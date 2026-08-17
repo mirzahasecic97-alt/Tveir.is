@@ -435,8 +435,6 @@ button { font: inherit; color: inherit; }
 /* Nafnið er einungis varaskeifa — hverfur um leið og lógóið hleðst */
 .logo-chip:has(img:not(.is-missing)) { color: transparent; }
 
-/* Ljóst lógó (t.d. gula Snerpa-merkið) þarf dökkan flöt til að sjást */
-.logo-chip--dark { background: var(--ink); border-color: transparent; color: rgba(255, 255, 255, .55); }
 
 @keyframes marquee {
   from { transform: translateX(0); }
@@ -672,8 +670,6 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
   width: auto; height: auto;
   object-fit: contain;
 }
-/* Ljóst lógó (t.d. gula Snerpa-merkið) þarf dökkan flöt til að sjást */
-.clientlist__logo--dark { background: var(--ink); border-color: transparent; }
 
 .clientlist__text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .clientlist__name {
