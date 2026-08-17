@@ -435,6 +435,9 @@ button { font: inherit; color: inherit; }
 /* Nafnið er einungis varaskeifa — hverfur um leið og lógóið hleðst */
 .logo-chip:has(img:not(.is-missing)) { color: transparent; }
 
+/* Ljóst lógó (t.d. gula Snerpa-merkið) þarf dökkan flöt til að sjást */
+.logo-chip--dark { background: var(--ink); border-color: transparent; color: rgba(255, 255, 255, .55); }
+
 @keyframes marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
