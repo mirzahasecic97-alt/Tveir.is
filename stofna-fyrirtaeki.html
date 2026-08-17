@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ertu að stofna fyrirtæki? — Tveir</title>
+<meta name="description" content="Starter kit: vörumerki, vefsíða og fyrstu auglýsingarnar — allt á einu bretti. Fylltu út og við sendum þér plan og verð.">
+<link rel="canonical" href="https://tveir.is/stofna-fyrirtaeki.html">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="is_IS">
+<meta property="og:site_name" content="Tveir">
+<meta property="og:title" content="Ertu að stofna fyrirtæki? — Tveir">
+<meta property="og:description" content="Starter kit: vörumerki, vefsíða og fyrstu auglýsingarnar — allt á einu bretti.">
+<meta property="og:url" content="https://tveir.is/stofna-fyrirtaeki.html">
+<meta name="theme-color" content="#f2f8fe">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/tveir-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Fara í efni</a>
+
+<header class="site-head">
+  <div class="wrap">
+    <nav class="pillnav" aria-label="Aðalvalmynd">
+      <a class="pillnav__logo" href="index.html" aria-label="Tveir — forsíða">
+        <img src="assets/img/tveir-logo.png" alt="Tveir" width="76" height="19">
+      </a>
+
+      <div class="pillnav__links">
+        <a href="verkefni.html">Verkefni</a>
+        <a href="index.html#thjonusta">Þjónusta</a>
+        <a href="index.html#teymid">Teymið</a>
+      </div>
+
+      <div class="pillnav__right">
+        <div class="dropdown">
+          <button type="button" class="btn btn--sm dropdown__toggle" aria-expanded="false" aria-controls="nav-dropdown">
+            Hafa samband <span class="caret" aria-hidden="true">▾</span>
+          </button>
+          <div class="dropdown__menu" id="nav-dropdown" hidden>
+            <a href="stofna-fyrirtaeki.html">
+              <strong>Er að stofna nýtt fyrirtæki</strong>
+              <span>Starter kit — vörumerki, vefur, auglýsingar</span>
+            </a>
+            <a href="hafa-samband.html">
+              <strong>Hafa samband</strong>
+              <span>Almenn fyrirspurn eða tilboð</span>
+            </a>
+          </div>
+        </div>
+
+        <button type="button" class="burger" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span>
+          <span class="sr-only">Valmynd</span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="mobilemenu" id="mobile-menu" hidden>
+      <a href="verkefni.html">Verkefni</a>
+      <a href="index.html#thjonusta">Þjónusta</a>
+      <a href="index.html#teymid">Teymið</a>
+      <a href="stofna-fyrirtaeki.html">Ertu að stofna fyrirtæki?</a>
+      <a href="hafa-samband.html">Hafa samband</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+
+    <section class="page-head">
+      <span class="badge">Starter kit</span>
+      <h1 style="margin-top:16px">Ertu að stofna <em>fyrirtæki?</em></h1>
+      <p class="lead">Vörumerki, vefsíða og fyrstu auglýsingarnar — allt á einu bretti. Fylltu út og við sendum þér plan og verð.</p>
+    </section>
+
+    <section class="section" aria-labelledby="kit">
+      <h2 id="kit" style="font-size:var(--fs-h2-sm);margin:0 0 24px">Hvað er í starter kitinu?</h2>
+      <div class="kit-grid">
+        <div class="card kit-card">
+          <div class="kit-card__num">01</div>
+          <h3>Vörumerki</h3>
+          <p>Nafn, logó, litir og tónn — svo þú lítur út eins og alvöru fyrirtæki frá degi eitt.</p>
+        </div>
+        <div class="card kit-card">
+          <div class="kit-card__num">02</div>
+          <h3>Vefsíða</h3>
+          <p>Ein síða sem selur, með formi og mælingum. Hýsing og viðhald í boði.</p>
+        </div>
+        <div class="card kit-card">
+          <div class="kit-card__num">03</div>
+          <h3>Fyrstu auglýsingarnar</h3>
+          <p>Meta &amp; Google uppsetning, targeting og fyrsta herferðin — mælt frá byrjun.</p>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="sendu">
+      <!-- FORM ENDPOINT: skiptu ‘XXXXXXXX’ út fyrir Formspree-auðkennið þitt -->
+      <form class="card card--navy form-navy" action="https://formspree.io/f/XXXXXXXX" method="POST" data-ajax novalidate>
+        <div>
+          <h2 id="sendu">Sendu okkur línu</h2>
+          <p>Við svörum með plani og verði innan sólarhrings.</p>
+        </div>
+
+        <div class="form-navy__inner">
+          <div class="field-row">
+            <label class="field">
+              <span>Nafn</span>
+              <input type="text" name="nafn" placeholder="Nafnið þitt" required autocomplete="name">
+            </label>
+            <label class="field">
+              <span>Netfang</span>
+              <input type="email" name="netfang" placeholder="netfang@example.is" required autocomplete="email">
+            </label>
+          </div>
+
+          <div class="field-row">
+            <label class="field">
+              <span>Hugmyndin / bransinn</span>
+              <input type="text" name="hugmynd" placeholder="t.d. kaffihús í Reykjavík" required>
+            </label>
+            <label class="field">
+              <span>Hvenær vilt þú opna?</span>
+              <input type="text" name="opnun" placeholder="t.d. í október">
+            </label>
+          </div>
+
+          <fieldset class="fieldset">
+            <legend>Hvað er komið?</legend>
+            <div class="chips" data-chips="stada-val">
+              <button type="button" class="chip" aria-pressed="false">Nafn</button>
+              <button type="button" class="chip" aria-pressed="false">Logó</button>
+              <button type="button" class="chip" aria-pressed="false">Vefsíða</button>
+              <button type="button" class="chip" aria-pressed="false">Samfélagsmiðlar</button>
+              <button type="button" class="chip" aria-pressed="false">Ekkert enn</button>
+            </div>
+            <input type="hidden" name="stada" id="stada-val">
+          </fieldset>
+
+          <label class="field">
+            <span>Segðu okkur frá</span>
+            <textarea name="skilabod" rows="4" placeholder="Hvað ertu að stofna og hverjum ertu að selja?" required></textarea>
+          </label>
+
+          <div class="hp" aria-hidden="true">
+            <label>Ekki fylla þetta út<input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label>
+          </div>
+
+          <input type="hidden" name="_subject" value="Starter kit fyrirspurn af tveir.is">
+
+          <p class="form-status" hidden role="status" aria-live="polite"></p>
+
+          <button type="submit" class="btn btn--lg form-submit" style="align-self:flex-start">Fá starter kit tilboð →</button>
+        </div>
+      </form>
+    </section>
+
+    <footer class="site-foot">
+      <div>© <span data-year>2026</span> Tveir — Reykjavík, Ísland</div>
+      <nav aria-label="Tengiliðaupplýsingar">
+        <a href="mailto:tveir@tveir.is">tveir@tveir.is</a>
+        <a href="tel:+3548572319">857-2319</a>
+        <a href="hafa-samband.html">Almenn fyrirspurn</a>
+      </nav>
+    </footer>
+
+  </div>
+</main>
+
+<script src="assets/js/main.js" defer></script>
+</body>
+</html>
