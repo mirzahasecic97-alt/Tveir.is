@@ -103,6 +103,21 @@
       }
       // Sum vafrar kveikja ekki á error-atburði fyrir skrá sem er ekki til
       video.addEventListener('loadeddata', function () { video.classList.remove('is-missing'); });
+
+      // autoplay-eigindin ein og sér bregst stundum. Við reynum bæði strax og
+      // aftur við canplay — canplay getur nefnilega verið búið að gerast áður
+      // en þessi kóði keyrir, og þá grípur hlustarinn einn ekkert.
+      if (video.autoplay) {
+        var nudge = function () {
+          if (!video.paused) return;
+          video.muted = true;
+          var p = video.play();
+          if (p && p.catch) p.catch(function () {});
+        };
+        nudge();
+        video.addEventListener('canplay', nudge);
+        video.addEventListener('loadeddata', nudge);
+      }
     });
   }
 
