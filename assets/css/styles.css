@@ -450,6 +450,9 @@ button { font: inherit; color: inherit; }
    -------------------------------------------------------------------------- */
 .section { padding: var(--sec) 0; }
 
+/* Fastur haus má ekki hylja það sem tenglar stökkva á */
+main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
+
 .hscroll {
   display: flex;
   gap: clamp(14px, 1.6vw, 18px);
@@ -528,24 +531,48 @@ button { font: inherit; color: inherit; }
 
 .member {
   position: relative;
-  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(28, 48, 80, .1);
-  background: var(--accs);
+  border-radius: 20px;
+  background: var(--ink);
+  box-shadow: var(--sh-navy);
+  min-height: clamp(210px, 19.5vw, 240px);
+  padding: clamp(24px, 2.4vw, 28px);
+  display: flex; flex-direction: column; justify-content: flex-end;
 }
-.member .slot { width: 100%; height: clamp(340px, 36.4vw, 430px); }
-.member__meta {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  padding: 52px 20px 22px;
-  background: linear-gradient(to top, rgba(28, 48, 80, .82), rgba(28, 48, 80, 0));
-  pointer-events: none;
+
+/* Upphafsstafirnir eru skreyting — vatnsmerki í stað ljósmyndar */
+.member__mono {
+  position: absolute; top: clamp(14px, 1.5vw, 18px); right: clamp(16px, 1.7vw, 20px);
+  font-family: var(--f-head); font-weight: 600;
+  font-size: clamp(78px, 8.5vw, 100px);
+  line-height: .8;
+  letter-spacing: -.045em;
+  color: rgba(91, 147, 240, .22);
+  pointer-events: none; user-select: none;
 }
+
 .member__name {
+  position: relative;
   font-family: var(--f-head); font-weight: 600;
   font-size: clamp(21px, 20.5px + .13vw, 22px);
+  line-height: 1.2;
   color: #fff;
 }
-.member__role { font-size: 12.5px; color: var(--acc-on-navy); margin-top: 4px; }
+.member__role {
+  position: relative;
+  font-size: 12.5px;
+  color: var(--acc-on-navy);
+  margin-top: 5px;
+}
+.member__desc {
+  position: relative;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, .62);
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, .12);
+}
 
 /* --------------------------------------------------------------------------
    11. Navy CTA blokk
