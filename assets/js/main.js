@@ -107,6 +107,49 @@
   }
 
   /* ------------------------------------------------------------------
+     Myndbönd á verkefnaspjöldum — sækjast fyrst þegar spjaldið sést,
+     svo forsíðan dragi ekki 14 MB niður við fyrstu heimsókn.
+     Kyrrmyndin liggur undir og sést þar til myndbandið byrjar.
+     ------------------------------------------------------------------ */
+  function initLazyVideos() {
+    var videos = Array.prototype.slice.call(document.querySelectorAll('video[data-src]'));
+    if (!videos.length) return;
+
+    // Virðum val notandans um minni hreyfingu — þá stendur kyrrmyndin ein
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    function tryPlay(video) {
+      video.muted = true;          // án þessa hafnar vafrinn sjálfvirkri spilun
+      var p = video.play();
+      if (p && p.catch) p.catch(function () {});
+    }
+
+    function start(video) {
+      if (!video.getAttribute('src')) {
+        video.setAttribute('src', video.getAttribute('data-src'));
+        // Fyrsta play() gerist áður en skráin er tilbúin og skilar sér ekki,
+        // svo við reynum aftur um leið og hún er spilanleg.
+        video.addEventListener('canplay', function () { tryPlay(video); }, { once: true });
+      }
+      tryPlay(video);
+    }
+
+    if (!('IntersectionObserver' in window)) {
+      videos.forEach(start);
+      return;
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) start(entry.target);
+        else if (entry.target.getAttribute('src')) entry.target.pause();
+      });
+    }, { rootMargin: '150px', threshold: 0.25 });
+
+    videos.forEach(function (video) { io.observe(video); });
+  }
+
+  /* ------------------------------------------------------------------
      Flokkasía á verkefnasíðu
      ------------------------------------------------------------------ */
   function initFilters() {
@@ -241,6 +284,7 @@
     initMobileMenu();
     initMarquee();
     initSlots();
+    initLazyVideos();
     initFilters();
     initChips();
     initForms();
