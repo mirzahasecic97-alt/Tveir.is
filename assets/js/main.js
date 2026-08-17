@@ -118,7 +118,9 @@
     function apply(value) {
       var shown = 0;
       cards.forEach(function (card) {
-        var match = value === 'allt' || card.getAttribute('data-category') === value;
+        // data-category getur haldið fleiri en einum flokki, bilaðskildum
+        var own = (card.getAttribute('data-category') || '').split(/\s+/);
+        var match = value === 'allt' || own.indexOf(value) !== -1;
         card.hidden = !match;
         if (match) shown++;
       });

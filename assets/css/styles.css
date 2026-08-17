@@ -669,6 +669,8 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
   width: auto; height: auto;
   object-fit: contain;
 }
+/* Ljóst lógó (t.d. gula Snerpa-merkið) þarf dökkan flöt til að sjást */
+.clientlist__logo--dark { background: var(--ink); border-color: transparent; }
 
 .clientlist__text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .clientlist__name {
@@ -678,6 +680,10 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
 }
 .clientlist__branch { font-size: 13px; color: var(--soft); }
 
+.clientlist__cats {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  justify-content: flex-end;
+}
 .clientlist__cat {
   font-size: 12.5px;
   color: var(--acc);
@@ -693,7 +699,7 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
     row-gap: 10px;
     padding-block: 16px;
   }
-  .clientlist__cat { grid-column: 2; justify-self: start; }
+  .clientlist__cats { grid-column: 2; justify-content: flex-start; }
 }
 
 .no-results {
