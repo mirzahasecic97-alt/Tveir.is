@@ -839,3 +839,12 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
 @media (max-width: 560px) {
   .form-submit { width: 100%; }
 }
+
+/* --------------------------------------------------------------------------
+   16. Síðari lagfæringar
+   -------------------------------------------------------------------------- */
+
+/* „Draga til hliðar" á aðeins við þar sem fingur skrunar — ekki á tölvu */
+@media (min-width: 900px) {
+  .drag-hint { display: none; }
+}
