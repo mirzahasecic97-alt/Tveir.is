@@ -848,3 +848,38 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
 @media (min-width: 900px) {
   .drag-hint { display: none; }
 }
+
+/* --------------------------------------------------------------------------
+   17. Tölur (Tveir í tölum)
+   -------------------------------------------------------------------------- */
+.stats {
+  margin-top: clamp(12px, 1.4vw, 16px);
+  background: var(--ink);
+  border-radius: clamp(20px, 2vw, 24px);
+  box-shadow: var(--sh-navy);
+  padding: clamp(30px, 4vw, 52px) clamp(14px, 2.4vw, 32px);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(10px, 1.6vw, 24px);
+  text-align: center;
+}
+
+.stat { min-width: 0; }
+
+.stat__num {
+  font-family: var(--f-head);
+  font-weight: 600;
+  font-size: clamp(30px, 11px + 5.5vw, 72px);
+  line-height: 1;
+  letter-spacing: -.03em;
+  color: #fff;
+}
+
+.stat__label {
+  margin-top: clamp(8px, 1vw, 12px);
+  font-size: clamp(12.5px, 11.5px + .26vw, 15px);
+  line-height: 1.35;
+  color: rgba(255, 255, 255, .62);
+  text-wrap: balance;
+}
+.stat__label em { font-style: normal; color: var(--acc-on-navy); }
