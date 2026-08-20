@@ -458,9 +458,12 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
   display: flex;
   gap: clamp(14px, 1.6vw, 18px);
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
   padding: 6px 2px 18px;
   scrollbar-width: thin;
+  /* Enginn snap-stuðningur: röðin er endalaus lykkja og snap slæst á
+     móti stökkinu sem heldur henni gangandi. */
+  scroll-snap-type: none;
+  overscroll-behavior-x: contain;
 }
 .hscroll::-webkit-scrollbar { height: 6px; }
 .hscroll::-webkit-scrollbar-thumb { background: rgba(28, 48, 80, .16); border-radius: 999px; }

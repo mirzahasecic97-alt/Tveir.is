@@ -122,6 +122,66 @@
   }
 
   /* ------------------------------------------------------------------
+     Endalaus verkefnaröð — þrjú eintök af spjöldunum hlið við hlið og
+     skrunið stokkið um eitt eintak þegar notandinn nálgast brúnina.
+     Stökkið er ósýnilegt því eintökin eru eins.
+     ------------------------------------------------------------------ */
+  function initLoopRail() {
+    var rail = document.querySelector('.hscroll');
+    if (!rail) return;
+
+    var originals = Array.prototype.slice.call(rail.children);
+    if (originals.length < 2) return;
+
+    function afrit() {
+      return originals.map(function (node) {
+        var c = node.cloneNode(true);
+        c.setAttribute('aria-hidden', 'true');
+        // afritin mega ekki grípa lyklaborðið
+        if (c.hasAttribute('href')) c.setAttribute('tabindex', '-1');
+        c.querySelectorAll('a, button').forEach(function (el) { el.setAttribute('tabindex', '-1'); });
+        return c;
+      });
+    }
+
+    afrit().forEach(function (n) { rail.appendChild(n); });
+    var fremst = afrit();
+    fremst.reverse().forEach(function (n) { rail.insertBefore(n, rail.firstChild); });
+
+    var breidd = 0;
+    function maelaBreidd() {
+      // breidd eins eintaks = heildarbreidd deilt með þremur
+      breidd = rail.scrollWidth / 3;
+    }
+
+    function midja() {
+      maelaBreidd();
+      rail.style.scrollBehavior = 'auto';
+      rail.scrollLeft = breidd;
+    }
+
+    // Leiðréttingin gerist samstundis, ekki í requestAnimationFrame:
+    // rAF er kæft í bakgrunnsflipum og þá myndi lykkjan hætta að ganga.
+    rail.addEventListener('scroll', function () {
+      if (!breidd) maelaBreidd();
+      if (!breidd) return;
+      var x = rail.scrollLeft;
+      if (x < breidd * 0.5) {
+        rail.style.scrollBehavior = 'auto';
+        rail.scrollLeft = x + breidd;
+      } else if (x > breidd * 1.5) {
+        rail.style.scrollBehavior = 'auto';
+        rail.scrollLeft = x - breidd;
+      }
+    }, { passive: true });
+
+    window.addEventListener('resize', midja);
+    // myndir breyta breiddinni þegar þær hlaðast
+    window.addEventListener('load', midja);
+    midja();
+  }
+
+  /* ------------------------------------------------------------------
      Myndbönd á verkefnaspjöldum — sækjast fyrst þegar spjaldið sést,
      svo forsíðan dragi ekki 14 MB niður við fyrstu heimsókn.
      Kyrrmyndin liggur undir og sést þar til myndbandið byrjar.
@@ -299,6 +359,7 @@
     initMobileMenu();
     initMarquee();
     initSlots();
+    initLoopRail();
     initLazyVideos();
     initFilters();
     initChips();
