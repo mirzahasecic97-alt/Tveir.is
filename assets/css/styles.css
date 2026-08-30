@@ -862,7 +862,9 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
   box-shadow: var(--sh-navy);
   padding: clamp(30px, 4vw, 52px) clamp(14px, 2.4vw, 32px);
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* Ein röð, jafnir dálkar — óháð því hve margar tölurnar eru */
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   gap: clamp(10px, 1.6vw, 24px);
   text-align: center;
 }
