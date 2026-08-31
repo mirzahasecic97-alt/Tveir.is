@@ -888,3 +888,39 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
   text-wrap: balance;
 }
 .stat__label em { font-style: normal; color: var(--acc-on-navy); }
+
+/* --------------------------------------------------------------------------
+   18. Tungumálarofi
+   -------------------------------------------------------------------------- */
+.langsw {
+  display: inline-flex;
+  flex: none;
+  padding: 3px;
+  gap: 2px;
+  background: var(--accs);
+  border-radius: var(--r-pill);
+}
+
+.langsw__btn {
+  border: 0;
+  cursor: pointer;
+  background: transparent;
+  color: var(--soft);
+  font: 500 12.5px/1 var(--f-body);
+  letter-spacing: .02em;
+  padding: 8px 10px;
+  border-radius: var(--r-pill);
+  transition: background .15s ease, color .15s ease;
+}
+.langsw__btn:hover { color: var(--ink); }
+.langsw__btn.is-on {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(28, 48, 80, .12);
+}
+
+/* Á þröngum skjá er plássið í nav-inu naumt */
+@media (max-width: 420px) {
+  .langsw { padding: 2px; }
+  .langsw__btn { padding: 7px 7px; font-size: 11.5px; }
+}
