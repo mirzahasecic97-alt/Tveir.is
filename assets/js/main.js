@@ -347,6 +347,66 @@
   }
 
   /* ------------------------------------------------------------------
+     Tungumálarofi. Íslenskan stendur í skránum sjálfum; enskan liggur í
+     data-en / data-en-html / data-en-ph og er skipt inn eftir þörfum.
+     Valið geymist í localStorage svo það haldist milli síðna.
+     ------------------------------------------------------------------ */
+  function initLang() {
+    var takkar = Array.prototype.slice.call(document.querySelectorAll('.langsw__btn'));
+    if (!takkar.length) return;
+
+    var LYKILL = 'tveir-lang';
+
+    function geyma(el, attr, gildi) {
+      // fyrsta skipti: geymum íslenskuna svo hægt sé að fara til baka
+      if (!el.hasAttribute(attr)) el.setAttribute(attr, gildi);
+    }
+
+    function setja(mal) {
+      var enska = mal === 'en';
+
+      document.querySelectorAll('[data-en]').forEach(function (el) {
+        geyma(el, 'data-is', el.textContent);
+        el.textContent = enska ? el.getAttribute('data-en') : el.getAttribute('data-is');
+      });
+
+      document.querySelectorAll('[data-en-html]').forEach(function (el) {
+        geyma(el, 'data-is-html', el.innerHTML);
+        el.innerHTML = enska ? el.getAttribute('data-en-html') : el.getAttribute('data-is-html');
+      });
+
+      document.querySelectorAll('[data-en-ph]').forEach(function (el) {
+        geyma(el, 'data-is-ph', el.getAttribute('placeholder') || '');
+        el.setAttribute('placeholder', enska ? el.getAttribute('data-en-ph') : el.getAttribute('data-is-ph'));
+      });
+
+      var lysing = document.querySelector('meta[name="description"][data-en-desc]');
+      if (lysing) {
+        geyma(lysing, 'data-is-desc', lysing.getAttribute('content'));
+        lysing.setAttribute('content', enska ? lysing.getAttribute('data-en-desc') : lysing.getAttribute('data-is-desc'));
+      }
+
+      document.documentElement.lang = enska ? 'en' : 'is';
+
+      takkar.forEach(function (b) {
+        var virkur = (b.getAttribute('data-lang') === mal);
+        b.classList.toggle('is-on', virkur);
+        b.setAttribute('aria-pressed', String(virkur));
+      });
+
+      try { localStorage.setItem(LYKILL, mal); } catch (e) {}
+    }
+
+    takkar.forEach(function (b) {
+      b.addEventListener('click', function () { setja(b.getAttribute('data-lang')); });
+    });
+
+    var valid = null;
+    try { valid = localStorage.getItem(LYKILL); } catch (e) {}
+    if (valid === 'en') setja('en');
+  }
+
+  /* ------------------------------------------------------------------
      Ártal í fæti
      ------------------------------------------------------------------ */
   function initYear() {
@@ -364,6 +424,7 @@
     initFilters();
     initChips();
     initForms();
+    initLang();
     initYear();
   }
 
