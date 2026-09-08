@@ -924,3 +924,12 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
   .langsw { padding: 2px; }
   .langsw__btn { padding: 7px 7px; font-size: 11.5px; }
 }
+
+/* Stækkar efnið um 1 cm og miðjar það aftur. object-fit: cover heldur
+   hlutföllunum, svo þetta klippir af brúnunum í stað þess að teygja. */
+.slot > .slot-zoom {
+  width: calc(100% + 1cm);
+  height: calc(100% + 1cm);
+  max-width: none;   /* annars heldur hnattræna img/video reglan breiddinni í 100% */
+  inset: -0.5cm;
+}
