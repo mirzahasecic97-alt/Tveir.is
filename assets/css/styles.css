@@ -400,7 +400,7 @@ button { font: inherit; color: inherit; }
 }
 .marquee__track {
   display: flex; width: max-content;
-  animation: marquee 78s linear infinite;
+  animation: marquee 52s linear infinite;
 }
 .marquee:hover .marquee__track,
 .marquee:focus-within .marquee__track { animation-play-state: paused; }
