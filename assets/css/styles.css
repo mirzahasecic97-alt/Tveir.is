@@ -933,3 +933,21 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
   max-width: none;   /* annars heldur hnattræna img/video reglan breiddinni í 100% */
   inset: -0.5cm;
 }
+
+/* --------------------------------------------------------------------------
+   19. Okkur — ein mynd, enginn texti
+   -------------------------------------------------------------------------- */
+.okkur {
+  margin-top: var(--sec);
+  border-radius: clamp(20px, 2vw, 24px);
+  overflow: hidden;
+  box-shadow: var(--sh-navy);
+}
+.okkur img {
+  display: block;
+  width: 100%;
+  height: clamp(260px, 38vw, 460px);
+  object-fit: cover;
+  /* andlitin sitja ofarlega í rammanum, svo við miðjum aðeins ofar */
+  object-position: center 32%;
+}
