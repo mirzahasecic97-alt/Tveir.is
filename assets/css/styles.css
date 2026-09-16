@@ -938,6 +938,7 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
    19. Okkur — ein mynd, enginn texti
    -------------------------------------------------------------------------- */
 .okkur {
+  position: relative;
   margin-top: var(--sec);
   border-radius: clamp(20px, 2vw, 24px);
   overflow: hidden;
@@ -946,8 +947,27 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
 .okkur img {
   display: block;
   width: 100%;
-  height: clamp(260px, 38vw, 460px);
+  height: clamp(220px, 30vw, 380px);
   object-fit: cover;
   /* andlitin sitja ofarlega í rammanum, svo við miðjum aðeins ofar */
   object-position: center 32%;
+}
+/* Sama meðferð og á verkefnaspjöldunum: hallandi skuggi svo hvíti
+   textinn haldist læsilegur hvað sem er undir honum. */
+.okkur__texti {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: clamp(46px, 6vw, 72px) clamp(20px, 2.7vw, 34px) clamp(18px, 2vw, 26px);
+  background: linear-gradient(to top, rgba(28, 48, 80, .82), rgba(28, 48, 80, 0));
+  pointer-events: none;
+}
+.okkur__titill {
+  margin: 0;
+  color: #fff;
+  font-size: var(--fs-h2);
+}
+.okkur__nofn {
+  margin-top: clamp(6px, .7vw, 10px);
+  color: var(--acc-on-navy);
+  font-size: clamp(13px, 12px + .26vw, 15.5px);
 }
