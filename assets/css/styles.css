@@ -889,6 +889,20 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
 }
 .stat__label em { font-style: normal; color: var(--acc-on-navy); }
 
+/* Tölur á þjónustusíðum: gildin eru lengri („205 kr.") og þurfa minna letur */
+.stats--sm .stat__num { font-size: clamp(24px, 10px + 4vw, 48px); }
+.stats--sm .stat__label { color: rgba(255,255,255,.7); }
+
+/* Tvær niðurstöðukort í stað þriggja */
+@media (min-width: 820px) { .kit-grid--2 { grid-template-columns: repeat(2, 1fr); } }
+
+/* Lykiltölur inni í korti */
+.case-figs { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 7px; }
+.case-figs li { display: flex; justify-content: space-between; gap: 14px; font-size: 13.5px; color: var(--soft); border-top: 1px solid var(--line); padding-top: 7px; }
+.case-figs li:first-child { border-top: 0; padding-top: 0; }
+.case-figs b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.case-note { margin-top: 14px; font-size: 12.5px; line-height: 1.5; color: var(--soft); }
+
 /* --------------------------------------------------------------------------
    18. Tungumálarofi
    -------------------------------------------------------------------------- */
