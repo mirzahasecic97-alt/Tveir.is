@@ -904,6 +904,68 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
 .case-note { margin-top: 14px; font-size: 12.5px; line-height: 1.5; color: var(--soft); }
 
 /* --------------------------------------------------------------------------
+   20. Solutaekifaeri: solusidu-einingar
+   -------------------------------------------------------------------------- */
+
+/* Takkapar undir fyrirsogn */
+.hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: clamp(22px, 2.6vw, 30px); }
+
+/* Smaletur yfir tolubandinu */
+.stat-cap {
+  margin: 0 0 12px;
+  font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--soft);
+}
+
+/* Passar / passar ekki */
+.fit { padding: clamp(26px, 3.4vw, 42px); display: grid; gap: clamp(24px, 2.8vw, 44px); }
+@media (min-width: 760px) { .fit { grid-template-columns: 1fr 1fr; } }
+.fit h3 { margin: 0 0 15px; font-size: 17px; color: #fff; }
+.fit__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+.fit__list li { display: flex; gap: 10px; font-size: 14.5px; line-height: 1.5; color: rgba(255,255,255,.78); }
+.fit__list li::before { flex: 0 0 auto; font-weight: 600; }
+.fit__list--ja li::before { content: "\2713"; color: var(--acc-on-navy); }
+.fit__list--nei li::before { content: "\2715"; color: rgba(255,255,255,.38); }
+
+/* Skrefin fjogur */
+.steps { display: grid; gap: 12px; }
+@media (min-width: 820px) { .steps { grid-template-columns: repeat(2, 1fr); gap: 14px; } }
+.step { position: relative; padding: clamp(22px, 2.4vw, 28px); padding-left: clamp(68px, 6vw, 84px); }
+.step__n {
+  position: absolute; left: clamp(20px, 2.2vw, 26px); top: clamp(21px, 2.3vw, 27px);
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accs); color: var(--acc);
+  font: 600 14px/1 var(--f-head);
+  display: grid; place-items: center;
+}
+.step h3 { margin: 0 0 8px; font-size: var(--fs-h3); }
+.step p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--soft); }
+
+/* Hvad thu faerd */
+.deliver-card { padding: clamp(24px, 3vw, 38px); }
+.deliver { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+@media (min-width: 760px) { .deliver { grid-template-columns: repeat(2, 1fr); gap: 12px clamp(24px, 3vw, 46px); } }
+.deliver li { display: flex; gap: 10px; font-size: 14.5px; line-height: 1.5; }
+.deliver li::before { content: "\2713"; color: var(--acc); font-weight: 600; flex: 0 0 auto; }
+
+/* Algengar spurningar */
+.faq { display: grid; gap: 10px; }
+.faq details { padding: clamp(16px, 1.8vw, 20px) clamp(18px, 2vw, 24px); }
+.faq summary {
+  cursor: pointer; list-style: none;
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  font-weight: 600; font-size: 15px; line-height: 1.4;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: "+"; flex: 0 0 auto;
+  color: var(--acc); font-size: 22px; line-height: 1; font-weight: 400;
+}
+.faq details[open] summary::after { content: "\2212"; }
+.faq summary:focus-visible { outline: 2px solid var(--acc); outline-offset: 4px; border-radius: 6px; }
+.faq p { margin: 12px 0 0; font-size: 14px; line-height: 1.62; color: var(--soft); max-width: 70ch; }
+
+/* --------------------------------------------------------------------------
    18. Tungumálarofi
    -------------------------------------------------------------------------- */
 .langsw {

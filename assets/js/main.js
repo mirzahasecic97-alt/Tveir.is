@@ -409,6 +409,43 @@
   /* ------------------------------------------------------------------
      Ártal í fæti
      ------------------------------------------------------------------ */
+  /* ------------------------------------------------------------------
+     Tolur telja upp thegar their koma i syn (solutaekifaeri)
+     HTML-id heldur lokagildinu, svo talan er rett an JS.
+     ------------------------------------------------------------------ */
+  function initCountUp() {
+    var tolur = Array.prototype.slice.call(document.querySelectorAll('[data-count]'));
+    if (!tolur.length) return;
+
+    var hoegari = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (hoegari || !('IntersectionObserver' in window)) return;
+
+    function telja(el) {
+      var lok = parseInt(el.getAttribute('data-count'), 10);
+      if (!lok) return;
+      var timi = 1000, byrjun = null;
+      el.textContent = '0';
+      function skref(nuna) {
+        if (byrjun === null) byrjun = nuna;
+        var hlutfall = Math.min((nuna - byrjun) / timi, 1);
+        var mjukt = 1 - Math.pow(1 - hlutfall, 3);
+        el.textContent = String(Math.round(lok * mjukt));
+        if (hlutfall < 1) requestAnimationFrame(skref);
+      }
+      requestAnimationFrame(skref);
+    }
+
+    var obs = new IntersectionObserver(function (faerslur) {
+      faerslur.forEach(function (f) {
+        if (!f.isIntersecting) return;
+        obs.unobserve(f.target);
+        telja(f.target);
+      });
+    }, { threshold: 0.5 });
+
+    tolur.forEach(function (el) { obs.observe(el); });
+  }
+
   function initYear() {
     var year = new Date().getFullYear();
     document.querySelectorAll('[data-year]').forEach(function (el) { el.textContent = year; });
@@ -425,6 +462,7 @@
     initChips();
     initForms();
     initLang();
+    initCountUp();
     initYear();
   }
 
