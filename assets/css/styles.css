@@ -337,46 +337,52 @@ button { font: inherit; color: inherit; }
 .hero {
   display: grid;
   grid-template-columns: 1fr;
-  gap: clamp(12px, 1.4vw, 16px);
-  padding-top: clamp(24px, 3.2vw, 36px);
+  gap: clamp(20px, 2.4vw, 32px);
+  padding-top: clamp(28px, 4vw, 56px);
+  align-items: center;
 }
 @media (min-width: 900px) {
-  .hero { grid-template-columns: 1.35fr 1fr; align-items: stretch; }
+  .hero { grid-template-columns: 1.05fr 1fr; gap: clamp(32px, 4vw, 64px); }
 }
 
-.hero__main {
-  padding: clamp(26px, 3.4vw, 40px) clamp(22px, 3.4vw, 40px);
-  display: flex; flex-direction: column; justify-content: center;
-  align-items: flex-start;
-  gap: clamp(16px, 1.9vw, 22px);
+/* Textahlidin: ekkert kort, bara texti a bakgrunninum */
+.hero__texti {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: clamp(18px, 2vw, 24px);
 }
-.hero__main h1 { font-size: var(--fs-h1-hero); line-height: 1.13; }
-.hero__main .lead { max-width: 460px; }
-.hero__actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
+.hero__texti h1 { font-size: var(--fs-h1-hero); line-height: 1.1; letter-spacing: -.02em; }
+.hero__texti .lead { max-width: 46ch; }
+.hero__actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: clamp(4px, .6vw, 8px); }
 @media (max-width: 560px) {
   .hero__actions { width: 100%; flex-direction: column; align-items: stretch; }
   .hero__actions .dropdown, .hero__actions .btn { width: 100%; }
   .hero__actions .dropdown__menu { left: 0; right: 0; min-width: 0; max-width: none; }
 }
 
-.hero__side {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(12px, 1.4vw, 16px);
+/* Myndin af theim */
+.hero__mynd {
+  position: relative; margin: 0;
+  border-radius: var(--r-block);
+  overflow: hidden;
+  box-shadow: var(--sh-navy);
 }
-.hero__note { padding: clamp(18px, 2vw, 24px); display: flex; flex-direction: column; justify-content: center; gap: 8px; }
-.hero__note b { font-size: clamp(17px, 14.5px + .64vw, 22px); font-weight: 500; line-height: 1.25; }
-.hero__note span { font-size: clamp(11.5px, 11px + .19vw, 13px); color: var(--soft); line-height: 1.45; }
-.hero__note.card--navy b { color: #fff; }
-.hero__note.card--navy span { color: rgba(255, 255, 255, .7); }
-
-.reel {
-  aspect-ratio: 9 / 16;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  box-shadow: 0 8px 24px rgba(28, 48, 80, .12);
+.hero__mynd img {
+  display: block; width: 100%;
+  height: clamp(260px, 38vw, 480px);
+  object-fit: cover; object-position: center 30%;
 }
-
+.hero__mynd figcaption {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: clamp(44px, 5vw, 64px) clamp(20px, 2.4vw, 30px) clamp(18px, 2vw, 24px);
+  background: linear-gradient(to top, rgba(28,48,80,.86), rgba(28,48,80,0));
+  display: grid; gap: 3px;
+  pointer-events: none;
+}
+.hero__mynd figcaption b {
+  font-family: var(--f-head); font-weight: 600;
+  font-size: clamp(17px, 15px + .5vw, 21px); color: #fff;
+}
+.hero__mynd figcaption span { font-size: clamp(12.5px, 12px + .2vw, 14px); color: rgba(255,255,255,.72); }
 /* --------------------------------------------------------------------------
    8. Lógóstrimill
    -------------------------------------------------------------------------- */
@@ -1013,42 +1019,4 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
   height: calc(100% + 1cm);
   max-width: none;   /* annars heldur hnattræna img/video reglan breiddinni í 100% */
   inset: -0.5cm;
-}
-
-/* --------------------------------------------------------------------------
-   19. Okkur — ein mynd, enginn texti
-   -------------------------------------------------------------------------- */
-.okkur {
-  position: relative;
-  margin-top: var(--sec);
-  border-radius: clamp(20px, 2vw, 24px);
-  overflow: hidden;
-  box-shadow: var(--sh-navy);
-}
-.okkur img {
-  display: block;
-  width: 100%;
-  height: clamp(220px, 30vw, 380px);
-  object-fit: cover;
-  /* andlitin sitja ofarlega í rammanum, svo við miðjum aðeins ofar */
-  object-position: center 32%;
-}
-/* Sama meðferð og á verkefnaspjöldunum: hallandi skuggi svo hvíti
-   textinn haldist læsilegur hvað sem er undir honum. */
-.okkur__texti {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  padding: clamp(46px, 6vw, 72px) clamp(20px, 2.7vw, 34px) clamp(18px, 2vw, 26px);
-  background: linear-gradient(to top, rgba(28, 48, 80, .82), rgba(28, 48, 80, 0));
-  pointer-events: none;
-}
-.okkur__titill {
-  margin: 0;
-  color: #fff;
-  font-size: var(--fs-h2);
-}
-.okkur__nofn {
-  margin-top: clamp(6px, .7vw, 10px);
-  color: var(--acc-on-navy);
-  font-size: clamp(13px, 12px + .26vw, 15.5px);
 }
