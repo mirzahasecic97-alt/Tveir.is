@@ -383,6 +383,46 @@ button { font: inherit; color: inherit; }
   font-size: clamp(17px, 15px + .5vw, 21px); color: #fff;
 }
 .hero__mynd figcaption span { font-size: clamp(12.5px, 12px + .2vw, 14px); color: rgba(255,255,255,.72); }
+
+/* Leidir inn: sama og i fellivalmyndinni, en synilegt an thess ad smella */
+.leidir {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(12px, 1.4vw, 16px);
+  margin-top: clamp(26px, 3vw, 42px);
+}
+@media (min-width: 760px) { .leidir { grid-template-columns: 1fr 1fr; } }
+
+.leid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 5px 18px;
+  padding: clamp(20px, 2.2vw, 28px) clamp(22px, 2.4vw, 32px);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.leid__titill {
+  grid-column: 1;
+  font-family: var(--f-head); font-weight: 600;
+  font-size: clamp(17px, 15.6px + .36vw, 20px);
+  line-height: 1.25;
+}
+.leid__texti { grid-column: 1; font-size: 13.5px; line-height: 1.45; color: var(--soft); }
+.leid__or {
+  grid-column: 2; grid-row: 1 / span 2;
+  color: var(--acc); font-size: 20px; line-height: 1;
+  transition: transform .15s ease;
+}
+.leid:hover { border-color: var(--acc); box-shadow: var(--sh-nav); transform: translateY(-2px); }
+.leid:hover .leid__or { transform: translateX(3px); }
+.leid:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .leid, .leid__or { transition: none; }
+  .leid:hover { transform: none; }
+}
 /* --------------------------------------------------------------------------
    8. Lógóstrimill
    -------------------------------------------------------------------------- */
