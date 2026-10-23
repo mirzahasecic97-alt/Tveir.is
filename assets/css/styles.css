@@ -335,54 +335,86 @@ button { font: inherit; color: inherit; }
    7. Hero (bento)
    -------------------------------------------------------------------------- */
 .hero {
+  position: relative;
+  margin-top: clamp(10px, 1.4vw, 18px);
+  border-radius: var(--r-block);
+  overflow: hidden;
+  box-shadow: var(--sh-navy);
+  min-height: clamp(520px, 78vh, 720px);
   display: grid;
-  grid-template-columns: 1fr;
-  gap: clamp(20px, 2.4vw, 32px);
-  padding-top: clamp(28px, 4vw, 56px);
-  align-items: center;
-}
-@media (min-width: 900px) {
-  .hero { grid-template-columns: 1.05fr 1fr; gap: clamp(32px, 4vw, 64px); }
+  align-items: end;
 }
 
-/* Textahlidin: ekkert kort, bara texti a bakgrunninum */
-.hero__texti {
-  display: flex; flex-direction: column; align-items: flex-start;
-  gap: clamp(18px, 2vw, 24px);
+/* Myndin fyllir allt hero-ið */
+.hero__bak {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  /* andlitin sitja ofarlega i rammanum, svo vid midjum ofar en midju */
+  object-position: 62% 26%;
 }
-.hero__texti h1 { font-size: var(--fs-h1-hero); line-height: 1.1; letter-spacing: -.02em; }
-.hero__texti .lead { max-width: 46ch; }
-.hero__actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: clamp(4px, .6vw, 8px); }
+
+/* Skuggi sem thettist til vinstri, thar sem textinn er, og sleppir andlitunum */
+.hero::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to right, rgba(16,28,48,.9) 0%, rgba(16,28,48,.76) 34%, rgba(16,28,48,.22) 64%, rgba(16,28,48,.06) 100%),
+    linear-gradient(to top, rgba(16,28,48,.72) 0%, rgba(16,28,48,0) 46%);
+}
+
+.hero__yfir {
+  position: relative; z-index: 1;
+  padding: clamp(28px, 4vw, 60px);
+  max-width: 44ch;
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: clamp(16px, 1.9vw, 22px);
+  color: #fff;
+}
+.hero__yfir h1 {
+  font-size: var(--fs-h1-hero);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  color: #fff;
+  text-wrap: balance;
+}
+.hero__yfir h1 em { color: var(--acc-on-navy); }
+.hero__yfir .lead { color: rgba(255,255,255,.8); max-width: 42ch; }
+
+.hero__actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: clamp(2px,.5vw,6px); }
 @media (max-width: 560px) {
   .hero__actions { width: 100%; flex-direction: column; align-items: stretch; }
   .hero__actions .dropdown, .hero__actions .btn { width: 100%; }
   .hero__actions .dropdown__menu { left: 0; right: 0; min-width: 0; max-width: none; }
 }
 
-/* Myndin af theim */
-.hero__mynd {
-  position: relative; margin: 0;
-  border-radius: var(--r-block);
-  overflow: hidden;
-  box-shadow: var(--sh-navy);
+/* Draugatakki a mynd: hvit lina, ekki blá */
+.btn--aglas {
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  border-color: rgba(255,255,255,.55);
+  box-shadow: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
-.hero__mynd img {
-  display: block; width: 100%;
-  height: clamp(260px, 38vw, 480px);
-  object-fit: cover; object-position: center 30%;
+.btn--aglas:hover { background: #fff; color: var(--ink); border-color: #fff; }
+
+.hero__nofn {
+  margin-top: clamp(4px, .8vw, 10px);
+  font-size: clamp(12.5px, 12px + .2vw, 14px);
+  color: rgba(255,255,255,.66);
 }
-.hero__mynd figcaption {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  padding: clamp(44px, 5vw, 64px) clamp(20px, 2.4vw, 30px) clamp(18px, 2vw, 24px);
-  background: linear-gradient(to top, rgba(28,48,80,.86), rgba(28,48,80,0));
-  display: grid; gap: 3px;
-  pointer-events: none;
+
+/* I sima: myndin verdur haerri og skugginn kemur ad nedan svo andlitin
+   sjaist fyrir ofan textann i stad thess ad hverfa undir hann. */
+@media (max-width: 1000px) {
+  .hero { min-height: clamp(560px, 86vh, 720px); }
+  .hero__bak { object-position: 46% 18%; }
+  .hero::after {
+    background: linear-gradient(to top, rgba(16,28,48,.94) 0%, rgba(16,28,48,.86) 34%, rgba(16,28,48,.38) 62%, rgba(16,28,48,.1) 100%);
+  }
+  .hero__yfir { max-width: none; }
 }
-.hero__mynd figcaption b {
-  font-family: var(--f-head); font-weight: 600;
-  font-size: clamp(17px, 15px + .5vw, 21px); color: #fff;
-}
-.hero__mynd figcaption span { font-size: clamp(12.5px, 12px + .2vw, 14px); color: rgba(255,255,255,.72); }
 
 /* Leidir inn: sama og i fellivalmyndinni, en synilegt an thess ad smella */
 .leidir {
