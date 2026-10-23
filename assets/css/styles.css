@@ -1079,14 +1079,18 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
 }
 .ferdir__listi {
   list-style: none; margin: 0; padding: 0;
-  display: flex; flex-wrap: wrap; gap: 10px;
+  display: grid; gap: 12px;
 }
 .ferdir__listi li {
+  display: grid; gap: 3px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.ferdir__listi li:first-child { border-top: 0; padding-top: 0; }
+.ferdir__listi b {
   font-family: var(--f-head); font-weight: 600;
-  font-size: clamp(16px, 15px + .3vw, 19px);
-  line-height: 1;
-  padding: 12px 18px;
-  border-radius: var(--r-pill);
-  background: var(--accs);
+  font-size: clamp(17px, 15.6px + .36vw, 20px);
+  line-height: 1.2;
   color: var(--acc);
 }
+.ferdir__listi span { font-size: 13.5px; line-height: 1.45; color: var(--soft); }
