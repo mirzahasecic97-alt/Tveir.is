@@ -340,7 +340,7 @@ button { font: inherit; color: inherit; }
   border-radius: var(--r-block);
   overflow: hidden;
   box-shadow: var(--sh-navy);
-  min-height: clamp(520px, 78vh, 720px);
+  min-height: clamp(520px, 84vh, 820px);
   display: grid;
   align-items: end;
 }
@@ -351,22 +351,28 @@ button { font: inherit; color: inherit; }
   width: 100%; height: 100%;
   object-fit: cover;
   /* andlitin sitja ofarlega i rammanum, svo vid midjum ofar en midju */
-  object-position: 62% 26%;
+  object-position: 50% 22%;
 }
 
 /* Skuggi sem thettist til vinstri, thar sem textinn er, og sleppir andlitunum */
 .hero::after {
   content: "";
   position: absolute; inset: 0;
-  background:
-    linear-gradient(to right, rgba(16,28,48,.9) 0%, rgba(16,28,48,.76) 34%, rgba(16,28,48,.22) 64%, rgba(16,28,48,.06) 100%),
-    linear-gradient(to top, rgba(16,28,48,.72) 0%, rgba(16,28,48,0) 46%);
+  /* Hallinn kemur ad nedan a ollum skjastaerdum, svo badir sjaist
+     fyrir ofan textann. A breidum skja sest oll breidd myndarinnar,
+     svo thad er ekki haegt ad faera okkur til hlidar. */
+  background: linear-gradient(to top,
+    rgba(16,28,48,.94) 0%,
+    rgba(16,28,48,.86) 26%,
+    rgba(16,28,48,.42) 54%,
+    rgba(16,28,48,.08) 78%,
+    rgba(16,28,48,0) 100%);
 }
 
 .hero__yfir {
   position: relative; z-index: 1;
   padding: clamp(28px, 4vw, 60px);
-  max-width: 44ch;
+  max-width: 60ch;
   display: flex; flex-direction: column; align-items: flex-start;
   gap: clamp(16px, 1.9vw, 22px);
   color: #fff;
@@ -408,11 +414,8 @@ button { font: inherit; color: inherit; }
 /* I sima: myndin verdur haerri og skugginn kemur ad nedan svo andlitin
    sjaist fyrir ofan textann i stad thess ad hverfa undir hann. */
 @media (max-width: 1000px) {
-  .hero { min-height: clamp(560px, 86vh, 720px); }
+  .hero { min-height: clamp(560px, 86vh, 760px); }
   .hero__bak { object-position: 46% 18%; }
-  .hero::after {
-    background: linear-gradient(to top, rgba(16,28,48,.94) 0%, rgba(16,28,48,.86) 34%, rgba(16,28,48,.38) 62%, rgba(16,28,48,.1) 100%);
-  }
   .hero__yfir { max-width: none; }
 }
 
