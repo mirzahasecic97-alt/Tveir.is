@@ -590,7 +590,14 @@ main [id] { scroll-margin-top: clamp(88px, 8vw, 108px); }
   scroll-snap-align: start;
   display: flex; flex-direction: column; align-items: center; gap: 14px;
   text-align: center;
+  color: inherit; text-decoration: none;
 }
+/* Thjonustur sem eiga sina eigin sidu eru hlekkir */
+a.service { transition: transform .15s ease; }
+a.service:hover { transform: translateY(-3px); }
+a.service:hover .service__icon { border-color: var(--acc); box-shadow: var(--sh-nav); }
+a.service:hover h3 { color: var(--acc); }
+a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; border-radius: 12px; }
 .service__icon {
   width: clamp(96px, 9.8vw, 116px); height: clamp(96px, 9.8vw, 116px);
   border-radius: 50%;
