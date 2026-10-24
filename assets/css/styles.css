@@ -426,7 +426,7 @@ button { font: inherit; color: inherit; }
   gap: clamp(12px, 1.4vw, 16px);
   margin-top: clamp(26px, 3vw, 42px);
 }
-@media (min-width: 760px) { .leidir { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 900px) { .leidir { grid-template-columns: repeat(3, 1fr); } }
 
 .leid {
   display: grid;
