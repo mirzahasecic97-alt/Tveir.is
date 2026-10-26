@@ -1,0 +1,20 @@
+# Tveir
+
+> Tveir er markaðsstofa í Reykjavík, rekin af Mirza Hasecic og Óskari Hákonar. Samfélagsmiðlar, Meta auglýsingar, vefsíður, tökur, klipping, sjálfvirkni og sýnileiki í gervigreind. Vefur: https://tveir.is/
+
+## Þjónusta
+
+- [Sölutækifæri](https://tveir.is/solutaekifaeri.html): Meta herferðir, landingarsíða, lead-form og eftirfylgni. 282 fyrirspurnir fyrir viðskiptavini, frá 205 kr. hver. Auglýsingakostnaður greiddur beint af viðskiptavini á hans eigin Meta reikning.
+- [Sjálfvirkni](https://tveir.is/sjalfvirkni.html): Staðfestingar, áminningar, eftirfylgni, skráningar í gagnagrunn og mánaðarlegar skýrslur sem ganga af sjálfu sér. Uppsetning og mánaðarlegt eftirlit.
+- [Vefsíða í áskrift](https://tveir.is/vefsida-askrift.html): Vefsíða, hýsing, lén, uppfærslur, breytingar og mælingar fyrir eitt mánaðargjald í stað eins stórs reiknings.
+- [Sýnileiki í gervigreind](https://tveir.is/gervigreind.html): Skipulögð gögn, aðgangur fyrir GPTBot, ClaudeBot, PerplexityBot og Google-Extended, og mæling á því hvað ChatGPT, Claude, Perplexity og Gemini segja um fyrirtækið fyrir og eftir.
+- [Starter kit](https://tveir.is/stofna-fyrirtaeki.html): Fyrir ný fyrirtæki. Vörumerki, vefsíða, samfélagsmiðlar og fyrsta Meta herferðin.
+
+## Annað
+
+- [Verkefni](https://tveir.is/verkefni.html): Viðskiptavinir meðal annars Krónan, Pósturinn, BYD, Breiðablik, KSÍ, Skólahreysti, Chess After Dark, Snerpa Þjálfun, Vignir Vatnar, Reykjavík Global Forum, Emin Kadri, Golfspá og HAF.
+- [Hafa samband](https://tveir.is/hafa-samband.html): Netfang tveir@tveir.is, sími 857-2319, Instagram @tveir.is.
+
+## Um okkur
+
+Tveir ferðast með viðskiptavinum þegar verkefnið krefst þess og hefur unnið í Finnlandi, á Spáni, Ítalíu og í Króatíu.
