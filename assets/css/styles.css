@@ -308,6 +308,7 @@ button { font: inherit; color: inherit; }
   display: flex; flex-direction: column;
   text-align: left;
   z-index: 30;
+  max-height: min(72vh, 620px); overflow-y: auto; overscroll-behavior: contain;
 }
 .dropdown__menu[hidden] { display: none; }
 .dropdown__menu a {

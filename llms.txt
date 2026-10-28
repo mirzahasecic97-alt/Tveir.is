@@ -8,6 +8,10 @@
 - [Sjálfvirkni](https://tveir.is/sjalfvirkni.html): Staðfestingar, áminningar, eftirfylgni, skráningar í gagnagrunn og mánaðarlegar skýrslur sem ganga af sjálfu sér. Uppsetning og mánaðarlegt eftirlit.
 - [Vefsíða í áskrift](https://tveir.is/vefsida-askrift.html): Vefsíða, hýsing, lén, uppfærslur, breytingar og mælingar fyrir eitt mánaðargjald í stað eins stórs reiknings.
 - [Sýnileiki í gervigreind](https://tveir.is/gervigreind.html): Skipulögð gögn, aðgangur fyrir GPTBot, ClaudeBot, PerplexityBot og Google-Extended, og mæling á því hvað ChatGPT, Claude, Perplexity og Gemini segja um fyrirtækið fyrir og eftir.
+- [Efni á samfélagsmiðla](https://tveir.is/efni.html): Tökudagur í hverjum mánuði, klipping fyrir Reels, TikTok og Stories, tilbúnar færslur og birting. Viðskiptavinur á allt hráefnið.
+- [Vörumerki](https://tveir.is/vorumerki.html): Merki, litapalli, letur, leiðbeiningaskjal, snið fyrir samfélagsmiðla og prentefni. Þrjár til fjórar vikur, tvær umferðir af breytingum innifaldar.
+- [Tökur á viðburðum](https://tveir.is/vidburdir.html): Tökur á staðnum, stuttar klippur samdægurs, lengra myndband innan viku og ljósmyndir. Ferðast erlendis, flug og gisting verðlögð sérstaklega.
+- [Póstlisti og sölupóstar](https://tveir.is/solupostar.html): Uppsetning á póstlista, skráningarform, sniðmát í söluformati, sjálfvirk póstaröð og mælingar. Sett upp og afhent, efnið kemur frá viðskiptavini.
 - [Starter kit](https://tveir.is/stofna-fyrirtaeki.html): Fyrir ný fyrirtæki. Vörumerki, vefsíða, samfélagsmiðlar og fyrsta Meta herferðin.
 
 ## Annað
