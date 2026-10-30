@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vinnusvæði | Tveir</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f2f8fe">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/img/tveir-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="assets/portal.css">
+</head>
+<body>
+
+<main class="inn">
+  <div class="card inn__kort">
+    <img src="../assets/img/tveir-logo.png" alt="Tveir" width="96" height="24">
+    <h1>Vinnusvæði</h1>
+    <p class="lead">Sláðu inn netfangið þitt og við sendum þér hlekk til að komast inn. Ekkert lykilorð.</p>
+
+    <form id="innform" novalidate>
+      <div class="field">
+        <span>Netfang</span>
+        <input type="email" id="netfang" name="netfang" required autocomplete="email"
+               inputmode="email" placeholder="nafn@fyrirtaeki.is">
+      </div>
+      <div class="form-status" id="stada" role="status" hidden></div>
+      <button type="submit" class="btn btn--block" id="senda" style="margin-top:18px">Senda mér hlekk</button>
+    </form>
+
+    <div class="prufubanner" id="prufubanner" hidden></div>
+
+    <p class="inn__fot">
+      Kemstu ekki inn? Sendu okkur línu á <a href="mailto:tveir@tveir.is">tveir@tveir.is</a>
+      eða hringdu í <a href="tel:+3548572319">857-2319</a>.
+    </p>
+  </div>
+</main>
+
+<script type="module">
+import { gogn, stillingar } from './assets/portal.js';
+
+const form   = document.getElementById('innform');
+const netf   = document.getElementById('netfang');
+const stada  = document.getElementById('stada');
+const senda  = document.getElementById('senda');
+const banner = document.getElementById('prufubanner');
+
+function segja(texti, tegund) {
+  stada.textContent = texti;
+  stada.className = 'form-status form-status--' + tegund;
+  stada.hidden = false;
+}
+
+const g = await gogn();
+
+/* Þegar þegar innskráður: fara beint inn */
+const ek = await g.eg();
+if (ek) location.replace(ek.hlutverk === 'admin' ? 'stjornbord.html' : 'yfirlit.html');
+
+if (g.prufa) {
+  banner.hidden = false;
+  banner.innerHTML = '<strong>Prufustilling.</strong> Gögnin eru sýnidæmi í þessum vafra og fara ekki út á netið. '
+    + 'Skráðu þig inn sem viðskiptavinur með <code>anna@hafvitamin.is</code> eða sem Tveir með <code>mirza@tveir.is</code>.';
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const gildi = netf.value.trim();
+  if (!gildi || !gildi.includes('@')) { segja('Netfangið vantar.', 'err'); netf.focus(); return; }
+
+  senda.disabled = true;
+  senda.textContent = 'Augnablik';
+  try {
+    await g.innskra(gildi);
+    if (g.prufa) {
+      const n = await g.eg();
+      location.replace(n.hlutverk === 'admin' ? 'stjornbord.html' : 'yfirlit.html');
+      return;
+    }
+    form.hidden = true;
+    segja('Hlekkur er á leiðinni á ' + gildi + '. Hann gildir í eina klukkustund.', 'ok');
+  } catch (villa) {
+    segja(villa.message || 'Þetta gekk ekki. Prófaðu aftur eða sendu okkur línu.', 'err');
+    senda.disabled = false;
+    senda.textContent = 'Senda mér hlekk';
+  }
+});
+</script>
+</body>
+</html>

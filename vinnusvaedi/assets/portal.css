@@ -1,0 +1,367 @@
+/* ==========================================================================
+   Tveir vinnusvæði — stílblað
+   Byggir ofan á ../assets/css/styles.css og notar sömu tokens.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Haus
+   -------------------------------------------------------------------------- */
+.phead {
+  position: sticky; top: 0; z-index: 20;
+  background: rgba(242, 248, 254, .88);
+  backdrop-filter: saturate(160%) blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.phead__inn {
+  display: flex; align-items: center; gap: 14px;
+  min-height: 68px; flex-wrap: nowrap;
+}
+.phead__logo { display: flex; align-items: center; flex: none; }
+.phead__skil {
+  width: 1px; height: 24px; background: var(--line); flex: none;
+}
+.phead__heiti {
+  font: 500 15px/1 var(--f-body); color: var(--soft);
+  flex: 1 1 auto; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.phead__heiti strong { color: var(--ink); font-weight: 500; }
+.phead__hnappar { display: flex; align-items: center; gap: 8px; flex: none; }
+
+.phead__notandi {
+  font: 400 13.5px/1.3 var(--f-body); color: var(--soft);
+  text-align: right; max-width: 190px;
+}
+.phead__notandi strong { display: block; color: var(--ink); font-weight: 500; }
+@media (max-width: 560px) {
+  .phead__notandi { display: none; }
+  .phead__inn { gap: 10px; min-height: 60px; }
+  .phead__skil { display: none; }
+}
+
+/* --------------------------------------------------------------------------
+   2. Stöðupillur
+   -------------------------------------------------------------------------- */
+.pstat {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  font: 500 12.5px/1 var(--f-body);
+  padding: 7px 12px; border-radius: var(--r-pill);
+  white-space: nowrap;
+}
+.pstat::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; flex: none;
+}
+.pstat--nytt    { background: #eef1f6; color: #5a6b86; }
+.pstat--vinnsla { background: var(--accs); color: var(--acc); }
+.pstat--bid     { background: #fff2e0; color: #a4681a; }
+.pstat--ok      { background: #e6f4ea; color: #1e6b34; }
+.pstat--lokid   { background: #e6f4ea; color: #1e6b34; }
+.pstat--hafnad  { background: #f3f0f0; color: #8a7a78; }
+
+.pforg {
+  font: 500 12px/1 var(--f-body); color: #a4681a;
+  background: #fff2e0; padding: 6px 10px; border-radius: var(--r-pill);
+  flex: none;
+}
+
+/* --------------------------------------------------------------------------
+   3. Grind
+   -------------------------------------------------------------------------- */
+.pwrap { padding-block: clamp(22px, 3vw, 38px) clamp(50px, 7vw, 90px); }
+
+.pgrid {
+  display: grid; grid-template-columns: 1fr;
+  gap: clamp(16px, 2.2vw, 26px); align-items: start;
+}
+.pgrid > * { min-width: 0; }
+
+/* .psum er samantektin. Hún kemur fyrst í síma og til hægri á skjá. */
+.pside { display: flex; flex-direction: column; gap: clamp(16px, 2.2vw, 26px); }
+
+@media (min-width: 940px) {
+  .pgrid { grid-template-columns: 1fr 340px; grid-template-rows: auto 1fr; }
+  .pgrid > .pmain { grid-column: 1; grid-row: 1 / span 2; }
+  .pgrid > .psum  { grid-column: 2; grid-row: 1; }
+  .pgrid > .pside { grid-column: 2; grid-row: 2; }
+}
+
+.pblokk { padding: clamp(18px, 2.2vw, 26px); }
+.pblokk + .pblokk { margin-top: clamp(16px, 2vw, 22px); }
+
+.pyfir {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.pyfir h2 { font-size: clamp(20px, 17px + .8vw, 26px); }
+.pyfir__telja { font: 400 13.5px/1 var(--f-body); color: var(--soft); }
+
+/* --------------------------------------------------------------------------
+   4. Bíður þín
+   -------------------------------------------------------------------------- */
+.bidur { padding: clamp(20px, 2.4vw, 28px); }
+.bidur h2 {
+  font-family: var(--f-body); font-weight: 500; letter-spacing: 0;
+  font-size: 15px; color: var(--acc-on-navy);
+  display: flex; align-items: center; gap: 10px;
+}
+.bidur__tala {
+  font-family: var(--f-head); font-weight: 600; font-size: 44px;
+  line-height: 1; color: #fff; margin-top: 14px;
+}
+.bidur__texti { color: rgba(255, 255, 255, .78); font-size: 14.5px; margin-top: 8px; }
+.bidur__listi { list-style: none; margin: 18px 0 0; padding: 0; }
+.bidur__listi li { border-top: 1px solid rgba(255, 255, 255, .14); }
+.bidur__listi a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 0; color: #fff; text-decoration: none; font-size: 14.5px;
+  min-height: 44px;
+}
+.bidur__listi a:hover { color: var(--acc-on-navy); }
+.bidur__listi .dags { margin-left: auto; font-size: 12.5px; color: rgba(255, 255, 255, .6); flex: none; }
+.bidur--tomt .bidur__tala { color: var(--acc-on-navy); }
+
+/* --------------------------------------------------------------------------
+   5. Verkefnakort
+   -------------------------------------------------------------------------- */
+.verk-listi { display: flex; flex-direction: column; gap: 12px; }
+
+.verk {
+  display: block; padding: 18px 20px; text-decoration: none; color: inherit;
+  background: var(--sur); border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.verk:hover {
+  border-color: rgba(91, 147, 240, .45); box-shadow: var(--sh-card);
+  transform: translateY(-1px);
+}
+.verk__linaein {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.verk__titill { font: 500 16.5px/1.3 var(--f-body); color: var(--ink); }
+.verk__fyr { font: 400 13px/1 var(--f-body); color: var(--soft); }
+.verk__lysing {
+  color: var(--soft); font-size: 14.5px; margin-top: 7px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.verk__fot {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin-top: 14px; font-size: 13px; color: var(--soft);
+}
+
+.framvinda {
+  flex: 1 1 120px; min-width: 100px; height: 6px;
+  background: var(--accs); border-radius: var(--r-pill); overflow: hidden;
+}
+.framvinda span {
+  display: block; height: 100%; background: var(--acc);
+  border-radius: var(--r-pill); transition: width .3s ease;
+}
+
+/* --------------------------------------------------------------------------
+   6. Tasklisti
+   -------------------------------------------------------------------------- */
+.tasklisti { list-style: none; margin: 0; padding: 0; }
+
+.task {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 15px 0; border-top: 1px solid var(--line);
+}
+.tasklisti li:first-child .task { border-top: 0; }
+
+.hak {
+  flex: none; width: 24px; height: 24px; margin-top: 1px; padding: 0;
+  border: 1.5px solid rgba(28, 48, 80, .2); border-radius: 7px;
+  background: #fff; cursor: pointer; position: relative;
+  transition: background .15s ease, border-color .15s ease;
+}
+.hak:hover { border-color: var(--acc); background: var(--accs); }
+.hak[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); }
+.hak[aria-pressed="true"]::after {
+  content: ''; position: absolute; left: 6px; top: 3px;
+  width: 7px; height: 12px; border: solid #fff; border-width: 0 2px 2px 0;
+  transform: rotate(42deg);
+}
+.hak:disabled { opacity: .45; cursor: not-allowed; }
+
+.task__mid { flex: 1 1 auto; min-width: 0; }
+.task__titill {
+  font: 500 15.5px/1.4 var(--f-body); color: var(--ink);
+  background: none; border: 0; padding: 0; text-align: left;
+  cursor: pointer; display: block;
+}
+.task__titill:hover { color: var(--acc); }
+.task--lokid .task__titill { color: var(--soft); text-decoration: line-through; }
+.task__undir {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 7px; font-size: 13px; color: var(--soft);
+}
+.task__undir .seint { color: #a3312a; font-weight: 500; }
+.task__hofn { flex: none; display: flex; align-items: center; gap: 8px; }
+
+/* --------------------------------------------------------------------------
+   7. Smáatriðaspjald (task opnast)
+   -------------------------------------------------------------------------- */
+.pdialog {
+  border: 0; padding: 0; background: transparent;
+  max-width: 620px; width: calc(100% - 2 * var(--gut));
+  max-height: calc(100dvh - 48px);
+}
+.pdialog::backdrop { background: rgba(28, 48, 80, .5); backdrop-filter: blur(2px); }
+.pdialog__kort {
+  background: var(--sur); border-radius: var(--r-block);
+  box-shadow: var(--sh-drop); padding: clamp(20px, 2.6vw, 30px);
+  max-height: calc(100dvh - 48px); overflow-y: auto;
+}
+.pdialog__haus {
+  display: flex; align-items: flex-start; gap: 14px; margin-bottom: 4px;
+}
+.pdialog__haus h2 { font-size: clamp(21px, 18px + .8vw, 27px); flex: 1 1 auto; }
+.loka {
+  flex: none; width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--line); background: #fff; cursor: pointer;
+  font-size: 17px; line-height: 1; color: var(--soft);
+}
+.loka:hover { background: var(--accs); color: var(--acc); }
+
+.pmeta { list-style: none; margin: 18px 0 0; padding: 0; }
+.pmeta li {
+  display: flex; gap: 14px; padding: 10px 0;
+  border-top: 1px solid var(--line); font-size: 14.5px;
+}
+.pmeta li > span:first-child { color: var(--soft); flex: none; width: 108px; }
+.pmeta select {
+  font: 400 14px/1 var(--f-body); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--r-input);
+  background: #fff; padding: 8px 10px; min-height: 40px;
+}
+
+/* --------------------------------------------------------------------------
+   8. Athugasemdir
+   -------------------------------------------------------------------------- */
+.ath-listi { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.ath {
+  background: #fff; border: 1px solid var(--line);
+  border-radius: var(--r-input); padding: 13px 15px;
+}
+.ath--tveir { background: var(--accs); border-color: transparent; }
+.ath__haus {
+  display: flex; gap: 8px; align-items: baseline;
+  font-size: 13px; color: var(--soft); margin-bottom: 5px;
+}
+.ath__haus strong { color: var(--ink); font-weight: 500; }
+.ath__texti { font-size: 14.5px; line-height: 1.55; }
+
+/* --------------------------------------------------------------------------
+   9. Flipar og tómar stöður
+   -------------------------------------------------------------------------- */
+.pflipar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.pflipi {
+  font: 400 14px/1 var(--f-body); color: var(--soft);
+  background: #fff; border: 1px solid var(--line);
+  border-radius: var(--r-pill); padding: 11px 17px; min-height: 44px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+}
+.pflipi:hover { border-color: var(--acc); color: var(--acc); }
+.pflipi[aria-pressed="true"] {
+  background: var(--ink); border-color: var(--ink); color: #fff; font-weight: 500;
+}
+.pflipi b { font-weight: 500; opacity: .7; }
+
+.tomt {
+  text-align: center; color: var(--soft); font-size: 14.5px;
+  padding: 34px 10px;
+}
+
+/* --------------------------------------------------------------------------
+   10. Innskráning
+   -------------------------------------------------------------------------- */
+.inn {
+  min-height: 100dvh; display: grid; place-items: center;
+  padding: var(--gut);
+}
+.inn__kort {
+  width: 100%; max-width: 430px; padding: clamp(26px, 3.4vw, 40px);
+  text-align: center;
+}
+.inn__kort img { margin: 0 auto 22px; }
+.inn__kort h1 { font-size: clamp(26px, 22px + 1.2vw, 34px); }
+.inn__kort .lead { margin-top: 12px; }
+.inn__kort form { margin-top: 24px; text-align: left; }
+.inn__fot {
+  margin-top: 22px; font-size: 13.5px; color: var(--soft); line-height: 1.6;
+}
+.inn__fot a { color: var(--acc); }
+
+.prufubanner {
+  background: #fff2e0; color: #8a5a12; border-radius: var(--r-input);
+  padding: 12px 15px; font-size: 13.5px; line-height: 1.55;
+  margin-top: 20px; text-align: left;
+}
+.prufubanner strong { font-weight: 600; }
+.prufubanner code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px; background: rgba(0, 0, 0, .05);
+  padding: 1px 5px; border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   11. Stjórnborð
+   -------------------------------------------------------------------------- */
+.tillaga {
+  border: 1px solid rgba(164, 104, 26, .25); background: #fffaf2;
+  border-radius: var(--r-card); padding: 18px 20px;
+}
+.tillaga + .tillaga { margin-top: 12px; }
+.tillaga__hnappar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+
+.ptafla { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.ptafla th {
+  text-align: left; font: 500 12.5px/1 var(--f-body); color: var(--soft);
+  padding: 0 12px 10px 0; letter-spacing: .02em;
+}
+.ptafla td { padding: 12px 12px 12px 0; border-top: 1px solid var(--line); vertical-align: middle; }
+.ptafla td:last-child, .ptafla th:last-child { padding-right: 0; }
+.ptafla .nafn { font-weight: 500; }
+.ptafla select {
+  font: 400 13.5px/1 var(--f-body); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--r-input);
+  background: #fff; padding: 8px 10px; min-height: 40px; max-width: 100%;
+}
+.ptafla-skrun { overflow-x: auto; margin-inline: -4px; padding-inline: 4px; }
+
+.sodull {
+  font: 400 13px/1 var(--f-body); color: var(--soft);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+
+/* --------------------------------------------------------------------------
+   12. Fellilistar — styles.css stílar bara input og textarea
+   -------------------------------------------------------------------------- */
+.field select,
+.pmeta select,
+.pyfir select {
+  font: 400 15px/1.5 var(--f-body);
+  color: var(--ink); background-color: #fff;
+  border: 1px solid var(--line); border-radius: var(--r-input);
+  padding: 12px 40px 12px 15px; min-height: 48px; width: 100%;
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5l5-5' fill='none' stroke='%237189ac' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat; background-position: right 15px center;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.pyfir select { width: auto; min-width: 170px; font-size: 14px; padding-block: 10px; min-height: 44px; }
+.pmeta select { width: auto; min-width: 150px; font-size: 14px; padding-block: 9px; min-height: 42px; }
+
+.field select:focus,
+.pmeta select:focus,
+.pyfir select:focus {
+  outline: none; border-color: var(--acc);
+  box-shadow: 0 0 0 3px rgba(91, 147, 240, .16);
+}
+
+.field input[type="date"] { min-height: 48px; }
+.field input[type="range"] { padding: 0; border: 0; accent-color: var(--acc); }

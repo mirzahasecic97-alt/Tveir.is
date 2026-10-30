@@ -1,0 +1,292 @@
+/* ==========================================================================
+   Tveir vinnusvæði — sameiginlegt
+   ========================================================================== */
+
+import { gogn, STODUR_TASK, STODUR_VERK, FORGANGUR } from './gogn.js';
+import { stillingar } from './stillingar.js';
+
+/* ------------------------------------------------------------------
+   Smáhjálp
+   ------------------------------------------------------------------ */
+export function el(tag, eigin, born) {
+  const n = document.createElement(tag);
+  if (eigin) {
+    for (const [k, v] of Object.entries(eigin)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'texti') n.textContent = v;
+      else if (k === 'html') n.innerHTML = v;
+      else if (k === 'class') n.className = v;
+      else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? '' : v);
+    }
+  }
+  for (const b of [].concat(born || [])) {
+    if (b === null || b === undefined || b === false) continue;
+    n.append(b);
+  }
+  return n;
+}
+
+export function tom(n) { while (n.firstChild) n.removeChild(n.firstChild); return n; }
+
+/* Íslensk mánaðanofn handvirkt. Chrome er ekki alltaf með is-IS
+   locale gögn og skilar þá enskum mánuðum. */
+const MAN_STUTT = ['jan.', 'feb.', 'mars', 'apr.', 'maí', 'jún.', 'júl.',
+                   'ágú.', 'sep.', 'okt.', 'nóv.', 'des.'];
+const MAN_LANGT = ['janúar', 'febrúar', 'mars', 'apríl', 'maí', 'júní', 'júlí',
+                   'ágúst', 'september', 'október', 'nóvember', 'desember'];
+
+export function dags(gildi, medAri) {
+  if (!gildi) return null;
+  const d = new Date(gildi);
+  if (isNaN(d)) return null;
+  const m = medAri ? MAN_LANGT[d.getMonth()] : MAN_STUTT[d.getMonth()];
+  return d.getDate() + '. ' + m + (medAri ? ' ' + d.getFullYear() : '');
+}
+
+/* Hversu langt síðan, í orðum */
+export function sidan(gildi) {
+  if (!gildi) return '';
+  const min = Math.round((Date.now() - new Date(gildi)) / 60000);
+  if (min < 2) return 'núna';
+  if (min < 60) return min + ' mín.';
+  const klst = Math.round(min / 60);
+  if (klst < 24) return klst + (klst === 1 ? ' klst.' : ' klst.');
+  const dagar = Math.round(klst / 24);
+  if (dagar < 8) return dagar === 1 ? 'í gær' : dagar + ' dagar';
+  return dags(gildi);
+}
+
+/* Er skiladagur liðinn */
+export function erSeint(dagsetning) {
+  if (!dagsetning) return false;
+  const i_dag = new Date(); i_dag.setHours(0, 0, 0, 0);
+  return new Date(dagsetning) < i_dag;
+}
+
+export function pilla(stada, tafla) {
+  const s = (tafla === 'verk' ? STODUR_VERK : STODUR_TASK)[stada];
+  if (!s) return el('span', { class: 'pstat pstat--nytt', texti: stada });
+  return el('span', { class: 'pstat pstat--' + s.litur, texti: s.heiti });
+}
+
+/* ------------------------------------------------------------------
+   Innskráningarvörður
+   Skilar notandanum eða sendir á innskráningu.
+   ------------------------------------------------------------------ */
+export async function vardaHlid({ krefstAdmin, badir } = {}) {
+  const g = await gogn();
+  const ek = await g.eg();
+
+  if (!ek) { location.replace('./'); return null; }
+
+  if (krefstAdmin && ek.hlutverk !== 'admin') { location.replace('yfirlit.html'); return null; }
+  if (!krefstAdmin && !badir && ek.hlutverk === 'admin') {
+    /* Admin lendir á stjórnborðinu, ekki á viðskiptavinayfirliti */
+    location.replace('stjornbord.html'); return null;
+  }
+  if (!krefstAdmin && !badir && !ek.fyrirtaeki_id) {
+    teiknaHaus(ek, 'Vinnusvæði');
+    const m = document.getElementById('innihald');
+    if (m) {
+      tom(m).append(el('div', { class: 'card pblokk' }, [
+        el('h2', { texti: 'Aðgangurinn er ekki tengdur fyrirtæki' }),
+        el('p', { class: 'lead', style: 'margin-top:10px',
+          texti: 'Við þurfum að tengja þig við fyrirtækið þitt áður en þú sérð verkefnin. Sendu okkur línu á tveir@tveir.is og við gerum það í dag.' })
+      ]));
+    }
+    return null;
+  }
+  return ek;
+}
+
+/* ------------------------------------------------------------------
+   Haus
+   ------------------------------------------------------------------ */
+export function teiknaHaus(ek, heiti) {
+  const haus = document.getElementById('phead');
+  if (!haus) return;
+
+  const admin = ek.hlutverk === 'admin';
+
+  tom(haus).append(
+    el('div', { class: 'wrap' }, [
+      el('div', { class: 'phead__inn' }, [
+        el('a', { class: 'phead__logo', href: admin ? 'stjornbord.html' : 'yfirlit.html',
+                  'aria-label': 'Vinnusvæði Tveir' }, [
+          el('img', { src: '../assets/img/tveir-logo.png', alt: 'Tveir', width: '70', height: '18' })
+        ]),
+        el('span', { class: 'phead__skil', 'aria-hidden': 'true' }),
+        el('div', { class: 'phead__heiti' }, [
+          document.createTextNode(heiti ? heiti + ' ' : ''),
+          ek.fyrirtaeki ? el('strong', { texti: ek.fyrirtaeki.nafn }) : (admin ? el('strong', { texti: 'Tveir' }) : null)
+        ]),
+        el('div', { class: 'phead__hnappar' }, [
+          el('div', { class: 'phead__notandi' }, [
+            el('strong', { texti: ek.nafn }),
+            document.createTextNode(admin ? 'Tveir' : ek.netfang)
+          ]),
+          el('button', {
+            type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Út',
+            onclick: async () => { const g = await gogn(); await g.utskra(); location.replace('./'); }
+          })
+        ])
+      ])
+    ])
+  );
+}
+
+/* ------------------------------------------------------------------
+   Taskspjald
+   ------------------------------------------------------------------ */
+let spjald = null;
+
+function byggjaSpjald() {
+  if (spjald) return spjald;
+  spjald = el('dialog', { class: 'pdialog' }, [el('div', { class: 'pdialog__kort', id: 'spjald-kort' })]);
+  spjald.addEventListener('click', (e) => { if (e.target === spjald) spjald.close(); });
+  document.body.append(spjald);
+  return spjald;
+}
+
+export async function opnaTask(id, { admin, eftir } = {}) {
+  const g = await gogn();
+  const d = byggjaSpjald();
+  const kort = d.querySelector('#spjald-kort');
+  const allir = await g.taskar({});
+  const t = allir.find((x) => x.id === id);
+  if (!t) return;
+
+  const ek = await g.eg();
+  const notendur = admin ? await g.notendur() : [];
+  const ath = await g.athugasemdir(id);
+
+  const stodurILausu = admin
+    ? Object.keys(STODUR_TASK)
+    : Object.keys(STODUR_TASK).filter((s) => s !== 'lokid');
+
+  const velStada = el('select', {
+    'aria-label': 'Staða',
+    onchange: async (e) => {
+      await g.uppfaeraTask(id, { stada: e.target.value });
+      if (eftir) eftir();
+      opnaTask(id, { admin, eftir });
+    }
+  }, stodurILausu.map((s) =>
+    el('option', { value: s, selected: t.stada === s, texti: STODUR_TASK[s].heiti })));
+
+  const velAbyrgd = admin ? el('select', {
+    'aria-label': 'Ábyrgð',
+    onchange: async (e) => {
+      await g.uppfaeraTask(id, { abyrgd: e.target.value || null });
+      if (eftir) eftir();
+    }
+  }, [el('option', { value: '', texti: 'Óráðið' })].concat(
+    notendur.map((n) => el('option', {
+      value: n.id, selected: t.abyrgd === n.id,
+      texti: n.nafn + (n.hlutverk === 'admin' ? ' (Tveir)' : '')
+    })))) : el('span', { texti: t.abyrgd_notandi ? t.abyrgd_notandi.nafn : 'Óráðið' });
+
+  const svarsvaedi = el('textarea', {
+    rows: '3', placeholder: 'Skrifaðu svar eða spurningu', 'aria-label': 'Ný athugasemd'
+  });
+
+  tom(kort).append(
+    el('div', { class: 'pdialog__haus' }, [
+      el('h2', { texti: t.titill }),
+      el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '✕',
+                     onclick: () => d.close() })
+    ]),
+    el('div', { class: 'task__undir', style: 'margin-top:4px' }, [
+      pilla(t.stada, 'task'),
+      t.forgangur === 'hatt' ? el('span', { class: 'pforg', texti: 'Hátt forgang' }) : null,
+      admin && t.fyrirtaeki ? el('span', { texti: t.fyrirtaeki.nafn }) : null
+    ]),
+    t.lysing ? el('p', { class: 'lead', style: 'margin-top:16px; font-size:15px', texti: t.lysing }) : null,
+
+    el('ul', { class: 'pmeta' }, [
+      el('li', {}, [el('span', { texti: 'Staða' }), el('span', {}, [velStada])]),
+      el('li', {}, [el('span', { texti: 'Ábyrgð' }), el('span', {}, [velAbyrgd])]),
+      el('li', {}, [el('span', { texti: 'Skiladagur' }), el('span', {
+        class: erSeint(t.skiladagur) && t.stada !== 'lokid' ? 'seint' : '',
+        texti: dags(t.skiladagur, true) || 'Enginn'
+      })]),
+      t.verkefni ? el('li', {}, [el('span', { texti: 'Verkefni' }), el('span', { texti: t.verkefni.titill })]) : null,
+      el('li', {}, [el('span', { texti: 'Stofnað' }), el('span', { texti: dags(t.stofnad, true) })])
+    ]),
+
+    el('h3', { style: 'margin-top:24px; font-family:var(--f-body); font-weight:500; font-size:15px',
+               texti: 'Samtal' }),
+
+    ath.length
+      ? el('ul', { class: 'ath-listi' }, ath.map((a) => el('li', {
+          class: 'ath' + (a.notandi && a.notandi.hlutverk === 'admin' ? ' ath--tveir' : '')
+        }, [
+          el('div', { class: 'ath__haus' }, [
+            el('strong', { texti: a.notandi ? a.notandi.nafn : 'Óþekkt' }),
+            el('span', { texti: sidan(a.stofnad) })
+          ]),
+          el('div', { class: 'ath__texti', texti: a.texti })
+        ])))
+      : el('p', { class: 'tomt', style: 'padding:18px 0', texti: 'Engar athugasemdir enn.' }),
+
+    el('form', {
+      class: 'field', style: 'margin-top:16px',
+      onsubmit: async (e) => {
+        e.preventDefault();
+        const texti = svarsvaedi.value.trim();
+        if (!texti) return;
+        await g.nyAthugasemd(id, texti);
+        if (eftir) eftir();
+        opnaTask(id, { admin, eftir });
+      }
+    }, [
+      svarsvaedi,
+      el('div', { style: 'margin-top:10px' }, [
+        el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Senda' })
+      ])
+    ])
+  );
+
+  if (!d.open) d.showModal();
+}
+
+/* ------------------------------------------------------------------
+   Tasklína
+   ------------------------------------------------------------------ */
+export function taskLina(t, { admin, eftir }) {
+  const lokid = t.stada === 'lokid';
+
+  return el('li', {}, [el('div', { class: 'task' + (lokid ? ' task--lokid' : '') }, [
+    el('button', {
+      type: 'button', class: 'hak', 'aria-pressed': String(lokid),
+      'aria-label': lokid ? 'Taka úr lokið' : 'Haka í lokið',
+      disabled: !admin,
+      title: admin ? '' : 'Við hökum í lokið',
+      onclick: async () => {
+        const g = await gogn();
+        await g.uppfaeraTask(t.id, { stada: lokid ? 'i_vinnslu' : 'lokid' });
+        if (eftir) eftir();
+      }
+    }),
+    el('div', { class: 'task__mid' }, [
+      el('button', { type: 'button', class: 'task__titill', texti: t.titill,
+                     onclick: () => opnaTask(t.id, { admin, eftir }) }),
+      el('div', { class: 'task__undir' }, [
+        admin && t.fyrirtaeki ? el('span', { texti: t.fyrirtaeki.nafn }) : null,
+        t.verkefni ? el('span', { texti: t.verkefni.titill }) : null,
+        t.skiladagur ? el('span', {
+          class: erSeint(t.skiladagur) && !lokid ? 'seint' : '',
+          texti: (erSeint(t.skiladagur) && !lokid ? 'Rann út ' : 'Skil ') + dags(t.skiladagur)
+        }) : null,
+        t.abyrgd_notandi ? el('span', { texti: t.abyrgd_notandi.nafn }) : null
+      ])
+    ]),
+    el('div', { class: 'task__hofn' }, [
+      t.forgangur === 'hatt' && !lokid ? el('span', { class: 'pforg', texti: 'Hátt' }) : null,
+      pilla(t.stada, 'task')
+    ])
+  ])]);
+}
+
+export { gogn, STODUR_TASK, STODUR_VERK, FORGANGUR, stillingar };
