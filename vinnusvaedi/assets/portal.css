@@ -693,4 +693,13 @@
   min-height: 44px;
 }
 .simahlekkur:hover { text-decoration: underline; }
+/* display:inline-flex trömpar á [hidden], því þarf þetta */
+.simahlekkur[hidden] { display: none; }
 .simahlekkur img { border-radius: 7px; flex: none; }
+
+/* --------------------------------------------------------------------------
+   21. Í appinu er tvisturinn merkið
+   -------------------------------------------------------------------------- */
+.app-fyrirsogn { margin: 0 0 4px; line-height: 1; }
+.app-fyrirsogn img { height: 96px; width: auto; margin: 0 auto; display: block; }
+.phead__tvistur { height: 28px; width: auto; display: block; }

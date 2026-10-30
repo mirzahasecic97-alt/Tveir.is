@@ -168,7 +168,12 @@ export function teiknaHaus(ek, heiti) {
       el('div', { class: 'phead__inn' }, [
         el('a', { class: 'phead__logo', href: admin ? 'stjornbord.html' : 'yfirlit.html',
                   'aria-label': 'Vinnusvæði Tveir' }, [
-          el('img', { src: '../assets/img/tveir-logo.png', alt: 'Tveir', width: '70', height: '18' })
+          /* Í appinu stærir tvisturinn sig, á vefnum er orðmerkið */
+          erUppsett()
+            ? el('img', { class: 'phead__tvistur', src: 'assets/tvistur.png',
+                          alt: 'Tveir', width: '22', height: '28' })
+            : el('img', { src: '../assets/img/tveir-logo.png', alt: 'Tveir',
+                          width: '70', height: '18' })
         ]),
         el('span', { class: 'phead__skil', 'aria-hidden': 'true' }),
 
@@ -221,6 +226,13 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 export function erUppsett() {
+  /* ?app=1 sýnir appútlitið í venjulegum vafra. Það helst í flipanum svo
+     hægt sé að smella sig um án þess að slá það inn aftur. */
+  try {
+    if (location.search.includes('app=1')) sessionStorage.setItem('tveir-appsyn', 'ja');
+    if (sessionStorage.getItem('tveir-appsyn') === 'ja') return true;
+  } catch (e) { /* lokað sessionStorage */ }
+
   return window.matchMedia('(display-mode: standalone)').matches
       || window.navigator.standalone === true;
 }

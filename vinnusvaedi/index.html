@@ -23,8 +23,8 @@
 
 <main class="inn">
   <div class="card inn__kort">
-    <img src="../assets/img/tveir-logo.png" alt="Tveir" width="96" height="24">
-    <h1>Vinnusvæði</h1>
+    <img src="../assets/img/tveir-logo.png" alt="Tveir" width="96" height="24" id="ordmerki">
+    <h1 id="fyrirsogn">Vinnusvæði</h1>
     <p class="lead">Sláðu inn netfangið þitt og við sendum þér hlekk til að komast inn. Ekkert lykilorð.</p>
 
     <form id="innform" novalidate>
@@ -68,7 +68,19 @@ function segja(texti, tegund) {
 
 /* Ábending um að setja í heimaskjá, nema það sé þegar gert */
 const simahnappur = document.getElementById('simahnappur');
-if (!erUppsett()) {
+if (erUppsett()) {
+  /* Í appinu er tvisturinn sjálfur fyrirsögnin, orðmerkið þá óþarft */
+  document.getElementById('ordmerki').remove();
+  const h1 = document.getElementById('fyrirsogn');
+  h1.textContent = '';
+  h1.className = 'app-fyrirsogn';
+  const merki = document.createElement('img');
+  merki.src = 'assets/tvistur.png';
+  merki.alt = 'Tveir';
+  merki.width = 86;
+  merki.height = 109;
+  h1.append(merki);
+} else {
   simahnappur.hidden = false;
   simahnappur.addEventListener('click', () => opnaUppsetningu());
 }
