@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import {
-  gogn, el, tom, fylla, dags, sidan, erSeint, pilla, taskLina, kronur, lesaTolu,
+  gogn, el, tom, fylla, dags, sidan, erSeint, pilla, opnaTask, kronur, lesaTolu,
   vardaHlid, teiknaHaus, STODUR_VERK, stillingar
 } from './portal.js';
 
@@ -56,20 +56,28 @@ async function start() {
 
         el('section', { class: 'card pblokk' }, [
           el('div', { class: 'pyfir' }, [
-            el('h2', { texti: 'Taskar í þessu verkefni' }),
-            el('span', { class: 'pyfir__telja', texti: opin.length + ' opið' })
+            el('h2', { texti: 'Tímalína' }),
+            taskar.length
+              ? el('span', { class: 'pyfir__telja',
+                             texti: lokin.length + ' af ' + taskar.length + ' búnum' })
+              : null
           ]),
-          opin.length
-            ? el('ul', { class: 'tasklisti' }, opin.map((t) => taskLina(t, { admin, eftir: teikna })))
+
+          taskar.length ? el('div', { class: 'framvinda framvinda--breid' }, [
+            el('span', { style: 'width:' + v.framvinda + '%' })
+          ]) : null,
+
+          taskar.length
+            ? el('ol', { class: 'timalina' }, taskar.map((t, i) => skref(t, i, taskar)))
             : el('p', { class: 'tomt',
-                        texti: tillaga ? 'Taskar koma þegar verkefnið er samþykkt.' : 'Ekkert opið.' }),
-          lokin.length
-            ? el('details', { style: 'margin-top:14px' }, [
-                el('summary', { class: 'sodull', style: 'cursor:pointer',
-                                texti: lokin.length + ' lokið' }),
-                el('ul', { class: 'tasklisti', style: 'margin-top:8px' },
-                   lokin.map((t) => taskLina(t, { admin, eftir: teikna })))
-              ])
+                        texti: tillaga
+                          ? 'Skrefin koma þegar verkefnið er samþykkt.'
+                          : 'Engin skref enn.' }),
+
+          admin && !tillaga
+            ? el('button', { type: 'button', class: 'btn btn--sm btn--ghost',
+                             style: 'margin-top:18px', texti: 'Bæta við skrefi',
+                             onclick: () => nyrTaskIVerk(v) })
             : null
         ]),
 
@@ -83,8 +91,19 @@ async function start() {
                 el('span', { style: 'width:' + v.framvinda + '%' })
               ]),
               el('p', { style: 'margin-top:8px; font-size:14px; color:var(--soft)',
-                        texti: v.framvinda + '% búið' })
+                        texti: taskar.length
+                          ? v.framvinda + '% búið, ' + lokin.length + ' af ' + taskar.length + ' skrefum'
+                          : 'Engin skref enn' })
             ]),
+
+            /* Öll skref búin en verkefnið enn opið */
+            admin && taskar.length && v.framvinda === 100 && v.stada !== 'lokid'
+              ? el('button', {
+                  type: 'button', class: 'btn btn--block btn--sm', style: 'margin-top:16px',
+                  texti: 'Öll skref búin, loka verkefninu',
+                  onclick: async () => { await g.uppfaeraVerkefni(v.id, { stada: 'lokid' }); teikna(); }
+                })
+              : null,
 
             el('div', { style: 'margin-top:16px' }, [
               v.innan_samnings
@@ -136,6 +155,62 @@ async function start() {
             : null
         ])
       ])
+    ]);
+  }
+
+  /* ------------------------------------------------------------------
+     Eitt skref í tímalínunni
+     ------------------------------------------------------------------ */
+  function skref(t, i, allir) {
+    const lokid = t.stada === 'lokid';
+    const fyrstaOpna = allir.findIndex((x) => x.stada !== 'lokid');
+    const nuna = !lokid && i === fyrstaOpna;
+
+    async function faera(att) {
+      const nagranni = allir[i + att];
+      if (!nagranni) return;
+      const minRod = Number(t.rod) || i + 1;
+      const hinRod = Number(nagranni.rod) || i + 1 + att;
+      await g.uppfaeraTask(t.id, { rod: hinRod });
+      await g.uppfaeraTask(nagranni.id, { rod: minRod });
+      teikna();
+    }
+
+    return el('li', {
+      class: 'skref' + (lokid ? ' skref--lokid' : '') + (nuna ? ' skref--nuna' : '')
+    }, [
+      el('button', {
+        type: 'button', class: 'skref__hak', 'aria-pressed': String(lokid),
+        'aria-label': lokid ? 'Taka úr lokið' : 'Haka í lokið',
+        disabled: !admin, title: admin ? '' : 'Við hökum í lokið',
+        texti: String(i + 1),
+        onclick: async () => {
+          await g.uppfaeraTask(t.id, { stada: lokid ? 'i_vinnslu' : 'lokid' });
+          teikna();
+        }
+      }),
+
+      el('div', { class: 'skref__inn' }, [
+        el('button', { type: 'button', class: 'skref__titill', texti: t.titill,
+                       onclick: () => opnaTask(t.id, { admin, eftir: teikna }) }),
+        el('div', { class: 'task__undir' }, [
+          lokid ? null : pilla(t.stada, 'task'),
+          t.forgangur === 'hatt' && !lokid ? el('span', { class: 'pforg', texti: 'Hátt' }) : null,
+          t.abyrgd_notandi ? el('span', { texti: t.abyrgd_notandi.nafn }) : null,
+          t.skiladagur ? el('span', {
+            class: erSeint(t.skiladagur) && !lokid ? 'seint' : '',
+            texti: (erSeint(t.skiladagur) && !lokid ? 'Rann út ' : 'Skil ') + dags(t.skiladagur)
+          }) : null,
+          lokid && t.lokid_dags ? el('span', { texti: 'Lokið ' + dags(t.lokid_dags) }) : null
+        ])
+      ]),
+
+      admin ? el('div', { class: 'skref__fera' }, [
+        el('button', { type: 'button', texti: '↑', 'aria-label': 'Færa ofar',
+                       disabled: i === 0, onclick: () => faera(-1) }),
+        el('button', { type: 'button', texti: '↓', 'aria-label': 'Færa neðar',
+                       disabled: i === allir.length - 1, onclick: () => faera(1) })
+      ]) : null
     ]);
   }
 
@@ -216,13 +291,6 @@ async function start() {
       Object.keys(STODUR_VERK).map((s) =>
         el('option', { value: s, selected: v.stada === s, texti: STODUR_VERK[s].heiti })));
 
-    const framVal = el('input', {
-      type: 'range', min: '0', max: '100', step: '5', value: String(v.framvinda),
-      'aria-label': 'Framvinda', style: 'width:100%'
-    });
-    const framTala = el('span', { style: 'font-size:14px; color:var(--soft)', texti: v.framvinda + '%' });
-    framVal.addEventListener('input', () => { framTala.textContent = framVal.value + '%'; });
-
     const dagurVal = el('input', { type: 'date', value: v.skiladagur || '' });
 
     const verdVal = el('input', {
@@ -244,7 +312,6 @@ async function start() {
         e.preventDefault();
         await g.uppfaeraVerkefni(v.id, {
           stada: stadaVal.value,
-          framvinda: Number(framVal.value),
           skiladagur: dagurVal.value || null,
           svar_admin: svarVal.value.trim() || null,
           verd_okkar: v.innan_samnings ? null : lesaTolu(verdVal.value)
@@ -252,9 +319,6 @@ async function start() {
         teikna();
       } }, [
         el('label', { class: 'field' }, [el('span', { texti: 'Staða' }), stadaVal]),
-        el('label', { class: 'field' }, [
-          el('span', {}, [document.createTextNode('Framvinda  '), framTala]), framVal
-        ]),
         el('label', { class: 'field' }, [el('span', { texti: 'Skiladagur' }), dagurVal]),
         v.innan_samnings ? null
           : el('label', { class: 'field' }, [el('span', { texti: 'Verð okkar' }), verdVal]),

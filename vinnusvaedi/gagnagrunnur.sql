@@ -518,3 +518,71 @@ select s.id, x.titill, x.lysing, x.rod, x.a_hverjum, x.forgangur
        ) as x(titill, lysing, rod, a_hverjum, forgangur)
  where s.nafn = 'Vörumerki'
    and not exists (select 1 from snid_taskar t where t.snid_id = s.id);
+
+-- ==========================================================================
+-- 11. Taskar og verkefni tala saman
+--     Framvinda verkefnis er ekki stillt í höndunum heldur reiknuð úr
+--     töskunum. Þegar einn er hakaður af hækkar prósentan sjálf.
+-- ==========================================================================
+
+alter table taskar add column if not exists rod int not null default 0;
+
+create index if not exists taskar_rod_idx on taskar (verkefni_id, rod);
+
+-- Gefa eldri töskum röð eftir því hvenær þeir urðu til
+with radad as (
+  select id, row_number() over (partition by verkefni_id order by stofnad) as nr
+    from taskar where verkefni_id is not null
+)
+update taskar t set rod = r.nr from radad r where r.id = t.id and t.rod = 0;
+
+create or replace function reikna_framvindu(vid uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare alls int; lokin int; nytt int;
+begin
+  if vid is null then return; end if;
+
+  select count(*), count(*) filter (where stada = 'lokid')
+    into alls, lokin
+    from taskar where verkefni_id = vid;
+
+  nytt := case when alls = 0 then 0
+               else round(lokin::numeric * 100 / alls) end;
+
+  update verkefni
+     set framvinda = nytt,
+         -- Fyrsti haki á samþykktu verkefni setur það í vinnslu
+         stada = case when nytt > 0 and stada = 'samthykkt' then 'i_vinnslu'
+                      else stada end
+   where id = vid
+     and (framvinda is distinct from nytt or (nytt > 0 and stada = 'samthykkt'));
+end;
+$$;
+
+create or replace function stilla_framvindu() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op in ('UPDATE', 'DELETE') then
+    perform reikna_framvindu(old.verkefni_id);
+  end if;
+  if tg_op in ('INSERT', 'UPDATE') then
+    perform reikna_framvindu(new.verkefni_id);
+  end if;
+  return coalesce(new, old);
+end;
+$$;
+
+drop trigger if exists stilla_framvindu_trigger on taskar;
+create trigger stilla_framvindu_trigger
+  after insert or update or delete on taskar
+  for each row execute function stilla_framvindu();
+
+-- Reikna allt upp á nýtt einu sinni
+do $$
+declare v record;
+begin
+  for v in select id from verkefni loop
+    perform reikna_framvindu(v.id);
+  end loop;
+end;
+$$;

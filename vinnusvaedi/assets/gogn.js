@@ -103,10 +103,13 @@ async function supabaseBakendi() {
 
     async taskar({ fyrirtaeki_id, verkefni_id } = {}) {
       let q = sb.from('taskar')
-        .select('*, fyrirtaeki(nafn), verkefni(titill), abyrgd_notandi:abyrgd(nafn)')
-        .order('stofnad', { ascending: false });
+        .select('*, fyrirtaeki(nafn), verkefni(titill), abyrgd_notandi:abyrgd(nafn)');
       if (fyrirtaeki_id) q = q.eq('fyrirtaeki_id', fyrirtaeki_id);
       if (verkefni_id) q = q.eq('verkefni_id', verkefni_id);
+      /* Innan verkefnis ræður röðin, annars nýjast efst */
+      q = verkefni_id
+        ? q.order('rod').order('stofnad')
+        : q.order('stofnad', { ascending: false });
       const svar = await q; kasta(svar); return svar.data;
     },
 
@@ -114,10 +117,20 @@ async function supabaseBakendi() {
       const ek = await eg();
       const svar = await sb.from('taskar').insert({
         ...task,
+        rod: task.rod !== undefined ? task.rod : await this.naestaRod(task.verkefni_id),
         fyrirtaeki_id: task.fyrirtaeki_id || ek.fyrirtaeki_id,
         hofundur: ek.id
       }).select().single();
       kasta(svar); return svar.data;
+    },
+
+    /* Nýr taskur fer aftast í tímalínuna */
+    async naestaRod(verkefni_id) {
+      if (!verkefni_id) return 0;
+      const svar = await sb.from('taskar').select('rod')
+        .eq('verkefni_id', verkefni_id).order('rod', { ascending: false }).limit(1);
+      kasta(svar);
+      return svar.data && svar.data[0] ? Number(svar.data[0].rod) + 1 : 1;
     },
 
     async uppfaeraTask(id, breytingar) {
@@ -232,8 +245,8 @@ async function supabaseBakendi() {
       const kunni = await sb.from('notendur').select('id')
         .eq('fyrirtaeki_id', v.fyrirtaeki_id).neq('hlutverk', 'admin').limit(1);
       const theirra = kunni.data && kunni.data[0] ? kunni.data[0].id : null;
-      const svar = await sb.from('taskar').insert(sn.data.map((t) => ({
-        fyrirtaeki_id: v.fyrirtaeki_id, verkefni_id: v.id,
+      const svar = await sb.from('taskar').insert(sn.data.map((t, i) => ({
+        fyrirtaeki_id: v.fyrirtaeki_id, verkefni_id: v.id, rod: t.rod || (i + 1),
         titill: t.titill, lysing: t.lysing, forgangur: t.forgangur,
         stada: t.a_hverjum === 'vidskiptavinur' ? 'bid_vidskiptavinar' : 'nytt',
         abyrgd: t.a_hverjum === 'vidskiptavinur' ? theirra : ek.id,
@@ -333,32 +346,32 @@ function prufuBakendi() {
     ];
 
     const taskar = [
-      { id: 't1', fyrirtaeki_id: 'f2', verkefni_id: 'v1', titill: 'Senda logo í vektor',
+      { id: 't1', rod: 2, fyrirtaeki_id: 'f2', verkefni_id: 'v1', titill: 'Senda logo í vektor',
         lysing: 'Við þurfum .ai eða .svg skrá, png dugar ekki í prentun.',
         stada: 'bid_vidskiptavinar', forgangur: 'hatt', abyrgd: 'u-haf', hofundur: 'u-mirza',
         skiladagur: dagsetning(2), lokid_dags: null, stofnad: dags(-5), uppfaert: dags(-5) },
-      { id: 't2', fyrirtaeki_id: 'f2', verkefni_id: 'v1', titill: 'Skrifa texta á Um okkur',
+      { id: 't2', rod: 3, fyrirtaeki_id: 'f2', verkefni_id: 'v1', titill: 'Skrifa texta á Um okkur',
         lysing: 'Stutt, fjórar til fimm línur. Við getum skrifað hann ef þú vilt.',
         stada: 'bid_vidskiptavinar', forgangur: 'venjulegt', abyrgd: 'u-haf', hofundur: 'u-oskar',
         skiladagur: dagsetning(5), lokid_dags: null, stofnad: dags(-5), uppfaert: dags(-5) },
-      { id: 't3', fyrirtaeki_id: 'f2', verkefni_id: 'v1', titill: 'Setja upp vöruyfirlit',
+      { id: 't3', rod: 4, fyrirtaeki_id: 'f2', verkefni_id: 'v1', titill: 'Setja upp vöruyfirlit',
         lysing: null, stada: 'i_vinnslu', forgangur: 'venjulegt', abyrgd: 'u-mirza', hofundur: 'u-mirza',
         skiladagur: dagsetning(4), lokid_dags: null, stofnad: dags(-6), uppfaert: dags(-1) },
-      { id: 't4', fyrirtaeki_id: 'f2', verkefni_id: 'v2', titill: 'Velja tökudag',
+      { id: 't4', rod: 1, fyrirtaeki_id: 'f2', verkefni_id: 'v2', titill: 'Velja tökudag',
         lysing: 'Við erum laus 11. eða 13. Hvor dagur passar betur?',
         stada: 'bid_vidskiptavinar', forgangur: 'hatt', abyrgd: 'u-haf', hofundur: 'u-oskar',
         skiladagur: dagsetning(1), lokid_dags: null, stofnad: dags(-2), uppfaert: dags(-2) },
-      { id: 't5', fyrirtaeki_id: 'f2', verkefni_id: null, titill: 'Breyta opnunartíma á síðunni',
+      { id: 't5', rod: 0, fyrirtaeki_id: 'f2', verkefni_id: null, titill: 'Breyta opnunartíma á síðunni',
         lysing: 'Við lokum kl. 16 á föstudögum frá og með næstu viku.',
         stada: 'nytt', forgangur: 'venjulegt', abyrgd: 'u-mirza', hofundur: 'u-haf',
         skiladagur: null, lokid_dags: null, stofnad: dags(-1), uppfaert: dags(-1) },
-      { id: 't6', fyrirtaeki_id: 'f2', verkefni_id: 'v1', titill: 'Tengja domain við Vercel',
+      { id: 't6', rod: 1, fyrirtaeki_id: 'f2', verkefni_id: 'v1', titill: 'Tengja domain við Vercel',
         lysing: null, stada: 'lokid', forgangur: 'venjulegt', abyrgd: 'u-mirza', hofundur: 'u-mirza',
         skiladagur: dagsetning(-3), lokid_dags: dags(-3), stofnad: dags(-14), uppfaert: dags(-3) },
-      { id: 't7', fyrirtaeki_id: 'f1', verkefni_id: 'v5', titill: 'Samþykkja færslur fyrir nóvember',
+      { id: 't7', rod: 1, fyrirtaeki_id: 'f1', verkefni_id: 'v5', titill: 'Samþykkja færslur fyrir nóvember',
         lysing: null, stada: 'lokid', forgangur: 'venjulegt', abyrgd: 'u-kron', hofundur: 'u-mirza',
         skiladagur: dagsetning(-20), lokid_dags: dags(-18), stofnad: dags(-30), uppfaert: dags(-18) },
-      { id: 't8', fyrirtaeki_id: 'f1', verkefni_id: null, titill: 'Uppfæra verð í auglýsingum',
+      { id: 't8', rod: 0, fyrirtaeki_id: 'f1', verkefni_id: null, titill: 'Uppfæra verð í auglýsingum',
         lysing: 'Verðið á kjúklingi fór úr 1.890 í 2.090.',
         stada: 'nytt', forgangur: 'hatt', abyrgd: 'u-oskar', hofundur: 'u-kron',
         skiladagur: dagsetning(1), lokid_dags: null, stofnad: dags(0), uppfaert: dags(0) }
@@ -448,6 +461,24 @@ function prufuBakendi() {
   /* Skrárnar sjálfar, bara í minni meðan síðan er opin */
   const BLOB = new Map();
 
+  /* Framvinda verkefnis kemur úr töskunum, ekki úr renniborda. */
+  function reiknaFramvindu(verkefni_id) {
+    if (!verkefni_id) return;
+    const v = g.verkefni.find((x) => x.id === verkefni_id);
+    if (!v) return;
+    const minir = g.taskar.filter((t) => t.verkefni_id === verkefni_id);
+    const lokin = minir.filter((t) => t.stada === 'lokid').length;
+    v.framvinda = minir.length ? Math.round(lokin * 100 / minir.length) : 0;
+    if (v.framvinda > 0 && v.stada === 'samthykkt') v.stada = 'i_vinnslu';
+    v.uppfaert = new Date().toISOString();
+  }
+
+  function naestaRod(verkefni_id) {
+    if (!verkefni_id) return 0;
+    const minir = g.taskar.filter((t) => t.verkefni_id === verkefni_id);
+    return minir.length ? Math.max(...minir.map((t) => Number(t.rod) || 0)) + 1 : 1;
+  }
+
   function reiknaKlst(verkefni_id) {
     const alls = g.timaskraning
       .filter((t) => t.verkefni_id === verkefni_id)
@@ -461,6 +492,9 @@ function prufuBakendi() {
   const finna = (listi, id) => listi.find((x) => x.id === id) || null;
   const fyrNafn = (id) => { const f = finna(g.fyrirtaeki, id); return f ? { nafn: f.nafn } : null; };
   const nyttId = () => 'x' + Math.random().toString(36).slice(2, 10);
+
+  /* Framvindan getur verið úreltt í eldri vistun. Reikna hana einu sinni. */
+  g.verkefni.forEach((v) => reiknaFramvindu(v.id));
 
   function skreyta(t) {
     return {
@@ -525,10 +559,14 @@ function prufuBakendi() {
     },
 
     async taskar({ fyrirtaeki_id, verkefni_id } = {}) {
-      return g.taskar
+      const listi = g.taskar
         .filter((t) => (!fyrirtaeki_id || t.fyrirtaeki_id === fyrirtaeki_id)
                     && (!verkefni_id || t.verkefni_id === verkefni_id))
-        .map(skreyta).sort(nyjast);
+        .map(skreyta);
+      return verkefni_id
+        ? listi.sort((a, b) => (Number(a.rod) || 0) - (Number(b.rod) || 0)
+                            || new Date(a.stofnad) - new Date(b.stofnad))
+        : listi.sort(nyjast);
     },
 
     async nyrTask(task) {
@@ -537,11 +575,14 @@ function prufuBakendi() {
         id: nyttId(), lysing: null, stada: 'nytt', forgangur: 'venjulegt',
         verkefni_id: null, abyrgd: null, skiladagur: null, lokid_dags: null,
         ...task,
+        rod: task.rod !== undefined ? task.rod : naestaRod(task.verkefni_id),
         fyrirtaeki_id: task.fyrirtaeki_id || ek.fyrirtaeki_id,
         hofundur: ek.id,
         stofnad: new Date().toISOString(), uppfaert: new Date().toISOString()
       };
-      g.taskar.unshift(t); vista(); return skreyta(t);
+      g.taskar.unshift(t);
+      reiknaFramvindu(t.verkefni_id);
+      vista(); return skreyta(t);
     },
 
     async uppfaeraTask(id, breytingar) {
@@ -549,6 +590,7 @@ function prufuBakendi() {
       Object.assign(t, breytingar, { uppfaert: new Date().toISOString() });
       if (breytingar.stada === 'lokid') t.lokid_dags = new Date().toISOString();
       if (breytingar.stada && breytingar.stada !== 'lokid') t.lokid_dags = null;
+      reiknaFramvindu(t.verkefni_id);
       vista(); return skreyta(t);
     },
 
@@ -660,9 +702,9 @@ function prufuBakendi() {
       if (!sn) return;
       const theirra = (g.notendur.find((n) => n.fyrirtaeki_id === v.fyrirtaeki_id
                                            && n.hlutverk !== 'admin') || {}).id || null;
-      sn.taskar.forEach((t) => {
+      sn.taskar.forEach((t, i) => {
         g.taskar.unshift({
-          id: nyttId(), fyrirtaeki_id: v.fyrirtaeki_id, verkefni_id: v.id,
+          id: nyttId(), fyrirtaeki_id: v.fyrirtaeki_id, verkefni_id: v.id, rod: i + 1,
           titill: t.titill, lysing: t.lysing, forgangur: t.forgangur,
           stada: t.a_hverjum === 'vidskiptavinur' ? 'bid_vidskiptavinar' : 'nytt',
           abyrgd: t.a_hverjum === 'vidskiptavinur' ? theirra : ek.id,
@@ -670,6 +712,7 @@ function prufuBakendi() {
           stofnad: new Date().toISOString(), uppfaert: new Date().toISOString()
         });
       });
+      reiknaFramvindu(v.id);
       vista();
     },
 

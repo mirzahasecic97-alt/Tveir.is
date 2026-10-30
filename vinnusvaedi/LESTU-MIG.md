@@ -142,14 +142,36 @@ viðskiptavinur lesið þá út úr API og reiknað framlegðina okkar.
 
 ---
 
+## Tímalínan
+
+Taskar innan verkefnis eru skref í röð, ekki listi. Á verkefnasíðunni sjást
+þau sem tölusett tímalína. Hakið ofan í einu skrefi hækkar prósentuna á
+verkefninu sjálfkrafa, bæði hjá ykkur og hjá viðskiptavininum.
+
+**Prósentan er ekki stillt í höndunum lengur.** Hún er alltaf
+lokið deilt með öllum skrefum. Níu skref og þrú klarar þrjú, þá stendur 33%.
+Reikningurinn er í gagnagrunninum sjálfum (`stilla_framvindu` trigger á
+`taskar`), svo talan er rétt sama hvaðan breytingin kemur.
+
+Tvennt gerist sjálfkrafa í leiðinni:
+
+- Fyrsta hakið á samþykktu verkefni setur það í vinnslu
+- Þegar öll skref eru búin birtist hnappur til að loka verkefninu. Við
+  lokum því ekki sjálfkrafa því lokið þýdir að senda reikning.
+
+Örvarnar til hægri á hverju skrefi færa það til í röðinni. Nýtt skref fer aftast.
+
+---
+
 ## Verkefnasnið
 
 Ný vefsíða er alltaf sömu níu taskarnir. Á stjórnborðinu er hnappurinn
 **Nýtt verkefni** þar sem þú velur snið og færð alla taskana með í einum
 smelli. Taskar sem eru merktir viðskiptavin lenda strax í Bíður þín hjá honum.
 
-Þrú snið fylgja: Ný vefsíða, Efnispakki mánaðar og Vörumerki. Þú breytir
-þeim í töflunum `snid` og `snid_taskar`.
+Þrú snið fylgja: Ný vefsíða (níu skref), Efnispakki mánaðar (sex) og
+Vörumerki (sex). Röðin í `snid_taskar.rod` verður að röðinni í tímalínunni.
+Þú breytir þeim í töflunum `snid` og `snid_taskar`.
 
 ---
 

@@ -506,3 +506,80 @@
   .tekjur dd { font-size: 20px; }
   .tekjur > div:last-child { grid-column: 1 / -1; }
 }
+
+/* --------------------------------------------------------------------------
+   17. Tímalína verkefnis
+   -------------------------------------------------------------------------- */
+.framvinda--breid { width: 100%; flex: none; height: 8px; margin-bottom: 22px; }
+
+.timalina {
+  list-style: none; margin: 0; padding: 0;
+  counter-reset: skref;
+}
+
+.skref {
+  position: relative;
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 0 0 22px;
+}
+.skref:last-child { padding-bottom: 0; }
+
+/* Lóðrétta línan milli skrefa */
+.skref::before {
+  content: ''; position: absolute;
+  left: 15px; top: 32px; bottom: 0; width: 2px;
+  background: var(--line);
+}
+.skref:last-child::before { display: none; }
+.skref--lokid::before { background: rgba(91, 147, 240, .45); }
+
+.skref__hak {
+  position: relative; z-index: 1; flex: none;
+  width: 32px; height: 32px; padding: 0;
+  border: 2px solid var(--line); border-radius: 50%;
+  background: #fff; cursor: pointer;
+  font: 500 13px/1 var(--f-body); color: var(--soft);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.skref__hak:hover:not(:disabled) { border-color: var(--acc); color: var(--acc); }
+.skref__hak:disabled { cursor: not-allowed; }
+
+.skref--nuna .skref__hak {
+  border-color: var(--acc); color: var(--acc); background: var(--accs);
+  box-shadow: 0 0 0 4px rgba(91, 147, 240, .14);
+}
+
+.skref--lokid .skref__hak {
+  background: var(--acc); border-color: var(--acc);
+  font-size: 0;
+}
+.skref--lokid .skref__hak::after {
+  content: ''; position: absolute; left: 10px; top: 6px;
+  width: 7px; height: 12px;
+  border: solid #fff; border-width: 0 2px 2px 0;
+  transform: rotate(42deg);
+}
+
+.skref__inn { flex: 1 1 auto; min-width: 0; padding-top: 4px; }
+
+.skref__titill {
+  font: 500 15.5px/1.4 var(--f-body); color: var(--ink);
+  background: none; border: 0; padding: 0; text-align: left;
+  cursor: pointer; display: block;
+}
+.skref__titill:hover { color: var(--acc); }
+.skref--lokid .skref__titill { color: var(--soft); text-decoration: line-through; }
+.skref--nuna .skref__titill { color: var(--ink); }
+
+.skref__fera { flex: none; display: flex; flex-direction: column; gap: 2px; }
+.skref__fera button {
+  background: none; border: 0; cursor: pointer; padding: 3px 6px;
+  color: rgba(113, 137, 172, .55); font-size: 13px; line-height: 1;
+}
+.skref__fera button:hover:not(:disabled) { color: var(--acc); }
+.skref__fera button:disabled { opacity: .25; cursor: default; }
+
+@media (max-width: 560px) {
+  .skref__fera { display: none; }
+}

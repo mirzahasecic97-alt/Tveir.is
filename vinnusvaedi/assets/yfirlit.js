@@ -172,7 +172,15 @@ async function start() {
           import('./portal.js').then((m) => m.opnaTask(t.id, { admin: false, eftir: teikna }));
         } }, [
           document.createTextNode(t.titill),
-          t.skiladagur ? el('span', { class: 'dags', texti: dags(t.skiladagur) }) : null
+          /* Sami titill getur verið í tveimur verkefnum, verkefnisnafnið skilur á milli */
+          erSeint(t.skiladagur)
+            ? el('span', { class: 'dags', style: 'color:#ffb4ae',
+                           texti: 'Rann út ' + dags(t.skiladagur) })
+            : t.verkefni
+              ? el('span', { class: 'dags', texti: t.verkefni.titill })
+              : t.skiladagur
+                ? el('span', { class: 'dags', texti: dags(t.skiladagur) })
+                : null
         ])])))
     ]);
   }
