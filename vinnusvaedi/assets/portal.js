@@ -326,6 +326,64 @@ export function opnaUppsetningu() {
 }
 
 /* ------------------------------------------------------------------
+   Borðinn sem rennur upp að neðan
+   ------------------------------------------------------------------ */
+const BORDALYKILL = 'tveir-simabordi-falinn';
+
+export function bordiFalinn() {
+  try { return localStorage.getItem(BORDALYKILL) === 'ja'; }
+  catch (e) { return false; }
+}
+
+function felaBorda(bordi) {
+  try { localStorage.setItem(BORDALYKILL, 'ja'); } catch (e) { /* sleppum */ }
+  bordi.classList.remove('er-inni');
+  document.body.style.paddingBottom = '';
+  setTimeout(() => bordi.remove(), 360);
+}
+
+function syndaSimabordi() {
+  if (!erSimi() || erUppsett() || bordiFalinn()) return;
+  if (document.querySelector('.simabordi')) return;
+
+  const bordi = el('div', { class: 'simabordi', role: 'complementary',
+                            'aria-label': 'Setja vinnusvæðið í símann' }, [
+    el('button', {
+      type: 'button', class: 'simabordi__loka', 'aria-label': 'Fela', texti: '✕',
+      onclick: () => felaBorda(bordi)
+    }),
+    el('div', { class: 'simabordi__inn' }, [
+      el('img', { src: 'assets/takn-192.png', alt: '', width: '48', height: '48' }),
+      el('div', { class: 'simabordi__texti' }, [
+        el('strong', { texti: 'Settu þetta í símann' }),
+        el('span', { texti: 'Opnast eins og app af heimaskjánum' })
+      ])
+    ]),
+    el('button', {
+      type: 'button', class: 'btn btn--white btn--block btn--sm',
+      style: 'margin-top:14px', texti: 'Sýna mér hvernig',
+      onclick: () => opnaUppsetningu()
+    })
+  ]);
+
+  document.body.append(bordi);
+
+  /* Tvö rammö svo vafrinn nái að teikna hann niðri áður en hann rennur upp */
+  setTimeout(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      bordi.classList.add('er-inni');
+      document.body.style.paddingBottom = bordi.offsetHeight + 'px';
+    }));
+  }, 700);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', syndaSimabordi);
+} else {
+  syndaSimabordi();
+}
+
+/* ------------------------------------------------------------------
    Taskspjald
    ------------------------------------------------------------------ */
 let spjald = null;

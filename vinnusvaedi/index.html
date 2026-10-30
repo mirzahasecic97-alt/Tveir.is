@@ -39,16 +39,6 @@
 
     <div class="prufubanner" id="prufubanner" hidden></div>
 
-    <div class="simakort simakort--inn" id="simakort" hidden>
-      <div class="simakort__haus">
-        <img src="assets/takn-192.png" alt="" width="44" height="44">
-        <h2>Settu þetta í símann</h2>
-      </div>
-      <p>Vinnusvæðið getur setið á heimaskjánum eins og hvert annað app.
-         Þá þarftu ekki að leita að hlekknum í póstinum í hvert sinn.</p>
-      <button type="button" class="btn btn--block btn--sm" id="simahnappur">Sýna mér hvernig</button>
-    </div>
-
     <p class="inn__fot">
       Kemstu ekki inn? Sendu okkur línu á <a href="mailto:tveir@tveir.is">tveir@tveir.is</a>
       eða hringdu í <a href="tel:+3548572319">857-2319</a>.
@@ -57,7 +47,7 @@
 </main>
 
 <script type="module">
-import { gogn, stillingar, erUppsett, erSimi, opnaUppsetningu } from './assets/portal.js';
+import { gogn, stillingar } from './assets/portal.js';
 
 const form   = document.getElementById('innform');
 const netf   = document.getElementById('netfang');
@@ -69,13 +59,6 @@ function segja(texti, tegund) {
   stada.textContent = texti;
   stada.className = 'form-status form-status--' + tegund;
   stada.hidden = false;
-}
-
-/* Leiðbeiningar um heimaskjáinn, bara í síma og bara ef það er ekki þegar gert */
-if (erSimi() && !erUppsett()) {
-  document.getElementById('simakort').hidden = false;
-  document.getElementById('simahnappur')
-    .addEventListener('click', () => opnaUppsetningu());
 }
 
 const g = await gogn();

@@ -4,7 +4,7 @@
 
 import {
   gogn, el, tom, fylla, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
-  vardaHlid, teiknaHaus, erUppsett, erSimi, opnaUppsetningu, STODUR_VERK
+  vardaHlid, teiknaHaus, erUppsett, erSimi, bordiFalinn, opnaUppsetningu, STODUR_VERK
 } from './portal.js';
 
 const ek = await vardaHlid({});
@@ -131,7 +131,9 @@ async function start() {
   const SIMALYKILL = 'tveir-simakort-falid';
 
   function simaKort() {
-    if (!erSimi() || erUppsett()) return null;
+    /* Borðinn að neðan sinnir þessu fyrst. Spjaldið tekur við þegar
+       honum hefur verið lokað, svo leiðin sé enn til. */
+    if (!erSimi() || erUppsett() || !bordiFalinn()) return null;
     try {
       if (localStorage.getItem(SIMALYKILL) === 'ja') return null;
     } catch (e) { /* lokað localStorage, sýnum þá bara kortið */ }

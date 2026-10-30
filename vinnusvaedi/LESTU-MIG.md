@@ -189,7 +189,10 @@ Vinnusvæðið er uppsetjanlegt á heimaskjá. Það þarf ekkert úr App Store
 eða Play, þetta er síðan sjálf í heilum skjá með tákni.
 
 Leiðbeiningarnar birtast **bara í síma og bara ef það er ekki þegar gert**.
-Reitur á innskráningarsíðunni og spjald á yfirlitinu, sem má fela.
+Borði rennur upp að neðan tveimur sekúndubrotum eftir að síðan opnast, á öllum
+síðum vinnusvæðisins. Hann má loka og þá kemur hann ekki aftur í þeim vafra.
+Þegar honum hefur verið lokað birtist rólegt spjald á yfirliti viðskiptavinarins
+í staðinn, svo leiðin sé enn til.
 Skrefin breytast eftir tæki: iPhone fær Safari skrefin, Android fær
 annaðhvort alvöru uppsetningarhnapp eða valmyndarskrefin.
 
