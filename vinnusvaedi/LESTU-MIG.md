@@ -186,8 +186,9 @@ Vörumerki (sex). Röðin í `snid_taskar.rod` verður að röðinni í tímalí
 ## Merki viðskiptavinarins
 
 Viðskiptavinur setur sitt eigið merki inn sjálfur á yfirlitinu, undir
-**Merkið þitt**. Það birtist út í hægra horninu í hausnum á öllum
-síðum vinnusvæðisins. Hámark 1 MB, og PNG með gegnsæjum bakgrunni kemur best út.
+**Merkið þitt**. Það **kemur í stað okkar merkis** uppi í horninu á öllum
+síðum vinnusvæðisins. Tvö merki í sama haus eru einu of mikil, og þetta er
+hans vinnusvæði. Hámark 1 MB, og PNG með gegnsæjum bakgrunni kemur best út.
 
 Í Supabase fer merkið í **opna geymslu sem heitir `merki`**. Hún er opin
 viljandi: merki fyrirtækis er hvort eð er á vef þess, og þá þarf ekki að

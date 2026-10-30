@@ -172,8 +172,8 @@ async function start() {
                  texti: 'Merkið þitt' }),
       el('p', { class: 'lead', style: 'font-size:14px; margin-top:8px',
                 texti: merki
-                  ? 'Það situr út í hægra horninu uppi.'
-                  : 'Settu merkið þitt inn og það birtist út í hægra horninu uppi. '
+                  ? 'Það stendur uppi í horninu í stað okkar merkis.'
+                  : 'Settu merkið þitt inn og það kemur uppi í horninu í stað okkar merkis. '
                     + 'PNG með gegnsæjum bakgrunni kemur best út.' }),
 
       el('div', { class: 'merkikort__synd' }, [
