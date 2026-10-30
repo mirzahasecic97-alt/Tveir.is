@@ -1116,40 +1116,6 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
 }
 
 /* --------------------------------------------------------------------------
-   22. Ferdalog
-   -------------------------------------------------------------------------- */
-.ferdir__inn {
-  padding: clamp(28px, 3.4vw, 46px);
-  display: grid;
-  gap: clamp(24px, 3vw, 44px);
-  align-items: center;
-}
-@media (min-width: 820px) { .ferdir__inn { grid-template-columns: 1.1fr 1fr; } }
-
-.ferdir__merki {
-  margin: 0 0 14px;
-  font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--soft);
-}
-.ferdir__listi {
-  list-style: none; margin: 0; padding: 0;
-  display: grid; gap: 12px;
-}
-.ferdir__listi li {
-  display: grid; gap: 3px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
-.ferdir__listi li:first-child { border-top: 0; padding-top: 0; }
-.ferdir__listi b {
-  font-family: var(--f-head); font-weight: 600;
-  font-size: clamp(17px, 15.6px + .36vw, 20px);
-  line-height: 1.2;
-  color: var(--acc);
-}
-.ferdir__listi span { font-size: 13.5px; line-height: 1.45; color: var(--soft); }
-
-/* --------------------------------------------------------------------------
    16. Vinnulag — kaflinn festist og síminn segir söguna eftir skruni
    data-skref 0..3 á kaflanum ræður öllu. Engin tímataka, bara staða.
    -------------------------------------------------------------------------- */
