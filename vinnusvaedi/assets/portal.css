@@ -365,3 +365,40 @@
 
 .field input[type="date"] { min-height: 48px; }
 .field input[type="range"] { padding: 0; border: 0; accent-color: var(--acc); }
+
+/* --------------------------------------------------------------------------
+   13. Budget
+   -------------------------------------------------------------------------- */
+.verd {
+  display: inline-flex; align-items: center; flex: none;
+  font: 500 12.5px/1 var(--f-body);
+  background: #e6f4ea; color: #1e6b34;
+  padding: 7px 12px; border-radius: var(--r-pill);
+  white-space: nowrap;
+}
+.verd--innan { background: var(--accs); color: var(--acc); }
+.verd--vantar { background: #fdeceb; color: #a3312a; }
+
+.verdlina {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 14px; padding: 11px 0; border-top: 1px solid var(--line);
+  font-size: 14.5px;
+}
+.verdlina > span:first-child { color: var(--soft); }
+.verdlina strong { font-weight: 500; }
+.verdlina--okkar strong { color: #1e6b34; }
+
+/* Flýtihnappar undir budget reitnum */
+.budgetflyt { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.budgetflyt button {
+  font: 400 12.5px/1 var(--f-body); color: var(--soft);
+  background: #fff; border: 1px solid var(--line);
+  border-radius: var(--r-pill); padding: 9px 13px; min-height: 38px;
+  cursor: pointer;
+}
+.budgetflyt button:hover { border-color: var(--acc); color: var(--acc); }
+
+.skyring {
+  font-size: 13px; color: var(--soft); line-height: 1.5; margin-top: 7px;
+}
+.field[hidden] { display: none; }

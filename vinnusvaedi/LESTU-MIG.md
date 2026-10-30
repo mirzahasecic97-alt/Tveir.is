@@ -16,6 +16,27 @@ Prufuaðgangar:
 
 ---
 
+## Budget reglan
+
+Viðskiptavinur getur ekki sent verkefnatillögu án þess að setja budget.
+
+Eina undantekningin er fyrirtæki sem er merkt **í áskrift**. Það velur hvort
+verkefnið rúmist innan samningsins eða sé sér verkefni. Velji það sér verkefni
+birtist budget reiturinn og hann er skylda.
+
+Þetta er ekki bara í forminu. Stefnan `verk_tillaga` í `gagnagrunnur.sql` hafnar
+línu án budgets, og hafnar línu sem er merkt innan áskriftar frá fyrirtæki sem
+er ekki í áskrift. Enginn kemst framhjá þessu með því að opna Developer Tools.
+
+Á stjórnborðinu sjáið þið hvað þau sendu og megið breyta öðru hvoru. Ef Krónan
+merkir verðmerkingu á sendibíla sem innan áskriftar og þið eruð ósammala, flettið þið
+reitnum í Sér verkefni, setjið verð og skrifið ástæðuna í svarið. Viðskiptavinurinn
+sér verðið og ástæðuna á verkefnasíðunni sinni.
+
+Fyrirtæki er merkt í áskrift þegar það er stofnað á stjórnborðinu.
+
+---
+
 ## Skrárnar
 
 ```

@@ -47,7 +47,7 @@ async function supabaseBakendi() {
     if (!user) return null;
     const { data } = await sb
       .from('notendur')
-      .select('id, nafn, netfang, hlutverk, fyrirtaeki_id, fyrirtaeki(id, nafn, merki_url)')
+      .select('id, nafn, netfang, hlutverk, fyrirtaeki_id, fyrirtaeki(id, nafn, merki_url, er_askrift, askrift_verd)')
       .eq('id', user.id)
       .single();
     minn = data || null;
@@ -84,11 +84,13 @@ async function supabaseBakendi() {
       kasta(svar); return svar.data;
     },
 
-    async nyVerkefnatillaga({ titill, lysing, skiladagur }) {
+    async nyVerkefnatillaga({ titill, lysing, skiladagur, budget, innan_samnings }) {
       const ek = await eg();
       const svar = await sb.from('verkefni').insert({
         fyrirtaeki_id: ek.fyrirtaeki_id,
         titill, lysing, skiladagur: skiladagur || null,
+        budget: innan_samnings ? null : budget,
+        innan_samnings: !!innan_samnings,
         stada: 'tillaga', hofundur: ek.id
       }).select().single();
       kasta(svar); return svar.data;
@@ -143,8 +145,8 @@ async function supabaseBakendi() {
       kasta(svar); return svar.data;
     },
 
-    async nyttFyrirtaeki(nafn, askrift) {
-      const svar = await sb.from('fyrirtaeki').insert({ nafn, askrift }).select().single();
+    async nyttFyrirtaeki(fyrirtaeki) {
+      const svar = await sb.from('fyrirtaeki').insert(fyrirtaeki).select().single();
       kasta(svar); return svar.data;
     },
 
@@ -175,9 +177,12 @@ function prufuBakendi() {
     const dagsetning = (n) => new Date(nu + n * dagur).toISOString().slice(0, 10);
 
     const fyr = [
-      { id: 'f1', nafn: 'Krónan',      askrift: 'Efni og samfélagsmiðlar' },
-      { id: 'f2', nafn: 'HAF Vítamín', askrift: 'Vefsíða í áskrift' },
-      { id: 'f3', nafn: 'Epicbet',     askrift: 'Sölutækifæri' }
+      { id: 'f1', nafn: 'Krónan',      askrift: 'Efni og samfélagsmiðlar',
+        er_askrift: true,  askrift_verd: 290000 },
+      { id: 'f2', nafn: 'HAF Vítamín', askrift: 'Vefsíða í áskrift',
+        er_askrift: true,  askrift_verd: 45000 },
+      { id: 'f3', nafn: 'Epicbet',     askrift: 'Sölutækifæri',
+        er_askrift: false, askrift_verd: null }
     ];
 
     const notendur = [
@@ -191,22 +196,27 @@ function prufuBakendi() {
       { id: 'v1', fyrirtaeki_id: 'f2', titill: 'Ný vefsíða',
         lysing: 'Fimm undirsíður, vöruyfirlit og form fyrir fyrirspurnir.',
         stada: 'i_vinnslu', framvinda: 65, skiladagur: dagsetning(12),
+        budget: 900000, innan_samnings: false, verd_okkar: 850000,
         hofundur: 'u-mirza', svar_admin: null, stofnad: dags(-24), uppfaert: dags(-2) },
       { id: 'v2', fyrirtaeki_id: 'f2', titill: 'Reels fyrir desember',
         lysing: 'Fjögur reels, tökudagur í stúdíói.',
         stada: 'bid_svar', framvinda: 30, skiladagur: dagsetning(20),
+        budget: 350000, innan_samnings: false, verd_okkar: 320000,
         hofundur: 'u-oskar', svar_admin: null, stofnad: dags(-9), uppfaert: dags(-1) },
       { id: 'v3', fyrirtaeki_id: 'f2', titill: 'Jólakynning á póstlista',
         lysing: 'Við viljum þrjá sölupósta fyrir jólin, fyrsti út 1. desember.',
         stada: 'tillaga', framvinda: 0, skiladagur: dagsetning(30),
+        budget: 250000, innan_samnings: false, verd_okkar: null,
         hofundur: 'u-haf', svar_admin: null, stofnad: dags(-1), uppfaert: dags(-1) },
       { id: 'v4', fyrirtaeki_id: 'f1', titill: 'Nýtt merki á sendibíla',
         lysing: 'Þarf skilaskrár fyrir prentsmiðju.',
         stada: 'tillaga', framvinda: 0, skiladagur: null,
+        budget: null, innan_samnings: true, verd_okkar: null,
         hofundur: 'u-kron', svar_admin: null, stofnad: dags(-3), uppfaert: dags(-3) },
       { id: 'v5', fyrirtaeki_id: 'f1', titill: 'Efnispakki nóvember',
         lysing: 'Tólf færslur og tvö reels.',
         stada: 'lokid', framvinda: 100, skiladagur: dagsetning(-4),
+        budget: null, innan_samnings: true, verd_okkar: null,
         hofundur: 'u-mirza', svar_admin: null, stofnad: dags(-40), uppfaert: dags(-4) }
     ];
 
@@ -310,12 +320,16 @@ function prufuBakendi() {
       return v ? { ...v, fyrirtaeki: fyrNafn(v.fyrirtaeki_id) } : null;
     },
 
-    async nyVerkefnatillaga({ titill, lysing, skiladagur }) {
+    async nyVerkefnatillaga({ titill, lysing, skiladagur, budget, innan_samnings }) {
       const ek = await this.eg();
+      const fyr = finna(g.fyrirtaeki, ek.fyrirtaeki_id);
+      const innan = !!innan_samnings && !!(fyr && fyr.er_askrift);
+      if (!innan && !budget) throw new Error('Budget vantar.');
       const v = {
         id: nyttId(), fyrirtaeki_id: ek.fyrirtaeki_id, titill, lysing,
         skiladagur: skiladagur || null, stada: 'tillaga', framvinda: 0,
         hofundur: ek.id, svar_admin: null,
+        budget: innan ? null : Number(budget), innan_samnings: innan, verd_okkar: null,
         stofnad: new Date().toISOString(), uppfaert: new Date().toISOString()
       };
       g.verkefni.unshift(v); vista(); return v;
@@ -371,8 +385,11 @@ function prufuBakendi() {
 
     async fyrirtaeki() { return [...g.fyrirtaeki].sort((a, b) => a.nafn.localeCompare(b.nafn, 'is')); },
 
-    async nyttFyrirtaeki(nafn, askrift) {
-      const f = { id: nyttId(), nafn, askrift, merki_url: null, stofnad: new Date().toISOString() };
+    async nyttFyrirtaeki(fyrirtaeki) {
+      const f = {
+        id: nyttId(), merki_url: null, er_askrift: false, askrift_verd: null,
+        ...fyrirtaeki, stofnad: new Date().toISOString()
+      };
       g.fyrirtaeki.push(f); vista(); return f;
     },
 

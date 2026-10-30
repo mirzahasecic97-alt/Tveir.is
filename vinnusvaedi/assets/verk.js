@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import {
-  gogn, el, tom, dags, erSeint, pilla, taskLina,
+  gogn, el, tom, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
   vardaHlid, teiknaHaus, STODUR_VERK
 } from './portal.js';
 
@@ -84,6 +84,27 @@ async function start() {
                         texti: v.framvinda + '% búið' })
             ]),
 
+            el('div', { style: 'margin-top:16px' }, [
+              v.innan_samnings
+                ? el('div', { class: 'verdlina' }, [
+                    el('span', { texti: 'Greiðsla' }),
+                    el('strong', { texti: 'Innan áskriftarinnar' })
+                  ])
+                : null,
+              !v.innan_samnings && v.budget
+                ? el('div', { class: 'verdlina' }, [
+                    el('span', { texti: admin ? 'Þeirra budget' : 'Þitt budget' }),
+                    el('strong', { texti: kronur(v.budget) })
+                  ])
+                : null,
+              !v.innan_samnings && v.verd_okkar
+                ? el('div', { class: 'verdlina verdlina--okkar' }, [
+                    el('span', { texti: admin ? 'Verð okkar' : 'Verð' }),
+                    el('strong', { texti: kronur(v.verd_okkar) })
+                  ])
+                : null
+            ]),
+
             el('ul', { class: 'pmeta' }, [
               el('li', {}, [el('span', { texti: 'Staða' }),
                             el('span', { texti: (STODUR_VERK[v.stada] || {}).heiti || v.stada })]),
@@ -127,6 +148,16 @@ async function start() {
     framVal.addEventListener('input', () => { framTala.textContent = framVal.value + '%'; });
 
     const dagurVal = el('input', { type: 'date', value: v.skiladagur || '' });
+
+    const verdVal = el('input', {
+      type: 'text', inputmode: 'numeric', 'aria-label': 'Verð okkar',
+      placeholder: v.innan_samnings ? 'Innan áskriftar' : 'Verð okkar',
+      value: v.verd_okkar ? kronur(v.verd_okkar).replace(' kr.', '') : '',
+      onblur: () => {
+        const t = lesaTolu(verdVal.value);
+        verdVal.value = t ? kronur(t).replace(' kr.', '') : '';
+      }
+    });
     const svarVal = el('textarea', { rows: '3', placeholder: 'Svar til viðskiptavinar' });
     svarVal.value = v.svar_admin || '';
 
@@ -139,7 +170,8 @@ async function start() {
           stada: stadaVal.value,
           framvinda: Number(framVal.value),
           skiladagur: dagurVal.value || null,
-          svar_admin: svarVal.value.trim() || null
+          svar_admin: svarVal.value.trim() || null,
+          verd_okkar: v.innan_samnings ? null : lesaTolu(verdVal.value)
         });
         teikna();
       } }, [
@@ -148,6 +180,8 @@ async function start() {
           el('span', {}, [document.createTextNode('Framvinda  '), framTala]), framVal
         ]),
         el('label', { class: 'field' }, [el('span', { texti: 'Skiladagur' }), dagurVal]),
+        v.innan_samnings ? null
+          : el('label', { class: 'field' }, [el('span', { texti: 'Verð okkar' }), verdVal]),
         el('label', { class: 'field' }, [el('span', { texti: 'Svar til viðskiptavinar' }), svarVal]),
         el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Vista' })
       ])

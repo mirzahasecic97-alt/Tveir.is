@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import {
-  gogn, el, tom, dags, erSeint, pilla, taskLina,
+  gogn, el, tom, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
   vardaHlid, teiknaHaus, STODUR_VERK
 } from './portal.js';
 
@@ -123,8 +123,14 @@ async function start() {
                 el('tbody', {}, fyrirtaeki.map((f) => {
                   const op = taskar.filter((t) => t.fyrirtaeki_id === f.id && t.stada !== 'lokid').length;
                   return el('tr', {}, [
-                    el('td', { class: 'nafn', texti: f.nafn }),
-                    el('td', { style: 'color:var(--soft); text-align:right',
+                    el('td', {}, [
+                      el('div', { class: 'nafn', texti: f.nafn }),
+                      f.er_askrift
+                        ? el('div', { style: 'font-size:12.5px; color:var(--soft)',
+                                      texti: 'Áskrift' + (f.askrift_verd ? ' · ' + kronur(f.askrift_verd) : '') })
+                        : null
+                    ]),
+                    el('td', { style: 'color:var(--soft); text-align:right; white-space:nowrap',
                                texti: op + ' opið' })
                   ]);
                 }))
@@ -205,6 +211,43 @@ async function start() {
     const svar = el('textarea', { rows: '2', placeholder: 'Svar til viðskiptavinar, verð eða tímalína' });
     const dagur = el('input', { type: 'date', value: v.skiladagur || '' });
 
+    const verd = el('input', {
+      type: 'text', inputmode: 'numeric', placeholder: 'Hvað ætlum við að taka',
+      'aria-label': 'Verð okkar',
+      value: v.budget ? kronur(v.budget).replace(' kr.', '') : '',
+      onblur: () => {
+        const t = lesaTolu(verd.value);
+        verd.value = t ? kronur(t).replace(' kr.', '') : '';
+      }
+    });
+
+    const verdReitur = el('div', { class: 'field', style: 'margin-top:12px' }, [
+      el('span', { texti: 'Verð okkar' }), verd
+    ]);
+
+    const greidsla = el('select', {
+      'aria-label': 'Hvernig þetta er greitt',
+      onchange: () => { verdReitur.hidden = greidsla.value === 'innan'; }
+    }, [
+      el('option', { value: 'ser', selected: !v.innan_samnings,
+                     texti: 'Sér verkefni, greitt sérstaklega' }),
+      el('option', { value: 'innan', selected: v.innan_samnings,
+                     texti: 'Innan áskriftarinnar' })
+    ]);
+    if (v.innan_samnings) verdReitur.hidden = true;
+
+    async function svara(stada) {
+      const innan = greidsla.value === 'innan';
+      await g.uppfaeraVerkefni(v.id, {
+        stada,
+        svar_admin: svar.value.trim() || null,
+        skiladagur: dagur.value || null,
+        innan_samnings: innan,
+        verd_okkar: innan ? null : lesaTolu(verd.value)
+      });
+      teikna();
+    }
+
     return el('div', { class: 'tillaga' }, [
       el('div', { class: 'verk__linaein' }, [
         el('span', { class: 'verk__titill', texti: v.titill }),
@@ -212,30 +255,35 @@ async function start() {
         el('span', { class: 'sodull', style: 'margin-left:auto', texti: dags(v.stofnad) })
       ]),
       v.lysing ? el('p', { class: 'lead', style: 'font-size:14.5px; margin-top:8px', texti: v.lysing }) : null,
-      v.skiladagur ? el('p', { style: 'font-size:13.5px; color:var(--soft); margin-top:8px',
-                               texti: 'Þau vilja það fyrir ' + dags(v.skiladagur, true) }) : null,
 
-      el('div', { class: 'field', style: 'margin-top:14px' }, [el('span', { texti: 'Svar' }), svar]),
+      /* Það sem þau sjálf settu inn */
+      el('div', { style: 'margin-top:12px' }, [
+        el('div', { class: 'verdlina' }, [
+          el('span', { texti: 'Þau sendu' }),
+          v.innan_samnings
+            ? el('strong', { texti: 'Innan áskriftarinnar, ekkert budget' })
+            : el('strong', { texti: kronur(v.budget) || 'Ekkert budget' })
+        ]),
+        v.skiladagur ? el('div', { class: 'verdlina' }, [
+          el('span', { texti: 'Þau vilja það fyrir' }),
+          el('strong', { texti: dags(v.skiladagur, true) })
+        ]) : null
+      ]),
+
+      el('div', { class: 'field', style: 'margin-top:14px' }, [
+        el('span', { texti: 'Hvernig þetta er greitt' }), greidsla
+      ]),
+      verdReitur,
+      el('div', { class: 'field', style: 'margin-top:12px' }, [el('span', { texti: 'Svar' }), svar]),
       el('div', { class: 'field', style: 'margin-top:12px' }, [
         el('span', { texti: 'Skiladagur sem við lofum' }), dagur
       ]),
 
       el('div', { class: 'tillaga__hnappar' }, [
-        el('button', { type: 'button', class: 'btn btn--sm', texti: 'Samþykkja', onclick: async () => {
-          await g.uppfaeraVerkefni(v.id, {
-            stada: 'samthykkt',
-            svar_admin: svar.value.trim() || null,
-            skiladagur: dagur.value || null
-          });
-          teikna();
-        } }),
-        el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Ekki taka', onclick: async () => {
-          await g.uppfaeraVerkefni(v.id, {
-            stada: 'hafnad',
-            svar_admin: svar.value.trim() || null
-          });
-          teikna();
-        } }),
+        el('button', { type: 'button', class: 'btn btn--sm', texti: 'Samþykkja',
+                       onclick: () => svara('samthykkt') }),
+        el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Ekki taka',
+                       onclick: () => svara('hafnad') }),
         el('a', { class: 'sodull', style: 'margin-left:auto; text-decoration:none',
                   href: 'verk.html?id=' + encodeURIComponent(v.id), texti: 'Opna →' })
       ])
@@ -247,6 +295,27 @@ async function start() {
     const askrift = el('input', { type: 'text', placeholder: 'Til dæmis: vefsíða í áskrift' });
     const villa = el('div', { class: 'form-status form-status--err', hidden: true });
 
+    const verd = el('input', {
+      type: 'text', inputmode: 'numeric', placeholder: 'Mánaðargjald',
+      'aria-label': 'Mánaðargjald',
+      onblur: () => {
+        const t = lesaTolu(verd.value);
+        verd.value = t ? kronur(t).replace(' kr.', '') : '';
+      }
+    });
+    const verdReitur = el('div', { class: 'field' }, [
+      el('span', { texti: 'Mánaðargjald' }), verd
+    ]);
+    verdReitur.hidden = true;
+
+    const erAskrift = el('select', {
+      'aria-label': 'Er í áskrift',
+      onchange: () => { verdReitur.hidden = erAskrift.value !== 'ja'; }
+    }, [
+      el('option', { value: 'nei', texti: 'Stakt verkefni, rukkað fyrir hvert' }),
+      el('option', { value: 'ja',  texti: 'Í áskrift, borgar mánaðarlega' })
+    ]);
+
     const d = el('dialog', { class: 'pdialog' }, [el('div', { class: 'pdialog__kort' }, [
       el('div', { class: 'pdialog__haus' }, [
         el('h2', { texti: 'Nýtt fyrirtæki' }),
@@ -257,12 +326,21 @@ async function start() {
         e.preventDefault();
         if (!nafn.value.trim()) { villa.textContent = 'Nafn vantar.'; villa.hidden = false; return; }
         try {
-          await g.nyttFyrirtaeki(nafn.value.trim(), askrift.value.trim() || null);
+          await g.nyttFyrirtaeki({
+            nafn: nafn.value.trim(),
+            askrift: askrift.value.trim() || null,
+            er_askrift: erAskrift.value === 'ja',
+            askrift_verd: erAskrift.value === 'ja' ? lesaTolu(verd.value) : null
+          });
           d.close(); teikna();
         } catch (f) { villa.textContent = f.message; villa.hidden = false; }
       } }, [
         el('label', { class: 'field' }, [el('span', { texti: 'Nafn' }), nafn]),
-        el('label', { class: 'field' }, [el('span', { texti: 'Áskrift' }), askrift]),
+        el('label', { class: 'field' }, [el('span', { texti: 'Hvað gerum við fyrir þau' }), askrift]),
+        el('div', { class: 'field' }, [el('span', { texti: 'Greitt' }), erAskrift]),
+        verdReitur,
+        el('p', { class: 'skyring',
+                  texti: 'Fyrirtæki í áskrift getur sent verkefni án budgets ef það rúmast innan samningsins. Öll önnur þurfa að setja budget.' }),
         villa,
         el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Búa til' })
       ])

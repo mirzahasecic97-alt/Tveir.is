@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import {
-  gogn, el, tom, dags, erSeint, pilla, taskLina,
+  gogn, el, tom, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
   vardaHlid, teiknaHaus, STODUR_VERK
 } from './portal.js';
 
@@ -140,9 +140,19 @@ async function start() {
         v.skiladagur ? el('span', {
           class: erSeint(v.skiladagur) && v.stada !== 'lokid' ? 'seint' : '',
           texti: 'Skil ' + dags(v.skiladagur)
-        }) : null
+        }) : null,
+        verdMerki(v)
       ])
     ]);
+  }
+
+  /* Græna merðið er það sem við höfum samþykkt, hitt er það sem þú baust. */
+  function verdMerki(v) {
+    if (v.innan_samnings) return el('span', { class: 'verd verd--innan', texti: 'Í áskrift' });
+    if (v.verd_okkar) return el('span', { class: 'verd', texti: kronur(v.verd_okkar) });
+    if (v.budget) return el('span', { class: 'verd verd--innan',
+                                      texti: 'Budget ' + kronur(v.budget) });
+    return null;
   }
 
   function bidurKort(listi) {
@@ -238,10 +248,45 @@ async function start() {
   }
 
   function opnaVerkForm() {
+    const askrift = !!(ek.fyrirtaeki && ek.fyrirtaeki.er_askrift);
+
     const titill = el('input', { type: 'text', required: true, placeholder: 'Til dæmis: ný vefsíða' });
-    const lysing = el('textarea', { rows: '5', placeholder: 'Hvað viltu að við gerum og hvers vegna' });
+    const lysing = el('textarea', { rows: '5', placeholder: 'Hvað viltu að við gerðum og hvers vegna' });
     const dagur  = el('input', { type: 'date' });
     const villa  = el('div', { class: 'form-status form-status--err', hidden: true });
+
+    const budget = el('input', {
+      type: 'text', inputmode: 'numeric', placeholder: 'Til dæmis 250.000',
+      'aria-label': 'Budget í krónum',
+      onblur: () => {
+        const t = lesaTolu(budget.value);
+        budget.value = t ? kronur(t).replace(' kr.', '') : '';
+      }
+    });
+
+    const flytir = el('div', { class: 'budgetflyt' },
+      [150000, 300000, 500000, 1000000].map((n) => el('button', {
+        type: 'button', texti: kronur(n),
+        onclick: () => { budget.value = kronur(n).replace(' kr.', ''); budget.focus(); }
+      })));
+
+    const budgetReitur = el('div', { class: 'field' }, [
+      el('span', { texti: 'Budget í krónum' }),
+      budget,
+      el('p', { class: 'skyring',
+                texti: 'Gróft mat dugar. Við svörum með raunverði og þú ræður hvort þú heldur áfram.' }),
+      flytir
+    ]);
+
+    const greidsla = askrift ? el('select', {
+      'aria-label': 'Hvernig er þetta greitt',
+      onchange: () => { budgetReitur.hidden = greidsla.value === 'innan'; }
+    }, [
+      el('option', { value: 'innan', texti: 'Innan áskriftarinnar' }),
+      el('option', { value: 'ser',   texti: 'Sér verkefni, greitt sérstaklega' })
+    ]) : null;
+
+    if (askrift) budgetReitur.hidden = true;
 
     const d = spjald([
       el('div', { class: 'pdialog__haus' }, [
@@ -250,21 +295,39 @@ async function start() {
                        onclick: () => d.close() })
       ]),
       el('p', { class: 'lead', style: 'font-size:14.5px; margin-top:6px',
-                texti: 'Við skoðum þetta og svörum með verði og tímalínu áður en við byrjum. Þú borgar ekkert fyrir að senda.' }),
+        texti: askrift
+          ? 'Við skoðum þetta og svörum með verði og tímalínu áður en við byrjum. Ef það rúmast ekki innan áskriftarinnar þarf budget að fylgja.'
+          : 'Við skoðum þetta og svörum með verði og tímalínu áður en við byrjum. Budget þarf að fylgja svo við vitum hvað við erum að vinna með.' }),
       el('form', { class: 'form-grid', style: 'margin-top:20px', onsubmit: async (e) => {
         e.preventDefault();
-        if (!titill.value.trim()) { villa.textContent = 'Titill vantar.'; villa.hidden = false; return; }
+        const innan = askrift && greidsla.value === 'innan';
+        const upphaed = lesaTolu(budget.value);
+
+        if (!titill.value.trim()) {
+          villa.textContent = 'Titill vantar.'; villa.hidden = false; return;
+        }
+        if (!innan && !upphaed) {
+          villa.textContent = 'Budget vantar. Við þurfum að vita hvað verkefnið má kosta '
+            + 'áður en við svörum.';
+          villa.hidden = false; budget.focus(); return;
+        }
         try {
           await g.nyVerkefnatillaga({
             titill: titill.value.trim(),
             lysing: lysing.value.trim() || null,
-            skiladagur: dagur.value || null
+            skiladagur: dagur.value || null,
+            budget: innan ? null : upphaed,
+            innan_samnings: innan
           });
           d.close(); teikna();
         } catch (v) { villa.textContent = v.message; villa.hidden = false; }
       } }, [
         el('label', { class: 'field' }, [el('span', { texti: 'Hvað er verkefnið' }), titill]),
         el('label', { class: 'field' }, [el('span', { texti: 'Lýsing' }), lysing]),
+        askrift ? el('div', { class: 'field' }, [
+          el('span', { texti: 'Hvernig er þetta greitt' }), greidsla
+        ]) : null,
+        budgetReitur,
         el('label', { class: 'field' }, [el('span', { texti: 'Hvenær þarf það að vera komið' }), dagur]),
         villa,
         el('button', { type: 'submit', class: 'btn', style: 'margin-top:4px', texti: 'Senda til samþykkis' })

@@ -10,11 +10,13 @@ create extension if not exists pgcrypto;
 -- --------------------------------------------------------------------------
 
 create table if not exists fyrirtaeki (
-  id          uuid primary key default gen_random_uuid(),
-  nafn        text not null,
-  merki_url   text,
-  askrift     text,
-  stofnad     timestamptz not null default now()
+  id            uuid primary key default gen_random_uuid(),
+  nafn          text not null,
+  merki_url     text,
+  askrift       text,
+  er_askrift    boolean not null default false,
+  askrift_verd  bigint,
+  stofnad       timestamptz not null default now()
 );
 
 create table if not exists notendur (
@@ -40,6 +42,9 @@ create table if not exists verkefni (
   skiladagur    date,
   hofundur      uuid references notendur on delete set null,
   svar_admin    text,
+  budget         bigint,
+  innan_samnings boolean not null default false,
+  verd_okkar     bigint,
   stofnad       timestamptz not null default now(),
   uppfaert      timestamptz not null default now()
 );
@@ -79,6 +84,13 @@ create table if not exists vidhengi (
   hofundur  uuid references notendur on delete set null,
   stofnad   timestamptz not null default now()
 );
+
+-- Ef töflurnar voru búnar til áður en budget kom inn
+alter table fyrirtaeki add column if not exists er_askrift   boolean not null default false;
+alter table fyrirtaeki add column if not exists askrift_verd bigint;
+alter table verkefni   add column if not exists budget         bigint;
+alter table verkefni   add column if not exists innan_samnings boolean not null default false;
+alter table verkefni   add column if not exists verd_okkar     bigint;
 
 create index if not exists taskar_fyrirtaeki_idx   on taskar (fyrirtaeki_id, stada);
 create index if not exists taskar_verkefni_idx     on taskar (verkefni_id);
@@ -203,15 +215,31 @@ drop policy if exists verk_les on verkefni;
 create policy verk_les on verkefni for select to authenticated
   using (er_admin() or fyrirtaeki_id = mitt_fyrirtaeki());
 
--- viðskiptavinur má stinga upp á verkefni, aldrei samþykkja það sjálfur
+-- Viðskiptavinur má stinga upp á verkefni, aldrei samþykkja það sjálfur.
+-- Budget er skylda nema verkefnið rúmist innan áskriftar, og enginn getur
+-- merkt verkefni innan áskriftar nema vera raunverulega í áskrift.
+-- Þetta er í gagnagrunninum sjálfum, ekki bara í forminu.
 drop policy if exists verk_tillaga on verkefni;
 create policy verk_tillaga on verkefni for insert to authenticated
-  with check (fyrirtaeki_id = mitt_fyrirtaeki() and stada = 'tillaga');
+  with check (
+    fyrirtaeki_id = mitt_fyrirtaeki()
+    and stada = 'tillaga'
+    and verd_okkar is null
+    and (innan_samnings or budget is not null)
+    and (not innan_samnings or exists (
+      select 1 from fyrirtaeki f where f.id = fyrirtaeki_id and f.er_askrift))
+  );
 
 drop policy if exists verk_breyta_tillogu on verkefni;
 create policy verk_breyta_tillogu on verkefni for update to authenticated
   using (fyrirtaeki_id = mitt_fyrirtaeki() and stada = 'tillaga')
-  with check (fyrirtaeki_id = mitt_fyrirtaeki() and stada = 'tillaga');
+  with check (
+    fyrirtaeki_id = mitt_fyrirtaeki()
+    and stada = 'tillaga'
+    and (innan_samnings or budget is not null)
+    and (not innan_samnings or exists (
+      select 1 from fyrirtaeki f where f.id = fyrirtaeki_id and f.er_askrift))
+  );
 
 drop policy if exists verk_admin on verkefni;
 create policy verk_admin on verkefni for all to authenticated

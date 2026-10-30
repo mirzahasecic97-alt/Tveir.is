@@ -44,6 +44,20 @@ export function dags(gildi, medAri) {
   return d.getDate() + '. ' + m + (medAri ? ' ' + d.getFullYear() : '');
 }
 
+/* 250000 -> "250.000 kr." Handvirkt af sömu ástæðu og mánuðirnir. */
+export function kronur(gildi) {
+  if (gildi === null || gildi === undefined || gildi === '') return null;
+  const tala = Math.round(Number(gildi));
+  if (isNaN(tala)) return null;
+  return String(tala).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' kr.';
+}
+
+/* "250.000" eða "250000" -> 250000 */
+export function lesaTolu(texti) {
+  const hreint = String(texti == null ? '' : texti).replace(/[^0-9]/g, '');
+  return hreint ? Number(hreint) : null;
+}
+
 /* Hversu langt síðan, í orðum */
 export function sidan(gildi) {
   if (!gildi) return '';
