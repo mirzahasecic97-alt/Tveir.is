@@ -447,40 +447,64 @@
   }
 
   /* ------------------------------------------------------------------
-     Vinnulag — hreyfimyndin keyrir bara meðan hún sést
+     Vinnulag — kaflinn festist og síminn gengur í gegnum skrefin
+     eftir því hvar í brautinni skrunið er statt
      ------------------------------------------------------------------ */
   function initVinnulag() {
     var kafli = document.querySelector('.vinnulag');
     if (!kafli) return;
-    var simi = kafli.querySelector('.vinnulag__simi');
 
-    if (!('IntersectionObserver' in window)) {
-      kafli.classList.add('er-komid');
-      if (simi) simi.classList.add('er-a-ferd');
+    var braut = kafli.querySelector('.vinnulag__braut');
+    var spjold = Array.prototype.slice.call(kafli.querySelectorAll('.vinnulag__listi li'));
+    var hreyfingSlokkt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!braut || hreyfingSlokkt) {
+      kafli.classList.add('engin-festing');
+      kafli.setAttribute('data-skref', '3');
+      spjold.forEach(function (li) { li.classList.add('er-lokid'); });
       return;
     }
 
-    /* Hreyfimyndin keyrir bara meðan hún sést */
-    if (simi) {
-      var obsSimi = new IntersectionObserver(function (faerslur) {
-        faerslur.forEach(function (f) {
-          simi.classList.toggle('er-a-ferd', f.isIntersecting);
-        });
-      }, { threshold: 0.25 });
-      obsSimi.observe(simi);
+    /* Hlutföllin ráða hvar hvert skref tekur við */
+    var mork = [0.16, 0.42, 0.68];
+    var sidasta = -1;
+    var bidur = false;
+
+    function reikna() {
+      bidur = false;
+
+      var r = braut.getBoundingClientRect();
+      var svigrum = braut.offsetHeight - window.innerHeight;
+      if (svigrum <= 0) return;
+
+      var p = (-r.top) / svigrum;
+      p = p < 0 ? 0 : (p > 1 ? 1 : p);
+
+      var skref = 0;
+      if (p >= mork[2]) skref = 3;
+      else if (p >= mork[1]) skref = 2;
+      else if (p >= mork[0]) skref = 1;
+
+      if (skref === sidasta) return;
+      sidasta = skref;
+
+      kafli.setAttribute('data-skref', String(skref));
+      spjold.forEach(function (li, i) {
+        var nr = i + 1;
+        li.classList.toggle('er-virkt', nr === skref);
+        li.classList.toggle('er-lokid', nr < skref);
+      });
     }
 
-    /* 1, 2, 3 poppa inn einu sinni */
-    var obsListi = new IntersectionObserver(function (faerslur) {
-      faerslur.forEach(function (f) {
-        if (!f.isIntersecting) return;
-        kafli.classList.add('er-komid');
-        obsListi.unobserve(f.target);
-      });
-    }, { threshold: 0.2 });
+    function vid() {
+      if (bidur) return;
+      bidur = true;
+      requestAnimationFrame(reikna);
+    }
 
-    var listi = kafli.querySelector('.vinnulag__listi');
-    if (listi) obsListi.observe(listi);
+    window.addEventListener('scroll', vid, { passive: true });
+    window.addEventListener('resize', vid);
+    reikna();
   }
 
   function initYear() {

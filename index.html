@@ -308,77 +308,80 @@
     </section>
 
     <!-- ===================== VINNULAG ===================== -->
-    <section class="section vinnulag" aria-labelledby="vinnulag">
-      <h2 class="section-title" id="vinnulag"
-          data-en="This is how we work with you">Svona vinnum við með þér</h2>
-      <p class="sec-intro vinnulag__intro"
-         data-en="You get your own workspace with us. You see where every project stands, send us what needs doing, and watch us tick it off.">Þú færð þitt eigið vinnusvæði hjá okkur. Þar sérðu hvar hvert verkefni stendur, sendir okkur það sem þarf að gerast og sérð hvenær við hökum í lokið.</p>
+    <section class="vinnulag" id="vinnulag-kafli" data-skref="0" aria-labelledby="vinnulag">
+      <div class="vinnulag__braut">
+        <div class="vinnulag__fast">
+          <div class="wrap vinnulag__inni">
 
-      <div class="vinnulag__svid">
+            <h2 class="section-title vinnulag__fyrirsogn" id="vinnulag"
+                data-en="This is how we work with you">Svona vinnum við með þér</h2>
 
-        <figure class="vinnulag__mynd">
-          <img src="assets/img/okkur.jpg" alt="Mirza Hasecic og Óskar Hákonar"
-               width="1600" height="1143" loading="lazy">
-          <figcaption data-en="Mirza and Óskar. You always know who you are talking to.">Mirza og Óskar. Þú veist alltaf við hvern þú ert að tala.</figcaption>
-        </figure>
+            <div class="vinnulag__svid">
+              <figure class="vinnulag__mynd">
+                <img src="assets/img/okkur.jpg" alt="Mirza Hasecic og Óskar Hákonar"
+                     width="1600" height="1143" loading="lazy">
+              </figure>
 
-        <!-- Hreyfimyndin. Hrein CSS, allir hlutar deila 12 sekúndna takti. -->
-        <div class="vinnulag__simi" aria-hidden="true">
-          <div class="simi">
-            <div class="simi__skjar">
-              <div class="simi__haus">
-                <img src="assets/img/tveir-logo.png" alt="" width="46" height="12">
-                <span class="simi__fyr">HAF Vítamín</span>
-              </div>
+              <!-- Síminn. Stöðurnar ráðast af data-skref á kaflanum. -->
+              <div class="vinnulag__simi" aria-hidden="true">
+                <div class="simi">
+                  <div class="simi__skjar">
+                    <div class="simi__haus">
+                      <img src="assets/img/tveir-logo.png" alt="" width="42" height="11">
+                      <span class="simi__fyr">HAF Vítamín</span>
+                    </div>
 
-              <div class="simi__efni">
-                <div class="m-bidur">
-                  <span class="m-bidur__heiti">Bíður þín</span>
-                  <span class="m-bidur__tolur">
-                    <span class="m-bidur__tala m-bidur__tala--null">0</span>
-                    <span class="m-bidur__tala m-bidur__tala--einn">1</span>
-                  </span>
-                </div>
+                    <div class="simi__efni">
+                      <div class="m-bidur">
+                        <span class="m-bidur__heiti">Bíður þín</span>
+                        <span class="m-bidur__tolur">
+                          <span class="m-bidur__tala m-bidur__tala--null">0</span>
+                          <span class="m-bidur__tala m-bidur__tala--einn">1</span>
+                        </span>
+                      </div>
 
-                <div class="m-verk">
-                  <div class="m-verk__titill">Ný vefsíða</div>
-                  <div class="m-sla"><span class="m-sla__fyll"></span></div>
-                  <div class="m-verk__hlutfall">
-                    <span class="m-hlut m-hlut--fyrir">40%</span>
-                    <span class="m-hlut m-hlut--eftir">60%</span>
+                      <div class="m-verk">
+                        <div class="m-verk__titill">Ný vefsíða</div>
+                        <div class="m-sla"><span class="m-sla__fyll"></span></div>
+                        <div class="m-verk__hlutfall">
+                          <span class="m-hlut m-hlut--fyrir">40%</span>
+                          <span class="m-hlut m-hlut--eftir">60%</span>
+                        </div>
+                      </div>
+
+                      <div class="m-task">
+                        <span class="m-hak"></span>
+                        <span class="m-task__inn">
+                          <span class="m-task__titill">Senda logo í vektor</span>
+                          <span class="m-task__merki">Ný vefsíða</span>
+                        </span>
+                      </div>
+
+                      <div class="m-bubla">Við getum teiknað það upp ef þú finnur það ekki.</div>
+                    </div>
                   </div>
                 </div>
-
-                <div class="m-task">
-                  <span class="m-hak"></span>
-                  <span class="m-task__titill">Senda logo í vektor</span>
-                </div>
-
-                <div class="m-bubla">Við getum teiknað það upp ef þú finnur það ekki.</div>
               </div>
             </div>
+
+            <ol class="vinnulag__listi">
+              <li data-fyrir="1">
+                <b data-en="Speed">Hraði</b>
+                <span data-en="You send it and we see it right away. Nothing sits in an unopened inbox.">Þú sendir og við sjáum það um leið. Ekkert bíður í óopnuðum pósti.</span>
+              </li>
+              <li data-fyrir="2">
+                <b data-en="Order">Skipulag</b>
+                <span data-en="Everything lands with the right project. Nothing gets lost in a thread.">Allt lendir hjá réttu verkefni. Ekkert týnist í póstþræði.</span>
+              </li>
+              <li data-fyrir="3">
+                <b data-en="Communication">Samskipti</b>
+                <span data-en="We answer, we tick it off, and you see it move.">Við svörum, hökum í lokið og þú sérð það hreyfast.</span>
+              </li>
+            </ol>
+
           </div>
         </div>
-
       </div>
-
-      <ol class="vinnulag__listi">
-        <li>
-          <b data-en="Speed">Hraði</b>
-          <span data-en="You send it and we see it right away. Nothing sits in an unopened inbox.">Þú sendir og við sjáum það um leið. Ekkert bíður í óopnuðum pósti.</span>
-        </li>
-        <li>
-          <b data-en="Order">Skipulag</b>
-          <span data-en="Everything in one place. Nothing gets lost in a thread with four attachments.">Allt á einum stað. Ekkert týnist í þræði með fjórum viðhengjum.</span>
-        </li>
-        <li>
-          <b data-en="Communication">Samskipti</b>
-          <span data-en="You always see what is happening and what is waiting on you.">Þú sérð alltaf hvað er í gangi og hvað bíður þín.</span>
-        </li>
-      </ol>
-
-      <p class="vinnulag__lok"
-         data-en="We want to be the company you call first.">Við viljum vera fyrirtækið sem þú hringir í fyrst.</p>
     </section>
 
     <!-- ===================== FERÐALÖG ===================== -->
