@@ -28,7 +28,10 @@ birtist budget reiturinn og hann er skylda.
 línu án budgets, og hafnar línu sem er merkt innan áskriftar frá fyrirtæki sem
 er ekki í áskrift. Enginn kemst framhjá þessu með því að opna Developer Tools.
 
-Á stjórnborðinu sjáið þið hvað þau sendu og megið breyta öðru hvoru. Ef Krónan
+Tillögurnar eiga sína eigin síðu, **Tillögur** í hausnum, með tölu á því sem
+bíður. Á stjórnborðinu er bara ein lína sem bendir þangað.
+
+Á þeirri síðu sjáið þið hvað þau sendu og megið breyta öðru hvoru. Ef Krónan
 merkir verðmerkingu á sendibíla sem innan áskriftar og þið eruð ósammala, flettið þið
 reitnum í Sér verkefni, setjið verð og skrifið ástæðuna í svarið. Viðskiptavinurinn
 sér verðið og ástæðuna á verkefnasíðunni sinni.
@@ -43,13 +46,15 @@ Fyrirtæki er merkt í áskrift þegar það er stofnað á stjórnborðinu.
 vinnusvaedi/
   index.html         innskráning
   yfirlit.html       það sem viðskiptavinurinn sér
-  verk.html          eitt verkefni, taskar þess, tímar og rukkun
-  stjornbord.html    það sem við sjáum
+  verk.html          eitt verkefni, tímalína, tímar og rukkun
+  stjornbord.html    það sem við sjáum daglega
+  tillogur.html      verkefnatillögur sem bíða svars
   gagnagrunnur.sql   allar töflur og réttindi, keyrist einu sinni
   assets/
     stillingar.js    eina skráin sem þarf að breyta
     gogn.js          sækir gögnin, úr Supabase eða úr prufudæmum
     portal.js        sameiginlegt, haus, taskar, spjöld, viðhengi
+    tillogur.js      samþykktarsíðan
     portal.css       stíll ofan á styles.css
 ```
 

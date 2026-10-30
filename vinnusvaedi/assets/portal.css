@@ -583,3 +583,62 @@
 @media (max-width: 560px) {
   .skref__fera { display: none; }
 }
+
+/* --------------------------------------------------------------------------
+   18. Valmynd okkar í hausnum
+   -------------------------------------------------------------------------- */
+.phead__nav {
+  display: flex; align-items: center; gap: 4px;
+  flex: 1 1 auto; min-width: 0;
+}
+.phead__nav a {
+  display: inline-flex; align-items: center; gap: 7px;
+  font: 400 14.5px/1 var(--f-body); color: var(--soft);
+  text-decoration: none; white-space: nowrap;
+  padding: 10px 14px; min-height: 42px;
+  border-radius: var(--r-pill);
+  transition: background .15s ease, color .15s ease;
+}
+.phead__nav a:hover { background: rgba(28, 48, 80, .05); color: var(--ink); }
+.phead__nav a[aria-current="page"] {
+  background: var(--accs); color: var(--acc); font-weight: 500;
+}
+
+.phead__merki {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 20px; padding: 0 6px;
+  border-radius: var(--r-pill);
+  background: #a4681a; color: #fff;
+  font: 500 11.5px/1 var(--f-body);
+}
+.phead__merki[hidden] { display: none; }
+.phead__nav a[aria-current="page"] .phead__merki { background: var(--acc); }
+
+@media (max-width: 430px) {
+  .phead__nav a { padding: 10px 11px; font-size: 13.5px; }
+}
+
+/* --------------------------------------------------------------------------
+   19. Tilkynningaborði
+   -------------------------------------------------------------------------- */
+.tilkynning {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px; text-decoration: none; color: inherit;
+  background: #fffaf2; border: 1px solid rgba(164, 104, 26, .25);
+  border-radius: var(--r-card);
+  transition: border-color .15s ease, transform .15s ease;
+}
+.tilkynning:hover {
+  border-color: rgba(164, 104, 26, .5); transform: translateY(-1px);
+}
+.tilkynning__inn { flex: 1 1 auto; min-width: 0; }
+.tilkynning strong {
+  display: block; font: 500 15.5px/1.3 var(--f-body); color: var(--ink);
+}
+.tilkynning span.undir {
+  display: block; margin-top: 4px; font-size: 13.5px; color: var(--soft);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tilkynning__or {
+  flex: none; color: #a4681a; font-size: 17px; line-height: 1;
+}

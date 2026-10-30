@@ -135,11 +135,33 @@ export async function vardaHlid({ krefstAdmin, badir } = {}) {
 /* ------------------------------------------------------------------
    Haus
    ------------------------------------------------------------------ */
+let hausMerki = null;
+
+/* Kallað eftir að tillaga er afgreidd svo talan í hausnum sé rétt */
+export function uppfaeraMerki() {
+  if (!hausMerki) return;
+  gogn()
+    .then((g) => g.verkefni())
+    .then((listi) => {
+      const fjoldi = listi.filter((v) => v.stada === 'tillaga').length;
+      hausMerki.textContent = String(fjoldi);
+      hausMerki.hidden = fjoldi === 0;
+    })
+    .catch(() => { /* merkið bíður bara */ });
+}
+
 export function teiknaHaus(ek, heiti) {
   const haus = document.getElementById('phead');
   if (!haus) return;
 
   const admin = ek.hlutverk === 'admin';
+
+  /* Merkið á Tillögur fyllist þar sem talan liggur ekki fyrir strax */
+  const merki = admin ? el('span', { class: 'phead__merki', hidden: true }) : null;
+  hausMerki = merki;
+  uppfaeraMerki();
+
+  const nuna = location.pathname.split('/').pop() || 'stjornbord.html';
 
   fylla(haus, [
     el('div', { class: 'wrap' }, [
@@ -149,10 +171,20 @@ export function teiknaHaus(ek, heiti) {
           el('img', { src: '../assets/img/tveir-logo.png', alt: 'Tveir', width: '70', height: '18' })
         ]),
         el('span', { class: 'phead__skil', 'aria-hidden': 'true' }),
-        el('div', { class: 'phead__heiti' }, [
-          document.createTextNode(heiti ? heiti + ' ' : ''),
-          ek.fyrirtaeki ? el('strong', { texti: ek.fyrirtaeki.nafn }) : (admin ? el('strong', { texti: 'Tveir' }) : null)
-        ]),
+
+        admin
+          ? el('nav', { class: 'phead__nav', 'aria-label': 'Vinnusvæði' }, [
+              el('a', { href: 'stjornbord.html', texti: 'Stjórnborð',
+                        'aria-current': nuna === 'stjornbord.html' ? 'page' : null }),
+              el('a', { href: 'tillogur.html',
+                        'aria-current': nuna === 'tillogur.html' ? 'page' : null }, [
+                document.createTextNode('Tillögur'), merki
+              ])
+            ])
+          : el('div', { class: 'phead__heiti' }, [
+              document.createTextNode(heiti ? heiti + ' ' : ''),
+              ek.fyrirtaeki ? el('strong', { texti: ek.fyrirtaeki.nafn }) : null
+            ]),
         el('div', { class: 'phead__hnappar' }, [
           el('div', { class: 'phead__notandi' }, [
             el('strong', { texti: ek.nafn }),

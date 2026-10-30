@@ -76,13 +76,16 @@ async function start() {
         ])
       ]),
 
-      /* ---------- tillögur ---------- */
-      tillogur.length ? el('section', { class: 'card pblokk', style: 'margin-top:26px' }, [
-        el('div', { class: 'pyfir' }, [
-          el('h2', { texti: 'Bíður samþykkis' }),
-          el('span', { class: 'pyfir__telja', texti: tillogur.length + (tillogur.length === 1 ? ' tillaga' : ' tillögur') })
+      /* ---------- tillögur eiga sína eigin síðu, hér er bara ábending ---------- */
+      tillogur.length ? el('a', { class: 'tilkynning', href: 'tillogur.html',
+                                  style: 'margin-top:20px' }, [
+        el('div', { class: 'tilkynning__inn' }, [
+          el('strong', { texti: tillogur.length === 1
+            ? 'Ein tillaga bíður samþykkis'
+            : tillogur.length + ' tillögur bíða samþykkis' }),
+          el('span', { class: 'undir', texti: tillogur.map((v) => v.titill).join(', ') })
         ]),
-        el('div', {}, tillogur.map(tillagaKort))
+        el('span', { class: 'tilkynning__or', 'aria-hidden': 'true', texti: '→' })
       ]) : null,
 
       el('div', { class: 'pgrid', style: 'margin-top:clamp(18px,2.2vw,26px)' }, [
@@ -256,89 +259,6 @@ async function start() {
       type: 'button', class: 'pflipi', 'aria-pressed': String(flipi === gildi),
       onclick: () => { flipi = gildi; teikna(); }
     }, [document.createTextNode(heiti), el('b', { texti: String(fjoldi) })]);
-  }
-
-  function tillagaKort(v) {
-    const svar = el('textarea', { rows: '2', placeholder: 'Svar til viðskiptavinar, verð eða tímalína' });
-    const dagur = el('input', { type: 'date', value: v.skiladagur || '' });
-
-    const verd = el('input', {
-      type: 'text', inputmode: 'numeric', placeholder: 'Hvað ætlum við að taka',
-      'aria-label': 'Verð okkar',
-      value: v.budget ? kronur(v.budget).replace(' kr.', '') : '',
-      onblur: () => {
-        const t = lesaTolu(verd.value);
-        verd.value = t ? kronur(t).replace(' kr.', '') : '';
-      }
-    });
-
-    const verdReitur = el('div', { class: 'field', style: 'margin-top:12px' }, [
-      el('span', { texti: 'Verð okkar' }), verd
-    ]);
-
-    const greidsla = el('select', {
-      'aria-label': 'Hvernig þetta er greitt',
-      onchange: () => { verdReitur.hidden = greidsla.value === 'innan'; }
-    }, [
-      el('option', { value: 'ser', selected: !v.innan_samnings,
-                     texti: 'Sér verkefni, greitt sérstaklega' }),
-      el('option', { value: 'innan', selected: v.innan_samnings,
-                     texti: 'Innan áskriftarinnar' })
-    ]);
-    if (v.innan_samnings) verdReitur.hidden = true;
-
-    async function svara(stada) {
-      const innan = greidsla.value === 'innan';
-      await g.uppfaeraVerkefni(v.id, {
-        stada,
-        svar_admin: svar.value.trim() || null,
-        skiladagur: dagur.value || null,
-        innan_samnings: innan,
-        verd_okkar: innan ? null : lesaTolu(verd.value)
-      });
-      teikna();
-    }
-
-    return el('div', { class: 'tillaga' }, [
-      el('div', { class: 'verk__linaein' }, [
-        el('span', { class: 'verk__titill', texti: v.titill }),
-        el('span', { class: 'verk__fyr', texti: v.fyrirtaeki ? v.fyrirtaeki.nafn : '' }),
-        el('span', { class: 'sodull', style: 'margin-left:auto', texti: dags(v.stofnad) })
-      ]),
-      v.lysing ? el('p', { class: 'lead', style: 'font-size:14.5px; margin-top:8px', texti: v.lysing }) : null,
-
-      /* Það sem þau sjálf settu inn */
-      el('div', { style: 'margin-top:12px' }, [
-        el('div', { class: 'verdlina' }, [
-          el('span', { texti: 'Þau sendu' }),
-          v.innan_samnings
-            ? el('strong', { texti: 'Innan áskriftarinnar, ekkert budget' })
-            : el('strong', { texti: kronur(v.budget) || 'Ekkert budget' })
-        ]),
-        v.skiladagur ? el('div', { class: 'verdlina' }, [
-          el('span', { texti: 'Þau vilja það fyrir' }),
-          el('strong', { texti: dags(v.skiladagur, true) })
-        ]) : null
-      ]),
-
-      el('div', { class: 'field', style: 'margin-top:14px' }, [
-        el('span', { texti: 'Hvernig þetta er greitt' }), greidsla
-      ]),
-      verdReitur,
-      el('div', { class: 'field', style: 'margin-top:12px' }, [el('span', { texti: 'Svar' }), svar]),
-      el('div', { class: 'field', style: 'margin-top:12px' }, [
-        el('span', { texti: 'Skiladagur sem við lofum' }), dagur
-      ]),
-
-      el('div', { class: 'tillaga__hnappar' }, [
-        el('button', { type: 'button', class: 'btn btn--sm', texti: 'Samþykkja',
-                       onclick: () => svara('samthykkt') }),
-        el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Ekki taka',
-                       onclick: () => svara('hafnad') }),
-        el('a', { class: 'sodull', style: 'margin-left:auto; text-decoration:none',
-                  href: 'verk.html?id=' + encodeURIComponent(v.id), texti: 'Opna →' })
-      ])
-    ]);
   }
 
   /* ------------------------------------------------------------------

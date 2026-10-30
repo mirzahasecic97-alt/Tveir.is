@@ -4,7 +4,7 @@
 
 import {
   gogn, el, tom, fylla, dags, sidan, erSeint, pilla, opnaTask, kronur, lesaTolu,
-  vardaHlid, teiknaHaus, STODUR_VERK, stillingar
+  vardaHlid, teiknaHaus, uppfaeraMerki, STODUR_VERK, stillingar
 } from './portal.js';
 
 const ek = await vardaHlid({ badir: true });
@@ -156,6 +156,8 @@ async function start() {
         ])
       ])
     ]);
+
+    uppfaeraMerki();
   }
 
   /* ------------------------------------------------------------------
