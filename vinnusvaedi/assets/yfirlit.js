@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import {
-  gogn, el, tom, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
+  gogn, el, tom, fylla, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
   vardaHlid, teiknaHaus, STODUR_VERK
 } from './portal.js';
 
@@ -34,7 +34,7 @@ async function start() {
     const lifandiVerk = verkefni.filter((v) => !['lokid', 'hafnad'].includes(v.stada));
     const lokinVerk = verkefni.filter((v) => ['lokid', 'hafnad'].includes(v.stada));
 
-    tom(innihald).append(
+    fylla(innihald, [
       el('div', { class: 'page-head', style: 'padding-top:0' }, [
         el('h1', { style: 'font-size:clamp(28px,24px+1.3vw,40px)',
                    texti: 'Hæ ' + ek.nafn.split(' ')[0] }),
@@ -111,7 +111,7 @@ async function start() {
           ])
         ])
       ])
-    );
+    ]);
   }
 
   /* ------------------------------------------------------------------

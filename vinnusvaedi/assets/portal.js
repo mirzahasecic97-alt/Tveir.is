@@ -29,6 +29,16 @@ export function el(tag, eigin, born) {
 
 export function tom(n) { while (n.firstChild) n.removeChild(n.firstChild); return n; }
 
+/* append() breytir null í textann "null", því síum við fyrst. */
+export function fylla(n, born) {
+  tom(n);
+  for (const b of [].concat(born || [])) {
+    if (b === null || b === undefined || b === false) continue;
+    n.append(b);
+  }
+  return n;
+}
+
 /* Íslensk mánaðanofn handvirkt. Chrome er ekki alltaf með is-IS
    locale gögn og skilar þá enskum mánuðum. */
 const MAN_STUTT = ['jan.', 'feb.', 'mars', 'apr.', 'maí', 'jún.', 'júl.',
@@ -71,6 +81,14 @@ export function sidan(gildi) {
   return dags(gildi);
 }
 
+/* 1536000 -> "1,5 MB" */
+export function staerd(bitar) {
+  if (!bitar && bitar !== 0) return '';
+  if (bitar < 1024) return bitar + ' B';
+  if (bitar < 1024 * 1024) return Math.round(bitar / 1024) + ' KB';
+  return String(Math.round(bitar / 1024 / 102.4) / 10).replace('.', ',') + ' MB';
+}
+
 /* Er skiladagur liðinn */
 export function erSeint(dagsetning) {
   if (!dagsetning) return false;
@@ -103,11 +121,11 @@ export async function vardaHlid({ krefstAdmin, badir } = {}) {
     teiknaHaus(ek, 'Vinnusvæði');
     const m = document.getElementById('innihald');
     if (m) {
-      tom(m).append(el('div', { class: 'card pblokk' }, [
+      fylla(m, [el('div', { class: 'card pblokk' }, [
         el('h2', { texti: 'Aðgangurinn er ekki tengdur fyrirtæki' }),
         el('p', { class: 'lead', style: 'margin-top:10px',
           texti: 'Við þurfum að tengja þig við fyrirtækið þitt áður en þú sérð verkefnin. Sendu okkur línu á tveir@tveir.is og við gerum það í dag.' })
-      ]));
+      ])]);
     }
     return null;
   }
@@ -123,7 +141,7 @@ export function teiknaHaus(ek, heiti) {
 
   const admin = ek.hlutverk === 'admin';
 
-  tom(haus).append(
+  fylla(haus, [
     el('div', { class: 'wrap' }, [
       el('div', { class: 'phead__inn' }, [
         el('a', { class: 'phead__logo', href: admin ? 'stjornbord.html' : 'yfirlit.html',
@@ -147,7 +165,7 @@ export function teiknaHaus(ek, heiti) {
         ])
       ])
     ])
-  );
+  ]);
 }
 
 /* ------------------------------------------------------------------
@@ -174,6 +192,7 @@ export async function opnaTask(id, { admin, eftir } = {}) {
   const ek = await g.eg();
   const notendur = admin ? await g.notendur() : [];
   const ath = await g.athugasemdir(id);
+  const skrar = await g.vidhengi(id);
 
   const stodurILausu = admin
     ? Object.keys(STODUR_TASK)
@@ -205,7 +224,7 @@ export async function opnaTask(id, { admin, eftir } = {}) {
     rows: '3', placeholder: 'Skrifaðu svar eða spurningu', 'aria-label': 'Ný athugasemd'
   });
 
-  tom(kort).append(
+  fylla(kort, [
     el('div', { class: 'pdialog__haus' }, [
       el('h2', { texti: t.titill }),
       el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '✕',
@@ -228,6 +247,38 @@ export async function opnaTask(id, { admin, eftir } = {}) {
       t.verkefni ? el('li', {}, [el('span', { texti: 'Verkefni' }), el('span', { texti: t.verkefni.titill })]) : null,
       el('li', {}, [el('span', { texti: 'Stofnað' }), el('span', { texti: dags(t.stofnad, true) })])
     ]),
+
+    el('h3', { style: 'margin-top:24px; font-family:var(--f-body); font-weight:500; font-size:15px',
+               texti: 'Viðhengi' }),
+
+    skrar.length
+      ? el('ul', { class: 'skralisti' }, skrar.map((sk) => skraLina(sk, g)))
+      : el('p', { class: 'tomt', style: 'padding:14px 0', texti: 'Engin skrá enn.' }),
+
+    (() => {
+      const inntak = el('input', {
+        type: 'file', multiple: true, style: 'display:none',
+        onchange: async (e) => {
+          const skrarNyjar = Array.from(e.target.files || []);
+          if (!skrarNyjar.length) return;
+          merki.textContent = 'Hleð upp';
+          try {
+            for (const sk of skrarNyjar) {
+              if (sk.size > 25 * 1024 * 1024) {
+                throw new Error(sk.name + ' er stærri en 25 MB. Sendu okkur hlekk á hana í staðinn.');
+              }
+              await g.nyttVidhengi(id, t.fyrirtaeki_id, sk);
+            }
+            opnaTask(id, { admin, eftir });
+          } catch (villa) {
+            merki.textContent = villa.message;
+            merki.className = 'form-status form-status--err';
+          }
+        }
+      });
+      const merki = el('span', { texti: 'Bæta við skrá' });
+      return el('label', { class: 'btn btn--sm btn--ghost', style: 'margin-top:4px' }, [merki, inntak]);
+    })(),
 
     el('h3', { style: 'margin-top:24px; font-family:var(--f-body); font-weight:500; font-size:15px',
                texti: 'Samtal' }),
@@ -260,9 +311,32 @@ export async function opnaTask(id, { admin, eftir } = {}) {
         el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Senda' })
       ])
     ])
-  );
+  ]);
 
   if (!d.open) d.showModal();
+}
+
+function skraLina(sk, g) {
+  return el('li', { class: 'skra' }, [
+    el('span', { class: 'skra__nafn', texti: sk.nafn }),
+    el('span', { class: 'skra__meta', texti: staerd(sk.staerd) }),
+    el('button', {
+      type: 'button', class: 'skra__opna', texti: 'Opna',
+      onclick: async (e) => {
+        const hnappur = e.currentTarget;
+        hnappur.disabled = true;
+        try {
+          const slod = await g.slodAVidhengi(sk);
+          window.open(slod, '_blank', 'noopener');
+        } catch (villa) {
+          hnappur.textContent = 'Ekki til';
+          hnappur.title = villa.message;
+        } finally {
+          hnappur.disabled = false;
+        }
+      }
+    })
+  ]);
 }
 
 /* ------------------------------------------------------------------

@@ -159,6 +159,113 @@ async function supabaseBakendi() {
     async tengjaNotanda(id, fyrirtaeki_id) {
       const svar = await sb.from('notendur').update({ fyrirtaeki_id }).eq('id', id).select().single();
       kasta(svar); return svar.data;
+    },
+
+    /* ---------- Innri: tímar og reikningur, bara við ---------- */
+
+    async innri(verkefni_id) {
+      let q = sb.from('verkefni_innri').select('*');
+      if (verkefni_id) {
+        const svar = await q.eq('verkefni_id', verkefni_id).maybeSingle();
+        kasta(svar); return svar.data || { verkefni_id, klst: 0, reikningur: 'ekki_rukkad' };
+      }
+      const svar = await q; kasta(svar); return svar.data;
+    },
+
+    async skraTima(verkefni_id, klst, nota) {
+      const ek = await eg();
+      const svar = await sb.from('timar')
+        .insert({ verkefni_id, klst, nota: nota || null, notandi: ek.id })
+        .select('*, notandi_nafn:notandi(nafn)').single();
+      kasta(svar); return svar.data;
+    },
+
+    async timaskraning(verkefni_id) {
+      const svar = await sb.from('timar')
+        .select('*, notandi_nafn:notandi(nafn)')
+        .eq('verkefni_id', verkefni_id).order('stofnad', { ascending: false });
+      kasta(svar); return svar.data;
+    },
+
+    async eydaTima(id) {
+      const svar = await sb.from('timar').delete().eq('id', id);
+      kasta(svar);
+    },
+
+    async setjaReikning(verkefni_id, reikningur) {
+      const svar = await sb.from('verkefni_innri').upsert({
+        verkefni_id, reikningur,
+        reikningur_dags: reikningur === 'ekki_rukkad' ? null : new Date().toISOString().slice(0, 10),
+        uppfaert: new Date().toISOString()
+      }).select().single();
+      kasta(svar); return svar.data;
+    },
+
+    /* ---------- Snið ---------- */
+
+    async snid() {
+      const svar = await sb.from('snid').select('*, snid_taskar(*)').order('nafn');
+      kasta(svar);
+      return (svar.data || []).map((s) => ({
+        ...s, taskar: (s.snid_taskar || []).sort((a, b) => a.rod - b.rod)
+      }));
+    },
+
+    async nyttVerkefniAdmin({ fyrirtaeki_id, titill, lysing, skiladagur, verd_okkar, innan_samnings, snid_id }) {
+      const ek = await eg();
+      const svar = await sb.from('verkefni').insert({
+        fyrirtaeki_id, titill, lysing: lysing || null, skiladagur: skiladagur || null,
+        stada: 'i_vinnslu', hofundur: ek.id, budget: null,
+        innan_samnings: !!innan_samnings,
+        verd_okkar: innan_samnings ? null : (verd_okkar || null)
+      }).select().single();
+      kasta(svar);
+      if (snid_id) await this.beitaSnidi(svar.data, snid_id);
+      return svar.data;
+    },
+
+    async beitaSnidi(v, snid_id) {
+      const ek = await eg();
+      const sn = await sb.from('snid_taskar').select('*').eq('snid_id', snid_id).order('rod');
+      kasta(sn);
+      if (!sn.data || !sn.data.length) return;
+      const kunni = await sb.from('notendur').select('id')
+        .eq('fyrirtaeki_id', v.fyrirtaeki_id).neq('hlutverk', 'admin').limit(1);
+      const theirra = kunni.data && kunni.data[0] ? kunni.data[0].id : null;
+      const svar = await sb.from('taskar').insert(sn.data.map((t) => ({
+        fyrirtaeki_id: v.fyrirtaeki_id, verkefni_id: v.id,
+        titill: t.titill, lysing: t.lysing, forgangur: t.forgangur,
+        stada: t.a_hverjum === 'vidskiptavinur' ? 'bid_vidskiptavinar' : 'nytt',
+        abyrgd: t.a_hverjum === 'vidskiptavinur' ? theirra : ek.id,
+        hofundur: ek.id
+      })));
+      kasta(svar);
+    },
+
+    /* ---------- Viðhengi ---------- */
+
+    async vidhengi(task_id) {
+      const svar = await sb.from('vidhengi')
+        .select('*, notandi:hofundur(nafn)').eq('task_id', task_id).order('stofnad');
+      kasta(svar); return svar.data;
+    },
+
+    async nyttVidhengi(task_id, fyrirtaeki_id, skra) {
+      const ek = await eg();
+      const hreintNafn = skra.name.replace(/[^\w.\- ]+/g, '_');
+      const slod = fyrirtaeki_id + '/' + task_id + '/' + Date.now() + '-' + hreintNafn;
+      const upp = await sb.storage.from('vidhengi').upload(slod, skra, { upsert: false });
+      if (upp.error) throw new Error(upp.error.message);
+      const svar = await sb.from('vidhengi').insert({
+        task_id, slod, nafn: skra.name, staerd: skra.size, hofundur: ek.id
+      }).select('*, notandi:hofundur(nafn)').single();
+      kasta(svar); return svar.data;
+    },
+
+    async slodAVidhengi(v) {
+      const svar = await sb.storage.from('vidhengi').createSignedUrl(v.slod, 60);
+      if (svar.error) throw new Error(svar.error.message);
+      return svar.data.signedUrl;
     }
   };
 }
@@ -217,7 +324,12 @@ function prufuBakendi() {
         lysing: 'Tólf færslur og tvö reels.',
         stada: 'lokid', framvinda: 100, skiladagur: dagsetning(-4),
         budget: null, innan_samnings: true, verd_okkar: null,
-        hofundur: 'u-mirza', svar_admin: null, stofnad: dags(-40), uppfaert: dags(-4) }
+        hofundur: 'u-mirza', svar_admin: null, stofnad: dags(-40), uppfaert: dags(-4) },
+      { id: 'v6', fyrirtaeki_id: 'f3', titill: 'Lendingarsíða og auglýsingar',
+        lysing: 'Ein síða, þremur auglýsingum og eftirfylgni í pósti.',
+        stada: 'lokid', framvinda: 100, skiladagur: dagsetning(-11),
+        budget: 400000, innan_samnings: false, verd_okkar: 420000,
+        hofundur: 'u-mirza', svar_admin: null, stofnad: dags(-52), uppfaert: dags(-11) }
     ];
 
     const taskar = [
@@ -258,13 +370,71 @@ function prufuBakendi() {
       { id: 'a3', task_id: 't4', hofundur: 'u-haf', texti: 'Þrettándi passar betur okkar fólki.', stofnad: dags(-1) }
     ];
 
-    return { fyrirtaeki: fyr, notendur, verkefni, taskar, athugasemdir, innskradur: null };
+    const innri = {
+      v1: { verkefni_id: 'v1', klst: 31,   reikningur: 'ekki_rukkad', reikningur_dags: null },
+      v2: { verkefni_id: 'v2', klst: 9.5,  reikningur: 'ekki_rukkad', reikningur_dags: null },
+      v3: { verkefni_id: 'v3', klst: 0,    reikningur: 'ekki_rukkad', reikningur_dags: null },
+      v4: { verkefni_id: 'v4', klst: 0,    reikningur: 'ekki_rukkad', reikningur_dags: null },
+      v5: { verkefni_id: 'v5', klst: 22,   reikningur: 'rukkad', reikningur_dags: dagsetning(-3) },
+      v6: { verkefni_id: 'v6', klst: 38,   reikningur: 'ekki_rukkad', reikningur_dags: null }
+    };
+
+    const timaskraning = [
+      { id: 'k1', verkefni_id: 'v1', notandi: 'u-mirza', klst: 8,   nota: 'Grunnur og útlit',   stofnad: dags(-14) },
+      { id: 'k2', verkefni_id: 'v1', notandi: 'u-mirza', klst: 12,  nota: 'Undirsíður',         stofnad: dags(-8) },
+      { id: 'k3', verkefni_id: 'v1', notandi: 'u-oskar', klst: 11,  nota: 'Myndir og efni',    stofnad: dags(-4) },
+      { id: 'k4', verkefni_id: 'v2', notandi: 'u-oskar', klst: 9.5, nota: 'Undirbúningur',      stofnad: dags(-3) },
+      { id: 'k5', verkefni_id: 'v5', notandi: 'u-oskar', klst: 22,  nota: null,                stofnad: dags(-10) },
+      { id: 'k6', verkefni_id: 'v6', notandi: 'u-mirza', klst: 21,  nota: 'Síða og form',     stofnad: dags(-30) },
+      { id: 'k7', verkefni_id: 'v6', notandi: 'u-oskar', klst: 17,  nota: 'Auglýsingar',      stofnad: dags(-20) }
+    ];
+
+    const snid = [
+      { id: 's1', nafn: 'Ný vefsíða', lysing: 'Fimm undirsíður, form og tenging við lén', taskar: [
+        { titill: 'Senda logo í vektor', lysing: 'Við þurfum .ai eða .svg skrá, png dugar ekki í prentun.', a_hverjum: 'vidskiptavinur', forgangur: 'hatt' },
+        { titill: 'Senda myndir af vörum eða starfsemi', lysing: null, a_hverjum: 'vidskiptavinur', forgangur: 'venjulegt' },
+        { titill: 'Skrifa texta á Um okkur', lysing: 'Fjórar til fimm línur. Við getum skrifað hann ef þú vilt.', a_hverjum: 'vidskiptavinur', forgangur: 'venjulegt' },
+        { titill: 'Setja upp grunn og útlit', lysing: null, a_hverjum: 'tveir', forgangur: 'venjulegt' },
+        { titill: 'Undirsíður og efni', lysing: null, a_hverjum: 'tveir', forgangur: 'venjulegt' },
+        { titill: 'Form og tenging við póst', lysing: null, a_hverjum: 'tveir', forgangur: 'venjulegt' },
+        { titill: 'Leitarvélar, sitemap og lýsingar', lysing: null, a_hverjum: 'tveir', forgangur: 'venjulegt' },
+        { titill: 'Yfirferð með viðskiptavin', lysing: null, a_hverjum: 'vidskiptavinur', forgangur: 'hatt' },
+        { titill: 'Tengja lén og setja í loftið', lysing: null, a_hverjum: 'tveir', forgangur: 'hatt' }
+      ] },
+      { id: 's2', nafn: 'Efnispakki mánaðar', lysing: 'Tökudagur, klipping og færslur', taskar: [
+        { titill: 'Velja tökudag', lysing: null, a_hverjum: 'vidskiptavinur', forgangur: 'hatt' },
+        { titill: 'Senda okkur áherslur mánaðarins', lysing: 'Tilboð, nýjar vörur eða viðburðir sem við eigum að ýta á.', a_hverjum: 'vidskiptavinur', forgangur: 'venjulegt' },
+        { titill: 'Tökur', lysing: null, a_hverjum: 'tveir', forgangur: 'venjulegt' },
+        { titill: 'Klipping', lysing: null, a_hverjum: 'tveir', forgangur: 'venjulegt' },
+        { titill: 'Yfirferð á efni', lysing: null, a_hverjum: 'vidskiptavinur', forgangur: 'venjulegt' },
+        { titill: 'Birting', lysing: null, a_hverjum: 'tveir', forgangur: 'venjulegt' }
+      ] },
+      { id: 's3', nafn: 'Vörumerki', lysing: 'Merki, litir, letur og leiðbeiningar', taskar: [
+        { titill: 'Samtal um hvað vörumerkið á að segja', lysing: null, a_hverjum: 'vidskiptavinur', forgangur: 'hatt' },
+        { titill: 'Senda okkur það sem er til nú þegar', lysing: 'Gamalt merki, litir, myndir, hvað sem er.', a_hverjum: 'vidskiptavinur', forgangur: 'venjulegt' },
+        { titill: 'Fyrstu tillögur', lysing: null, a_hverjum: 'tveir', forgangur: 'venjulegt' },
+        { titill: 'Val á leið', lysing: null, a_hverjum: 'vidskiptavinur', forgangur: 'hatt' },
+        { titill: 'Fullvinnsla og skilaskrár', lysing: null, a_hverjum: 'tveir', forgangur: 'venjulegt' },
+        { titill: 'Leiðbeiningar til að fara eftir', lysing: null, a_hverjum: 'tveir', forgangur: 'venjulegt' }
+      ] }
+    ];
+
+    return { fyrirtaeki: fyr, notendur, verkefni, taskar, athugasemdir,
+             innri, timaskraning, snid, vidhengi: [], innskradur: null };
   };
 
   function les() {
     try {
       const h = localStorage.getItem(LYKILL);
-      if (h) return JSON.parse(h);
+      if (h) {
+        /* Eldri vistun getur vantað hluti sem bættust við síðar */
+        const vistað = JSON.parse(h);
+        const sjalf = sjalfgefid();
+        for (const lykill of Object.keys(sjalf)) {
+          if (vistað[lykill] === undefined) vistað[lykill] = sjalf[lykill];
+        }
+        return vistað;
+      }
     } catch (e) { /* localStorage getur verið lokað */ }
     return sjalfgefid();
   }
@@ -273,6 +443,19 @@ function prufuBakendi() {
 
   function vista() {
     try { localStorage.setItem(LYKILL, JSON.stringify(g)); } catch (e) { /* sleppum */ }
+  }
+
+  /* Skrárnar sjálfar, bara í minni meðan síðan er opin */
+  const BLOB = new Map();
+
+  function reiknaKlst(verkefni_id) {
+    const alls = g.timaskraning
+      .filter((t) => t.verkefni_id === verkefni_id)
+      .reduce((a, t) => a + Number(t.klst), 0);
+    if (!g.innri[verkefni_id]) {
+      g.innri[verkefni_id] = { verkefni_id, klst: 0, reikningur: 'ekki_rukkad', reikningur_dags: null };
+    }
+    g.innri[verkefni_id].klst = Math.round(alls * 10) / 10;
   }
 
   const finna = (listi, id) => listi.find((x) => x.id === id) || null;
@@ -402,8 +585,125 @@ function prufuBakendi() {
       n.fyrirtaeki_id = fyrirtaeki_id; vista(); return n;
     },
 
+    /* ---------- Innri: tímar og reikningur ---------- */
+
+    async innri(verkefni_id) {
+      if (verkefni_id) {
+        return g.innri[verkefni_id]
+          || { verkefni_id, klst: 0, reikningur: 'ekki_rukkad', reikningur_dags: null };
+      }
+      return Object.values(g.innri);
+    },
+
+    async skraTima(verkefni_id, klst, nota) {
+      const ek = await this.eg();
+      const t = {
+        id: nyttId(), verkefni_id, notandi: ek.id, klst: Number(klst),
+        nota: nota || null, stofnad: new Date().toISOString()
+      };
+      g.timaskraning.unshift(t);
+      reiknaKlst(verkefni_id);
+      vista();
+      return { ...t, notandi_nafn: { nafn: ek.nafn } };
+    },
+
+    async timaskraning(verkefni_id) {
+      return g.timaskraning
+        .filter((t) => t.verkefni_id === verkefni_id)
+        .map((t) => ({ ...t, notandi_nafn: { nafn: (finna(g.notendur, t.notandi) || {}).nafn } }))
+        .sort(nyjast);
+    },
+
+    async eydaTima(id) {
+      const t = finna(g.timaskraning, id);
+      if (!t) return;
+      g.timaskraning = g.timaskraning.filter((x) => x.id !== id);
+      reiknaKlst(t.verkefni_id);
+      vista();
+    },
+
+    async setjaReikning(verkefni_id, reikningur) {
+      if (!g.innri[verkefni_id]) {
+        g.innri[verkefni_id] = { verkefni_id, klst: 0, reikningur: 'ekki_rukkad', reikningur_dags: null };
+      }
+      g.innri[verkefni_id].reikningur = reikningur;
+      g.innri[verkefni_id].reikningur_dags =
+        reikningur === 'ekki_rukkad' ? null : new Date().toISOString().slice(0, 10);
+      vista();
+      return g.innri[verkefni_id];
+    },
+
+    /* ---------- Snið ---------- */
+
+    async snid() { return g.snid; },
+
+    async nyttVerkefniAdmin({ fyrirtaeki_id, titill, lysing, skiladagur, verd_okkar, innan_samnings, snid_id }) {
+      const ek = await this.eg();
+      const v = {
+        id: nyttId(), fyrirtaeki_id, titill, lysing: lysing || null,
+        skiladagur: skiladagur || null, stada: 'i_vinnslu', framvinda: 0,
+        hofundur: ek.id, svar_admin: null, budget: null,
+        innan_samnings: !!innan_samnings,
+        verd_okkar: innan_samnings ? null : (verd_okkar || null),
+        stofnad: new Date().toISOString(), uppfaert: new Date().toISOString()
+      };
+      g.verkefni.unshift(v);
+      g.innri[v.id] = { verkefni_id: v.id, klst: 0, reikningur: 'ekki_rukkad', reikningur_dags: null };
+      if (snid_id) await this.beitaSnidi(v, snid_id);
+      vista();
+      return v;
+    },
+
+    async beitaSnidi(v, snid_id) {
+      const ek = await this.eg();
+      const sn = finna(g.snid, snid_id);
+      if (!sn) return;
+      const theirra = (g.notendur.find((n) => n.fyrirtaeki_id === v.fyrirtaeki_id
+                                           && n.hlutverk !== 'admin') || {}).id || null;
+      sn.taskar.forEach((t) => {
+        g.taskar.unshift({
+          id: nyttId(), fyrirtaeki_id: v.fyrirtaeki_id, verkefni_id: v.id,
+          titill: t.titill, lysing: t.lysing, forgangur: t.forgangur,
+          stada: t.a_hverjum === 'vidskiptavinur' ? 'bid_vidskiptavinar' : 'nytt',
+          abyrgd: t.a_hverjum === 'vidskiptavinur' ? theirra : ek.id,
+          hofundur: ek.id, skiladagur: null, lokid_dags: null,
+          stofnad: new Date().toISOString(), uppfaert: new Date().toISOString()
+        });
+      });
+      vista();
+    },
+
+    /* ---------- Viðhengi ----------
+       Í prufu lifa skrárnar sjálfar bara í minni, því localStorage þolir
+       ekki myndir. Nafn og stærð haldast, hlekkurinn deyr við endurhleðslu. */
+
+    async vidhengi(task_id) {
+      return g.vidhengi
+        .filter((v) => v.task_id === task_id)
+        .map((v) => ({ ...v, notandi: finna(g.notendur, v.hofundur), lifandi: BLOB.has(v.id) }));
+    },
+
+    async nyttVidhengi(task_id, fyrirtaeki_id, skra) {
+      const ek = await this.eg();
+      const v = {
+        id: nyttId(), task_id, slod: null, nafn: skra.name, staerd: skra.size,
+        hofundur: ek.id, stofnad: new Date().toISOString()
+      };
+      BLOB.set(v.id, skra);
+      g.vidhengi.push(v);
+      vista();
+      return { ...v, notandi: finna(g.notendur, ek.id), lifandi: true };
+    },
+
+    async slodAVidhengi(v) {
+      const skra = BLOB.get(v.id);
+      if (!skra) throw new Error('Skráin er horfin. Í prufustillingu lifa viðhengi bara þá '
+        + 'lötu sem síðan er opin.');
+      return URL.createObjectURL(skra);
+    },
+
     /* Bara í prufu: byrja upp á nýtt */
-    hreinsa() { g = sjalfgefid(); vista(); }
+    hreinsa() { g = sjalfgefid(); BLOB.clear(); vista(); }
   };
 }
 

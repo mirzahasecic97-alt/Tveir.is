@@ -3,8 +3,8 @@
    ========================================================================== */
 
 import {
-  gogn, el, tom, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
-  vardaHlid, teiknaHaus, STODUR_VERK
+  gogn, el, tom, fylla, dags, sidan, erSeint, pilla, taskLina, kronur, lesaTolu,
+  vardaHlid, teiknaHaus, STODUR_VERK, stillingar
 } from './portal.js';
 
 const ek = await vardaHlid({ badir: true });
@@ -22,22 +22,24 @@ async function start() {
     const v = id ? await g.verkefniEitt(id) : null;
 
     if (!v) {
-      tom(innihald).append(el('div', { class: 'card pblokk' }, [
+      fylla(innihald, [el('div', { class: 'card pblokk' }, [
         el('h1', { style: 'font-size:26px', texti: 'Verkefnið fannst ekki' }),
         el('p', { class: 'lead', style: 'margin-top:10px',
                   texti: 'Hlekkurinn er líklega úr gildi fallinn.' }),
         el('a', { class: 'btn btn--sm', style: 'margin-top:18px',
                   href: admin ? 'stjornbord.html' : 'yfirlit.html', texti: 'Til baka' })
-      ]));
+      ])]);
       return;
     }
 
     const taskar = await g.taskar({ verkefni_id: v.id });
+    const innri = admin ? await g.innri(v.id) : null;
+    const timalog = admin ? await g.timaskraning(v.id) : [];
     const opin = taskar.filter((t) => t.stada !== 'lokid');
     const lokin = taskar.filter((t) => t.stada === 'lokid');
     const tillaga = v.stada === 'tillaga';
 
-    tom(innihald).append(
+    fylla(innihald, [
       el('a', { class: 'sodull', href: admin ? 'stjornbord.html' : 'yfirlit.html',
                 style: 'text-decoration:none', texti: '← Til baka' }),
 
@@ -120,16 +122,90 @@ async function start() {
             ]) : null,
 
             admin ? adminStjorn(v) : null,
+          ]),
 
-            !admin && !tillaga && v.stada !== 'lokid' && v.stada !== 'hafnad'
-              ? el('button', { type: 'button', class: 'btn btn--block btn--sm btn--ghost',
-                               style: 'margin-top:18px', texti: 'Nýr taskur í þetta',
+          admin ? timaKort(v, innri, timalog) : null,
+
+
+          !admin && !tillaga && v.stada !== 'lokid' && v.stada !== 'hafnad'
+            ? el('div', { class: 'card pblokk', style: 'margin-top:clamp(16px,2vw,22px)' }, [
+                el('button', { type: 'button', class: 'btn btn--block btn--sm btn--ghost',
+                               texti: 'Nýr taskur í þetta',
                                onclick: () => nyrTaskIVerk(v) })
-              : null
-          ])
+              ])
+            : null
         ])
       ])
-    );
+    ]);
+  }
+
+  /* ------------------------------------------------------------------
+     Tímar og rukkun. Bara við sjáum þetta, það býr í sértöflu með
+     sinni eigin stefnu svo viðskiptavinur nái ekki framlegðinni.
+     ------------------------------------------------------------------ */
+  function timaKort(v, innri, timalog) {
+    const klst = Number(innri.klst) || 0;
+    const aTimann = klst > 0 && v.verd_okkar ? Math.round(v.verd_okkar / klst) : null;
+    const lagt = aTimann !== null && aTimann < (stillingar.timagjald || 0);
+
+    async function baeta(n) {
+      await g.skraTima(v.id, n, null);
+      teikna();
+    }
+
+    const reikningur = el('select', {
+      'aria-label': 'Reikningsstaða',
+      onchange: async (e) => { await g.setjaReikning(v.id, e.target.value); teikna(); }
+    }, [
+      el('option', { value: 'ekki_rukkad', selected: innri.reikningur === 'ekki_rukkad',
+                     texti: 'Ekki rukkað' }),
+      el('option', { value: 'rukkad', selected: innri.reikningur === 'rukkad',
+                     texti: 'Reikningur sendur' }),
+      el('option', { value: 'greitt', selected: innri.reikningur === 'greitt',
+                     texti: 'Greitt' })
+    ]);
+
+    return el('div', { class: 'card pblokk', style: 'margin-top:clamp(16px,2vw,22px)' }, [
+      el('h2', { style: 'font-size:17px; font-family:var(--f-body); font-weight:500',
+                 texti: 'Tímar og rukkun' }),
+
+      el('div', { class: 'timar__tala', style: 'margin-top:14px',
+                  texti: String(klst).replace('.', ',') + ' klst.' }),
+
+      v.innan_samnings
+        ? el('p', { class: 'timar__hja', texti: 'Innan áskriftarinnar' })
+        : aTimann !== null
+          ? el('p', { class: 'timar__hja' + (lagt ? ' er-lagt' : '') }, [
+              el('strong', { texti: kronur(aTimann) }),
+              document.createTextNode(' á tímann')
+            ])
+          : el('p', { class: 'timar__hja',
+                      texti: v.verd_okkar ? 'Engir tímar skráðir' : 'Ekkert verð sett' }),
+
+      el('div', { class: 'timar__hnappar' },
+        [1, 2, 4, 8].map((n) => el('button', {
+          type: 'button', texti: '+' + n, 'aria-label': 'Bæta við ' + n + ' tímum',
+          onclick: () => baeta(n)
+        }))),
+
+      timalog.length
+        ? el('ul', { class: 'timalog' }, timalog.slice(0, 8).map((t) => el('li', {}, [
+            el('b', { texti: String(t.klst).replace('.', ',') + ' klst.' }),
+            el('span', { class: 'nota',
+                         texti: (t.notandi_nafn ? t.notandi_nafn.nafn.split(' ')[0] : '')
+                                + (t.nota ? ', ' + t.nota : '') }),
+            el('span', { style: 'flex:none', texti: sidan(t.stofnad) }),
+            el('button', {
+              type: 'button', texti: '✕', 'aria-label': 'Eyða skráningu',
+              onclick: async () => { await g.eydaTima(t.id); teikna(); }
+            })
+          ])))
+        : null,
+
+      v.innan_samnings ? null : el('div', { class: 'field', style: 'margin-top:18px' }, [
+        el('span', { texti: 'Reikningur' }), reikningur
+      ])
+    ]);
   }
 
   /* ------------------------------------------------------------------

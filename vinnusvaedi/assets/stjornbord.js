@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import {
-  gogn, el, tom, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
+  gogn, el, tom, fylla, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
   vardaHlid, teiknaHaus, STODUR_VERK
 } from './portal.js';
 
@@ -19,12 +19,26 @@ async function start() {
   let fyrirtaekiSia = '';
 
   async function teikna() {
-    const [verkefni, taskar, fyrirtaeki, notendur] = await Promise.all([
-      g.verkefni(), g.taskar({}), g.fyrirtaeki(), g.notendur()
+    const [verkefni, taskar, fyrirtaeki, notendur, innriOll, snidin] = await Promise.all([
+      g.verkefni(), g.taskar({}), g.fyrirtaeki(), g.notendur(), g.innri(), g.snid()
     ]);
+    const innri = {};
+    (innriOll || []).forEach((i) => { innri[i.verkefni_id] = i; });
 
     const tillogur = verkefni.filter((v) => v.stada === 'tillaga');
     const otengdir = notendur.filter((n) => n.hlutverk !== 'admin' && !n.fyrirtaeki_id);
+
+    const lifandi = verkefni.filter((v) => ['samthykkt', 'i_vinnslu', 'bid_svar'].includes(v.stada));
+    const askriftir = fyrirtaeki
+      .filter((f) => f.er_askrift)
+      .reduce((a, f) => a + (Number(f.askrift_verd) || 0), 0);
+    const ivinnslu = lifandi
+      .filter((v) => !v.innan_samnings)
+      .reduce((a, v) => a + (Number(v.verd_okkar) || 0), 0);
+    const oinnheimt = verkefni.filter((v) =>
+      v.stada === 'lokid' && !v.innan_samnings
+      && (innri[v.id] || {}).reikningur === 'ekki_rukkad' && v.verd_okkar);
+    const oinnheimtAlls = oinnheimt.reduce((a, v) => a + Number(v.verd_okkar), 0);
 
     const siad = taskar.filter((t) => !fyrirtaekiSia || t.fyrirtaeki_id === fyrirtaekiSia);
     const opin = siad.filter((t) => t.stada !== 'lokid');
@@ -37,13 +51,29 @@ async function start() {
       : flipi === 'lokid' ? siad.filter((t) => t.stada === 'lokid')
       : opin;
 
-    tom(innihald).append(
+    fylla(innihald, [
       el('div', { class: 'page-head', style: 'padding-top:0' }, [
         el('h1', { style: 'font-size:clamp(28px,24px+1.3vw,40px)', texti: 'Stjórnborð' }),
         el('p', { class: 'lead',
           texti: nyir.length
             ? nyir.length + (nyir.length === 1 ? ' nýr taskur bíður okkar.' : ' nýir taskar bíða okkar.')
             : 'Ekkert nýtt hefur komið inn.' })
+      ]),
+
+      /* ---------- peningarnir ---------- */
+      el('dl', { class: 'tekjur', style: 'margin-top:4px' }, [
+        el('div', { class: 'adal' }, [
+          el('dt', { texti: 'Áskriftir á mánuði' }),
+          el('dd', { texti: kronur(askriftir) || '0 kr.' })
+        ]),
+        el('div', {}, [
+          el('dt', { texti: 'Í vinnslu' }),
+          el('dd', { texti: kronur(ivinnslu) || '0 kr.' })
+        ]),
+        el('div', { class: oinnheimtAlls ? 'vidvorun' : '' }, [
+          el('dt', { texti: 'Lokið en órukkað' }),
+          el('dd', { texti: kronur(oinnheimtAlls) || '0 kr.' })
+        ])
       ]),
 
       /* ---------- tillögur ---------- */
@@ -86,12 +116,15 @@ async function start() {
 
           /* ---------- verkefni í gangi ---------- */
           el('section', { class: 'card pblokk' }, [
-            el('div', { class: 'pyfir' }, [el('h2', { texti: 'Verkefni í gangi' })]),
+            el('div', { class: 'pyfir' }, [
+              el('h2', { texti: 'Verkefni í gangi' }),
+              el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Nýtt verkefni',
+                             onclick: () => nyttVerkefniForm(fyrirtaeki, snidin) })
+            ]),
             (() => {
-              const lifandi = verkefni.filter((v) => ['samthykkt', 'i_vinnslu', 'bid_svar'].includes(v.stada)
-                && (!fyrirtaekiSia || v.fyrirtaeki_id === fyrirtaekiSia));
-              return lifandi.length
-                ? el('div', { class: 'verk-listi' }, lifandi.map((v) =>
+              const synileg = lifandi.filter((v) => !fyrirtaekiSia || v.fyrirtaeki_id === fyrirtaekiSia);
+              return synileg.length
+                ? el('div', { class: 'verk-listi' }, synileg.map((v) =>
                     el('a', { class: 'verk', href: 'verk.html?id=' + encodeURIComponent(v.id) }, [
                       el('div', { class: 'verk__linaein' }, [
                         el('span', { class: 'verk__titill', texti: v.titill }),
@@ -113,6 +146,24 @@ async function start() {
 
         /* ---------- hægri ---------- */
         el('aside', { class: 'pside' }, [
+
+          /* lokið en órukkað */
+          oinnheimt.length ? el('div', { class: 'card pblokk' }, [
+            el('h2', { style: 'font-size:17px; font-family:var(--f-body); font-weight:500',
+                       texti: 'Bíður reiknings' }),
+            el('p', { class: 'lead', style: 'font-size:14px; margin-top:8px',
+                      texti: 'Búið og órukkað. Þetta er það sem gleymist.' }),
+            el('ul', { class: 'rukkun' }, oinnheimt.map((v) => el('li', {}, [
+              el('span', { class: 'nafn' }, [
+                el('a', { href: 'verk.html?id=' + encodeURIComponent(v.id),
+                          style: 'color:inherit; text-decoration:none', texti: v.titill })
+              ]),
+              el('span', { class: 'upph', texti: kronur(v.verd_okkar) }),
+              el('button', { type: 'button', texti: 'Rukkað', onclick: async () => {
+                await g.setjaReikning(v.id, 'rukkad'); teikna();
+              } })
+            ])))
+          ]) : null,
 
           /* fyrirtæki */
           el('div', { class: 'card pblokk' }, [
@@ -174,7 +225,7 @@ async function start() {
           ]) : null
         ])
       ])
-    );
+    ]);
   }
 
   /* ------------------------------------------------------------------
@@ -288,6 +339,85 @@ async function start() {
                   href: 'verk.html?id=' + encodeURIComponent(v.id), texti: 'Opna →' })
       ])
     ]);
+  }
+
+  /* ------------------------------------------------------------------
+     Nýtt verkefni frá okkur, með eða án sniðs
+     ------------------------------------------------------------------ */
+  function nyttVerkefniForm(fyrirtaeki, snidin) {
+    const titill = el('input', { type: 'text', required: true, placeholder: 'Hvað heitir verkefnið' });
+    const lysing = el('textarea', { rows: '3' });
+    const dagur  = el('input', { type: 'date' });
+    const villa  = el('div', { class: 'form-status form-status--err', hidden: true });
+
+    const fyrVal = el('select', { 'aria-label': 'Fyrirtæki' },
+      [el('option', { value: '', texti: 'Velja fyrirtæki' })].concat(
+        fyrirtaeki.map((f) => el('option', { value: f.id, texti: f.nafn }))));
+
+    const snidVal = el('select', { 'aria-label': 'Snið',
+      onchange: () => {
+        const sn = snidin.find((x) => x.id === snidVal.value);
+        if (sn && !titill.value.trim()) titill.value = sn.nafn;
+        fjoldi.textContent = sn ? sn.taskar.length + ' taskar fylgja' : '';
+      } },
+      [el('option', { value: '', texti: 'Ekkert snið, tómt verkefni' })].concat(
+        snidin.map((sn) => el('option', { value: sn.id, texti: sn.nafn }))));
+    const fjoldi = el('p', { class: 'skyring', texti: '' });
+
+    const verd = el('input', {
+      type: 'text', inputmode: 'numeric', placeholder: 'Verð okkar', 'aria-label': 'Verð okkar',
+      onblur: () => {
+        const t = lesaTolu(verd.value);
+        verd.value = t ? kronur(t).replace(' kr.', '') : '';
+      }
+    });
+    const verdReitur = el('div', { class: 'field' }, [el('span', { texti: 'Verð okkar' }), verd]);
+
+    const greidsla = el('select', { 'aria-label': 'Hvernig þetta er greitt',
+      onchange: () => { verdReitur.hidden = greidsla.value === 'innan'; } }, [
+      el('option', { value: 'ser',   texti: 'Sér verkefni, greitt sérstaklega' }),
+      el('option', { value: 'innan', texti: 'Innan áskriftarinnar' })
+    ]);
+
+    const d = el('dialog', { class: 'pdialog' }, [el('div', { class: 'pdialog__kort' }, [
+      el('div', { class: 'pdialog__haus' }, [
+        el('h2', { texti: 'Nýtt verkefni' }),
+        el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '✕',
+                       onclick: () => d.close() })
+      ]),
+      el('form', { class: 'form-grid', style: 'margin-top:18px', onsubmit: async (e) => {
+        e.preventDefault();
+        if (!fyrVal.value) { villa.textContent = 'Veldu fyrirtæki.'; villa.hidden = false; return; }
+        if (!titill.value.trim()) { villa.textContent = 'Titill vantar.'; villa.hidden = false; return; }
+        try {
+          await g.nyttVerkefniAdmin({
+            fyrirtaeki_id: fyrVal.value,
+            titill: titill.value.trim(),
+            lysing: lysing.value.trim() || null,
+            skiladagur: dagur.value || null,
+            innan_samnings: greidsla.value === 'innan',
+            verd_okkar: lesaTolu(verd.value),
+            snid_id: snidVal.value || null
+          });
+          d.close(); teikna();
+        } catch (f) { villa.textContent = f.message; villa.hidden = false; }
+      } }, [
+        el('div', { class: 'field' }, [el('span', { texti: 'Fyrirtæki' }), fyrVal]),
+        el('div', { class: 'field' }, [el('span', { texti: 'Snið' }), snidVal, fjoldi]),
+        el('label', { class: 'field' }, [el('span', { texti: 'Titill' }), titill]),
+        el('label', { class: 'field' }, [el('span', { texti: 'Lýsing' }), lysing]),
+        el('div', { class: 'field' }, [el('span', { texti: 'Greiðsla' }), greidsla]),
+        verdReitur,
+        el('label', { class: 'field' }, [el('span', { texti: 'Skiladagur' }), dagur]),
+        villa,
+        el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Búa til' })
+      ])
+    ])]);
+    d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+    d.addEventListener('close', () => d.remove());
+    document.body.append(d);
+    d.showModal();
+    fyrVal.focus();
   }
 
   function nyttFyrirtaekiForm() {

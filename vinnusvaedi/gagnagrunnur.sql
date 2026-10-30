@@ -314,3 +314,207 @@ create policy vidhengi_sett on storage.objects for insert to authenticated
 drop policy if exists vidhengi_eytt on storage.objects;
 create policy vidhengi_eytt on storage.objects for delete to authenticated
   using (bucket_id = 'vidhengi' and er_admin());
+
+-- ==========================================================================
+-- 7. Innri gögn: tímar og reikningsstaða
+--    Þetta er í sérstakri töflu en ekki dálkum á verkefni, því Row Level
+--    Security virkar á línur en ekki dálka. Ef tímarnir sætu á verkefni gæti
+--    viðskiptavinur lesið þá út úr API og reiknað framlegðina okkar.
+-- ==========================================================================
+
+create table if not exists verkefni_innri (
+  verkefni_id     uuid primary key references verkefni on delete cascade,
+  klst            numeric(7,1) not null default 0,
+  reikningur      text not null default 'ekki_rukkad'
+                  check (reikningur in ('ekki_rukkad', 'rukkad', 'greitt')),
+  reikningur_dags date,
+  uppfaert        timestamptz not null default now()
+);
+
+create table if not exists timar (
+  id          uuid primary key default gen_random_uuid(),
+  verkefni_id uuid not null references verkefni on delete cascade,
+  notandi     uuid references notendur on delete set null,
+  klst        numeric(5,1) not null,
+  nota        text,
+  stofnad     timestamptz not null default now()
+);
+
+create index if not exists timar_verkefni_idx on timar (verkefni_id, stofnad);
+
+-- Hvert verkefni fær innri línu um leið og það verður til
+create or replace function nytt_verkefni_innri() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into verkefni_innri (verkefni_id) values (new.id)
+  on conflict (verkefni_id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists nytt_verkefni_innri_trigger on verkefni;
+create trigger nytt_verkefni_innri_trigger
+  after insert on verkefni
+  for each row execute function nytt_verkefni_innri();
+
+insert into verkefni_innri (verkefni_id)
+  select id from verkefni on conflict (verkefni_id) do nothing;
+
+-- Heildartíminn reiknast upp á nýtt í hvert sinn sem skráning breytist
+create or replace function stilla_klst() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare vid uuid;
+begin
+  vid := coalesce(new.verkefni_id, old.verkefni_id);
+  insert into verkefni_innri (verkefni_id) values (vid)
+  on conflict (verkefni_id) do nothing;
+  update verkefni_innri
+     set klst = coalesce((select sum(klst) from timar where verkefni_id = vid), 0),
+         uppfaert = now()
+   where verkefni_id = vid;
+  return coalesce(new, old);
+end;
+$$;
+
+drop trigger if exists stilla_klst_trigger on timar;
+create trigger stilla_klst_trigger
+  after insert or update or delete on timar
+  for each row execute function stilla_klst();
+
+alter table verkefni_innri enable row level security;
+alter table timar          enable row level security;
+
+-- Bara við. Viðskiptavinur sér hvorki tímana né reikningsstöðuna.
+drop policy if exists innri_admin on verkefni_innri;
+create policy innri_admin on verkefni_innri for all to authenticated
+  using (er_admin()) with check (er_admin());
+
+drop policy if exists timar_admin on timar;
+create policy timar_admin on timar for all to authenticated
+  using (er_admin()) with check (er_admin());
+
+-- ==========================================================================
+-- 8. Verkefnasnið
+--    Ný vefsíða er alltaf sömu taskarnir. Þetta sparar að skrifa þá aftur.
+-- ==========================================================================
+
+create table if not exists snid (
+  id      uuid primary key default gen_random_uuid(),
+  nafn    text not null,
+  lysing  text,
+  stofnad timestamptz not null default now()
+);
+
+create table if not exists snid_taskar (
+  id       uuid primary key default gen_random_uuid(),
+  snid_id  uuid not null references snid on delete cascade,
+  titill   text not null,
+  lysing   text,
+  rod      int not null default 0,
+  a_hverjum text not null default 'tveir'
+           check (a_hverjum in ('tveir', 'vidskiptavinur')),
+  forgangur text not null default 'venjulegt'
+           check (forgangur in ('lagt', 'venjulegt', 'hatt'))
+);
+
+create index if not exists snid_taskar_idx on snid_taskar (snid_id, rod);
+
+alter table snid        enable row level security;
+alter table snid_taskar enable row level security;
+
+drop policy if exists snid_admin on snid;
+create policy snid_admin on snid for all to authenticated
+  using (er_admin()) with check (er_admin());
+
+drop policy if exists snid_taskar_admin on snid_taskar;
+create policy snid_taskar_admin on snid_taskar for all to authenticated
+  using (er_admin()) with check (er_admin());
+
+-- ==========================================================================
+-- 9. Yfirlit fyrir Make
+--    Make notar service_role lykilinn og fer því framhjá RLS. security_invoker
+--    er samt sett svo venjulegur innskráður notandi geti ekki lesið þetta
+--    framhjá sínum eigin réttindum.
+-- ==========================================================================
+
+create or replace view bidur_vidskiptavina
+with (security_invoker = true) as
+  select t.id, t.titill, t.skiladagur, t.uppfaert,
+         f.id as fyrirtaeki_id, f.nafn as fyrirtaeki,
+         n.netfang, n.nafn as notandi
+    from taskar t
+    join fyrirtaeki f on f.id = t.fyrirtaeki_id
+    join notendur n   on n.fyrirtaeki_id = t.fyrirtaeki_id
+   where t.stada = 'bid_vidskiptavinar';
+
+create or replace view olokid_rukkun
+with (security_invoker = true) as
+  select v.id, v.titill, v.verd_okkar, v.uppfaert,
+         f.nafn as fyrirtaeki, i.klst, i.reikningur
+    from verkefni v
+    join fyrirtaeki f      on f.id = v.fyrirtaeki_id
+    join verkefni_innri i  on i.verkefni_id = v.id
+   where v.stada = 'lokid'
+     and v.innan_samnings = false
+     and i.reikningur = 'ekki_rukkad';
+
+-- ==========================================================================
+-- 10. Þrjú snið til að byrja með. Breyttu þeim eins og ykkur hentar.
+-- ==========================================================================
+
+insert into snid (nafn, lysing)
+select 'Ný vefsíða', 'Fimm undirsíður, form og tenging við lén'
+where not exists (select 1 from snid where nafn = 'Ný vefsíða');
+
+insert into snid_taskar (snid_id, titill, lysing, rod, a_hverjum, forgangur)
+select s.id, x.titill, x.lysing, x.rod, x.a_hverjum, x.forgangur
+  from snid s,
+       (values
+         ('Senda logo í vektor', 'Við þurfum .ai eða .svg skrá, png dugar ekki í prentun.', 1, 'vidskiptavinur', 'hatt'),
+         ('Senda myndir af vörum eða starfsemi', null, 2, 'vidskiptavinur', 'venjulegt'),
+         ('Skrifa texta á Um okkur', 'Fjórar til fimm línur. Við getum skrifað hann ef þú vilt.', 3, 'vidskiptavinur', 'venjulegt'),
+         ('Setja upp grunn og útlit', null, 4, 'tveir', 'venjulegt'),
+         ('Undirsíður og efni', null, 5, 'tveir', 'venjulegt'),
+         ('Form og tenging við póst', null, 6, 'tveir', 'venjulegt'),
+         ('Leitarvélar, sitemap og lýsingar', null, 7, 'tveir', 'venjulegt'),
+         ('Yfirferð með viðskiptavin', null, 8, 'vidskiptavinur', 'hatt'),
+         ('Tengja lén og setja í loftið', null, 9, 'tveir', 'hatt')
+       ) as x(titill, lysing, rod, a_hverjum, forgangur)
+ where s.nafn = 'Ný vefsíða'
+   and not exists (select 1 from snid_taskar t where t.snid_id = s.id);
+
+insert into snid (nafn, lysing)
+select 'Efnispakki mánaðar', 'Tökudagur, klipping og færslur'
+where not exists (select 1 from snid where nafn = 'Efnispakki mánaðar');
+
+insert into snid_taskar (snid_id, titill, lysing, rod, a_hverjum, forgangur)
+select s.id, x.titill, x.lysing, x.rod, x.a_hverjum, x.forgangur
+  from snid s,
+       (values
+         ('Velja tökudag', null, 1, 'vidskiptavinur', 'hatt'),
+         ('Senda okkur áherslur mánaðarins', 'Tilboð, nýjar vörur eða viðburðir sem við eigum að ýta á.', 2, 'vidskiptavinur', 'venjulegt'),
+         ('Tökur', null, 3, 'tveir', 'venjulegt'),
+         ('Klipping', null, 4, 'tveir', 'venjulegt'),
+         ('Yfirferð á efni', null, 5, 'vidskiptavinur', 'venjulegt'),
+         ('Birting', null, 6, 'tveir', 'venjulegt')
+       ) as x(titill, lysing, rod, a_hverjum, forgangur)
+ where s.nafn = 'Efnispakki mánaðar'
+   and not exists (select 1 from snid_taskar t where t.snid_id = s.id);
+
+insert into snid (nafn, lysing)
+select 'Vörumerki', 'Merki, litir, letur og leiðbeiningar'
+where not exists (select 1 from snid where nafn = 'Vörumerki');
+
+insert into snid_taskar (snid_id, titill, lysing, rod, a_hverjum, forgangur)
+select s.id, x.titill, x.lysing, x.rod, x.a_hverjum, x.forgangur
+  from snid s,
+       (values
+         ('Samtal um hvað vörumerkið á að segja', null, 1, 'vidskiptavinur', 'hatt'),
+         ('Senda okkur það sem er til nú þegar', 'Gamalt merki, litir, myndir, hvað sem er.', 2, 'vidskiptavinur', 'venjulegt'),
+         ('Fyrstu tillögur', null, 3, 'tveir', 'venjulegt'),
+         ('Val á leið', null, 4, 'vidskiptavinur', 'hatt'),
+         ('Fullvinnsla og skilaskrár', null, 5, 'tveir', 'venjulegt'),
+         ('Leiðbeiningar til að fara eftir', null, 6, 'tveir', 'venjulegt')
+       ) as x(titill, lysing, rod, a_hverjum, forgangur)
+ where s.nafn = 'Vörumerki'
+   and not exists (select 1 from snid_taskar t where t.snid_id = s.id);

@@ -13,7 +13,12 @@ export const stillingar = {
   supabaseAnonKey: '',
 
   /* Hvert innskráningarhlekkurinn úr póstinum skal lenda */
-  slod: 'https://tveir.is/vinnusvaedi/'
+  slod: 'https://tveir.is/vinnusvaedi/',
+
+  /* Hvað þurfum við að fá á tímann til að þetta borgi sig. Verð á verkefni
+     deilt með skráðum tímum birtist rautt á stjórnborðinu ef það fer undir
+     þessa tölu. Bara fyrir okkur, viðskiptavinur sér hana aldrei. */
+  timagjald: 12000
 };
 
 /* anon key er ætlaður til að vera opinber. Það sem ver gögnin er Row Level

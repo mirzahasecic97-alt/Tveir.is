@@ -43,13 +43,13 @@ Fyrirtæki er merkt í áskrift þegar það er stofnað á stjórnborðinu.
 vinnusvaedi/
   index.html         innskráning
   yfirlit.html       það sem viðskiptavinurinn sér
-  verk.html          eitt verkefni og taskar þess
+  verk.html          eitt verkefni, taskar þess, tímar og rukkun
   stjornbord.html    það sem við sjáum
   gagnagrunnur.sql   allar töflur og réttindi, keyrist einu sinni
   assets/
     stillingar.js    eina skráin sem þarf að breyta
     gogn.js          sækir gögnin, úr Supabase eða úr prufudæmum
-    portal.js        sameiginlegt, haus, taskar, spjöld
+    portal.js        sameiginlegt, haus, taskar, spjöld, viðhengi
     portal.css       stíll ofan á styles.css
 ```
 
@@ -121,6 +121,47 @@ og tengir hann við fyrirtækið sitt þar.
 
 ---
 
+## Tímar og rukkun
+
+Á verkefnasíðu sjáið þið spjald sem heitir **Tímar og rukkun**. Hnapparnir
++1, +2, +4 og +8 skrá tíma þegar þið standið upp frá verkinu. Engin klukka
+sem þarf að muna eftir að stoppa.
+
+Undir tölunni stendur hvað þið eruð að fá á tímann. Sú tala verður rauð ef
+hún fer undir `timagjald` í `assets/stillingar.js`, sem er 12.000 kr. í dag.
+Breyttu henni í ykkar tölu.
+
+Reikningsreiturinn hefur þrjár stöður: ekki rukkað, reikningur sendur og greitt.
+Á stjórnborðinu er listi sem heitir **Bíður reiknings** með öllu sem er lokið
+og órukkað, og tekjulínan efst telur það saman.
+
+**Viðskiptavinur sér hvorki tímana né reikningsstöðuna.** Þau gögn eru í
+sértöflunni `verkefni_innri` sem hefur sinn eigin aðgang. Ástæðan er að Row
+Level Security virkar á línur en ekki dálka. Sætu tímarnir á `verkefni` gæti
+viðskiptavinur lesið þá út úr API og reiknað framlegðina okkar.
+
+---
+
+## Verkefnasnið
+
+Ný vefsíða er alltaf sömu níu taskarnir. Á stjórnborðinu er hnappurinn
+**Nýtt verkefni** þar sem þú velur snið og færð alla taskana með í einum
+smelli. Taskar sem eru merktir viðskiptavin lenda strax í Bíður þín hjá honum.
+
+Þrú snið fylgja: Ný vefsíða, Efnispakki mánaðar og Vörumerki. Þú breytir
+þeim í töflunum `snid` og `snid_taskar`.
+
+---
+
+## Viðhengi
+
+Smelltu á task og þú sérð **Bæta við skrá**. Hámark 25 MB á skrá.
+
+Í prufustillingu lifa skrárnar bara meðan síðan er opin, því localStorage
+þolir ekki myndir. Þegar Supabase er komið fara þær í Storage og haldast.
+
+---
+
 ## Tilkynningar
 
 Vinnusvæði sem enginn opnar er dautt. Pósturinn er það sem heldur því lifandi.
@@ -141,6 +182,17 @@ stofnaði, og Gmail eining á hvorri grein.
 - Taskur fer í `lokid` → póstur á viðskiptavininn
 - Ný verkefnatillaga → póstur á okkur báða
 
+**Tvö yfirlit bíða í gagnagrunninum fyrir Make.** Make notar `service_role`
+lykilinn og les þá beint:
+
+| Yfirlit | Til hvers |
+| --- | --- |
+| `bidur_vidskiptavina` | Áminning: allt sem bíður viðskiptavinar, með netfangi hans |
+| `olokid_rukkun` | Lokið en órukkað, til að minna okkur á að senda reikning |
+
+Vikuleg áminning á mánudagsmorgni úr `bidur_vidskiptavina` er það sem heldur
+þessu lifandi. Viðskiptavinur sem fær þann póst hættir ekki í áskrift í þögn.
+
 ---
 
 ## Hvað þetta kostar
@@ -156,6 +208,7 @@ stofnaði, og Gmail eining á hvorri grein.
 
 ## Það sem er ekki komið
 
-- Viðhengi eru tilbúin í gagnagrunni og Storage en ekki komin í viðmótið
 - Enginn póstur fer út fyrr en Make flæðið er sett upp
 - Engin leitarsía á gömlum verkefnum, það kemur þegar listinn verður langur
+- Sniðum er breytt í SQL, ekki í viðmótinu
+- Reikningar eru merktir handvirkt, ekkert samband við bókhaldskerfi

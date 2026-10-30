@@ -402,3 +402,107 @@
   font-size: 13px; color: var(--soft); line-height: 1.5; margin-top: 7px;
 }
 .field[hidden] { display: none; }
+
+/* --------------------------------------------------------------------------
+   14. Viðhengi
+   -------------------------------------------------------------------------- */
+.skralisti { list-style: none; margin: 14px 0 16px; padding: 0; }
+
+.skra {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 0; border-top: 1px solid var(--line);
+  font-size: 14.5px;
+}
+.skra__nafn {
+  flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.skra__meta { flex: none; font-size: 13px; color: var(--soft); }
+.skra__opna {
+  flex: none; background: none; border: 0; padding: 8px 4px;
+  color: var(--acc); font: 500 13.5px/1 var(--f-body); cursor: pointer;
+  min-height: 38px;
+}
+.skra__opna:hover { text-decoration: underline; }
+.skra__opna:disabled { color: var(--soft); cursor: default; text-decoration: none; }
+
+/* --------------------------------------------------------------------------
+   15. Tímar og reikningur
+   -------------------------------------------------------------------------- */
+.timar__tala {
+  font-family: var(--f-head); font-weight: 600; font-size: 34px;
+  line-height: 1; color: var(--ink);
+}
+.timar__hja { font-size: 14px; color: var(--soft); margin-top: 6px; }
+.timar__hja strong { font-weight: 500; color: var(--ink); }
+.timar__hja.er-lagt strong { color: #a3312a; }
+
+.timar__hnappar { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 14px; }
+.timar__hnappar button {
+  font: 500 14px/1 var(--f-body); color: var(--acc);
+  background: var(--accs); border: 1px solid transparent;
+  border-radius: var(--r-pill); padding: 11px 15px; min-height: 42px;
+  cursor: pointer; flex: 1 1 auto;
+}
+.timar__hnappar button:hover { background: #d8e8fd; }
+
+.timalog { list-style: none; margin: 14px 0 0; padding: 0; }
+.timalog li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0; border-top: 1px solid var(--line);
+  font-size: 13.5px; color: var(--soft);
+}
+.timalog b { font-weight: 500; color: var(--ink); flex: none; }
+.timalog .nota { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.timalog button {
+  flex: none; background: none; border: 0; cursor: pointer;
+  color: var(--soft); font-size: 15px; line-height: 1; padding: 6px;
+}
+.timalog button:hover { color: #a3312a; }
+
+/* --------------------------------------------------------------------------
+   16. Tekjulína á stjórnborði
+   -------------------------------------------------------------------------- */
+.tekjur {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 2px; background: var(--line);
+  border-radius: var(--r-card); overflow: hidden;
+  border: 1px solid var(--line);
+}
+.tekjur > div { background: var(--sur); padding: 18px 20px; }
+.tekjur dt {
+  font: 400 13px/1.3 var(--f-body); color: var(--soft); margin: 0;
+}
+.tekjur dd {
+  font-family: var(--f-head); font-weight: 600; font-size: 25px;
+  line-height: 1.1; margin: 8px 0 0; color: var(--ink);
+}
+.tekjur .adal { background: var(--ink); }
+.tekjur .adal dt { color: var(--acc-on-navy); }
+.tekjur .adal dd { color: #fff; }
+.tekjur .vidvorun dd { color: #a3312a; }
+
+.rukkun { list-style: none; margin: 12px 0 0; padding: 0; }
+.rukkun li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 0; border-top: 1px solid var(--line); font-size: 14px;
+}
+.rukkun .nafn { flex: 1 1 auto; min-width: 0; overflow: hidden;
+                text-overflow: ellipsis; white-space: nowrap; }
+.rukkun .upph { flex: none; font-weight: 500; }
+.rukkun button {
+  flex: none; font: 500 12.5px/1 var(--f-body);
+  background: var(--accs); color: var(--acc);
+  border: 0; border-radius: var(--r-pill); padding: 9px 13px;
+  min-height: 38px; cursor: pointer;
+}
+.rukkun button:hover { background: var(--acc); color: #fff; }
+
+/* Í síma: tvær reitir á línu og sá þriðji yfir alla breiddina,
+   annars situr tómur reitur eftir í grindinni. */
+@media (max-width: 620px) {
+  .tekjur { grid-template-columns: 1fr 1fr; }
+  .tekjur > div { padding: 15px 16px; }
+  .tekjur dd { font-size: 20px; }
+  .tekjur > div:last-child { grid-column: 1 / -1; }
+}
