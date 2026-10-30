@@ -685,21 +685,13 @@
 }
 .simakort__loka:hover { color: var(--ink); }
 
-/* Hlekkurinn neðst á innskráningarsíðunni */
-.simahlekkur {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: none; border: 0; cursor: pointer; padding: 10px 0;
-  font: 500 14px/1 var(--f-body); color: var(--acc);
-  min-height: 44px;
+/* Reiturinn á innskráningarsíðunni */
+.simakort--inn {
+  text-align: left; margin-top: 22px;
+  background: var(--bg); border-radius: var(--r-card); padding: 18px;
 }
-.simahlekkur:hover { text-decoration: underline; }
-/* display:inline-flex trömpar á [hidden], því þarf þetta */
-.simahlekkur[hidden] { display: none; }
-.simahlekkur img { border-radius: 7px; flex: none; }
-
-/* --------------------------------------------------------------------------
-   21. Í appinu er tvisturinn merkið
-   -------------------------------------------------------------------------- */
-.app-fyrirsogn { margin: 0 0 4px; line-height: 1; }
-.app-fyrirsogn img { height: 96px; width: auto; margin: 0 auto; display: block; }
-.phead__tvistur { height: 28px; width: auto; display: block; }
+.simakort--inn p {
+  font-size: 13.5px; line-height: 1.55; color: var(--soft); margin-top: 10px;
+}
+.simakort--inn .btn { margin-top: 14px; }
+.simakort[hidden] { display: none; }

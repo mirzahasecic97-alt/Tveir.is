@@ -188,10 +188,13 @@ Vörumerki (sex). Röðin í `snid_taskar.rod` verður að röðinni í tímalí
 Vinnusvæðið er uppsetjanlegt á heimaskjá. Það þarf ekkert úr App Store
 eða Play, þetta er síðan sjálf í heilum skjá með tákni.
 
-Viðskiptavinur sér **Setja vinnusvæðið í símann** á innskráningarsíðunni og
-spjald á yfirlitinu sínu þangað til hann felur það. Leiðbeiningarnar breytast
-eftir tæki: iPhone fær Safari skrefin, Android fær annaðhvort alvöru
-uppsetningarhnapp eða valmyndarskrefin.
+Leiðbeiningarnar birtast **bara í síma og bara ef það er ekki þegar gert**.
+Reitur á innskráningarsíðunni og spjald á yfirlitinu, sem má fela.
+Skrefin breytast eftir tæki: iPhone fær Safari skrefin, Android fær
+annaðhvort alvöru uppsetningarhnapp eða valmyndarskrefin.
+
+Orðmerkið TVEIR er áfram efst á innskráningarsíðunni, líka í appinu.
+Tvisturinn er táknið á heimaskjánum, ekki merki inni í síðunni.
 
 Táknið er tvisturinn úr `favicon.svg`, hvítur á navy. Nafnið á heimaskjánum er
 **Tveir**, sett í `short_name` í `manifest.webmanifest`. Ef þið viljið annað

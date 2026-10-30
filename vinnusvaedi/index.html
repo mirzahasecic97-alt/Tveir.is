@@ -23,8 +23,8 @@
 
 <main class="inn">
   <div class="card inn__kort">
-    <img src="../assets/img/tveir-logo.png" alt="Tveir" width="96" height="24" id="ordmerki">
-    <h1 id="fyrirsogn">Vinnusvæði</h1>
+    <img src="../assets/img/tveir-logo.png" alt="Tveir" width="96" height="24">
+    <h1>Vinnusvæði</h1>
     <p class="lead">Sláðu inn netfangið þitt og við sendum þér hlekk til að komast inn. Ekkert lykilorð.</p>
 
     <form id="innform" novalidate>
@@ -39,10 +39,15 @@
 
     <div class="prufubanner" id="prufubanner" hidden></div>
 
-    <button type="button" class="simahlekkur" id="simahnappur" hidden>
-      <img src="assets/takn-192.png" alt="" width="26" height="26">
-      Setja vinnusvæðið í símann
-    </button>
+    <div class="simakort simakort--inn" id="simakort" hidden>
+      <div class="simakort__haus">
+        <img src="assets/takn-192.png" alt="" width="44" height="44">
+        <h2>Settu þetta í símann</h2>
+      </div>
+      <p>Vinnusvæðið getur setið á heimaskjánum eins og hvert annað app.
+         Þá þarftu ekki að leita að hlekknum í póstinum í hvert sinn.</p>
+      <button type="button" class="btn btn--block btn--sm" id="simahnappur">Sýna mér hvernig</button>
+    </div>
 
     <p class="inn__fot">
       Kemstu ekki inn? Sendu okkur línu á <a href="mailto:tveir@tveir.is">tveir@tveir.is</a>
@@ -52,7 +57,7 @@
 </main>
 
 <script type="module">
-import { gogn, stillingar, erUppsett, opnaUppsetningu } from './assets/portal.js';
+import { gogn, stillingar, erUppsett, erSimi, opnaUppsetningu } from './assets/portal.js';
 
 const form   = document.getElementById('innform');
 const netf   = document.getElementById('netfang');
@@ -66,23 +71,11 @@ function segja(texti, tegund) {
   stada.hidden = false;
 }
 
-/* Ábending um að setja í heimaskjá, nema það sé þegar gert */
-const simahnappur = document.getElementById('simahnappur');
-if (erUppsett()) {
-  /* Í appinu er tvisturinn sjálfur fyrirsögnin, orðmerkið þá óþarft */
-  document.getElementById('ordmerki').remove();
-  const h1 = document.getElementById('fyrirsogn');
-  h1.textContent = '';
-  h1.className = 'app-fyrirsogn';
-  const merki = document.createElement('img');
-  merki.src = 'assets/tvistur.png';
-  merki.alt = 'Tveir';
-  merki.width = 86;
-  merki.height = 109;
-  h1.append(merki);
-} else {
-  simahnappur.hidden = false;
-  simahnappur.addEventListener('click', () => opnaUppsetningu());
+/* Leiðbeiningar um heimaskjáinn, bara í síma og bara ef það er ekki þegar gert */
+if (erSimi() && !erUppsett()) {
+  document.getElementById('simakort').hidden = false;
+  document.getElementById('simahnappur')
+    .addEventListener('click', () => opnaUppsetningu());
 }
 
 const g = await gogn();

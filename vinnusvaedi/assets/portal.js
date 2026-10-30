@@ -168,12 +168,8 @@ export function teiknaHaus(ek, heiti) {
       el('div', { class: 'phead__inn' }, [
         el('a', { class: 'phead__logo', href: admin ? 'stjornbord.html' : 'yfirlit.html',
                   'aria-label': 'Vinnusvæði Tveir' }, [
-          /* Í appinu stærir tvisturinn sig, á vefnum er orðmerkið */
-          erUppsett()
-            ? el('img', { class: 'phead__tvistur', src: 'assets/tvistur.png',
-                          alt: 'Tveir', width: '22', height: '28' })
-            : el('img', { src: '../assets/img/tveir-logo.png', alt: 'Tveir',
-                          width: '70', height: '18' })
+          el('img', { src: '../assets/img/tveir-logo.png', alt: 'Tveir',
+                      width: '70', height: '18' })
         ]),
         el('span', { class: 'phead__skil', 'aria-hidden': 'true' }),
 
@@ -235,6 +231,13 @@ export function erUppsett() {
 
   return window.matchMedia('(display-mode: standalone)').matches
       || window.navigator.standalone === true;
+}
+
+/* Leiðbeiningarnar eiga bara við í síma. Enginn setur viðskiptavinasvæði
+   á skrifborðið hjá sér. */
+export function erSimi() {
+  const hvada = taeki();
+  return hvada === 'ios' || hvada === 'android';
 }
 
 export function taeki() {
