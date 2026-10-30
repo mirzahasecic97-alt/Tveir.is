@@ -726,3 +726,32 @@
   cursor: pointer;
 }
 .simabordi__loka:hover { background: rgba(255, 255, 255, .22); color: #fff; }
+
+/* --------------------------------------------------------------------------
+   22. Merki viðskiptavinarins í hausnum
+   -------------------------------------------------------------------------- */
+.phead__kunnamerki {
+  flex: none; max-height: 30px; max-width: 120px;
+  width: auto; height: auto; object-fit: contain;
+  padding: 4px 8px; border-radius: 9px; background: #fff;
+  border: 1px solid var(--line);
+}
+@media (max-width: 430px) { .phead__kunnamerki { max-width: 78px; max-height: 26px; } }
+
+/* Reiturinn þar sem því er hlaðið inn */
+.merkikort__synd {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 84px; margin-top: 12px; padding: 12px;
+  background: var(--bg); border: 1px dashed rgba(28, 48, 80, .18);
+  border-radius: var(--r-input);
+}
+.merkikort__synd img { max-height: 58px; max-width: 100%; object-fit: contain; }
+.merkikort__synd span { font-size: 13px; color: var(--soft); }
+.merkikort__hnappar { display: flex; gap: 8px; margin-top: 12px; }
+.merkikort__hnappar .btn { flex: 1 1 auto; }
+.merkikort__henda {
+  flex: none; background: none; border: 0; cursor: pointer;
+  font: 400 13px/1 var(--f-body); color: var(--soft); padding: 10px;
+  min-height: 42px;
+}
+.merkikort__henda:hover { color: #a3312a; }

@@ -586,3 +586,58 @@ begin
   end loop;
 end;
 $$;
+
+-- ==========================================================================
+-- 12. Merki viðskiptavinarins
+--     Opin geymsla, því merki fyrirtækis er hvort eð er á vef þess.
+--     Þá þarf ekki undirritaða slóð í hvert sinn sem hausinn teiknast.
+-- ==========================================================================
+
+insert into storage.buckets (id, name, public)
+select 'merki', 'merki', true
+where not exists (select 1 from storage.buckets where id = 'merki');
+
+drop policy if exists merki_les on storage.objects;
+create policy merki_les on storage.objects for select to public
+  using (bucket_id = 'merki');
+
+drop policy if exists merki_sett on storage.objects;
+create policy merki_sett on storage.objects for insert to authenticated
+  with check (bucket_id = 'merki'
+              and (er_admin() or (storage.foldername(name))[1] = mitt_fyrirtaeki()::text));
+
+drop policy if exists merki_skipt on storage.objects;
+create policy merki_skipt on storage.objects for update to authenticated
+  using (bucket_id = 'merki'
+         and (er_admin() or (storage.foldername(name))[1] = mitt_fyrirtaeki()::text));
+
+drop policy if exists merki_hent on storage.objects;
+create policy merki_hent on storage.objects for delete to authenticated
+  using (bucket_id = 'merki'
+         and (er_admin() or (storage.foldername(name))[1] = mitt_fyrirtaeki()::text));
+
+-- Viðskiptavinur má uppfæra sína eigin línu í fyrirtaeki
+drop policy if exists fyr_eigid_merki on fyrirtaeki;
+create policy fyr_eigid_merki on fyrirtaeki for update to authenticated
+  using (id = mitt_fyrirtaeki())
+  with check (id = mitt_fyrirtaeki());
+
+-- En bara merkið. Nafn, áskrift og áskriftarverð standa óhreyfð,
+-- því er_askrift ræður því hvort budget sé skylda á verkefnatillögum.
+create or replace function verja_fyrirtaeki() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if er_admin() then return new; end if;
+  new.nafn         := old.nafn;
+  new.askrift      := old.askrift;
+  new.er_askrift   := old.er_askrift;
+  new.askrift_verd := old.askrift_verd;
+  new.stofnad      := old.stofnad;
+  return new;
+end;
+$$;
+
+drop trigger if exists verja_fyrirtaeki_trigger on fyrirtaeki;
+create trigger verja_fyrirtaeki_trigger
+  before update on fyrirtaeki
+  for each row execute function verja_fyrirtaeki();

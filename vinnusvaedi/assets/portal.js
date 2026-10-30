@@ -187,6 +187,11 @@ export function teiknaHaus(ek, heiti) {
               ek.fyrirtaeki ? el('strong', { texti: ek.fyrirtaeki.nafn }) : null
             ]),
         el('div', { class: 'phead__hnappar' }, [
+          /* Merki viðskiptavinarins út í hægra hornið */
+          ek.fyrirtaeki && ek.fyrirtaeki.merki_url
+            ? el('img', { class: 'phead__kunnamerki', src: ek.fyrirtaeki.merki_url,
+                          alt: ek.fyrirtaeki.nafn })
+            : null,
           el('div', { class: 'phead__notandi' }, [
             el('strong', { texti: ek.nafn }),
             document.createTextNode(admin ? 'Tveir' : ek.netfang)

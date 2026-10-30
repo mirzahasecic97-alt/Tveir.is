@@ -183,6 +183,27 @@ Vörumerki (sex). Röðin í `snid_taskar.rod` verður að röðinni í tímalí
 
 ---
 
+## Merki viðskiptavinarins
+
+Viðskiptavinur setur sitt eigið merki inn sjálfur á yfirlitinu, undir
+**Merkið þitt**. Það birtist út í hægra horninu í hausnum á öllum
+síðum vinnusvæðisins. Hámark 1 MB, og PNG með gegnsæjum bakgrunni kemur best út.
+
+Í Supabase fer merkið í **opna geymslu sem heitir `merki`**. Hún er opin
+viljandi: merki fyrirtækis er hvort eð er á vef þess, og þá þarf ekki að
+sækja undirritaða slóð í hvert sinn sem hausinn teiknast. `gagnagrunnur.sql`
+býr geymsluna til.
+
+Viðskiptavinurinn fær rétt til að uppfæra sína eigin línu í `fyrirtaeki`,
+en **trigger passar að hann breyti bara merkinu**. Nafn, áskrift og
+áskriftarverð standa óhreyfð, því `er_askrift` ræður því hvort budget sé
+skylda á verkefnatillögum og það má enginn stilla sjálfur.
+
+Í prufustillingu er myndin geymd sem data-slóð í localStorage, svo hún
+lifir endurhleðslu en fylgir ekki á milli tækja.
+
+---
+
 ## Appið í símanum
 
 Vinnusvæðið er uppsetjanlegt á heimaskjá. Það þarf ekkert úr App Store

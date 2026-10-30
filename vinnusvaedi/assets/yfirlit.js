@@ -98,6 +98,8 @@ async function start() {
                            texti: 'Senda verkefni', onclick: () => opnaVerkForm() })
           ]),
 
+          merkiKort(),
+
           simaKort(),
 
           el('div', { class: 'card pblokk' }, [
@@ -125,6 +127,77 @@ async function start() {
       type: 'button', class: 'pflipi', 'aria-pressed': String(flipi === gildi),
       onclick: () => { flipi = gildi; teikna(); }
     }, [document.createTextNode(heiti), el('b', { texti: String(fjoldi) })]);
+  }
+
+  /* ------------------------------------------------------------------
+     Merkið þitt. Birtist út í hægra hornið í hausnum.
+     ------------------------------------------------------------------ */
+  const MERKI_HAMARK = 1024 * 1024;
+
+  function merkiKort() {
+    if (!ek.fyrirtaeki) return null;
+
+    const villa = el('div', { class: 'form-status form-status--err', hidden: true,
+                              style: 'margin-top:10px' });
+
+    const inntak = el('input', {
+      type: 'file', style: 'display:none',
+      accept: 'image/png,image/jpeg,image/svg+xml,image/webp',
+      onchange: async (e) => {
+        const skra = (e.target.files || [])[0];
+        if (!skra) return;
+        villa.hidden = true;
+
+        if (skra.size > MERKI_HAMARK) {
+          villa.textContent = 'Myndin er stærri en 1 MB. Minnkaðu hana eða sendu okkur hana.';
+          villa.hidden = false;
+          return;
+        }
+        try {
+          const f = await g.setjaMerki(ek.fyrirtaeki_id, skra);
+          ek.fyrirtaeki.merki_url = f.merki_url;
+          teiknaHaus(ek, 'Vinnusvæði');
+          teikna();
+        } catch (v) {
+          villa.textContent = v.message;
+          villa.hidden = false;
+        }
+      }
+    });
+
+    const merki = ek.fyrirtaeki.merki_url;
+
+    return el('div', { class: 'card pblokk merkikort' }, [
+      el('h2', { style: 'font-size:17px; font-family:var(--f-body); font-weight:500',
+                 texti: 'Merkið þitt' }),
+      el('p', { class: 'lead', style: 'font-size:14px; margin-top:8px',
+                texti: merki
+                  ? 'Það situr út í hægra horninu uppi.'
+                  : 'Settu merkið þitt inn og það birtist út í hægra horninu uppi. '
+                    + 'PNG með gegnsæjum bakgrunni kemur best út.' }),
+
+      el('div', { class: 'merkikort__synd' }, [
+        merki
+          ? el('img', { src: merki, alt: ek.fyrirtaeki.nafn })
+          : el('span', { texti: 'Ekkert merki enn' })
+      ]),
+
+      villa,
+
+      el('div', { class: 'merkikort__hnappar' }, [
+        el('label', { class: 'btn btn--sm btn--ghost' },
+           [el('span', { texti: merki ? 'Skipta um' : 'Setja inn merki' }), inntak]),
+        merki ? el('button', {
+          type: 'button', class: 'merkikort__henda', texti: 'Henda',
+          onclick: async () => {
+            await g.hendaMerki(ek.fyrirtaeki_id);
+            ek.fyrirtaeki.merki_url = null;
+            teiknaHaus(ek, 'Vinnusvæði');
+            teikna();
+          }
+        }) : null
+      ])
+    ]);
   }
 
   /* Minnir á heimaskjáinn þangað til það er gert eða felið */

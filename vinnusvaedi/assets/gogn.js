@@ -279,6 +279,38 @@ async function supabaseBakendi() {
       const svar = await sb.storage.from('vidhengi').createSignedUrl(v.slod, 60);
       if (svar.error) throw new Error(svar.error.message);
       return svar.data.signedUrl;
+    },
+
+    /* ---------- Merki viðskiptavinarins ---------- */
+
+    async setjaMerki(fyrirtaeki_id, skra) {
+      const endir = (skra.name.split('.').pop() || 'png').toLowerCase();
+      const slod = fyrirtaeki_id + '/merki-' + Date.now() + '.' + endir;
+
+      const upp = await sb.storage.from('merki')
+        .upload(slod, skra, { upsert: true, contentType: skra.type || undefined });
+      if (upp.error) throw new Error(upp.error.message);
+
+      const { data: opin } = sb.storage.from('merki').getPublicUrl(slod);
+      const svar = await sb.from('fyrirtaeki')
+        .update({ merki_url: opin.publicUrl }).eq('id', fyrirtaeki_id).select().single();
+      kasta(svar);
+
+      /* Hausinn les úr minninu, svo það þarf að fylgja með */
+      if (minn && minn.fyrirtaeki && minn.fyrirtaeki.id === fyrirtaeki_id) {
+        minn.fyrirtaeki.merki_url = opin.publicUrl;
+      }
+      return svar.data;
+    },
+
+    async hendaMerki(fyrirtaeki_id) {
+      const svar = await sb.from('fyrirtaeki')
+        .update({ merki_url: null }).eq('id', fyrirtaeki_id).select().single();
+      kasta(svar);
+      if (minn && minn.fyrirtaeki && minn.fyrirtaeki.id === fyrirtaeki_id) {
+        minn.fyrirtaeki.merki_url = null;
+      }
+      return svar.data;
     }
   };
 }
@@ -298,11 +330,11 @@ function prufuBakendi() {
 
     const fyr = [
       { id: 'f1', nafn: 'Hlíðarkaup',      askrift: 'Efni og samfélagsmiðlar',
-        er_askrift: true,  askrift_verd: 290000 },
+        er_askrift: true,  askrift_verd: 290000, merki_url: null },
       { id: 'f2', nafn: 'Steinvík ehf.', askrift: 'Vefsíða í áskrift',
-        er_askrift: true,  askrift_verd: 45000 },
+        er_askrift: true,  askrift_verd: 45000, merki_url: null },
       { id: 'f3', nafn: 'Fossberg ehf.',     askrift: 'Sölutækifæri',
-        er_askrift: false, askrift_verd: null }
+        er_askrift: false, askrift_verd: null, merki_url: null }
     ];
 
     const notendur = [
@@ -743,6 +775,31 @@ function prufuBakendi() {
       if (!skra) throw new Error('Skráin er horfin. Í prufustillingu lifa viðhengi bara þá '
         + 'lötu sem síðan er opin.');
       return URL.createObjectURL(skra);
+    },
+
+    /* ---------- Merki viðskiptavinarins ----------
+       Í prufu er myndin geymd sem data-slóð svo hún lifi endurhleðslu. */
+
+    async setjaMerki(fyrirtaeki_id, skra) {
+      const f = finna(g.fyrirtaeki, fyrirtaeki_id);
+      if (!f) throw new Error('Fyrirtækið fannst ekki.');
+
+      const slod = await new Promise((skila, hafna) => {
+        const lesari = new FileReader();
+        lesari.onload = () => skila(lesari.result);
+        lesari.onerror = () => hafna(new Error('Náði ekki að lesa skrána.'));
+        lesari.readAsDataURL(skra);
+      });
+
+      f.merki_url = slod;
+      vista();
+      return f;
+    },
+
+    async hendaMerki(fyrirtaeki_id) {
+      const f = finna(g.fyrirtaeki, fyrirtaeki_id);
+      if (f) { f.merki_url = null; vista(); }
+      return f;
     },
 
     /* Bara í prufu: byrja upp á nýtt */
