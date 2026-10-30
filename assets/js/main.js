@@ -446,6 +446,43 @@
     tolur.forEach(function (el) { obs.observe(el); });
   }
 
+  /* ------------------------------------------------------------------
+     Vinnulag — hreyfimyndin keyrir bara meðan hún sést
+     ------------------------------------------------------------------ */
+  function initVinnulag() {
+    var kafli = document.querySelector('.vinnulag');
+    if (!kafli) return;
+    var simi = kafli.querySelector('.vinnulag__simi');
+
+    if (!('IntersectionObserver' in window)) {
+      kafli.classList.add('er-komid');
+      if (simi) simi.classList.add('er-a-ferd');
+      return;
+    }
+
+    /* Hreyfimyndin keyrir bara meðan hún sést */
+    if (simi) {
+      var obsSimi = new IntersectionObserver(function (faerslur) {
+        faerslur.forEach(function (f) {
+          simi.classList.toggle('er-a-ferd', f.isIntersecting);
+        });
+      }, { threshold: 0.25 });
+      obsSimi.observe(simi);
+    }
+
+    /* 1, 2, 3 poppa inn einu sinni */
+    var obsListi = new IntersectionObserver(function (faerslur) {
+      faerslur.forEach(function (f) {
+        if (!f.isIntersecting) return;
+        kafli.classList.add('er-komid');
+        obsListi.unobserve(f.target);
+      });
+    }, { threshold: 0.2 });
+
+    var listi = kafli.querySelector('.vinnulag__listi');
+    if (listi) obsListi.observe(listi);
+  }
+
   function initYear() {
     var year = new Date().getFullYear();
     document.querySelectorAll('[data-year]').forEach(function (el) { el.textContent = year; });
@@ -463,6 +500,7 @@
     initForms();
     initLang();
     initCountUp();
+    initVinnulag();
     initYear();
   }
 
