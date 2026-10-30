@@ -1183,8 +1183,66 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
   box-shadow: var(--sh-card);
 }
 
-/* ---------- Síminn ---------- */
-.vinnulag__simi { display: flex; justify-content: center; }
+/* ---------- Síminn og kortin í kringum hann ---------- */
+.vinnulag__taeki { position: relative; display: flex; justify-content: center; }
+
+.fljot {
+  position: absolute; z-index: 3;
+  width: 218px;
+  background: var(--sur); border: 1px solid var(--line);
+  border-radius: 18px; padding: 14px 16px;
+  box-shadow: 0 16px 38px rgba(28, 48, 80, .18);
+  opacity: 0;
+  transform: translate(var(--fx, -14px), 18px) scale(.9);
+  transition: opacity .5s ease, transform .6s cubic-bezier(.2, 1.25, .35, 1);
+}
+.fljot strong {
+  display: block; margin-top: 7px;
+  font: 500 14px/1.35 var(--f-body); color: var(--ink);
+}
+.fljot__undir {
+  display: block; margin-top: 5px;
+  font: 400 11.5px/1.4 var(--f-body); color: var(--soft);
+}
+.fljot__merki {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 500 10px/1 var(--f-body); letter-spacing: .06em; text-transform: uppercase;
+  color: #a4681a; background: #fff2e0;
+  padding: 6px 9px; border-radius: var(--r-pill);
+}
+.fljot__merki i {
+  width: 5px; height: 5px; border-radius: 50%; background: currentColor;
+}
+.fljot__merki--blar { color: var(--acc); background: var(--accs); }
+
+.fljot__punktar { display: flex; gap: 4px; margin-top: 9px; }
+.fljot__punktar i {
+  width: 100%; height: 4px; border-radius: var(--r-pill);
+  background: var(--accs);
+}
+.fljot__punktar i.er-lokid { background: var(--acc); }
+
+.fljot__hak {
+  position: relative; display: block;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #e6f4ea;
+}
+.fljot__hak::after {
+  content: ''; position: absolute; left: 9px; top: 6px;
+  width: 6px; height: 11px;
+  border: solid #1e6b34; border-width: 0 2px 2px 0;
+  transform: rotate(42deg);
+}
+
+/* Staðsetningar. Kortin skarast á myndina svo þetta fái dýpt. */
+@media (min-width: 980px) {
+  .fljot--1 { left: -212px; top: 1%;   --fx: -24px; }
+  .fljot--2 { left: -250px; top: 39%;  --fx: -28px; }
+  /* Skarðast á neðra horn símans svo það líti út eins og það komi út úr honum */
+  .fljot--3 { left: -128px; bottom: 3%; width: 192px; --fx: -20px; }
+
+}
+@media (max-width: 979px) { .fljot { display: none; } }
 
 .simi {
   background: var(--ink);
@@ -1318,6 +1376,20 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
   border-color: rgba(91, 147, 240, .5); box-shadow: var(--sh-btn); transform: translateY(-2px);
 }
 
+/* Kortin birtast eitt af öðru og halda sér, svo í lokin sést allt flæðið */
+.vinnulag[data-skref="1"] .fljot--1,
+.vinnulag[data-skref="2"] .fljot--1,
+.vinnulag[data-skref="3"] .fljot--1 {
+  opacity: 1; transform: translate(0, 0) scale(1) rotate(-2.2deg);
+}
+.vinnulag[data-skref="2"] .fljot--2,
+.vinnulag[data-skref="3"] .fljot--2 {
+  opacity: 1; transform: translate(0, 0) scale(1) rotate(1.8deg);
+}
+.vinnulag[data-skref="3"] .fljot--3 {
+  opacity: 1; transform: translate(0, 0) scale(1) rotate(2.6deg);
+}
+
 .vinnulag[data-skref="3"] .m-bubla { opacity: 1; transform: none; }
 .vinnulag[data-skref="3"] .m-hak { background: var(--acc); border-color: var(--acc); }
 .vinnulag[data-skref="3"] .m-hak::after { opacity: 1; transform: rotate(42deg) scale(1); }
@@ -1399,6 +1471,7 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
   .vinnulag__listi li { opacity: 1; transform: none; }
   .vinnulag .m-task, .vinnulag .m-bubla { opacity: 1; transform: none; }
   .vinnulag .m-task__merki { opacity: 1; transform: none; }
+  .vinnulag .fljot { opacity: 1; transform: none; }
   .vinnulag .m-bidur__tala--einn { opacity: 0; }
   .vinnulag .m-hak { background: var(--acc); border-color: var(--acc); }
   .vinnulag .m-hak::after { opacity: 1; transform: rotate(42deg) scale(1); }
