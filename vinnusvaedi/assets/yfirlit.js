@@ -4,7 +4,7 @@
 
 import {
   gogn, el, tom, fylla, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
-  vardaHlid, teiknaHaus, STODUR_VERK
+  vardaHlid, teiknaHaus, erUppsett, opnaUppsetningu, STODUR_VERK
 } from './portal.js';
 
 const ek = await vardaHlid({});
@@ -98,6 +98,8 @@ async function start() {
                            texti: 'Senda verkefni', onclick: () => opnaVerkForm() })
           ]),
 
+          simaKort(),
+
           el('div', { class: 'card pblokk' }, [
             el('h2', { style: 'font-size:17px; font-family:var(--f-body); font-weight:500',
                        texti: 'Þarftu okkur strax' }),
@@ -123,6 +125,37 @@ async function start() {
       type: 'button', class: 'pflipi', 'aria-pressed': String(flipi === gildi),
       onclick: () => { flipi = gildi; teikna(); }
     }, [document.createTextNode(heiti), el('b', { texti: String(fjoldi) })]);
+  }
+
+  /* Minnir á heimaskjáinn þangað til það er gert eða felið */
+  const SIMALYKILL = 'tveir-simakort-falid';
+
+  function simaKort() {
+    if (erUppsett()) return null;
+    try {
+      if (localStorage.getItem(SIMALYKILL) === 'ja') return null;
+    } catch (e) { /* lokað localStorage, sýnum þá bara kortið */ }
+
+    const kort = el('div', { class: 'card simakort' }, [
+      el('div', { class: 'simakort__haus' }, [
+        el('img', { src: 'assets/takn-192.png', alt: '', width: '40', height: '40' }),
+        el('h2', { texti: 'Hafðu þetta við höndina' }),
+        el('button', {
+          type: 'button', class: 'simakort__loka', 'aria-label': 'Fela þessa ábendingu',
+          texti: '✕',
+          onclick: () => {
+            try { localStorage.setItem(SIMALYKILL, 'ja'); } catch (e) { /* sleppum */ }
+            kort.remove();
+          }
+        })
+      ]),
+      el('p', { class: 'lead', style: 'font-size:14px; margin-top:10px',
+                texti: 'Settu vinnusvæðið á heimaskjáinn. Þá opnast það eins og app og '
+                     + 'þú þarft ekki að leita að hlekknum í póstinum.' }),
+      el('button', { type: 'button', class: 'btn btn--block btn--sm', style: 'margin-top:14px',
+                     texti: 'Sýna mér hvernig', onclick: () => opnaUppsetningu() })
+    ]);
+    return kort;
   }
 
   function verkKort(v) {

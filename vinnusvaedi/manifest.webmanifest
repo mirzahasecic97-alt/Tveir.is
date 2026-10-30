@@ -1,0 +1,18 @@
+{
+  "name": "Tveir vinnusvæði",
+  "short_name": "Tveir",
+  "description": "Verkefnin þín hjá Tveir: staðan, taskar og það sem bíður þín.",
+  "lang": "is",
+  "dir": "ltr",
+  "start_url": "/vinnusvaedi/",
+  "scope": "/vinnusvaedi/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f8fe",
+  "theme_color": "#f2f8fe",
+  "icons": [
+    { "src": "assets/takn-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/takn-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/takn-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

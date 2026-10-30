@@ -7,7 +7,12 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#f2f8fe">
 <link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="../assets/img/tveir-logo.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tveir">
+<link rel="apple-touch-icon" href="assets/takn-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -34,6 +39,11 @@
 
     <div class="prufubanner" id="prufubanner" hidden></div>
 
+    <button type="button" class="simahlekkur" id="simahnappur" hidden>
+      <img src="assets/takn-192.png" alt="" width="26" height="26">
+      Setja vinnusvæðið í símann
+    </button>
+
     <p class="inn__fot">
       Kemstu ekki inn? Sendu okkur línu á <a href="mailto:tveir@tveir.is">tveir@tveir.is</a>
       eða hringdu í <a href="tel:+3548572319">857-2319</a>.
@@ -42,7 +52,7 @@
 </main>
 
 <script type="module">
-import { gogn, stillingar } from './assets/portal.js';
+import { gogn, stillingar, erUppsett, opnaUppsetningu } from './assets/portal.js';
 
 const form   = document.getElementById('innform');
 const netf   = document.getElementById('netfang');
@@ -54,6 +64,13 @@ function segja(texti, tegund) {
   stada.textContent = texti;
   stada.className = 'form-status form-status--' + tegund;
   stada.hidden = false;
+}
+
+/* Ábending um að setja í heimaskjá, nema það sé þegar gert */
+const simahnappur = document.getElementById('simahnappur');
+if (!erUppsett()) {
+  simahnappur.hidden = false;
+  simahnappur.addEventListener('click', () => opnaUppsetningu());
 }
 
 const g = await gogn();

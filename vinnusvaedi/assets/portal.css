@@ -642,3 +642,55 @@
 .tilkynning__or {
   flex: none; color: #a4681a; font-size: 17px; line-height: 1;
 }
+
+/* --------------------------------------------------------------------------
+   20. Setja í símann
+   -------------------------------------------------------------------------- */
+.uppsetning__haus {
+  display: flex; align-items: center; gap: 14px;
+  margin-top: 18px; padding: 14px 16px;
+  background: var(--bg); border-radius: var(--r-input);
+}
+.uppsetning__haus img { border-radius: 13px; flex: none; }
+.uppsetning__haus strong {
+  display: block; font: 500 15px/1.3 var(--f-body); color: var(--ink);
+}
+
+.uppsetning { list-style: none; margin: 20px 0 0; padding: 0; }
+.uppsetning li {
+  display: flex; align-items: flex-start; gap: 13px;
+  padding: 13px 0; border-top: 1px solid var(--line);
+  font-size: 15px; line-height: 1.5;
+}
+.uppsetning li:first-child { border-top: 0; padding-top: 4px; }
+.uppsetning__nr {
+  flex: none; width: 25px; height: 25px; margin-top: 1px;
+  border-radius: 50%; background: var(--accs); color: var(--acc);
+  font: 500 13px/1 var(--f-body);
+  display: flex; align-items: center; justify-content: center;
+}
+.uppsetning .skyring { margin-top: 3px; }
+
+/* Áminningin sjálf */
+.simakort { padding: 20px; }
+.simakort__haus { display: flex; align-items: center; gap: 12px; }
+.simakort__haus img { border-radius: 10px; flex: none; }
+.simakort__haus h2 {
+  font-family: var(--f-body); font-weight: 500; font-size: 16px;
+  letter-spacing: 0; flex: 1 1 auto;
+}
+.simakort__loka {
+  flex: none; background: none; border: 0; cursor: pointer;
+  color: var(--soft); font-size: 15px; line-height: 1; padding: 6px;
+}
+.simakort__loka:hover { color: var(--ink); }
+
+/* Hlekkurinn neðst á innskráningarsíðunni */
+.simahlekkur {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: none; border: 0; cursor: pointer; padding: 10px 0;
+  font: 500 14px/1 var(--f-body); color: var(--acc);
+  min-height: 44px;
+}
+.simahlekkur:hover { text-decoration: underline; }
+.simahlekkur img { border-radius: 7px; flex: none; }

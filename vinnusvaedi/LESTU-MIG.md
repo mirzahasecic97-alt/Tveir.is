@@ -49,6 +49,9 @@ vinnusvaedi/
   verk.html          eitt verkefni, tímalína, tímar og rukkun
   stjornbord.html    það sem við sjáum daglega
   tillogur.html      verkefnatillögur sem bíða svars
+  manifest.webmanifest  gerir þetta að appi á heimaskjá
+  sw.js                 þjónustustarfi, geymir bara sambandsleysissíðuna
+  ekkert-samband.html   það sem sést þegar netið dettur út
   gagnagrunnur.sql   allar töflur og réttindi, keyrist einu sinni
   assets/
     stillingar.js    eina skráin sem þarf að breyta
@@ -177,6 +180,31 @@ smelli. Taskar sem eru merktir viðskiptavin lenda strax í Bíður þín hjá h
 Þrú snið fylgja: Ný vefsíða (níu skref), Efnispakki mánaðar (sex) og
 Vörumerki (sex). Röðin í `snid_taskar.rod` verður að röðinni í tímalínunni.
 Þú breytir þeim í töflunum `snid` og `snid_taskar`.
+
+---
+
+## Appið í símanum
+
+Vinnusvæðið er uppsetjanlegt á heimaskjá. Það þarf ekkert úr App Store
+eða Play, þetta er síðan sjálf í heilum skjá með tákni.
+
+Viðskiptavinur sér **Setja vinnusvæðið í símann** á innskráningarsíðunni og
+spjald á yfirlitinu sínu þangað til hann felur það. Leiðbeiningarnar breytast
+eftir tæki: iPhone fær Safari skrefin, Android fær annaðhvort alvöru
+uppsetningarhnapp eða valmyndarskrefin.
+
+Táknið er tvisturinn úr `favicon.svg`, hvítur á navy. Nafnið á heimaskjánum er
+**Tveir**, sett í `short_name` í `manifest.webmanifest`. Ef þið viljið annað
+nafn seinna er það ein lína þar og ein í `apple-mobile-web-app-title` á
+síðunum fimm.
+
+**Á iPhone heldur appið sinni eigin innskráningu.** Safari og heimaskjásappið
+deila ekki gögnum, svo viðskiptavinurinn slær netfangið inn einu sinni í
+viðbót þegar hann opnar appið í fyrsta sinn. Þetta stendur í leiðbeiningunum.
+
+Þjónustustarfinn geymir ekkert nema sambandsleysissíðuna. Það er viljandi:
+ef hann geymdi kóðann sjálfan gætu viðskiptavinir setið uppi með gamla útgáfu
+eftir að við breytum einhverju.
 
 ---
 

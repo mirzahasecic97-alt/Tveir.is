@@ -200,6 +200,116 @@ export function teiknaHaus(ek, heiti) {
   ]);
 }
 
+/* ==================================================================
+   Setja vinnusvæðið í símann
+   ================================================================== */
+
+/* Þjónustustarfi: geymir ekkert nema sambandsleysissíðuna, en án hans
+   býður Android ekki upp á að setja síðuna upp sem forrit. */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js', { scope: './' })
+      .catch(() => { /* þá er það bara venjuleg síða */ });
+  });
+}
+
+/* Android gefur okkur boð sem við geymum og notum þegar á þarf að halda */
+let innsetningarbod = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  innsetningarbod = e;
+});
+
+export function erUppsett() {
+  return window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+}
+
+export function taeki() {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/.test(ua)) return 'ios';
+  /* iPad segist vera Mac frá iPadOS 13 */
+  if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  return 'tolva';
+}
+
+function skref(nr, texti, aukatexti) {
+  return el('li', {}, [
+    el('span', { class: 'uppsetning__nr', texti: String(nr) }),
+    el('div', {}, [
+      el('div', { texti: texti }),
+      aukatexti ? el('div', { class: 'skyring', texti: aukatexti }) : null
+    ])
+  ]);
+}
+
+export function opnaUppsetningu() {
+  const hvada = taeki();
+
+  const d = el('dialog', { class: 'pdialog' }, [el('div', { class: 'pdialog__kort' }, [
+    el('div', { class: 'pdialog__haus' }, [
+      el('h2', { texti: 'Vinnusvæðið í símann' }),
+      el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '✕',
+                     onclick: () => d.close() })
+    ]),
+
+    el('div', { class: 'uppsetning__haus' }, [
+      el('img', { src: 'assets/takn-192.png', alt: '', width: '56', height: '56' }),
+      el('div', {}, [
+        el('strong', { texti: 'Tveir' }),
+        el('span', { class: 'skyring',
+                     texti: 'Þannig lítur táknið út á heimaskjánum' })
+      ])
+    ]),
+
+    hvada === 'ios'
+      ? el('ol', { class: 'uppsetning' }, [
+          skref(1, 'Ýðu á deilitáknið neðst í Safari',
+                   'Ferningurinn með örinni upp úr.'),
+          skref(2, 'Skrunaðu niður og veldu Bæta við heimaskjá'),
+          skref(3, 'Ýðu á Bæta við uppi í hægra horninu')
+        ])
+      : hvada === 'android'
+        ? el('ol', { class: 'uppsetning' }, [
+            skref(1, 'Ýðu á þrjá punkta uppi í hægra horninu'),
+            skref(2, 'Veldu Setja upp forrit eða Bæta við heimaskjá'),
+            skref(3, 'Staðfestu')
+          ])
+        : el('ol', { class: 'uppsetning' }, [
+            skref(1, 'Smelltu á uppsetningartáknið hægra megin í veffangastikunni',
+                     'Lítill skjár með ör niður.'),
+            skref(2, 'Ef það sést ekki: þrjú punktarnir og svo Varpa eða Setja upp'),
+            skref(3, 'Staðfestu')
+          ]),
+
+    innsetningarbod
+      ? el('button', { type: 'button', class: 'btn btn--block', style: 'margin-top:20px',
+                       texti: 'Setja upp núna',
+                       onclick: async (e) => {
+                         e.currentTarget.disabled = true;
+                         innsetningarbod.prompt();
+                         await innsetningarbod.userChoice;
+                         innsetningarbod = null;
+                         d.close();
+                       } })
+      : null,
+
+    el('p', { class: 'skyring', style: 'margin-top:18px',
+              texti: hvada === 'ios'
+                ? 'Appið heldur sinni eigin innskráningu, svo þú slærð netfangið inn einu '
+                  + 'sinni í viðbót þegar þú opnar það í fyrsta sinn.'
+                : 'Það þarf ekkert úr App Store eða Play. Þetta er síðan sjálf, bara í heilum skjá '
+                  + 'og með tákni á heimaskjánum.' })
+  ])]);
+
+  d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+  d.addEventListener('close', () => d.remove());
+  document.body.append(d);
+  d.showModal();
+  return d;
+}
+
 /* ------------------------------------------------------------------
    Taskspjald
    ------------------------------------------------------------------ */
