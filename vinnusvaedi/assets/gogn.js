@@ -297,19 +297,19 @@ function prufuBakendi() {
     const dagsetning = (n) => new Date(nu + n * dagur).toISOString().slice(0, 10);
 
     const fyr = [
-      { id: 'f1', nafn: 'Krónan',      askrift: 'Efni og samfélagsmiðlar',
+      { id: 'f1', nafn: 'Hlíðarkaup',      askrift: 'Efni og samfélagsmiðlar',
         er_askrift: true,  askrift_verd: 290000 },
-      { id: 'f2', nafn: 'HAF Vítamín', askrift: 'Vefsíða í áskrift',
+      { id: 'f2', nafn: 'Steinvík ehf.', askrift: 'Vefsíða í áskrift',
         er_askrift: true,  askrift_verd: 45000 },
-      { id: 'f3', nafn: 'Epicbet',     askrift: 'Sölutækifæri',
+      { id: 'f3', nafn: 'Fossberg ehf.',     askrift: 'Sölutækifæri',
         er_askrift: false, askrift_verd: null }
     ];
 
     const notendur = [
       { id: 'u-mirza', nafn: 'Mirza Hasecic', netfang: 'mirza@tveir.is', hlutverk: 'admin', fyrirtaeki_id: null },
       { id: 'u-oskar', nafn: 'Óskar Hákonar', netfang: 'oskar@tveir.is', hlutverk: 'admin', fyrirtaeki_id: null },
-      { id: 'u-haf',   nafn: 'Anna Jónsdóttir', netfang: 'anna@hafvitamin.is', hlutverk: 'vidskiptavinur', fyrirtaeki_id: 'f2' },
-      { id: 'u-kron',  nafn: 'Páll Guðmundsson', netfang: 'pall@kronan.is', hlutverk: 'vidskiptavinur', fyrirtaeki_id: 'f1' }
+      { id: 'u-haf',   nafn: 'Anna Jónsdóttir', netfang: 'anna@steinvik.is', hlutverk: 'vidskiptavinur', fyrirtaeki_id: 'f2' },
+      { id: 'u-kron',  nafn: 'Páll Guðmundsson', netfang: 'pall@hlidarkaup.is', hlutverk: 'vidskiptavinur', fyrirtaeki_id: 'f1' }
     ];
 
     const verkefni = [
@@ -512,7 +512,7 @@ function prufuBakendi() {
 
     async innskra(netfang) {
       const n = g.notendur.find((x) => x.netfang.toLowerCase() === netfang.trim().toLowerCase());
-      if (!n) throw new Error('Þetta netfang er ekki á prufulistanum. Prófaðu mirza@tveir.is eða anna@hafvitamin.is.');
+      if (!n) throw new Error('Þetta netfang er ekki á prufulistanum. Prófaðu mirza@tveir.is eða anna@steinvik.is.');
       g.innskradur = n.id; vista();
     },
 

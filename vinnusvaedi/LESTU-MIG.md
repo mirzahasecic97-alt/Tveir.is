@@ -10,7 +10,7 @@ Prufuaðgangar:
 
 | Netfang | Sér |
 | --- | --- |
-| `anna@hafvitamin.is` | Vinnusvæði viðskiptavinar |
+| `anna@steinvik.is` | Vinnusvæði viðskiptavinar |
 | `mirza@tveir.is` | Stjórnborðið okkar |
 | `oskar@tveir.is` | Stjórnborðið okkar |
 
@@ -31,7 +31,7 @@ er ekki í áskrift. Enginn kemst framhjá þessu með því að opna Developer 
 Tillögurnar eiga sína eigin síðu, **Tillögur** í hausnum, með tölu á því sem
 bíður. Á stjórnborðinu er bara ein lína sem bendir þangað.
 
-Á þeirri síðu sjáið þið hvað þau sendu og megið breyta öðru hvoru. Ef Krónan
+Á þeirri síðu sjáið þið hvað þau sendu og megið breyta öðru hvoru. Ef Hlíðarkaup
 merkir verðmerkingu á sendibíla sem innan áskriftar og þið eruð ósammala, flettið þið
 reitnum í Sér verkefni, setjið verð og skrifið ástæðuna í svarið. Viðskiptavinurinn
 sér verðið og ástæðuna á verkefnasíðunni sinni.

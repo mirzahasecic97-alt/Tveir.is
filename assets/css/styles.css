@@ -1160,6 +1160,8 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
 .vinnulag__fast {
   position: sticky; top: 0;
   min-height: 100svh;
+  /* Hausinn situr fastur yfir þessu, svo það þarf að vera pláss fyrir hann */
+  padding-top: clamp(64px, 8vh, 86px);
   display: flex; align-items: center;
   overflow: hidden;
 }
@@ -1168,23 +1170,11 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
 
 .vinnulag__fyrirsogn { margin-bottom: clamp(18px, 2.6vh, 30px); }
 
-/* Myndin vinstra megin, síminn hægra megin */
-/* Tveir dálkar í allri breidd, annars kemst ekkert fyrir í föstum ramma */
-.vinnulag__svid {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto;
-  gap: clamp(14px, 3vw, 40px);
-  align-items: center;
-}
-
-.vinnulag__mynd { margin: 0; }
-.vinnulag__mynd img {
-  width: 100%; height: min(46vh, 420px); object-fit: cover; object-position: 50% 30%;
-  border-radius: var(--r-block);
-  box-shadow: var(--sh-card);
-}
+/* Skoðunarsviðið: síminn í miðju, kortin beggja vegna */
+.vinnulag__svid { display: flex; justify-content: center; }
 
 /* ---------- Síminn og kortin í kringum hann ---------- */
-.vinnulag__taeki { position: relative; display: flex; justify-content: center; }
+.vinnulag__taeki { position: relative; width: fit-content; }
 
 .fljot {
   position: absolute; z-index: 3;
@@ -1215,6 +1205,12 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
 }
 .fljot__merki--blar { color: var(--acc); background: var(--accs); }
 
+.fljot__verd {
+  display: inline-block; margin-top: 9px;
+  font: 500 11.5px/1 var(--f-body); color: #1e6b34;
+  background: #e6f4ea; padding: 6px 9px; border-radius: var(--r-pill);
+}
+
 .fljot__punktar { display: flex; gap: 4px; margin-top: 9px; }
 .fljot__punktar i {
   width: 100%; height: 4px; border-radius: var(--r-pill);
@@ -1234,15 +1230,24 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
   transform: rotate(42deg);
 }
 
-/* Staðsetningar. Kortin skarast á myndina svo þetta fái dýpt. */
-@media (min-width: 980px) {
-  .fljot--1 { left: -212px; top: 1%;   --fx: -24px; }
-  .fljot--2 { left: -250px; top: 39%;  --fx: -28px; }
-  /* Skarðast á neðra horn símans svo það líti út eins og það komi út úr honum */
-  .fljot--3 { left: -128px; bottom: 3%; width: 192px; --fx: -20px; }
-
+/* Tvö kort hvoru megin. calc(100% + bil) festir þau við brún símans
+   svo þau fylgi honum í hvaða hæð sem skjárinn gefur. */
+@media (min-width: 1040px) {
+  .fljot--1 { right: calc(100% + 46px); top: 3%;    --fx: -26px; }
+  .fljot--2 { right: calc(100% + 74px); bottom: 6%; --fx: -30px; }
+  .fljot--3 { left:  calc(100% + 74px); top: 11%;   --fx: 30px; }
+  .fljot--4 { left:  calc(100% + 46px); bottom: 2%; --fx: 26px; }
 }
-@media (max-width: 979px) { .fljot { display: none; } }
+
+@media (min-width: 820px) and (max-width: 1039px) {
+  .fljot { width: 188px; }
+  .fljot--1 { right: calc(100% + 24px); top: 2%;    --fx: -22px; }
+  .fljot--2 { right: calc(100% + 24px); bottom: 4%; --fx: -22px; }
+  .fljot--3 { left:  calc(100% + 24px); top: 10%;   --fx: 22px; }
+  .fljot--4 { left:  calc(100% + 24px); bottom: 2%; --fx: 22px; }
+}
+
+@media (max-width: 819px) { .fljot { display: none; } }
 
 .simi {
   background: var(--ink);
@@ -1255,7 +1260,7 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
   background: var(--bg);
   border-radius: 24px;
   overflow: hidden;
-  height: min(46vh, 430px);
+  height: min(56vh, 520px);
   aspect-ratio: 230 / 468;
   display: flex; flex-direction: column;
 }
@@ -1386,8 +1391,13 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
 .vinnulag[data-skref="3"] .fljot--2 {
   opacity: 1; transform: translate(0, 0) scale(1) rotate(1.8deg);
 }
+.vinnulag[data-skref="1"] .fljot--3,
+.vinnulag[data-skref="2"] .fljot--3,
 .vinnulag[data-skref="3"] .fljot--3 {
-  opacity: 1; transform: translate(0, 0) scale(1) rotate(2.6deg);
+  opacity: 1; transform: translate(0, 0) scale(1) rotate(2.2deg);
+}
+.vinnulag[data-skref="3"] .fljot--4 {
+  opacity: 1; transform: translate(0, 0) scale(1) rotate(-2.4deg);
 }
 
 .vinnulag[data-skref="3"] .m-bubla { opacity: 1; transform: none; }
@@ -1462,8 +1472,7 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
 .vinnulag.engin-festing .vinnulag__braut { height: auto; }
 .vinnulag.engin-festing .vinnulag__fast { position: static; min-height: 0; }
 .vinnulag.engin-festing .vinnulag__listi li { opacity: 1; }
-.vinnulag.engin-festing .vinnulag__mynd img { max-height: 420px; }
-.vinnulag.engin-festing .simi__skjar { height: 430px; }
+.vinnulag.engin-festing .simi__skjar { height: 520px; }
 
 @media (prefers-reduced-motion: reduce) {
   .vinnulag__braut { height: auto; }
