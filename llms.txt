@@ -12,6 +12,7 @@
 - [Vörumerki](https://tveir.is/vorumerki.html): Merki, litapalli, letur, leiðbeiningaskjal, snið fyrir samfélagsmiðla og prentefni. Þrjár til fjórar vikur, tvær umferðir af breytingum innifaldar.
 - [Tökur á viðburðum](https://tveir.is/vidburdir.html): Tökur á staðnum, stuttar klippur samdægurs, lengra myndband innan viku og ljósmyndir. Ferðast erlendis, flug og gisting verðlögð sérstaklega.
 - [Póstlisti og sölupóstar](https://tveir.is/solupostar.html): Uppsetning á póstlista, skráningarform, sniðmát í söluformati, sjálfvirk póstaröð og mælingar. Sett upp og afhent, efnið kemur frá viðskiptavini.
+- [Eftirfylgni á tilboðum](https://tveir.is/eftirfylgni.html): Eftirfylgni á tilboðum sem bíða svars og fyrirspurnum sem fóru ekkert. Póstar úr pósthólfi viðskiptavinarins, svörin flokkuð, fundir bókaðir í dagatalið. Uppsetning og mánaðargjald.
 - [Starter kit](https://tveir.is/stofna-fyrirtaeki.html): Fyrir ný fyrirtæki. Vörumerki, vefsíða, samfélagsmiðlar og fyrsta Meta herferðin.
 
 ## Annað
