@@ -1454,3 +1454,187 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
   .vinnulag .m-hlut--fyrir { opacity: 0; }
   .vinnulag .m-hlut--eftir { opacity: 1; }
 }
+
+/* ==========================================================================
+   21. Verðskrá — bindingartakkar, verðkort, verðtafla og reiknivél
+   ========================================================================== */
+
+/* ---------- Bindingin. Eitt val sem stýrir öllum verðum á síðunni ---------- */
+.binditakkar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 520px;
+}
+.binditakki {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--sur);
+  color: var(--ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .16s, box-shadow .16s, background .16s;
+}
+.binditakki:hover { border-color: var(--acc); }
+.binditakki.is-on {
+  background: var(--accs);
+  border-color: var(--acc);
+  box-shadow: inset 0 0 0 1px var(--acc);
+}
+.binditakki__man { font-weight: 600; font-size: 15px; }
+.binditakki__af { font-size: 13px; color: var(--soft); }
+.binditakki.is-on .binditakki__af { color: var(--acc-hover); font-weight: 500; }
+
+/* ---------- Pakkakortin ---------- */
+.verdlisti {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+.verdkort { position: relative; display: flex; flex-direction: column; gap: 10px; }
+.verdkort--vinsaelt { box-shadow: inset 0 0 0 2px var(--acc), var(--sh-card); }
+/* Merkið situr inni í kortinu. Hangi það út fyrir brúnina lendir það
+   ofan á kortinu fyrir ofan þegar þau staflast á síma. */
+.verdkort__merki {
+  position: absolute;
+  top: 16px; right: 16px;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: var(--acc);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.verdkort__nafn {
+  margin: 0;
+  padding-right: 86px;
+  font-family: var(--f-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--soft);
+}
+.verdkort__verd { margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; }
+.verdkort__tala {
+  font-family: var(--f-head);
+  font-size: clamp(28px, 24px + 1vw, 36px);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink);
+}
+.verdkort__eining { font-size: 14px; color: var(--soft); }
+/* Fulla verðið stendur yfirstrikað við hliðina þegar afsláttur er virkur. */
+.verdkort__fullt { margin: -4px 0 0; font-size: 13px; color: var(--soft); }
+.verdkort__fullt s { text-decoration-thickness: 1px; }
+.verdkort__punktar { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.verdkort__punktar li {
+  position: relative;
+  padding-left: 20px;
+  font-size: 14px;
+  color: var(--soft);
+  line-height: 1.45;
+}
+.verdkort__punktar li::before {
+  content: "";
+  position: absolute;
+  left: 2px; top: 7px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--acc);
+}
+
+/* ---------- Taflan fyrir verk sem eru greidd einu sinni ---------- */
+.verdhopur {
+  margin: 26px 0 10px;
+  font-family: var(--f-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--soft);
+}
+.verdtafla { padding: 6px 0; }
+.verdtafla__lina {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px var(--gut);
+  border-bottom: 1px solid var(--line);
+}
+.verdtafla__lina:last-child { border-bottom: 0; }
+.verdtafla__nafn { display: flex; flex-direction: column; gap: 2px; font-weight: 500; }
+.verdtafla__lysing { font-size: 13px; font-weight: 400; color: var(--soft); line-height: 1.45; }
+.verdtafla__verd { white-space: nowrap; font-weight: 600; }
+.verdtafla__fra { font-size: 13px; font-weight: 400; color: var(--soft); }
+
+/* ---------- Reiknivélin ---------- */
+.reikni { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 900px) {
+  .reikni { grid-template-columns: 1fr minmax(300px, 360px); align-items: start; }
+  .reikni__summa { position: sticky; top: 92px; }
+}
+.reikni__val { display: grid; gap: 22px; }
+.reikni__hopur { margin: 0; padding: 0; border: 0; }
+.reikni__hopur legend {
+  padding: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--soft);
+}
+.reikni__lidir { display: grid; gap: 2px; }
+.reikni__lidur {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: var(--r-input);
+  cursor: pointer;
+  transition: background .14s;
+}
+.reikni__lidur:hover { background: var(--accs); }
+.reikni__lidur input { width: 18px; height: 18px; accent-color: var(--acc); flex: none; cursor: pointer; }
+.reikni__heiti { flex: 1; font-size: 15px; }
+.reikni__kr { white-space: nowrap; font-size: 14px; color: var(--soft); }
+.reikni__lidur input:checked ~ .reikni__kr { color: var(--ink); font-weight: 600; }
+
+.reikni__summa { display: flex; flex-direction: column; gap: 10px; }
+.reikni__binding { margin: 0; font-size: 13px; color: var(--acc-on-navy); }
+.reikni__rod { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 15px; }
+.reikni__rod span { color: var(--acc-on-navy); }
+.reikni__rod--afsl b { color: #8ee6b4; }
+.reikni__rod--stor { font-size: 16px; }
+.reikni__rod--stor > b {
+  font-family: var(--f-head);
+  font-size: clamp(26px, 22px + 1vw, 32px);
+  font-weight: 600;
+  line-height: 1.1;
+}
+.reikni__strik { height: 1px; margin: 4px 0; border: 0; background: rgba(255, 255, 255, .16); }
+.reikni__vsk { margin: -4px 0 0; font-size: 13px; color: var(--acc-on-navy); }
+.reikni__smatt { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--acc-on-navy); }
+.reikni__takki { align-self: flex-start; margin-top: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .binditakki, .reikni__lidur { transition: none; }
+}
+
+/* ==========================================================================
+   22. Hausinn — merkið mátti ekki þjappast saman
+   .pillnav__logo var venjulegur flex-hlutur og gaf eftir þegar plássið
+   þraut. Á síma fór merkið úr 76 px niður í 32 og hvarf alveg á þeim
+   þrengstu. Nú stendur það fast og takkinn þrengir sér í staðinn.
+   ========================================================================== */
+.pillnav__logo { flex: none; }
+
+@media (max-width: 559px) {
+  .pillnav__right { gap: 6px; }
+  .pillnav__right .dropdown__toggle { padding-inline: 12px; font-size: 13.5px; }
+  .pillnav__right .dropdown__toggle .caret { display: none; }
+  .burger { width: 38px; padding: 0 10px; }
+}

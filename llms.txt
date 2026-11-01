@@ -4,6 +4,8 @@
 
 ## Þjónusta
 
+- [Verðskrá](https://tveir.is/verdskra.html): Opinber verð. Mánaðarpakkar frá 29.000 kr. (vefviðhald) og 89.000 kr. (samfélagsmiðlar), auglýsingastýring frá 119.000 kr., landingarsíða 245.000 kr., lítil vefsíða 485.000 kr., vefverslun frá 950.000 kr., vörumerki frá 189.000 kr., stakt myndband 60.000 kr. Öll verð án VSK. Þrír mánuðir lágmark á mánaðarpökkum, 10% afsláttur við 6 mánuði og 20% við 12.
+
 - [Sölutækifæri](https://tveir.is/solutaekifaeri.html): Meta herferðir, landingarsíða, lead-form og eftirfylgni. 282 fyrirspurnir fyrir viðskiptavini, frá 205 kr. hver. Auglýsingakostnaður greiddur beint af viðskiptavini á hans eigin Meta reikning.
 - [Sjálfvirkni](https://tveir.is/sjalfvirkni.html): Staðfestingar, áminningar, eftirfylgni, skráningar í gagnagrunn og mánaðarlegar skýrslur sem ganga af sjálfu sér. Uppsetning og mánaðarlegt eftirlit.
 - [Vefsíða í áskrift](https://tveir.is/vefsida-askrift.html): Vefsíða, hýsing, lén, uppfærslur, breytingar og mælingar fyrir eitt mánaðargjald í stað eins stórs reiknings.

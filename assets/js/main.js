@@ -507,6 +507,164 @@
     reikna();
   }
 
+  /* ------------------------------------------------------------------
+     Verðskrá — eitt val á bindingu stýrir öllum mánaðarverðum á síðunni
+     og reiknivélinni. Verðin standa í HTML svo þau sjást án JS.
+     ------------------------------------------------------------------ */
+  function initVerdskra() {
+    var takkar = Array.prototype.slice.call(document.querySelectorAll('.binditakki'));
+    if (!takkar.length) return;
+
+    /* Kjörin. Breyttu hér ef afslátturinn breytist, hvergi annars staðar. */
+    var AFSLATTUR = { 3: 0, 6: 0.10, 12: 0.20 };
+    var VSK = 0.24;
+
+    var manudir = 3;
+
+    function kr(n) {
+      return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' kr.';
+    }
+    function ord(is, en) {
+      return document.documentElement.lang === 'en' ? en : is;
+    }
+
+    var pakkar = Array.prototype.slice.call(document.querySelectorAll('[data-pakki]'))
+      .map(function (el) {
+        return {
+          nafn: el.getAttribute('data-nafn'),
+          verd: parseInt(el.getAttribute('data-verd'), 10),
+          man: el.getAttribute('data-teg') === 'man',
+          tala: el.querySelector('.verdkort__tala'),
+          fullt: el.querySelector('.verdkort__fullt'),
+          hak: null,
+          krEl: null
+        };
+      });
+
+    /* Reiknivélin er byggð úr sömu línum og verðskráin að ofan, svo
+       tölurnar tvær geta ekki farið úr takti hvor við aðra. */
+    (function byggja() {
+      var holfMan = document.querySelector('[data-reikni-man]');
+      var holfEitt = document.querySelector('[data-reikni-eitt]');
+      if (!holfMan || !holfEitt) return;
+
+      pakkar.forEach(function (p, i) {
+        var lab = document.createElement('label');
+        lab.className = 'reikni__lidur';
+
+        var inp = document.createElement('input');
+        inp.type = 'checkbox';
+        inp.id = 'reikni-' + i;
+        inp.addEventListener('change', teikna);
+
+        var heiti = document.createElement('span');
+        heiti.className = 'reikni__heiti';
+        heiti.textContent = p.nafn;
+
+        var verd = document.createElement('span');
+        verd.className = 'reikni__kr';
+
+        lab.appendChild(inp);
+        lab.appendChild(heiti);
+        lab.appendChild(verd);
+        (p.man ? holfMan : holfEitt).appendChild(lab);
+
+        p.hak = inp;
+        p.krEl = verd;
+      });
+    })();
+
+    function settu(val, texti) {
+      var el = document.querySelector('[data-summa-' + val + ']');
+      if (el) el.textContent = texti;
+    }
+    function syna(val, a) {
+      var el = document.querySelector('[data-summa-' + val + ']');
+      if (el) el.hidden = !a;
+    }
+
+    function teikna() {
+      var afsl = AFSLATTUR[manudir] || 0;
+      var manUpph = 0, eittUpph = 0;
+      var valinMan = [], valinEitt = [];
+
+      pakkar.forEach(function (p) {
+        var verd = p.man ? p.verd * (1 - afsl) : p.verd;
+
+        /* Verðkortin sjálf */
+        if (p.tala) p.tala.textContent = kr(verd).replace(' kr.', '');
+        if (p.fullt) {
+          if (afsl > 0) {
+            p.fullt.innerHTML = '<s>' + kr(p.verd) + '</s> ' +
+              ord('á mánuði án bindingar', 'per month without a commitment');
+            p.fullt.hidden = false;
+          } else {
+            p.fullt.hidden = true;
+          }
+        }
+
+        /* Línurnar í reiknivélinni */
+        if (p.krEl) {
+          p.krEl.textContent = kr(verd) + (p.man ? ord(' á mán.', ' / mo') : '');
+        }
+
+        if (p.hak && p.hak.checked) {
+          if (p.man) { manUpph += p.verd; valinMan.push(p.nafn); }
+          else { eittUpph += p.verd; valinEitt.push(p.nafn); }
+        }
+      });
+
+      var manAfsl = manUpph * afsl;
+      var manNetto = manUpph - manAfsl;
+      var alls = manNetto * manudir + eittUpph;
+
+      settu('binding', manudir + ' ' + ord('mánuðir', 'months'));
+      settu('manfjoldi', String(manudir));
+      settu('man', kr(manNetto));
+      settu('afsl', kr(manAfsl));
+      settu('eitt', kr(eittUpph));
+      settu('alls', kr(alls));
+      settu('vsk', kr(alls * (1 + VSK)));
+      syna('afslrod', manAfsl > 0);
+      syna('eittrod', eittUpph > 0);
+
+      /* Útdrátturinn fer með í tilboðsbeiðnina svo við vitum hvað var valið. */
+      var ut = document.querySelector('[data-reikni-utdrattur]');
+      if (ut) {
+        if (!valinMan.length && !valinEitt.length) {
+          ut.value = '';
+        } else {
+          var linur = [ord('Binding', 'Commitment') + ': ' + manudir + ' ' + ord('mánuðir', 'months')];
+          if (valinMan.length) linur.push(ord('Mánaðarlega', 'Monthly') + ': ' + valinMan.join(', '));
+          if (valinEitt.length) linur.push(ord('Einu sinni', 'One-off') + ': ' + valinEitt.join(', '));
+          if (manNetto > 0) linur.push(ord('Á mánuði', 'Per month') + ': ' + kr(manNetto));
+          linur.push(ord('Samtals yfir', 'Total over') + ' ' + manudir + ' ' +
+                     ord('mánuði', 'months') + ': ' + kr(alls) + ' ' + ord('án VSK', 'excl. VAT'));
+          ut.value = linur.join('\n');
+        }
+      }
+    }
+
+    takkar.forEach(function (b) {
+      b.addEventListener('click', function () {
+        manudir = parseInt(b.getAttribute('data-man'), 10) || 3;
+        takkar.forEach(function (x) {
+          var a = (x === b);
+          x.classList.toggle('is-on', a);
+          x.setAttribute('aria-pressed', String(a));
+        });
+        teikna();
+      });
+    });
+
+    /* Tungumálarofinn skrifar ekki yfir það sem við teiknum sjálf. */
+    document.querySelectorAll('.langsw__btn').forEach(function (b) {
+      b.addEventListener('click', function () { setTimeout(teikna, 0); });
+    });
+
+    teikna();
+  }
+
   function initYear() {
     var year = new Date().getFullYear();
     document.querySelectorAll('[data-year]').forEach(function (el) { el.textContent = year; });
@@ -525,6 +683,7 @@
     initLang();
     initCountUp();
     initVinnulag();
+    initVerdskra();
     initYear();
   }
 

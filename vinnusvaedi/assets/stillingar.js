@@ -18,7 +18,7 @@ export const stillingar = {
   /* Hvað þurfum við að fá á tímann til að þetta borgi sig. Verð á verkefni
      deilt með skráðum tímum birtist rautt á stjórnborðinu ef það fer undir
      þessa tölu. Bara fyrir okkur, viðskiptavinur sér hana aldrei. */
-  timagjald: 12000
+  timagjald: 15500
 };
 
 /* anon key er ætlaður til að vera opinber. Það sem ver gögnin er Row Level
