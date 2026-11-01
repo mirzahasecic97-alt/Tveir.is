@@ -297,9 +297,17 @@ create policy vid_admin on vidhengi for all to authenticated
 
 -- --------------------------------------------------------------------------
 -- 6. Viðhengi í Storage
---    Búðu til private bucket sem heitir vidhengi í Supabase Storage,
---    svo keyrðu þetta. Slóðin er alltaf <fyrirtaeki_id>/<task_id>/<nafn>.
+--    Geymslan verður til hér, lokuð. Hún má aldrei vera opin, því þá
+--    liggja skjöl viðskiptavina á netinu fyrir hvern sem giskar á slóðina.
+--    Slóðin er alltaf <fyrirtaeki_id>/<task_id>/<nafn>.
 -- --------------------------------------------------------------------------
+
+insert into storage.buckets (id, name, public)
+select 'vidhengi', 'vidhengi', false
+where not exists (select 1 from storage.buckets where id = 'vidhengi');
+
+-- Hafi hún verið stofnuð í höndunum og merkt opin, lokum við henni.
+update storage.buckets set public = false where id = 'vidhengi' and public;
 
 drop policy if exists vidhengi_les on storage.objects;
 create policy vidhengi_les on storage.objects for select to authenticated

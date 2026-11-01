@@ -108,8 +108,8 @@ aldrei þangað inn, hann fer framhjá öllum réttindum.
 
 ### 5. Viðhengi
 
-**Storage → New bucket**, nafn `vidhengi`, ekki public. Réttindin eru þegar
-í `gagnagrunnur.sql`.
+Ekkert að gera. `gagnagrunnur.sql` býr til báðar geymslurnar, `vidhengi`
+lokaða og `merki` opna, og setur réttindin á þær.
 
 ### 6. Fyrsti aðgangur
 
@@ -136,7 +136,7 @@ og tengir hann við fyrirtækið sitt þar.
 sem þarf að muna eftir að stoppa.
 
 Undir tölunni stendur hvað þið eruð að fá á tímann. Sú tala verður rauð ef
-hún fer undir `timagjald` í `assets/stillingar.js`, sem er 12.000 kr. í dag.
+hún fer undir `timagjald` í `assets/stillingar.js`, sem er 15.500 kr. í dag, lægsti taxtinn í verðskránni.
 Breyttu henni í ykkar tölu.
 
 Reikningsreiturinn hefur þrjár stöður: ekki rukkað, reikningur sendur og greitt.
