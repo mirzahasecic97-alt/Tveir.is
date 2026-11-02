@@ -19,8 +19,9 @@ async function start() {
   let fyrirtaekiSia = '';
 
   async function teikna() {
-    const [verkefni, taskar, fyrirtaeki, notendur, innriOll, snidin] = await Promise.all([
-      g.verkefni(), g.taskar({}), g.fyrirtaeki(), g.notendur(), g.innri(), g.snid()
+    const [verkefni, taskar, fyrirtaeki, notendur, innriOll, snidin, okkar] = await Promise.all([
+      g.verkefni(), g.taskar({}), g.fyrirtaeki(), g.notendur(), g.innri(), g.snid(),
+      g.innriTaskar()
     ]);
     const innri = {};
     (innriOll || []).forEach((i) => { innri[i.verkefni_id] = i; });
@@ -39,6 +40,12 @@ async function start() {
       v.stada === 'lokid' && !v.innan_samnings
       && (innri[v.id] || {}).reikningur === 'ekki_rukkad' && v.verd_okkar);
     const oinnheimtAlls = oinnheimt.reduce((a, v) => a + Number(v.verd_okkar), 0);
+
+    /* Af okkar eigin lista nefnum við bara það sem er ósnert eða komið fram
+       úr skiladegi. Annars stæði borðinn þarna alla daga og hætti að segja
+       nokkuð. */
+    const okkarAMig = okkar.filter((t) => t.abyrgd === ek.id && t.stada !== 'lokid'
+                                       && (t.stada === 'nytt' || erSeint(t.skiladagur)));
 
     const siad = taskar.filter((t) => !fyrirtaekiSia || t.fyrirtaeki_id === fyrirtaekiSia);
     const opin = siad.filter((t) => t.stada !== 'lokid');
@@ -84,6 +91,18 @@ async function start() {
             ? 'Ein tillaga bíður samþykkis'
             : tillogur.length + ' tillögur bíða samþykkis' }),
           el('span', { class: 'undir', texti: tillogur.map((v) => v.titill).join(', ') })
+        ]),
+        el('span', { class: 'tilkynning__or', 'aria-hidden': 'true', texti: '→' })
+      ]) : null,
+
+      /* ---------- okkar eigin listi á sinni eigin síðu ---------- */
+      okkarAMig.length ? el('a', { class: 'tilkynning', href: 'okkar.html',
+                                   style: 'margin-top:14px' }, [
+        el('div', { class: 'tilkynning__inn' }, [
+          el('strong', { texti: okkarAMig.length === 1
+            ? 'Einn taskur liggur á þér'
+            : okkarAMig.length + ' taskar liggja á þér' }),
+          el('span', { class: 'undir', texti: okkarAMig.map((t) => t.titill).join(', ') })
         ]),
         el('span', { class: 'tilkynning__or', 'aria-hidden': 'true', texti: '→' })
       ]) : null,

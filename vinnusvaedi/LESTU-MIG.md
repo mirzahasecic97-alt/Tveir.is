@@ -49,6 +49,7 @@ vinnusvaedi/
   verk.html          eitt verkefni, tímalína, tímar og rukkun
   stjornbord.html    það sem við sjáum daglega
   tillogur.html      verkefnatillögur sem bíða svars
+  okkar.html         okkar eigin listi, taskar milli okkar tveggja
   manifest.webmanifest  gerir þetta að appi á heimaskjá
   sw.js                 þjónustustarfi, geymir bara sambandsleysissíðuna
   ekkert-samband.html   það sem sést þegar netið dettur út
@@ -58,6 +59,7 @@ vinnusvaedi/
     gogn.js          sækir gögnin, úr Supabase eða úr prufudæmum
     portal.js        sameiginlegt, haus, taskar, spjöld, viðhengi
     tillogur.js      samþykktarsíðan
+    okkar.js         okkar eigin listi
     portal.css       stíll ofan á styles.css
 ```
 
@@ -126,6 +128,39 @@ where netfang = 'oskar@tveir.is';
 
 Eftir það býrðu til fyrirtæki á stjórnborðinu, býður viðskiptavini á sama hátt
 og tengir hann við fyrirtækið sitt þar.
+
+---
+
+## Okkar eigin listi
+
+**Okkar** í hausnum er listi sem bara við tvö sjáum. Þar liggja taskar á okkur
+sjálfum: það sem Óskar á að gera, það sem Mirza á að gera og það sem enginn
+hefur tekið að sér enn.
+
+Efst er ein lína: skrifaðu hvað þarf að gera, veldu á hvorn og ýttu á enter.
+Dagsetning er valkvæð. Undir henni eru flipar eftir manni og fellilisti sem
+ræður hvort lokið sést.
+
+Smellurðu á titilinn opnast spjald þar sem þú breytir öllu: titli, nótu, stöðu,
+á hvorn, forgangi, skiladegi og hvaða fyrirtæki taskurinn tilheyrir. Fyrirtækið
+er bara til að vita hverjum hann tengist, það er valkvætt. Eyðing tekur tvær
+ýtingar, því hér er ekkert afturkalla.
+
+Stöðurnar eru fjórar: **Ekki byrjað**, **Í vinnslu**, **Bíður annars** og
+**Lokið**. Bíður annars er fyrir það sem liggur hjá þriðja aðila og við getum
+ekkert gert í á meðan.
+
+Þetta liggur í töflunni `innri_taskar`, sem er aðskilin frá `taskar`. Ástæðan
+er sú að `taskar` er lesin af viðskiptavininum í hans fyrirtæki. Væru okkar
+eigin taskar þar inni gæti hann lesið þá út úr API-inu, hvað sem síðan sýnir
+honum. Stefnan á `innri_taskar` hleypir engum inn nema admin.
+
+Á stjórnborðinu birtist lína sem bendir hingað, en bara þegar eitthvað á þér
+er ósnert eða komið fram úr skiladegi. Talan í hausnum telur allt sem er opið
+á þér.
+
+Yfirlitið `okkar_a_eftir` bíður tilbúið fyrir Make, ef við viljum póst á
+morgnana um það sem er komið fram úr skiladegi.
 
 ---
 

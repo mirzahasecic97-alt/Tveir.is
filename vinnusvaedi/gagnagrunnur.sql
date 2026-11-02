@@ -649,3 +649,55 @@ drop trigger if exists verja_fyrirtaeki_trigger on fyrirtaeki;
 create trigger verja_fyrirtaeki_trigger
   before update on fyrirtaeki
   for each row execute function verja_fyrirtaeki();
+
+-- ==========================================================================
+-- 13. Okkar eigin listi
+--     Taskar milli okkar tveggja. Þeir fara ekki í taskar-töfluna, því
+--     hana les viðskiptavinurinn í sínu fyrirtæki og þar á ekkert af
+--     þessu að sjást. Hér er ein stefna og hún hleypir engum inn nema
+--     okkur. Tenging á fyrirtæki er valkvæð og bara til að vita hverjum
+--     taskurinn tilheyrir.
+-- ==========================================================================
+
+create table if not exists innri_taskar (
+  id            uuid primary key default gen_random_uuid(),
+  titill        text not null,
+  lysing        text,
+  stada         text not null default 'nytt'
+                check (stada in ('nytt', 'i_vinnslu', 'bid', 'lokid')),
+  forgangur     text not null default 'venjulegt'
+                check (forgangur in ('lagt', 'venjulegt', 'hatt')),
+  abyrgd        uuid references notendur on delete set null,
+  hofundur      uuid references notendur on delete set null,
+  fyrirtaeki_id uuid references fyrirtaeki on delete set null,
+  skiladagur    date,
+  lokid_dags    timestamptz,
+  stofnad       timestamptz not null default now(),
+  uppfaert      timestamptz not null default now()
+);
+
+create index if not exists innri_taskar_abyrgd_idx on innri_taskar (abyrgd, stada);
+create index if not exists innri_taskar_stada_idx  on innri_taskar (stada, skiladagur);
+
+drop trigger if exists stimpla_innri_taskar on innri_taskar;
+create trigger stimpla_innri_taskar before update on innri_taskar
+  for each row execute function stimpla();
+
+alter table innri_taskar enable row level security;
+
+drop policy if exists innri_taskar_admin on innri_taskar;
+create policy innri_taskar_admin on innri_taskar for all to authenticated
+  using (er_admin()) with check (er_admin());
+
+-- Yfirlit fyrir Make: það sem liggur á okkur og er komið fram úr skiladegi
+create or replace view okkar_a_eftir
+with (security_invoker = true) as
+  select t.id, t.titill, t.skiladagur, t.forgangur, t.uppfaert,
+         n.nafn as abyrgd_nafn, n.netfang as abyrgd_netfang,
+         f.nafn as fyrirtaeki
+    from innri_taskar t
+    left join notendur n   on n.id = t.abyrgd
+    left join fyrirtaeki f on f.id = t.fyrirtaeki_id
+   where t.stada <> 'lokid'
+     and t.skiladagur is not null
+     and t.skiladagur < current_date;

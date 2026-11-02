@@ -24,6 +24,15 @@ export const STODUR_TASK = {
   lokid:             { heiti: 'Lokið',      litur: 'lokid' }
 };
 
+/* Okkar eigin listi hefur sínar stöður. "Bíður annars" er þegar
+   taskurinn liggur hjá þriðja aðila og við getum ekkert gert í honum. */
+export const STODUR_INNRI = {
+  nytt:      { heiti: 'Ekki byrjað',  litur: 'nytt' },
+  i_vinnslu: { heiti: 'Í vinnslu',    litur: 'vinnsla' },
+  bid:       { heiti: 'Bíður annars', litur: 'bid' },
+  lokid:     { heiti: 'Lokið',        litur: 'lokid' }
+};
+
 export const FORGANGUR = {
   lagt:      'Lágt',
   venjulegt: 'Venjulegt',
@@ -281,6 +290,41 @@ async function supabaseBakendi() {
       return svar.data.signedUrl;
     },
 
+    /* ---------- Okkar eigin listi ---------- */
+
+    async innriTaskar() {
+      const svar = await sb.from('innri_taskar')
+        .select('*, abyrgd_notandi:abyrgd(nafn), fyrirtaeki(nafn)')
+        .order('stofnad', { ascending: false });
+      kasta(svar); return svar.data;
+    },
+
+    async nyrInnriTask(task) {
+      const ek = await eg();
+      const svar = await sb.from('innri_taskar').insert({
+        titill: task.titill,
+        lysing: task.lysing || null,
+        stada: task.stada || 'nytt',
+        forgangur: task.forgangur || 'venjulegt',
+        abyrgd: task.abyrgd || null,
+        fyrirtaeki_id: task.fyrirtaeki_id || null,
+        skiladagur: task.skiladagur || null,
+        hofundur: ek.id
+      }).select('*, abyrgd_notandi:abyrgd(nafn), fyrirtaeki(nafn)').single();
+      kasta(svar); return svar.data;
+    },
+
+    async uppfaeraInnriTask(id, breytingar) {
+      const svar = await sb.from('innri_taskar').update(breytingar).eq('id', id)
+        .select('*, abyrgd_notandi:abyrgd(nafn), fyrirtaeki(nafn)').single();
+      kasta(svar); return svar.data;
+    },
+
+    async eydaInnriTask(id) {
+      const svar = await sb.from('innri_taskar').delete().eq('id', id);
+      kasta(svar);
+    },
+
     /* ---------- Merki viðskiptavinarins ---------- */
 
     async setjaMerki(fyrirtaeki_id, skra) {
@@ -409,6 +453,33 @@ function prufuBakendi() {
         skiladagur: dagsetning(1), lokid_dags: null, stofnad: dags(0), uppfaert: dags(0) }
     ];
 
+    /* Okkar eigin listi. Enginn viðskiptavinur kemur nálægt þessu. */
+    const innri_taskar = [
+      { id: 'i1', titill: 'Senda tilboðið á Fossberg',
+        lysing: 'Lendingarsíða, þrjár auglýsingar og eftirfylgni. Verðið liggur fyrir.',
+        stada: 'nytt', forgangur: 'hatt', abyrgd: 'u-mirza', hofundur: 'u-oskar',
+        fyrirtaeki_id: 'f3', skiladagur: dagsetning(1), lokid_dags: null,
+        stofnad: dags(-1), uppfaert: dags(-1) },
+      { id: 'i2', titill: 'Klippa reels fyrir Steinvík',
+        lysing: 'Fjögur stykki, efnið er á drifinu.',
+        stada: 'i_vinnslu', forgangur: 'venjulegt', abyrgd: 'u-oskar', hofundur: 'u-oskar',
+        fyrirtaeki_id: 'f2', skiladagur: dagsetning(3), lokid_dags: null,
+        stofnad: dags(-4), uppfaert: dags(-1) },
+      { id: 'i3', titill: 'Fara yfir bókhaldið fyrir mánuðinn',
+        lysing: null, stada: 'nytt', forgangur: 'venjulegt', abyrgd: null, hofundur: 'u-mirza',
+        fyrirtaeki_id: null, skiladagur: dagsetning(6), lokid_dags: null,
+        stofnad: dags(-2), uppfaert: dags(-2) },
+      { id: 'i4', titill: 'Bíður svars um lénið',
+        lysing: 'Sendum fyrirspurn, heyrum ekkert fyrr en þeir svara.',
+        stada: 'bid', forgangur: 'lagt', abyrgd: 'u-mirza', hofundur: 'u-mirza',
+        fyrirtaeki_id: 'f1', skiladagur: null, lokid_dags: null,
+        stofnad: dags(-7), uppfaert: dags(-5) },
+      { id: 'i5', titill: 'Setja nýju verkefnin inn á vefinn',
+        lysing: null, stada: 'lokid', forgangur: 'venjulegt', abyrgd: 'u-mirza', hofundur: 'u-oskar',
+        fyrirtaeki_id: null, skiladagur: dagsetning(-3), lokid_dags: dags(-2),
+        stofnad: dags(-12), uppfaert: dags(-2) }
+    ];
+
     const athugasemdir = [
       { id: 'a1', task_id: 't1', hofundur: 'u-mirza', texti: 'Ef þú finnur hana ekki getum við teiknað merkið upp aftur, það tekur okkur klukkutíma.', stofnad: dags(-4) },
       { id: 'a2', task_id: 't1', hofundur: 'u-haf', texti: 'Ég spyr hönnuðinn sem gerði það og heyri í þér á morgun.', stofnad: dags(-3) },
@@ -465,7 +536,8 @@ function prufuBakendi() {
     ];
 
     return { fyrirtaeki: fyr, notendur, verkefni, taskar, athugasemdir,
-             innri, timaskraning, snid, vidhengi: [], innskradur: null };
+             innri, timaskraning, snid, vidhengi: [], innri_taskar,
+             innskradur: null };
   };
 
   function les() {
@@ -533,6 +605,14 @@ function prufuBakendi() {
       ...t,
       fyrirtaeki: fyrNafn(t.fyrirtaeki_id),
       verkefni: t.verkefni_id ? { titill: (finna(g.verkefni, t.verkefni_id) || {}).titill } : null,
+      abyrgd_notandi: t.abyrgd ? { nafn: (finna(g.notendur, t.abyrgd) || {}).nafn } : null
+    };
+  }
+
+  function skreytaInnri(t) {
+    return {
+      ...t,
+      fyrirtaeki: t.fyrirtaeki_id ? fyrNafn(t.fyrirtaeki_id) : null,
       abyrgd_notandi: t.abyrgd ? { nafn: (finna(g.notendur, t.abyrgd) || {}).nafn } : null
     };
   }
@@ -775,6 +855,37 @@ function prufuBakendi() {
       if (!skra) throw new Error('Skráin er horfin. Í prufustillingu lifa viðhengi bara þá '
         + 'lötu sem síðan er opin.');
       return URL.createObjectURL(skra);
+    },
+
+    /* ---------- Okkar eigin listi ---------- */
+
+    async innriTaskar() {
+      return g.innri_taskar.map(skreytaInnri).sort(nyjast);
+    },
+
+    async nyrInnriTask(task) {
+      const ek = await this.eg();
+      const t = {
+        id: nyttId(), lysing: null, stada: 'nytt', forgangur: 'venjulegt',
+        abyrgd: null, fyrirtaeki_id: null, skiladagur: null, lokid_dags: null,
+        ...task, hofundur: ek.id,
+        stofnad: new Date().toISOString(), uppfaert: new Date().toISOString()
+      };
+      g.innri_taskar.unshift(t); vista(); return skreytaInnri(t);
+    },
+
+    async uppfaeraInnriTask(id, breytingar) {
+      const t = finna(g.innri_taskar, id);
+      if (!t) return null;
+      Object.assign(t, breytingar, { uppfaert: new Date().toISOString() });
+      if (breytingar.stada === 'lokid') t.lokid_dags = new Date().toISOString();
+      if (breytingar.stada && breytingar.stada !== 'lokid') t.lokid_dags = null;
+      vista(); return skreytaInnri(t);
+    },
+
+    async eydaInnriTask(id) {
+      g.innri_taskar = g.innri_taskar.filter((x) => x.id !== id);
+      vista();
     },
 
     /* ---------- Merki viðskiptavinarins ----------

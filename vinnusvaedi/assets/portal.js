@@ -2,7 +2,7 @@
    Tveir vinnusvæði — sameiginlegt
    ========================================================================== */
 
-import { gogn, STODUR_TASK, STODUR_VERK, FORGANGUR } from './gogn.js';
+import { gogn, STODUR_TASK, STODUR_VERK, STODUR_INNRI, FORGANGUR } from './gogn.js';
 import { stillingar } from './stillingar.js';
 
 /* ------------------------------------------------------------------
@@ -97,7 +97,8 @@ export function erSeint(dagsetning) {
 }
 
 export function pilla(stada, tafla) {
-  const s = (tafla === 'verk' ? STODUR_VERK : STODUR_TASK)[stada];
+  const toflur = { verk: STODUR_VERK, innri: STODUR_INNRI };
+  const s = (toflur[tafla] || STODUR_TASK)[stada];
   if (!s) return el('span', { class: 'pstat pstat--nytt', texti: stada });
   return el('span', { class: 'pstat pstat--' + s.litur, texti: s.heiti });
 }
@@ -136,18 +137,30 @@ export async function vardaHlid({ krefstAdmin, badir } = {}) {
    Haus
    ------------------------------------------------------------------ */
 let hausMerki = null;
+let hausOkkar = null;
+let hausEgId  = null;
 
-/* Kallað eftir að tillaga er afgreidd svo talan í hausnum sé rétt */
+function setjaTolu(n, fjoldi) {
+  n.textContent = String(fjoldi);
+  n.hidden = fjoldi === 0;
+}
+
+/* Kallað eftir að tillaga er afgreidd eða taskur hakaður, svo tölurnar
+   í hausnum séu réttar án þess að hlaða síðunni upp á nýtt. */
 export function uppfaeraMerki() {
-  if (!hausMerki) return;
-  gogn()
-    .then((g) => g.verkefni())
-    .then((listi) => {
-      const fjoldi = listi.filter((v) => v.stada === 'tillaga').length;
-      hausMerki.textContent = String(fjoldi);
-      hausMerki.hidden = fjoldi === 0;
-    })
-    .catch(() => { /* merkið bíður bara */ });
+  if (hausMerki) {
+    gogn()
+      .then((g) => g.verkefni())
+      .then((listi) => setjaTolu(hausMerki, listi.filter((v) => v.stada === 'tillaga').length))
+      .catch(() => { /* merkið bíður bara */ });
+  }
+  if (hausOkkar) {
+    gogn()
+      .then((g) => g.innriTaskar())
+      .then((listi) => setjaTolu(hausOkkar,
+        listi.filter((t) => t.stada !== 'lokid' && t.abyrgd === hausEgId).length))
+      .catch(() => { /* merkið bíður bara */ });
+  }
 }
 
 export function teiknaHaus(ek, heiti) {
@@ -156,9 +169,13 @@ export function teiknaHaus(ek, heiti) {
 
   const admin = ek.hlutverk === 'admin';
 
-  /* Merkið á Tillögur fyllist þar sem talan liggur ekki fyrir strax */
+  /* Merkin fyllast á eftir, því tölurnar liggja ekki fyrir strax */
   const merki = admin ? el('span', { class: 'phead__merki', hidden: true }) : null;
+  const merkiOkkar = admin
+    ? el('span', { class: 'phead__merki phead__merki--okkar', hidden: true }) : null;
   hausMerki = merki;
+  hausOkkar = merkiOkkar;
+  hausEgId = ek.id;
   uppfaeraMerki();
 
   const nuna = location.pathname.split('/').pop() || 'stjornbord.html';
@@ -185,6 +202,10 @@ export function teiknaHaus(ek, heiti) {
               el('a', { href: 'tillogur.html',
                         'aria-current': nuna === 'tillogur.html' ? 'page' : null }, [
                 document.createTextNode('Tillögur'), merki
+              ]),
+              el('a', { href: 'okkar.html',
+                        'aria-current': nuna === 'okkar.html' ? 'page' : null }, [
+                document.createTextNode('Okkar'), merkiOkkar
               ])
             ])
           : el('div', { class: 'phead__heiti' }, [
@@ -597,4 +618,4 @@ export function taskLina(t, { admin, eftir }) {
   ])]);
 }
 
-export { gogn, STODUR_TASK, STODUR_VERK, FORGANGUR, stillingar };
+export { gogn, STODUR_TASK, STODUR_VERK, STODUR_INNRI, FORGANGUR, stillingar };
