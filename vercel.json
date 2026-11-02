@@ -1,0 +1,10 @@
+{
+  "redirects": [
+    {
+      "source": "/:slod*",
+      "has": [{ "type": "host", "value": "www.tveir.is" }],
+      "destination": "https://tveir.is/:slod*",
+      "permanent": true
+    }
+  ]
+}
