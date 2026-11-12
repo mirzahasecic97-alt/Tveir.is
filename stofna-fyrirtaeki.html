@@ -24,6 +24,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/styles.css">
+<link rel="stylesheet" href="assets/css/glans.css">
+<script src="assets/js/glans.js"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -113,7 +115,7 @@
   <div class="wrap">
     <nav class="pillnav" aria-label="Aðalvalmynd">
       <a class="pillnav__logo" href="index.html" aria-label="Tveir forsíða">
-        <img src="assets/img/tveir-logo.png" alt="Tveir" width="76" height="19">
+        <img src="assets/img/tveir-logo-3d.png" alt="Tveir" width="73" height="20">
       </a>
 
       <div class="pillnav__links">
@@ -126,57 +128,7 @@
           <button type="button" class="langsw__btn is-on" data-lang="is" aria-pressed="true" lang="is">IS</button>
           <button type="button" class="langsw__btn" data-lang="en" aria-pressed="false" lang="en">EN</button>
         </div>
-        <div class="dropdown">
-          <button type="button" class="btn btn--sm dropdown__toggle" aria-expanded="false" aria-controls="nav-dropdown">
-            <span data-en="Get in touch">Hafa samband</span> <span class="caret" aria-hidden="true">▾</span>
-          </button>
-          <div class="dropdown__menu" id="nav-dropdown" hidden>
-            <a href="stofna-fyrirtaeki.html">
-              <strong data-en="Starting a new business">Er að stofna nýtt fyrirtæki</strong>
-              <span data-en="Starter kit: brand, website, ads">Starter kit: vörumerki, vefur, auglýsingar</span>
-            </a>
-            <a href="solutaekifaeri.html">
-              <strong data-en="I want more customers">Vil fá fleiri kúnna</strong>
-              <span data-en="Lead generation: ads, landing page, follow-up">Sölutækifæri: auglýsingar, síða, eftirfylgni</span>
-            </a>
-            <a href="sjalfvirkni.html">
-              <strong data-en="I want automation in my business">Vil sjálfvirkni í fyrirtækið mitt</strong>
-              <span data-en="We take the manual work off you">Sjálfvirkni: við tökum handavinnuna af þér</span>
-            </a>
-            <a href="vefsida-askrift.html">
-              <strong data-en="I want a new website">Vil nýja vefsíðu</strong>
-              <span data-en="Website subscription: everything for a monthly fee">Vefsíða í áskrift: allt fyrir mánaðargjald</span>
-            </a>
-            <a href="gervigreind.html">
-              <strong data-en="I want to show up in AI answers">Vil sjást í gervigreind</strong>
-              <span data-en="We make your business readable to the machines">Við gerum fyrirtækið læsilegt fyrir vélarnar</span>
-            </a>
-            <a href="efni.html">
-              <strong data-en="I want content for social media">Vil efni á samfélagsmiðla</strong>
-              <span data-en="Filming, editing and posts every month">Tökur, klipping og færslur í hverjum mánuði</span>
-            </a>
-            <a href="vorumerki.html">
-              <strong data-en="I want a new look for my brand">Vil nýtt útlit á vörumerkið</strong>
-              <span data-en="Logo, colours, fonts and a guide to follow">Merki, litir, letur og leiðbeiningar til að fara eftir</span>
-            </a>
-            <a href="vidburdir.html">
-              <strong data-en="I have an event coming up">Er með viðburð framundan</strong>
-              <span data-en="We come along and film it, at home or abroad">Við mætum og tökum upp, hér heima eða erlendis</span>
-            </a>
-            <a href="solupostar.html">
-              <strong data-en="I want to reach old customers again">Vil ná aftur í gamla kúnna</strong>
-              <span data-en="Email list and sales emails that get set up for you">Póstlisti og sölupóstar sem eru settir upp fyrir þig</span>
-            </a>
-            <a href="eftirfylgni.html">
-              <strong data-en="I want answers on my quotes">Vil svör á tilboðin mín</strong>
-              <span data-en="Follow-up that keeps going until they reply">Eftirfylgni sem heldur áfram þangað til svar kemur</span>
-            </a>
-            <a href="hafa-samband.html">
-              <strong data-en="Get in touch">Hafa samband</strong>
-              <span data-en="General enquiry or a quote">Almenn fyrirspurn eða tilboð</span>
-            </a>
-          </div>
-        </div>
+        <a class="btn btn--sm" href="hafa-samband.html" data-en="Get in touch">Hafa samband</a>
 
         <button type="button" class="burger" aria-expanded="false" aria-controls="mobile-menu">
           <span></span><span></span>

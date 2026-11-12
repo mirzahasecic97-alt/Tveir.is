@@ -1,0 +1,331 @@
+/* ==========================================================================
+   Tveir.is — glans
+   Glerlag ofan a styles.css. Breytir utliti, ekki uppbyggingu.
+   Takirdu <link> a thessa skra ut verdur sidan eins og hun var adur.
+   ========================================================================== */
+
+:root {
+  /* Glerfletir */
+  --gl-fill:   linear-gradient(145deg, rgba(255,255,255,.6), rgba(255,255,255,.3));
+  --gl-brun:   rgba(255,255,255,.6);
+  --gl-inn:    inset 0 1px 0 rgba(255,255,255,.75), inset 0 -1px 0 rgba(28,48,80,.04);
+  --gl-fall:   0 18px 40px -22px rgba(28,48,80,.34), 0 2px 8px rgba(28,48,80,.05);
+  --gl-fall-h: 0 30px 60px -26px rgba(28,48,80,.42), 0 0 0 1px rgba(91,147,240,.26);
+  --gl-blur:   blur(26px) saturate(1.9);
+
+  /* Undirtextinn situr nuna a litudum fleti, svo hann tharf ad vera dekkri
+     en adur til ad vera laesilegur. */
+  --soft: #526a8f;
+
+  /* Ljomi */
+  --lj-bla:    rgba(91,147,240,.5);
+  --lj-ljos:   rgba(137,176,246,.45);
+  --lj-himinn: rgba(109,194,240,.42);
+  --lj-lilla:  rgba(154,160,246,.45);
+}
+
+/* --------------------------------------------------------------------------
+   1. Umhverfisljomi — lifandi bakgrunnur a bak vid allt
+   -------------------------------------------------------------------------- */
+html {
+  background:
+    linear-gradient(158deg, #e9f1fe 0%, #d9e7fc 34%, #e2e6fb 62%, #d7ebfa 100%)
+    fixed no-repeat;
+  background-color: var(--bg);
+}
+body { background: transparent; position: relative; }
+
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: -25vmax;
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform;
+}
+
+body::before {
+  background:
+    radial-gradient(54vmax 44vmax at 6% 2%,  var(--lj-bla),    transparent 62%),
+    radial-gradient(48vmax 42vmax at 94% 10%, var(--lj-lilla),  transparent 60%),
+    radial-gradient(52vmax 46vmax at 48% 52%, var(--lj-himinn), transparent 64%);
+  animation: gl-svif-a 34s ease-in-out infinite alternate;
+}
+
+body::after {
+  background:
+    radial-gradient(56vmax 48vmax at 90% 90%, var(--lj-bla),  transparent 62%),
+    radial-gradient(46vmax 40vmax at 8% 94%,  var(--lj-ljos), transparent 60%);
+  animation: gl-svif-b 44s ease-in-out infinite alternate;
+}
+
+@keyframes gl-svif-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(4vmax, 3vmax, 0) scale(1.12); }
+}
+@keyframes gl-svif-b {
+  from { transform: translate3d(0, 0, 0) scale(1.08); }
+  to   { transform: translate3d(-5vmax, -3vmax, 0) scale(1); }
+}
+
+/* --------------------------------------------------------------------------
+   2. Kort ur gleri
+   -------------------------------------------------------------------------- */
+.card {
+  background: var(--gl-fill);
+  border: 1px solid var(--gl-brun);
+  backdrop-filter: var(--gl-blur);
+  -webkit-backdrop-filter: var(--gl-blur);
+  box-shadow: var(--gl-inn), var(--gl-fall);
+}
+
+.card--navy {
+  background: linear-gradient(155deg, #23406c, var(--ink) 58%);
+  border-color: rgba(157,192,247,.22);
+  box-shadow:
+    inset 0 1px 0 rgba(157,192,247,.28),
+    0 26px 56px -24px rgba(28,48,80,.6);
+}
+
+/* --------------------------------------------------------------------------
+   3. Hnappar med gljaa
+   -------------------------------------------------------------------------- */
+.btn {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #74a4f5, var(--acc) 52%, #4b83e4);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.5),
+    0 10px 24px -8px rgba(91,147,240,.65),
+    0 2px 6px rgba(28,48,80,.12);
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.btn > * { position: relative; z-index: 1; }
+
+/* Ljosrak sem rennur yfir hnappinn */
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: -60%;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.42), transparent);
+  transform: skewX(-18deg);
+  transition: left .55s ease;
+  pointer-events: none;
+}
+.btn:hover::after { left: 115%; }
+
+.btn:hover {
+  background: linear-gradient(180deg, #7fabf7, var(--acc) 48%, #4a83e2);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55),
+    0 18px 34px -10px rgba(91,147,240,.7),
+    0 3px 8px rgba(28,48,80,.14);
+}
+.btn:active { transform: translateY(0); }
+
+.btn--ghost {
+  background: rgba(255,255,255,.55);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 8px 20px -12px rgba(28,48,80,.3);
+}
+.btn--ghost:hover {
+  background: linear-gradient(180deg, #74a4f5, var(--acc) 52%, #4b83e4);
+  color: #fff;
+}
+
+.btn--white {
+  background: linear-gradient(180deg, #fff, #eaf1fe);
+  box-shadow: inset 0 1px 0 #fff, 0 10px 24px -12px rgba(28,48,80,.45);
+}
+.btn--white:hover { background: linear-gradient(180deg, #fff, #dfe9fd); }
+
+.btn--aglas {
+  background: rgba(255,255,255,.14);
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  border-color: rgba(255,255,255,.55);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 10px 26px -14px rgba(0,0,0,.5);
+}
+.btn--aglas:hover { background: #fff; color: var(--ink); }
+
+/* --------------------------------------------------------------------------
+   4. Valmyndin
+   -------------------------------------------------------------------------- */
+.site-head { background: none; }
+
+.pillnav {
+  background: linear-gradient(145deg, rgba(255,255,255,.58), rgba(255,255,255,.3));
+  backdrop-filter: blur(26px) saturate(1.9);
+  -webkit-backdrop-filter: blur(26px) saturate(1.9);
+  border-color: rgba(255,255,255,.65);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.8),
+    0 14px 34px -18px rgba(28,48,80,.4);
+}
+
+.dropdown__menu,
+.mobilemenu {
+  background: linear-gradient(150deg, rgba(255,255,255,.8), rgba(255,255,255,.62));
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  border: 1px solid rgba(255,255,255,.8);
+  box-shadow: var(--gl-inn), 0 24px 50px -22px rgba(28,48,80,.45);
+}
+
+/* --------------------------------------------------------------------------
+   5. Fyrirsagnir
+   -------------------------------------------------------------------------- */
+.section-title em,
+h1 em, h2 em {
+  background: linear-gradient(100deg, var(--acc), #7fc4f2 55%, #8fa6f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero__yfir h1 em { background: none; color: var(--acc-on-navy); }
+
+/* --------------------------------------------------------------------------
+   6. Thjonustukortin med glertakni
+   -------------------------------------------------------------------------- */
+.leid {
+  grid-template-columns: auto 1fr auto;
+  position: relative;
+  overflow: hidden;
+}
+.leid__takn {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  width: clamp(48px, 4.6vw, 62px);
+  height: clamp(48px, 4.6vw, 62px);
+  object-fit: contain;
+  filter: drop-shadow(0 8px 14px rgba(28,48,80,.22));
+  transition: transform .25s ease;
+}
+.leid__titill, .leid__texti { grid-column: 2; }
+.leid__or { grid-column: 3; }
+
+.leid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 90% at 0% 50%, rgba(91,147,240,.16), transparent 70%);
+  opacity: 0;
+  transition: opacity .25s ease;
+  pointer-events: none;
+}
+.leid:hover::before { opacity: 1; }
+.leid:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,.9);
+  box-shadow: var(--gl-inn), var(--gl-fall-h);
+}
+.leid:hover .leid__takn { transform: translateY(-3px) scale(1.06); }
+
+/* --------------------------------------------------------------------------
+   7. Logostrimill og traust
+   -------------------------------------------------------------------------- */
+.trust { position: relative; }
+
+/* --------------------------------------------------------------------------
+   8. Lokakall
+   -------------------------------------------------------------------------- */
+.cta {
+  position: relative;
+  /* Ekkert overflow: hidden hér. Fellivalmyndin undir hnappinum teygir sig
+     nidur fyrir bordann og klipptist af. Bakgrunnurinn fylgir hornunum hvort
+     sem er og ::before fær somu horn. */
+  background:
+    linear-gradient(150deg, rgba(28,48,80,.34), rgba(28,48,80,.5) 52%, rgba(20,34,57,.64)),
+    url('../img/gler-navy.jpg') center / cover no-repeat,
+    var(--ink);
+  box-shadow:
+    inset 0 1px 0 rgba(157,192,247,.3),
+    0 34px 70px -30px rgba(28,48,80,.7);
+}
+
+/* Dekkra i midjunni svo hvitur texti sitji orugglega ofan a myndinni. */
+.cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(56% 84% at 50% 50%, rgba(18,31,52,.82), rgba(18,31,52,.3) 62%, transparent 78%);
+  pointer-events: none;
+}
+.cta > * { position: relative; z-index: 1; }
+
+/* --------------------------------------------------------------------------
+   9. Bordar og merki
+   -------------------------------------------------------------------------- */
+.badge {
+  background: linear-gradient(180deg, rgba(231,240,253,.95), rgba(214,229,252,.9));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 12px -6px rgba(91,147,240,.5);
+}
+
+/* --------------------------------------------------------------------------
+   10. Minni hreyfing
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  body::before, body::after, .cta::before { animation: none; }
+  .btn::after { display: none; }
+  .btn:hover, .leid:hover { transform: none; }
+  .leid:hover .leid__takn { transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   11. Kaflar risa upp vid skrun
+   Listinn hér verdur ad vera eins og listinn i assets/js/glans.js.
+   gl-js kemur a <html> adeins thegar skriftan keyrir, svo sidan an JavaScript
+   synir allt eins og adur.
+   -------------------------------------------------------------------------- */
+.gl-js .section-title:not(.vinnulag__fyrirsogn),
+.gl-js .leid,
+.gl-js .cta,
+.gl-js .trust h2 {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Hver lina hér verdur ad vera jafn thung og felu-linan ad ofan, annars
+   vinnur felu-linan og kaflinn kemur aldrei i ljos. Thad skildi eftir tomt
+   bil thar sem fyrirsognin atti ad vera. */
+.gl-js .section-title.gl-komid,
+.gl-js .leid.gl-komid,
+.gl-js .cta.gl-komid,
+.gl-js .trust h2.gl-komid {
+  opacity: 1;
+  transform: none;
+  transition: opacity .65s ease, transform .65s cubic-bezier(.22,.9,.3,1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gl-js .section-title,
+  .gl-js .leid,
+  .gl-js .cta,
+  .gl-js .trust h2 { opacity: 1; transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   12. Simar
+   Backdrop-filter er thungt thegar morg spjold liggja hvert ofan a odru.
+   A litlum skjam er thvi minna moskvad og spjoldin adeins thettari i stadinn.
+   -------------------------------------------------------------------------- */
+@media (max-width: 760px) {
+  :root {
+    --gl-fill: linear-gradient(145deg, rgba(255,255,255,.74), rgba(255,255,255,.52));
+    --gl-blur: blur(12px) saturate(1.5);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   13. Merkid i valmyndinni
+   Glermerkid tharf adeins meiri haed en flata merkid til ad glansinn sjaist.
+   -------------------------------------------------------------------------- */
+.pillnav__logo img {
+  height: clamp(19px, 1.9vw, 23px);
+  filter: drop-shadow(0 2px 4px rgba(28,48,80,.18));
+}
