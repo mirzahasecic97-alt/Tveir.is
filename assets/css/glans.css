@@ -418,9 +418,9 @@ h1 em, h2 em {
 /* Tolustafurinn vikur fyrir glertakni, eins og a thjonustukortunum */
 .vinnulag__listi li::before {
   content: '';
-  width: 46px;
-  height: 46px;
-  margin-bottom: 10px;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 12px;
   border-radius: 0;
   background: center / contain no-repeat;
   filter: drop-shadow(0 7px 12px rgba(28,48,80,.22));
@@ -431,8 +431,13 @@ h1 em, h2 em {
 .vinnulag__listi li:nth-child(3)::before { background-image: url('../img/takn/flugvel.png'); }
 
 .vinnulag__listi li.er-virkt {
-  border-color: rgba(255,255,255,.9);
-  box-shadow: var(--gl-inn), var(--gl-fall-h);
+  border-color: rgba(255,255,255,.95);
+  transform: translateY(-9px);
+  box-shadow:
+    var(--gl-inn),
+    0 34px 64px -26px rgba(28,48,80,.45),
+    0 0 0 1px rgba(91,147,240,.3),
+    0 0 42px -10px rgba(91,147,240,.5);
 }
 /* styles.css setur `background: var(--acc)` a virka skrefid. Sa stytti
    ritháttur nullstillir lika size, position og repeat, svo taknid var
@@ -442,7 +447,14 @@ h1 em, h2 em {
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  transform: translateY(-2px) scale(1.08);
+  /* Skoppar inn i hvert sinn sem skrefid tekur vid, ekki bara rennur. */
+  animation: gl-popp .58s cubic-bezier(.26,1.62,.45,1) both;
+}
+
+@keyframes gl-popp {
+  0%   { transform: scale(.5)  translateY(14px); }
+  58%  { transform: scale(1.16) translateY(-6px); }
+  100% { transform: scale(1.08) translateY(-2px); }
 }
 
 /* --------------------------------------------------------------------------
@@ -599,4 +611,25 @@ h1 em, h2 em {
 
 @media (prefers-reduced-motion: reduce) {
   .simi { transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   19. Taknin a thjonustukortunum skoppa inn
+   backwards heldur upphafsstodunni medan beđid er, en skilar tákninu svo
+   aftur i venjulega stodu svo lyftan vid bendil virki afram.
+   -------------------------------------------------------------------------- */
+.gl-js .leid.gl-komid .leid__takn {
+  animation: gl-popp-takn .6s cubic-bezier(.26,1.62,.45,1) backwards;
+}
+
+@keyframes gl-popp-takn {
+  0%   { opacity: 0; transform: scale(.45) translateY(16px) rotate(-12deg); }
+  62%  { opacity: 1; transform: scale(1.14) translateY(-5px) rotate(3deg); }
+  100% { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gl-js .leid.gl-komid .leid__takn,
+  .vinnulag__listi li.er-virkt::before { animation: none; }
+  .vinnulag__listi li.er-virkt { transform: none; }
 }
