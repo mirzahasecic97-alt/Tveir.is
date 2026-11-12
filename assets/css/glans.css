@@ -236,24 +236,22 @@ h1 em, h2 em {
 .cta {
   position: relative;
   /* Ekkert overflow: hidden hér. Fellivalmyndin undir hnappinum teygir sig
-     nidur fyrir bordann og klipptist af. Bakgrunnurinn fylgir hornunum hvort
-     sem er og ::before fær somu horn. */
-  background:
-    linear-gradient(150deg, rgba(28,48,80,.34), rgba(28,48,80,.5) 52%, rgba(20,34,57,.64)),
-    url('../img/gler-navy.jpg') center / cover no-repeat,
-    var(--ink);
+     nidur fyrir bordann og klipptist af. */
+  background: linear-gradient(152deg, #274774, var(--ink) 52%, #15253e);
   box-shadow:
     inset 0 1px 0 rgba(157,192,247,.3),
     0 34px 70px -30px rgba(28,48,80,.7);
 }
 
-/* Dekkra i midjunni svo hvitur texti sitji orugglega ofan a myndinni. */
+/* Mjukur blar ljomi ut fra hornunum, enginn myndabakgrunnur. */
 .cta::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(56% 84% at 50% 50%, rgba(18,31,52,.82), rgba(18,31,52,.3) 62%, transparent 78%);
+  background:
+    radial-gradient(42% 70% at 12% 8%,  rgba(91,147,240,.38), transparent 68%),
+    radial-gradient(38% 64% at 90% 92%, rgba(124,200,240,.26), transparent 68%);
   pointer-events: none;
 }
 .cta > * { position: relative; z-index: 1; }
