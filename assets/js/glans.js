@@ -77,9 +77,51 @@
     }, 5000);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', byrja);
-  } else {
+  /* Siminn i vinnulagskaflanum. Hann byrjar hallandi og fjaer og rettir sig
+     upp og faerist naer eftir thvi sem skrunid gengur i gegnum kaflann.
+     Lesid er beint ur stodu brautarinnar, --fram fer a .simi sjalfan. */
+  function simi() {
+    var kafli = document.querySelector('.vinnulag');
+    if (!kafli) return;
+    var braut = kafli.querySelector('.vinnulag__braut');
+    var taeki = kafli.querySelector('.simi');
+    if (!braut || !taeki) return;
+
+    var bidur2 = false;
+
+    function reikna() {
+      bidur2 = false;
+      var svigrum = braut.offsetHeight - window.innerHeight;
+      /* Enginn festiskrun, til daemis thegar JS naer ekki i gegn eda
+         kaflinn er styttri en skjarinn. Tha situr siminn i endastodu. */
+      if (svigrum <= 0 || kafli.classList.contains('engin-festing')) {
+        taeki.style.setProperty('--fram', '1');
+        return;
+      }
+      var p = (-braut.getBoundingClientRect().top) / svigrum;
+      p = p < 0 ? 0 : (p > 1 ? 1 : p);
+      taeki.style.setProperty('--fram', p.toFixed(3));
+    }
+
+    function vid() {
+      if (bidur2) return;
+      bidur2 = true;
+      window.requestAnimationFrame(reikna);
+    }
+
+    window.addEventListener('scroll', vid, { passive: true });
+    window.addEventListener('resize', vid);
+    reikna();
+  }
+
+  function raesa() {
     byrja();
+    simi();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', raesa);
+  } else {
+    raesa();
   }
 })();

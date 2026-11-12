@@ -474,3 +474,129 @@ h1 em, h2 em {
     background: linear-gradient(145deg, rgba(255,255,255,.93), rgba(255,255,255,.82));
   }
 }
+
+/* --------------------------------------------------------------------------
+   17. Hamborgarinn
+   Hann var tvaer harfinar strikur an nokkurs forms, vid hlidina a glansandi
+   blaum hnappi. Nu er hann glerhnappur sem snyst i kross.
+   -------------------------------------------------------------------------- */
+.burger {
+  /* Hann var ad skreppa saman i sporoskju og standa ut fyrir pilluna.
+     Threngslin voru til stadar adur en sastu ekki a berum strikum. */
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0 11px;
+  border-radius: 50%;
+  background: linear-gradient(150deg, rgba(255,255,255,.72), rgba(255,255,255,.4));
+  border: 1px solid rgba(255,255,255,.78);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.92), 0 6px 16px -9px rgba(28,48,80,.45);
+  transition: transform .36s cubic-bezier(.3,1.45,.4,1),
+              background .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+
+/* Hnappurinn hefur thrju span: tvaer strikur og falinn texta fyrir
+   skjalesara. Gamla reglan notadi span:last-child og sneri thvi alltaf
+   falda textanum en ekki seinni strikunni, svo krossinn vard aldrei kross.
+   Her er talid i staerdinni og falda spanid latid i fridi. */
+.burger span:not(.sr-only) {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--acc);
+  transition: transform .36s cubic-bezier(.3,1.45,.4,1), background .25s ease;
+}
+
+/* Strikurnar skrida sitt i hvora att thegar bendillinn kemur */
+.burger:hover { transform: scale(1.07); }
+.burger:hover span:nth-child(1) { transform: translateX(2.5px); }
+.burger:hover span:nth-child(2) { transform: translateX(-2.5px); }
+
+/* Opinn: hnappurinn snyst og fyllist, strikurnar verda ad krossi */
+.burger[aria-expanded="true"] {
+  transform: rotate(90deg);
+  background: linear-gradient(180deg, #74a4f5, var(--acc) 52%, #4b83e4);
+  border-color: transparent;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 10px 24px -9px rgba(91,147,240,.75);
+}
+.burger[aria-expanded="true"]:hover { transform: rotate(90deg) scale(1.07); }
+.burger[aria-expanded="true"] span:not(.sr-only) { background: #fff; }
+.burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(3.3px) rotate(45deg); }
+.burger[aria-expanded="true"] span:nth-child(2) { transform: translateY(-3.3px) rotate(-45deg); }
+.burger span.sr-only { transform: none; }
+
+/* Valmyndin dettur nidur og linurnar koma hver af annarri.
+   Hun er falin med hidden, svo hreyfingin keyrir upp a nytt i hvert sinn. */
+.mobilemenu { animation: gl-valmynd .34s cubic-bezier(.22,1,.36,1) both; transform-origin: top right; }
+.mobilemenu a { animation: gl-lina .4s cubic-bezier(.22,1,.36,1) both; }
+.mobilemenu a:nth-child(1)  { animation-delay: .04s; }
+.mobilemenu a:nth-child(2)  { animation-delay: .07s; }
+.mobilemenu a:nth-child(3)  { animation-delay: .10s; }
+.mobilemenu a:nth-child(4)  { animation-delay: .13s; }
+.mobilemenu a:nth-child(5)  { animation-delay: .16s; }
+.mobilemenu a:nth-child(6)  { animation-delay: .19s; }
+.mobilemenu a:nth-child(7)  { animation-delay: .21s; }
+.mobilemenu a:nth-child(8)  { animation-delay: .23s; }
+.mobilemenu a:nth-child(9)  { animation-delay: .25s; }
+.mobilemenu a:nth-child(n+10) { animation-delay: .27s; }
+
+.mobilemenu a {
+  transition: background .18s ease, transform .18s ease, color .18s ease;
+}
+.mobilemenu a:hover,
+.mobilemenu a:focus-visible {
+  background: linear-gradient(100deg, rgba(91,147,240,.16), rgba(124,200,240,.1));
+  transform: translateX(4px);
+}
+
+@keyframes gl-valmynd {
+  from { opacity: 0; transform: translateY(-10px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes gl-lina {
+  from { opacity: 0; transform: translateY(-9px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .burger, .burger span, .mobilemenu, .mobilemenu a { animation: none; transition: none; }
+  .burger:hover { transform: none; }
+  .burger:hover span:first-child,
+  .burger:hover span:last-child { transform: none; }
+  .mobilemenu a:hover { transform: none; }
+}
+
+/* Thad er throngt i pillunni a mjosta simanum, svo allt gefur eftir
+   um nokkra punkta til ad hamborgarinn fai ad vera heill hringur. */
+@media (max-width: 430px) {
+  .pillnav {
+    gap: 8px;
+    padding-left: 14px;
+    padding-right: 8px;
+  }
+  .pillnav__right { gap: 6px; }
+  .btn--sm { padding-left: 13px; padding-right: 13px; }
+}
+
+/* --------------------------------------------------------------------------
+   18. Siminn kemur ut ur skjanum
+   --fram er 0 thegar kaflinn byrjar og 1 thegar skrunid er komid i gegn.
+   glans.js setur hana. Siminn snyst ur hallanum og faerist naer a leidinni.
+   -------------------------------------------------------------------------- */
+.vinnulag__taeki { perspective: 1500px; }
+
+.simi {
+  --fram: 0;
+  transform-origin: 50% 56%;
+  transform:
+    rotateY(calc(-15deg * (1 - var(--fram))))
+    rotateX(calc(10deg * (1 - var(--fram))))
+    scale(calc(.87 + .18 * var(--fram)));
+  box-shadow:
+    inset 0 1px 0 rgba(157,192,247,.3),
+    0 calc(26px + 44px * var(--fram)) calc(56px + 46px * var(--fram)) -26px
+      rgba(28,48,80,calc(.45 + .3 * var(--fram)));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .simi { transform: none; }
+}
