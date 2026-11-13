@@ -324,16 +324,43 @@ async function start() {
     return Math.round(v / 1000) + ' þ.';
   }
 
-  /* Upphæðarreitur sem fylgir VSK rofanum. Vsklaus tala er alltaf endanleg. */
-  function upphaedInn(r) {
+  /* Upphæðarreitur með eigin vali: talan er án VSK, með VSK eða vsklaus.
+     Í grunninn er alltaf geymt án VSK, nema vsklaust, þá er talan endanleg. */
+  function upphaedReitur(merki, r) {
     const tala = Number(r.upphaed) || 0;
-    const birt = tala ? Math.round(r.vsklaust || !medVsk ? tala : tala * (1 + VSK)) : '';
-    return el('input', { type: 'text', inputmode: 'numeric', required: true, placeholder: '0',
-      value: birt ? String(birt).replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '' });
-  }
-  function upphaedUt(reitur, vsklaust) {
-    const t = lesaTolu(reitur.value) || 0;
-    return medVsk && !vsklaust ? Math.round(t / (1 + VSK)) : t;
+    let hamur = r.vsklaust ? 'ekkert' : (medVsk ? 'med' : 'an');
+    const punktar = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const birt = tala ? Math.round(hamur === 'med' ? tala * (1 + VSK) : tala) : '';
+    const inn = el('input', { type: 'text', inputmode: 'numeric', required: true, placeholder: '0',
+      value: birt ? punktar(birt) : '' });
+    inn.addEventListener('blur', () => { const t = lesaTolu(inn.value); if (t) inn.value = punktar(t); });
+    const lina = el('p', { class: 'skyring bok__vsklina' });
+    const hnappar = {};
+    const uppfaera = () => {
+      Object.keys(hnappar).forEach((k) => hnappar[k].setAttribute('aria-pressed', String(k === hamur)));
+      const t = lesaTolu(inn.value) || 0;
+      if (!t) { lina.textContent = hamur === 'ekkert' ? 'Ekkert VSK lagt ofan á.' : ''; return; }
+      if (hamur === 'an') lina.textContent = '= ' + kronur(Math.round(t * (1 + VSK))) + ' með VSK';
+      else if (hamur === 'med') lina.textContent = '= ' + kronur(Math.round(t / (1 + VSK))) + ' án VSK';
+      else lina.textContent = 'Ekkert VSK lagt ofan á.';
+    };
+    [['an', 'Án VSK'], ['med', 'Með VSK'], ['ekkert', 'Ekkert VSK']].forEach(([k, heiti]) => {
+      hnappar[k] = el('button', { type: 'button', class: 'pflipi', texti: heiti,
+        onclick: () => { hamur = k; uppfaera(); } });
+    });
+    inn.addEventListener('input', uppfaera);
+    uppfaera();
+    return {
+      node: el('div', { class: 'field' }, [
+        el('span', { texti: merki }), inn,
+        el('div', { class: 'pflipar bok__vskval' }, Object.values(hnappar)), lina
+      ]),
+      inn,
+      ut() {
+        const t = lesaTolu(inn.value) || 0;
+        return { upphaed: hamur === 'med' ? Math.round(t / (1 + VSK)) : t, vsklaust: hamur === 'ekkert' };
+      }
+    };
   }
 
   function spjald(titill, reitir, vista, eyda) {
@@ -370,7 +397,6 @@ async function start() {
           }
         }
       }, reitir.concat([
-        el('p', { class: 'skyring', style: 'margin-top:-6px', texti: 'Upphæðin er ' + vskOrd() + ', eins og rofinn efst.' }),
         stadan,
         el('div', { class: 'spjald__fot' }, [el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Vista' }), eydaHn])
       ]))
@@ -384,26 +410,24 @@ async function start() {
   const reitur = (merki, inntak) => el('label', { class: 'field' }, [el('span', { texti: merki }), inntak]);
   const tikk = (merki, inntak) => el('label', { class: 'bok__tikk' }, [inntak, el('span', { texti: merki })]);
   const hak = (gildi) => { const i = el('input', { type: 'checkbox' }); i.checked = !!gildi; return i; };
-  const upphaedRod = (merki, upp, laust) => el('div', { class: 'bok__upphaedrod' }, [reitur(merki, upp), tikk('Ekkert VSK', laust)]);
 
   function opnaSamning(s) {
     const vid = el('input', { type: 'text', value: s.vidskiptavinur || '', required: true });
     const thj = el('input', { type: 'text', value: s.thjonusta || '', placeholder: 'Samfélagsmiðlar' });
-    const upp = upphaedInn(s);
-    const laust = hak(s.vsklaust);
+    const upp = upphaedReitur('Kr. á mánuði', s);
     const hefst = el('input', { type: 'month', value: s.hefst || NU_MAN });
     const lykur = el('input', { type: 'month', value: s.lykur || '' });
     spjald(s.id ? 'Samningur' : 'Nýr samningur', [
       reitur('Viðskiptavinur', vid), reitur('Þjónusta', thj),
-      upphaedRod('Kr. á mánuði', upp, laust),
+      upp.node,
       el('div', { class: 'field-row' }, [reitur('Hefst', hefst), reitur('Lýkur (valfrjálst)', lykur)])
     ], async () => {
       if (!vid.value.trim()) { vid.focus(); return false; }
-      const u = upphaedUt(upp, laust.checked);
-      if (!u) { upp.focus(); return false; }
+      const { upphaed: u, vsklaust } = upp.ut();
+      if (!u) { upp.inn.focus(); return false; }
       await g.vistaBokhald('samningar', {
         ...(s.id ? { id: s.id } : {}), vidskiptavinur: vid.value.trim(), thjonusta: thj.value.trim() || null,
-        upphaed: u, vsklaust: laust.checked, hefst: hefst.value || NU_MAN, lykur: lykur.value || null
+        upphaed: u, vsklaust, hefst: hefst.value || NU_MAN, lykur: lykur.value || null
       });
     }, s.id ? () => g.eydaBokhald('samningar', s.id) : null);
   }
@@ -411,8 +435,7 @@ async function start() {
   function opnaAuka(a) {
     const heiti = el('input', { type: 'text', value: a.heiti || '', required: true, placeholder: 'Tökudagur' });
     const vid = el('input', { type: 'text', value: a.vidskiptavinur || '' });
-    const upp = upphaedInn(a);
-    const laust = hak(a.vsklaust);
+    const upp = upphaedReitur('Upphæð', a);
     const dags = el('input', { type: 'date', value: a.dags || idag() });
     const stada = el('select', {}, [
       el('option', { value: 'stadfest', selected: a.stada !== 'kannski', texti: 'Staðfest' }),
@@ -421,16 +444,16 @@ async function start() {
     const greitt = hak(a.greitt);
     spjald(a.id ? 'Aukaverkefni' : 'Nýtt aukaverkefni', [
       reitur('Verkefni', heiti), reitur('Viðskiptavinur', vid),
-      upphaedRod('Upphæð', upp, laust),
+      upp.node,
       el('div', { class: 'field-row' }, [reitur('Dagsetning', dags), reitur('Staða', stada)]),
       tikk('Greitt', greitt)
     ], async () => {
       if (!heiti.value.trim()) { heiti.focus(); return false; }
-      const u = upphaedUt(upp, laust.checked);
-      if (!u) { upp.focus(); return false; }
+      const { upphaed: u, vsklaust } = upp.ut();
+      if (!u) { upp.inn.focus(); return false; }
       await g.vistaBokhald('aukaverkefni', {
         ...(a.id ? { id: a.id } : {}), heiti: heiti.value.trim(), vidskiptavinur: vid.value.trim() || null,
-        upphaed: u, vsklaust: laust.checked, dags: dags.value || idag(), stada: stada.value, greitt: greitt.checked
+        upphaed: u, vsklaust, dags: dags.value || idag(), stada: stada.value, greitt: greitt.checked
       });
     }, a.id ? () => g.eydaBokhald('aukaverkefni', a.id) : null);
   }
@@ -439,19 +462,18 @@ async function start() {
     const vid = el('input', { type: 'text', value: t.vidskiptavinur || '' });
     const heiti = el('input', { type: 'text', value: t.heiti || '', required: true, placeholder: 'Vidjó' });
     const eining = el('input', { type: 'text', value: t.eining || '', placeholder: 'vidjó' });
-    const upp = upphaedInn(t);
-    const laust = hak(t.vsklaust);
+    const upp = upphaedReitur('Verð á einingu', t);
     spjald(t.id ? 'Taxti' : 'Nýr taxti', [
       reitur('Viðskiptavinur', vid),
       el('div', { class: 'field-row' }, [reitur('Verk', heiti), reitur('Eining', eining)]),
-      upphaedRod('Verð á einingu', upp, laust)
+      upp.node
     ], async () => {
       if (!heiti.value.trim()) { heiti.focus(); return false; }
-      const u = upphaedUt(upp, laust.checked);
-      if (!u) { upp.focus(); return false; }
+      const { upphaed: u, vsklaust } = upp.ut();
+      if (!u) { upp.inn.focus(); return false; }
       await g.vistaBokhald('taxtar', {
         ...(t.id ? { id: t.id } : {}), vidskiptavinur: vid.value.trim() || null, heiti: heiti.value.trim(),
-        eining: eining.value.trim() || null, upphaed: u, vsklaust: laust.checked
+        eining: eining.value.trim() || null, upphaed: u, vsklaust
       });
     }, t.id ? () => g.eydaBokhald('taxtar', t.id) : null);
   }

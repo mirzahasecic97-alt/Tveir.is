@@ -1063,3 +1063,8 @@
 }
 .bok__alt--stor { margin: 4px 0 0; font-size: 13px; }
 .bok__tolur .adal .bok__alt { color: var(--acc-on-navy); }
+
+/* Upphæð í formi: val um án VSK, með VSK eða ekkert VSK */
+.bok__vskval { margin: 10px 0 0; }
+.bok__vskval .pflipi { min-height: 40px; }
+.bok__vsklina { margin: 8px 0 0; min-height: 1.4em; }
