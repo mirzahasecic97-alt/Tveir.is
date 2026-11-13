@@ -869,9 +869,9 @@ begin
 
   /* Listi í póstinum (línur sem byrja á -, *, • eða 1. / 1)) verður einn
      taskur á hvern lið. Annars verður allur pósturinn einn taskur. */
-  foreach lina in array regexp_split_to_array(coalesce(texti, ''), E'\r?\n') loop
-    if lina ~ E'^\s*([-*•–]|\d{1,2}[.)])\s+\S' then
-      lidir := lidir || left(trim(regexp_replace(lina, E'^\s*([-*•–]|\d{1,2}[.)])\s+', '')), 200);
+  foreach lina in array regexp_split_to_array(coalesce(texti, ''), '\r?\n') loop
+    if lina ~ '^\s*([-*•–]|\d{1,2}[.)])\s+\S' then
+      lidir := lidir || left(trim(regexp_replace(lina, '^\s*([-*•–]|\d{1,2}[.)])\s+', '')), 200);
     end if;
   end loop;
 
