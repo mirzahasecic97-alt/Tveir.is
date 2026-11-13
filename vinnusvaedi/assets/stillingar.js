@@ -6,11 +6,11 @@
 export const stillingar = {
   /* Prufustilling. Á true keyrir vinnusvæðið á sýnidæmum í vafranum þínum
      og ekkert fer út á netið. Settu false þegar Supabase er tilbúið. */
-  prufa: true,
+  prufa: false,
 
   /* Supabase -> Project Settings -> API */
-  supabaseUrl: '',
-  supabaseAnonKey: '',
+  supabaseUrl: 'https://wusqvolbwjysnjrfahjy.supabase.co',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1c3F2b2xid2p5c25qcmZhaGp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ2MDQ2NDQsImV4cCI6MjExMDE4MDY0NH0.CBEC8wLhLORbtr4QcFBfc_eWfa-nkk5qcO2EH1yIeCI',
 
   /* Hvert innskráningarhlekkurinn úr póstinum skal lenda */
   slod: 'https://tveir.is/vinnusvaedi/',
