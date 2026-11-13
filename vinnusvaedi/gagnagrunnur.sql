@@ -830,6 +830,9 @@ create policy taxtar_admin on taxtar for all to authenticated
 -- Skriftan sannar sig með lykli sem liggur í töflunni stillingar_innri. Enginn
 -- kemst í þá töflu nema þetta fall, ekki einu sinni innskráðir notendur.
 -- --------------------------------------------------------------------------
+alter table taskar add column if not exists postur_thradur text;
+alter table taskar add column if not exists tilkynnt_lokid timestamptz;
+
 create table if not exists stillingar_innri (
   lykill  text primary key,
   gildi   text not null
@@ -840,7 +843,8 @@ insert into stillingar_innri (lykill, gildi)
 values ('postur_lykill', encode(gen_random_bytes(24), 'hex'))
 on conflict (lykill) do nothing;
 
-create or replace function taskur_ur_posti(p_lykill text, p_fra text, p_efni text, p_texti text)
+drop function if exists taskur_ur_posti(text, text, text, text);
+create or replace function taskur_ur_posti(p_lykill text, p_fra text, p_efni text, p_texti text, p_thradur text default null)
 returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
@@ -877,13 +881,13 @@ begin
 
   if array_length(lidir, 1) >= 2 then
     foreach lidur in array lidir[1:30] loop
-      insert into taskar (fyrirtaeki_id, titill, lysing, hofundur, stada)
-      values (n.fyrirtaeki_id, lidur, 'Úr tölvupósti: ' || efni, n.id, 'nytt');
+      insert into taskar (fyrirtaeki_id, titill, lysing, hofundur, stada, postur_thradur)
+      values (n.fyrirtaeki_id, lidur, 'Úr tölvupósti: ' || efni, n.id, 'nytt', p_thradur);
       fjoldi := fjoldi + 1;
     end loop;
   else
-    insert into taskar (fyrirtaeki_id, titill, lysing, hofundur, stada)
-    values (n.fyrirtaeki_id, efni, texti, n.id, 'nytt');
+    insert into taskar (fyrirtaeki_id, titill, lysing, hofundur, stada, postur_thradur)
+    values (n.fyrirtaeki_id, efni, texti, n.id, 'nytt', p_thradur);
     fjoldi := 1;
   end if;
 
@@ -892,5 +896,56 @@ begin
     'fyrirtaeki', (select nafn from fyrirtaeki where id = n.fyrirtaeki_id));
 end;
 $$;
-revoke all on function taskur_ur_posti(text, text, text, text) from public;
-grant execute on function taskur_ur_posti(text, text, text, text) to anon;
+revoke all on function taskur_ur_posti(text, text, text, text, text) from public;
+grant execute on function taskur_ur_posti(text, text, text, text, text) to anon;
+
+
+-- --------------------------------------------------------------------------
+-- 17. Lokið: sá sem bað um taskinn fær að vita það
+-- Þegar task frá viðskiptavini er hakaður í lokið sækir sama Google skrifta
+-- hann hér, svarar sendandanum (í sama pósti ef taskurinn kom með pósti) og
+-- merkir hann tilkynntan. Opnist taskur aftur og lokist á ný fer ný tilkynning.
+-- --------------------------------------------------------------------------
+create or replace function lokid_otilkynnt(p_lykill text)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+begin
+  if p_lykill is null
+     or p_lykill is distinct from (select gildi from stillingar_innri where lykill = 'postur_lykill') then
+    return '[]'::jsonb;
+  end if;
+  return coalesce((
+    select jsonb_agg(jsonb_build_object('id', t.id, 'titill', t.titill, 'netfang', n.netfang,
+                                        'nafn', n.nafn, 'thradur', t.postur_thradur))
+      from taskar t
+      join notendur n on n.id = t.hofundur
+     where t.stada = 'lokid'
+       and t.lokid_dags is not null
+       and n.hlutverk = 'vidskiptavinur'
+       and coalesce(n.netfang, '') <> ''
+       and (t.tilkynnt_lokid is null or t.tilkynnt_lokid < t.lokid_dags)
+  ), '[]'::jsonb);
+end;
+$$;
+revoke all on function lokid_otilkynnt(text) from public;
+grant execute on function lokid_otilkynnt(text) to anon;
+
+create or replace function merkja_tilkynnt(p_lykill text, p_ids uuid[])
+returns int
+language plpgsql security definer set search_path = public as $$
+declare fjoldi int;
+begin
+  if p_lykill is null
+     or p_lykill is distinct from (select gildi from stillingar_innri where lykill = 'postur_lykill') then
+    return 0;
+  end if;
+  update taskar set tilkynnt_lokid = now() where id = any(p_ids) and stada = 'lokid';
+  get diagnostics fjoldi = row_count;
+  return fjoldi;
+end;
+$$;
+revoke all on function merkja_tilkynnt(text, uuid[]) from public;
+grant execute on function merkja_tilkynnt(text, uuid[]) to anon;
+
+-- Það sem var lokið áður en þetta kom inn telst tilkynnt, svo enginn fái gamlan póst
+update taskar set tilkynnt_lokid = now() where stada = 'lokid' and tilkynnt_lokid is null;

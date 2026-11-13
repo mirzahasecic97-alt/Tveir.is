@@ -8,11 +8,14 @@
    Annars verður enginn taskur til og pósturinn fær merkið Verk/Othekkt í
    Gmail, svo við sjáum hann.
 
+   Þegar task frá viðskiptavini er hakaður í lokið fær sá sem bað um hann
+   póst um það, í sama póstþræði ef hann kom með pósti.
+
    LYKILL hér að neðan er skilinn eftir auður í þessu afriti. Raunverulegi
    lykillinn liggur bara í skriftunni í Google og í töflunni stillingar_innri.
    ========================================================================== */
 
-const SLOD = 'https://wusqvolbwjysnjrfahjy.supabase.co/rest/v1/rpc/taskur_ur_posti';
+const GRUNNUR = 'https://wusqvolbwjysnjrfahjy.supabase.co/rest/v1/rpc/';
 const ANON = 'SETTU_ANON_LYKILINN_HER';
 const LYKILL = 'SETTU_POSTUR_LYKILINN_HER';
 const NETFANG = 'verk@tveir.is';
@@ -40,7 +43,8 @@ function lesaVerk() {
       /* Bara póstur sem fór á verk@, og ekki svörin okkar sjálfra */
       if (til.indexOf(NETFANG) === -1 || /@tveir\.is$/.test(fra)) { buid.push(id); return; }
 
-      const svar = senda_(fra, p.getSubject(), hreinsa_(p.getPlainBody()));
+      const svar = kalla_('taskur_ur_posti', { p_fra: fra, p_efni: p.getSubject(),
+        p_texti: hreinsa_(p.getPlainBody()), p_thradur: thradur.getId() });
       if (!svar) return; /* netið datt út, reynum aftur eftir 5 mín */
 
       buid.push(id);
@@ -61,15 +65,58 @@ function lesaVerk() {
 
   if (buid.length > 500) buid = buid.slice(-500);
   eiginlegir.setProperty('buid', JSON.stringify(buid));
+
+  tilkynnaLokid_();
 }
 
-function senda_(fra, efni, texti) {
+/* Taskar frá viðskiptavinum sem við hökuðum í lokið: segjum þeim það.
+   Kom taskurinn með pósti fer svarið í sama póstþráð, annars nýr póstur.
+   Margir taskar til sama manns í sama þræði fara í einum pósti. */
+function tilkynnaLokid_() {
+  const listi = kalla_('lokid_otilkynnt', {});
+  if (!Array.isArray(listi) || !listi.length) return;
+
+  const hopar = {};
+  listi.forEach((t) => {
+    const k = t.netfang + '|' + (t.thradur || '');
+    (hopar[k] = hopar[k] || []).push(t);
+  });
+
+  const sent = [];
+  Object.keys(hopar).forEach((k) => {
+    const taskar = hopar[k];
+    const fyrsti = taskar[0];
+    const fornafn = String(fyrsti.nafn || '').split(' ')[0];
+    const texti = (fornafn ? 'Hæ ' + fornafn + ',\n\n' : '')
+      + (taskar.length > 1 ? 'Þessi verk eru klár:' : 'Þetta er klárt:')
+      + '\n\n' + taskar.map((t) => '- ' + t.titill).join('\n')
+      + '\n\nÞú sérð stöðuna á https://tveir.is/vinnusvaedi\n\nKveðja,\nTveir';
+    try {
+      const thradur = fyrsti.thradur ? GmailApp.getThreadById(fyrsti.thradur) : null;
+      /* Svarað á upprunalega póstinn frá þeim, ekki okkar eigið svar */
+      const upphaf = thradur ? thradur.getMessages().find((m) => netfangUr_(m.getFrom()) === String(fyrsti.netfang).toLowerCase()) : null;
+      if (upphaf) {
+        upphaf.reply(texti, { name: 'Tveir' });
+      } else {
+        const efni = taskar.length > 1 ? 'Klárt: ' + taskar.length + ' verk' : 'Klárt: ' + fyrsti.titill;
+        GmailApp.sendEmail(fyrsti.netfang, efni, texti, { name: 'Tveir' });
+      }
+      taskar.forEach((t) => sent.push(t.id));
+    } catch (e) {
+      /* reynum aftur eftir 5 mínútur */
+    }
+  });
+
+  if (sent.length) kalla_('merkja_tilkynnt', { p_ids: sent });
+}
+
+function kalla_(fall, gogn) {
   try {
-    const r = UrlFetchApp.fetch(SLOD, {
+    const r = UrlFetchApp.fetch(GRUNNUR + fall, {
       method: 'post',
       contentType: 'application/json',
       headers: { apikey: ANON, Authorization: 'Bearer ' + ANON },
-      payload: JSON.stringify({ p_lykill: LYKILL, p_fra: fra, p_efni: efni, p_texti: texti }),
+      payload: JSON.stringify(Object.assign({ p_lykill: LYKILL }, gogn)),
       muteHttpExceptions: true
     });
     if (r.getResponseCode() !== 200) return null;
