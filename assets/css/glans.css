@@ -678,3 +678,136 @@ h1 em, h2 em {
   .fljot { transition: none; }
   .vinnulag .fljot--5, .vinnulag .fljot--6 { opacity: 1; transform: none; }
 }
+
+
+/* --------------------------------------------------------------------------
+   21. Snertitaeki: glerid an thess ad hokta
+   A sima var thrennt sem helt skjanum uppteknum vid hvert skrun:
+   - fastur bakgrunnur a html, sem simar teikna allan upp a nytt i hverjum ramma
+   - blettirnir i bakgrunni hreyfdust stodugt, og hvert glerspjald ofan a
+     theim (valmyndin, hausinn, kortin) var moskad upp a nytt med
+   - moskunin sjalf, sem tharf ad endurreikna i hverjum ramma thegar
+     efnid undir faerist
+   Her er bakgrunnurinn kyrr og glerid thettara i stadinn fyrir moskad.
+   Utlitid helst nanast eins, en skjarinn tharf ekkert ad endurteikna.
+   -------------------------------------------------------------------------- */
+@media (hover: none) and (pointer: coarse) {
+  html { background-attachment: scroll; }
+
+  body::before,
+  body::after {
+    animation: none;
+    will-change: auto;
+  }
+
+  .card,
+  .fljot,
+  .btn--ghost,
+  .btn--aglas,
+  .site-head::before {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .card {
+    background: linear-gradient(145deg, rgba(255,255,255,.86), rgba(255,255,255,.68));
+  }
+  .btn--ghost { background: rgba(255,255,255,.82); }
+  .btn--aglas { background: rgba(28,48,80,.42); }
+
+  /* Valmyndin og hausinn: thett gler i stad moskunar */
+  .pillnav {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: linear-gradient(145deg, rgba(255,255,255,.94), rgba(244,248,255,.88));
+  }
+  .site-head::before { background: rgba(233,241,254,.9); }
+
+  .dropdown__menu,
+  .mobilemenu {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: linear-gradient(150deg, rgba(255,255,255,.97), rgba(246,249,255,.95));
+  }
+
+  /* Skrefaspjoldin: skugginn breytist ekki i fjoru, hann er teiknadur
+     einu sinni og bara lyftan fjadrar */
+  .vinnulag__listi li { transition: opacity .35s ease, transform .35s ease; }
+}
+
+/* --------------------------------------------------------------------------
+   22. Thjonustan i rennu
+   Tiu kort i dalki voru heill skjar af skruni a sima og thrjar radir a
+   tolvu. Nu renna thau til hlidar: a sima sest eitt og bladid af naesta,
+   a tolvu thrju og hluti af fjorda. Orvar og framvindustrik undir.
+   -------------------------------------------------------------------------- */
+.leidir--renna {
+  --leid-bil: clamp(12px, 1.4vw, 16px);
+  display: flex;
+  gap: var(--leid-bil);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gut);
+  /* Kortin lyftast vid bendil og kasta skugga, svo rennan tharf svigrum
+     ofan og nedan, og nær ut ad skjabrun a sima. */
+  margin: clamp(10px, 1.6vw, 22px) calc(-1 * var(--gut)) -22px;
+  padding: 14px var(--gut) 40px;
+  scrollbar-width: none;
+}
+.leidir--renna::-webkit-scrollbar { display: none; }
+
+.leidir--renna .leid {
+  flex: 0 0 min(78vw, 300px);
+  scroll-snap-align: start;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto 1fr;
+  align-items: start;
+  gap: 10px 12px;
+}
+@media (min-width: 900px) {
+  .leidir--renna .leid { flex-basis: calc((100% - 3 * var(--leid-bil)) / 3.35); }
+}
+/* Innan rennunnar nær hun fra brun til brunar, en kortin midast vid
+   efnisbreiddina. */
+@media (min-width: 1244px) {
+  .leidir--renna .leid { flex-basis: calc((1180px - 2 * var(--gut) - 3 * var(--leid-bil)) / 3.35); }
+}
+
+.leidir--renna .leid__takn { grid-column: 1; grid-row: 1; }
+.leidir--renna .leid__or   { grid-column: 2; grid-row: 1; align-self: center; }
+.leidir--renna .leid__titill { grid-column: 1 / -1; grid-row: 2; margin-top: 6px; }
+.leidir--renna .leid__texti  { grid-column: 1 / -1; grid-row: 3; }
+.leidir--renna .leid::before {
+  background: radial-gradient(90% 70% at 20% 0%, rgba(91,147,240,.16), transparent 70%);
+}
+
+.leidir__stjorn {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; margin-top: 4px;
+}
+.leidir__stjorn[hidden] { display: none; }
+.leidir__ora {
+  width: 44px; height: 44px; border-radius: 50%; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  font: 400 22px/1 var(--f-body); color: var(--ink); cursor: pointer;
+  background: linear-gradient(145deg, rgba(255,255,255,.9), rgba(255,255,255,.62));
+  border: 1px solid rgba(255,255,255,.85);
+  box-shadow: inset 0 1px 0 #fff, 0 8px 20px -12px rgba(28,48,80,.35);
+  transition: transform .2s ease, opacity .2s ease, color .2s ease;
+}
+.leidir__ora:hover:not(:disabled) { color: var(--acc); transform: translateY(-2px); }
+.leidir__ora:disabled { opacity: .35; cursor: default; }
+.leidir__ora:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+
+.leidir__brau {
+  width: min(220px, 42vw); height: 4px; border-radius: 999px;
+  background: rgba(28,48,80,.1); overflow: hidden;
+}
+.leidir__brau span {
+  display: block; height: 100%; width: 30%; border-radius: inherit;
+  background: var(--acc);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leidir__ora { transition: none; }
+}

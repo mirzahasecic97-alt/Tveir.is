@@ -477,14 +477,20 @@
     var sidasta = -1;
     var bidur = false;
 
+    /* Staðan á brautinni er mæld einu sinni og aftur bara þegar síðan
+       breytist. Að mæla í hverjum ramma neyddi símann til að reikna
+       útlitið upp á nýtt meðan skrunað var. */
+    var brautTopp = 0, svigrum = 0;
+    function maela() {
+      brautTopp = braut.getBoundingClientRect().top + window.pageYOffset;
+      svigrum = braut.offsetHeight - window.innerHeight;
+    }
+
     function reikna() {
       bidur = false;
-
-      var r = braut.getBoundingClientRect();
-      var svigrum = braut.offsetHeight - window.innerHeight;
       if (svigrum <= 0) return;
 
-      var p = (-r.top) / svigrum;
+      var p = (window.pageYOffset - brautTopp) / svigrum;
       p = p < 0 ? 0 : (p > 1 ? 1 : p);
 
       var skref = 0;
@@ -509,8 +515,13 @@
       requestAnimationFrame(reikna);
     }
 
+    function endurmaela() { maela(); vid(); }
+
     window.addEventListener('scroll', vid, { passive: true });
-    window.addEventListener('resize', vid);
+    window.addEventListener('resize', endurmaela);
+    window.addEventListener('load', endurmaela);
+    if ('ResizeObserver' in window) new ResizeObserver(endurmaela).observe(document.body);
+    maela();
     reikna();
   }
 

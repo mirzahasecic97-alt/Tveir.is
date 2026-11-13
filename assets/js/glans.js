@@ -103,16 +103,23 @@
         'scale(' + (0.88 + 0.22 * p).toFixed(4) + ')';
     }
 
+    /* Mælt einu sinni og aftur bara þegar síðan breytist, ekki í hverjum
+       ramma. Það hélt símanum uppteknum við útlitsreikning meðan skrunað var. */
+    var brautTopp = 0, svigrum = 0;
+    function maela() {
+      brautTopp = braut.getBoundingClientRect().top + window.pageYOffset;
+      svigrum = braut.offsetHeight - window.innerHeight;
+    }
+
     function reikna() {
       bidur2 = false;
-      var svigrum = braut.offsetHeight - window.innerHeight;
       /* Enginn festiskrun, til daemis thegar JS naer ekki i gegn eda
          kaflinn er styttri en skjarinn. Tha situr siminn i endastodu. */
       if (svigrum <= 0 || kafli.classList.contains('engin-festing')) {
         setja(1);
         return;
       }
-      var p = (-braut.getBoundingClientRect().top) / svigrum;
+      var p = (window.pageYOffset - brautTopp) / svigrum;
       setja(p < 0 ? 0 : (p > 1 ? 1 : p));
     }
 
@@ -122,14 +129,66 @@
       window.requestAnimationFrame(reikna);
     }
 
+    function endurmaela() { maela(); vid(); }
+
     window.addEventListener('scroll', vid, { passive: true });
-    window.addEventListener('resize', vid);
+    window.addEventListener('resize', endurmaela);
+    window.addEventListener('load', endurmaela);
+    if ('ResizeObserver' in window) new ResizeObserver(endurmaela).observe(document.body);
+    maela();
     reikna();
+  }
+
+  /* Thjonustan i rennu: orvar og framvindustrik */
+  function leidir() {
+    var renna = document.querySelector('.leidir--renna');
+    var stjorn = document.querySelector('.leidir__stjorn');
+    if (!renna || !stjorn) return;
+    var orvar = stjorn.querySelectorAll('.leidir__ora');
+    var strik = stjorn.querySelector('.leidir__brau span');
+    var rolegt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var bidur3 = false;
+
+    function skref() {
+      var kort = renna.querySelector('.leid');
+      var bil = parseFloat(window.getComputedStyle(renna).columnGap) || 16;
+      return kort ? kort.getBoundingClientRect().width + bil : 300;
+    }
+
+    function uppfaera() {
+      bidur3 = false;
+      var mest = renna.scrollWidth - renna.clientWidth;
+      stjorn.hidden = mest <= 2;
+      if (mest <= 2) return;
+      var hluti = renna.clientWidth / renna.scrollWidth;
+      var p = renna.scrollLeft / mest;
+      strik.style.width = (hluti * 100).toFixed(2) + '%';
+      strik.style.transform = 'translateX(' + (p * (1 / hluti - 1) * 100).toFixed(2) + '%)';
+      orvar[0].disabled = renna.scrollLeft <= 2;
+      orvar[1].disabled = renna.scrollLeft >= mest - 2;
+    }
+
+    function vid() {
+      if (bidur3) return;
+      bidur3 = true;
+      window.requestAnimationFrame(uppfaera);
+    }
+
+    Array.prototype.forEach.call(orvar, function (b) {
+      b.addEventListener('click', function () {
+        renna.scrollBy({ left: Number(b.getAttribute('data-att')) * skref(),
+                         behavior: rolegt ? 'auto' : 'smooth' });
+      });
+    });
+    renna.addEventListener('scroll', vid, { passive: true });
+    window.addEventListener('resize', vid);
+    uppfaera();
   }
 
   function raesa() {
     byrja();
     simi();
+    leidir();
   }
 
   if (document.readyState === 'loading') {
