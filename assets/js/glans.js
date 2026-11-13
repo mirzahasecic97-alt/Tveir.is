@@ -88,6 +88,20 @@
     if (!braut || !taeki) return;
 
     var bidur2 = false;
+    var sidast = -1;
+
+    /* Transform er sett beint. Adur var thetta CSS breyta a simanum, en
+       breytur erfast, svo oll 24 stykkin inni i simanum fengu stilinn
+       sinn endurreiknadan i hverjum ramma. */
+    function setja(p) {
+      if (Math.abs(p - sidast) < 0.002) return;
+      sidast = p;
+      var q = 1 - p;
+      taeki.style.transform =
+        'rotateY(' + (-15 * q).toFixed(2) + 'deg) ' +
+        'rotateX(' + (10 * q).toFixed(2) + 'deg) ' +
+        'scale(' + (0.88 + 0.22 * p).toFixed(4) + ')';
+    }
 
     function reikna() {
       bidur2 = false;
@@ -95,12 +109,11 @@
       /* Enginn festiskrun, til daemis thegar JS naer ekki i gegn eda
          kaflinn er styttri en skjarinn. Tha situr siminn i endastodu. */
       if (svigrum <= 0 || kafli.classList.contains('engin-festing')) {
-        taeki.style.setProperty('--fram', '1');
+        setja(1);
         return;
       }
       var p = (-braut.getBoundingClientRect().top) / svigrum;
-      p = p < 0 ? 0 : (p > 1 ? 1 : p);
-      taeki.style.setProperty('--fram', p.toFixed(3));
+      setja(p < 0 ? 0 : (p > 1 ? 1 : p));
     }
 
     function vid() {

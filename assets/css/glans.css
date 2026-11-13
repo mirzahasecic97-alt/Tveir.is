@@ -397,8 +397,6 @@ h1 em, h2 em {
 .fljot {
   background: var(--gl-fill);
   border: 1px solid var(--gl-brun);
-  backdrop-filter: var(--gl-blur);
-  -webkit-backdrop-filter: var(--gl-blur);
   box-shadow: var(--gl-inn), 0 20px 44px -20px rgba(28,48,80,.4);
 }
 
@@ -415,8 +413,6 @@ h1 em, h2 em {
 .vinnulag__listi li {
   background: var(--gl-fill);
   border: 1px solid var(--gl-brun);
-  backdrop-filter: var(--gl-blur);
-  -webkit-backdrop-filter: var(--gl-blur);
   box-shadow: var(--gl-inn), var(--gl-fall);
 }
 
@@ -596,22 +592,20 @@ h1 em, h2 em {
 
 /* --------------------------------------------------------------------------
    18. Siminn kemur ut ur skjanum
-   --fram er 0 thegar kaflinn byrjar og 1 thegar skrunid er komid i gegn.
-   glans.js setur hana. Siminn snyst ur hallanum og faerist naer a leidinni.
+   glans.js reiknar hve langt skrunid er komid i gegnum kaflann og setur
+   transform beint a simann. Hann snyst ur hallanum og faerist naer.
    -------------------------------------------------------------------------- */
 .vinnulag__taeki { perspective: 1500px; }
 
+/* glans.js setur transform beint a simann vid hvert skrun. Skugginn er
+   fastur: hann staekkadi adur med skruninu, og 100px moda sem breytist
+   tharf ad teiknast upp a nytt i hverjum ramma, sem hokkti. */
 .simi {
-  --fram: 0;
   transform-origin: 50% 56%;
-  transform:
-    rotateY(calc(-15deg * (1 - var(--fram))))
-    rotateX(calc(10deg * (1 - var(--fram))))
-    scale(calc(.87 + .18 * var(--fram)));
+  will-change: transform;
   box-shadow:
     inset 0 1px 0 rgba(157,192,247,.3),
-    0 calc(26px + 44px * var(--fram)) calc(56px + 46px * var(--fram)) -26px
-      rgba(28,48,80,calc(.45 + .3 * var(--fram)));
+    0 48px 84px -30px rgba(28,48,80,.6);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -645,13 +639,6 @@ h1 em, h2 em {
    svo eitthvad poppi upp vid hvert skref i stad thess ad eitt komi i einu.
    -------------------------------------------------------------------------- */
 .simi__skjar { height: min(62vh, 580px); }
-
-.simi {
-  transform:
-    rotateY(calc(-15deg * (1 - var(--fram))))
-    rotateX(calc(10deg * (1 - var(--fram))))
-    scale(calc(.88 + .22 * var(--fram)));
-}
 
 /* Kortin skjotast inn med fjodrun i stad thess ad renna */
 .fljot {
