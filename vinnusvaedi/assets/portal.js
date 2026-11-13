@@ -200,8 +200,8 @@ export function teiknaHaus(ek, heiti) {
           ek.fyrirtaeki && ek.fyrirtaeki.merki_url
             ? el('img', { class: 'phead__kunnamerki', src: ek.fyrirtaeki.merki_url,
                           alt: ek.fyrirtaeki.nafn })
-            : el('img', { src: '../assets/img/tveir-logo.png', alt: 'Tveir',
-                          width: '70', height: '18' })
+            : el('img', { class: 'phead__tveir', src: '../assets/img/tveir-logo-3d.png', alt: 'Tveir',
+                          width: '84', height: '23' })
         ]),
         el('span', { class: 'phead__skil', 'aria-hidden': 'true' }),
 
