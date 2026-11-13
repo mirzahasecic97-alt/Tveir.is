@@ -1146,3 +1146,12 @@
   }
 }
 .phead + main, .phead ~ main { padding-top: 8px; }
+
+/* Bókhaldstölurnar á stjórnborðinu opna bókhaldið */
+.tekjur > a { display: block; padding: 18px 20px; text-decoration: none; color: inherit;
+              background: var(--gler); transition: filter .15s ease; }
+.tekjur > a:hover { filter: brightness(1.03); }
+.tekjur > a.adal { background: var(--ink); }
+.tekjur > a.adal:hover { filter: brightness(1.15); }
+.tekjur .bok__alt { display: block; margin-top: 4px; }
+.tekjur .adal .bok__alt { color: rgba(255,255,255,.62); }

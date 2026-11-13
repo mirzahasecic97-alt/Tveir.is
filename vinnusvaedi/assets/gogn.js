@@ -70,19 +70,29 @@ async function supabaseBakendi() {
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm');
   const sb = createClient(stillingar.supabaseUrl, stillingar.supabaseAnonKey);
 
-  /* Munum hver notandinn er innan síðuhleðslunnar */
+  /* Hver er innskráður. Lotan liggur í vafranum, svo hér er ekki farið á
+     netið við hverja síðu. Prófíllinn er geymdur meðan flipinn er opinn.
+     Þetta stýrir bara hvað er teiknað: gagnagrunnurinn sjálfur (RLS)
+     ákveður hvað hver má sjá, sama hvað stendur hér. */
   let minn = null;
+  const LYKILL_EG = 'tveir-eg';
 
   async function eg() {
     if (minn) return minn;
-    const { data: { user } } = await sb.auth.getUser();
+    const { data: { session } } = await sb.auth.getSession();
+    const user = session && session.user;
     if (!user) return null;
+    try {
+      const geymt = JSON.parse(sessionStorage.getItem(LYKILL_EG) || 'null');
+      if (geymt && geymt.id === user.id) { minn = geymt; return minn; }
+    } catch (e) { /* ekkert geymt */ }
     const { data } = await sb
       .from('notendur')
       .select('id, nafn, netfang, hlutverk, fyrirtaeki_id, fyrirtaeki(id, nafn, merki_url, er_askrift, askrift_verd)')
       .eq('id', user.id)
       .single();
     minn = data || null;
+    if (minn) { try { sessionStorage.setItem(LYKILL_EG, JSON.stringify(minn)); } catch (e) { /* lokað */ } }
     return minn;
   }
 
@@ -99,7 +109,13 @@ async function supabaseBakendi() {
       if (error) throw new Error(error.message);
     },
 
-    async utskra() { minn = null; await sb.auth.signOut(); },
+    async utskra() {
+      minn = null;
+      try {
+        Object.keys(sessionStorage).filter((k) => k.startsWith('tveir-')).forEach((k) => sessionStorage.removeItem(k));
+      } catch (e) { /* lokað */ }
+      await sb.auth.signOut();
+    },
 
     eg,
 

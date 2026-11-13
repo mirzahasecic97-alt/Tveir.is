@@ -29,10 +29,14 @@ async function start() {
      sama manninn upp á nýtt fyrir hvern task. */
   let flytiA = ek.id;
 
-  async function teikna() {
-    const [allir, notendur, fyrirtaeki] = await Promise.all([
+  /* Gögnin eru sótt einu sinni. Flipar og síur teikna bara upp á nýtt
+     úr því sem er komið, það er það sem gerði flipana hæga. */
+  let hlad = null;
+  async function teikna(adeinsBirta) {
+    if (!adeinsBirta || !hlad) hlad = await Promise.all([
       g.innriTaskar(), g.notendur(), g.fyrirtaeki()
     ]);
+    const [allir, notendur, fyrirtaeki] = hlad;
 
     const vid = notendur.filter((n) => n.hlutverk === 'admin');
     const opid = allir.filter((t) => t.stada !== 'lokid');
@@ -114,7 +118,7 @@ async function start() {
           )),
           el('select', {
             'aria-label': 'Hvað á að sýna',
-            onchange: (e) => { syna = e.target.value; teikna(); }
+            onchange: (e) => { syna = e.target.value; teikna(true); }
           }, [
             el('option', { value: 'opid',  selected: syna === 'opid',  texti: 'Opið' }),
             el('option', { value: 'lokid', selected: syna === 'lokid', texti: 'Lokið' }),
@@ -142,7 +146,7 @@ async function start() {
     function flipi(gildi, heiti, fjoldi) {
       return el('button', {
         type: 'button', class: 'pflipi', 'aria-pressed': String(hver === gildi),
-        onclick: () => { hver = gildi; teikna(); }
+        onclick: () => { hver = gildi; teikna(true); }
       }, [document.createTextNode(heiti + ' '), el('b', { texti: String(fjoldi) })]);
     }
 

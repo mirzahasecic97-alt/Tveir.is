@@ -107,6 +107,15 @@ export function pilla(stada, tafla) {
    Innskráningarvörður
    Skilar notandanum eða sendir á innskráningu.
    ------------------------------------------------------------------ */
+/* Síðustu gögn síðunnar, geymd meðan flipinn er opinn. Síðan teiknar þau
+   strax og sækir svo ný í bakgrunni, í stað þess að standa auð á meðan. */
+export function geymt(lykill) {
+  try { return JSON.parse(sessionStorage.getItem('tveir-sida-' + lykill) || 'null'); } catch (e) { return null; }
+}
+export function geyma(lykill, gildi) {
+  try { sessionStorage.setItem('tveir-sida-' + lykill, JSON.stringify(gildi)); } catch (e) { /* of stórt eða lokað */ }
+}
+
 export async function vardaHlid({ krefstAdmin, badir } = {}) {
   const g = await gogn();
   const ek = await g.eg();

@@ -4,8 +4,10 @@
 
 import {
   gogn, el, tom, fylla, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
-  vardaHlid, teiknaHaus, STODUR_VERK
+  vardaHlid, teiknaHaus, STODUR_VERK,
+  geymt, geyma
 } from './portal.js';
+import { NU_MAN, manHeiti, NAESTI, pPlus, pAn, pMed, lesaMedVsk, reiknivel } from './bokreikningur.js';
 
 const ek = await vardaHlid({ krefstAdmin: true });
 if (ek) start();
@@ -18,11 +20,30 @@ async function start() {
   let flipi = 'opid';
   let fyrirtaekiSia = '';
 
-  async function teikna() {
-    const [verkefni, taskar, fyrirtaeki, notendur, innriOll, snidin, okkar, fyrirspurnir] = await Promise.all([
+  /* Gögnin eru sótt einu sinni. Flipar og síur teikna bara upp á nýtt
+     úr því sem er komið, það er það sem gerði flipana hæga. */
+  let hlad = null;
+  async function teikna(adeinsBirta) {
+    if (!adeinsBirta || !hlad) {
+      hlad = await Promise.all([
       g.verkefni(), g.taskar({}), g.fyrirtaeki(), g.notendur(), g.innri(), g.snid(),
-      g.innriTaskar(), g.fyrirspurnir().catch(() => [])
+      g.innriTaskar(), g.fyrirspurnir().catch(() => []),
+      g.bokhald('samningar').catch(() => []), g.bokhald('aukaverkefni').catch(() => [])
     ]);
+      geyma('stjornbord', hlad);
+    }
+    const [verkefni, taskar, fyrirtaeki, notendur, innriOll, snidin, okkar, fyrirspurnir,
+           samningar, aukaverkefni] = hlad;
+
+    /* Bókhaldið: sömu tölur og efst á bókhaldssíðunni, með sama VSK rofa */
+    const { virkurI, fastI, aukaI } = reiknivel(samningar, aukaverkefni);
+    const medVsk = lesaMedVsk();
+    const fastNu = fastI(NU_MAN);
+    const greidslaNu = pPlus(fastNu, aukaI(NU_MAN));
+    const virkir = samningar.filter((s) => virkurI(s, NU_MAN)).length;
+    const bokTala = (p) => kronur(Math.round(medVsk ? pMed(p) : pAn(p))) || '0 kr.';
+    const bokAnnad = (p) => (!p[0] ? (p[1] ? 'ekkert VSK' : '')
+      : kronur(Math.round(medVsk ? pAn(p) : pMed(p))) + (medVsk ? ' án VSK' : ' með VSK'));
     const nyjarFyrirspurnir = fyrirspurnir.filter((f) => f.stada === 'ny');
     const innri = {};
     (innriOll || []).forEach((i) => { innri[i.verkefni_id] = i; });
@@ -31,9 +52,6 @@ async function start() {
     const otengdir = notendur.filter((n) => n.hlutverk !== 'admin' && !n.fyrirtaeki_id);
 
     const lifandi = verkefni.filter((v) => ['samthykkt', 'i_vinnslu', 'bid_svar'].includes(v.stada));
-    const askriftir = fyrirtaeki
-      .filter((f) => f.er_askrift)
-      .reduce((a, f) => a + (Number(f.askrift_verd) || 0), 0);
     const ivinnslu = lifandi
       .filter((v) => !v.innan_samnings)
       .reduce((a, v) => a + (Number(v.verd_okkar) || 0), 0);
@@ -70,9 +88,15 @@ async function start() {
 
       /* ---------- peningarnir ---------- */
       el('dl', { class: 'tekjur', style: 'margin-top:4px' }, [
-        el('div', { class: 'adal' }, [
-          el('dt', { texti: 'Áskriftir á mánuði' }),
-          el('dd', { texti: kronur(askriftir) || '0 kr.' })
+        el('a', { class: 'adal tekjur__tengill', href: 'bokhald.html' }, [
+          el('dt', { texti: 'Greiðist í ' + manHeiti(NAESTI) }),
+          el('dd', { texti: bokTala(greidslaNu) }),
+          bokAnnad(greidslaNu) ? el('small', { class: 'bok__alt', texti: bokAnnad(greidslaNu) }) : null
+        ]),
+        el('a', { class: 'tekjur__tengill', href: 'bokhald.html' }, [
+          el('dt', { texti: 'Fast á mánuði' }),
+          el('dd', { texti: bokTala(fastNu) }),
+          el('small', { class: 'bok__alt', texti: virkir === 1 ? '1 samningur' : virkir + ' samningar' })
         ]),
         el('div', {}, [
           el('dt', { texti: 'Í vinnslu' }),
@@ -133,7 +157,7 @@ async function start() {
               el('h2', { texti: 'Taskar' }),
               el('select', {
                 'aria-label': 'Fyrirtæki',
-                onchange: (e) => { fyrirtaekiSia = e.target.value; teikna(); }
+                onchange: (e) => { fyrirtaekiSia = e.target.value; teikna(true); }
               }, [el('option', { value: '', texti: 'Öll fyrirtæki' })].concat(
                 fyrirtaeki.map((f) => el('option', {
                   value: f.id, selected: fyrirtaekiSia === f.id, texti: f.nafn }))))
@@ -290,7 +314,7 @@ async function start() {
   function flipiHnappur(gildi, heiti, fjoldi) {
     return el('button', {
       type: 'button', class: 'pflipi', 'aria-pressed': String(flipi === gildi),
-      onclick: () => { flipi = gildi; teikna(); }
+      onclick: () => { flipi = gildi; teikna(true); }
     }, [document.createTextNode(heiti), el('b', { texti: String(fjoldi) })]);
   }
 
@@ -435,5 +459,7 @@ async function start() {
     nafn.focus();
   }
 
+  hlad = geymt('stjornbord');
+  if (hlad) teikna(true);
   teikna();
 }

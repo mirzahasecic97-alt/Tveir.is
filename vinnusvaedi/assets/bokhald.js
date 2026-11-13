@@ -9,36 +9,15 @@
    reikningur fram í pari: [VSK-skylt, VSK-laust].
    ========================================================================== */
 
-import { gogn, el, fylla, kronur, lesaTolu, vardaHlid, teiknaHaus } from './portal.js';
+import { gogn, el, fylla, kronur, lesaTolu, vardaHlid, teiknaHaus, geymt, geyma } from './portal.js';
+import {
+  MAN, MAN_LANGT, VSK, LYKILL_VSK, P, pPlus, pAf, pAn, pMed,
+  mk, NU_AR, NU_MAN, naestiMan, NAESTI, manHeiti, lesaMedVsk, reiknivel
+} from './bokreikningur.js';
 
 const ek = await vardaHlid({ krefstAdmin: true });
 if (ek) start();
 
-const MAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Maí', 'Jún', 'Júl', 'Ágú', 'Sep', 'Okt', 'Nóv', 'Des'];
-const MAN_LANGT = ['janúar', 'febrúar', 'mars', 'apríl', 'maí', 'júní', 'júlí',
-                   'ágúst', 'september', 'október', 'nóvember', 'desember'];
-const VSK = 0.24;
-const LYKILL_VSK = 'tveir-vsk';
-
-/* ---------- pörin ---------- */
-const P = (a, b) => [a || 0, b || 0];
-const pPlus = (a, b) => [a[0] + b[0], a[1] + b[1]];
-const pAf = (r) => (r && r.vsklaust ? [0, Number(r.upphaed) || 0] : [Number(r && r.upphaed) || 0, 0]);
-const pAn = (p) => p[0] + p[1];
-const pMed = (p) => p[0] * (1 + VSK) + p[1];
-
-/* ---------- mánuðir ---------- */
-const mk = (ar, i) => ar + '-' + String(i + 1).padStart(2, '0');
-const nuDags = new Date();
-const NU_AR = nuDags.getFullYear();
-const NU_MAN = mk(NU_AR, nuDags.getMonth());
-const naestiMan = (m, n) => {
-  const [a, mm] = m.split('-').map(Number);
-  const d = new Date(a, mm - 1 + n, 1);
-  return mk(d.getFullYear(), d.getMonth());
-};
-const NAESTI = naestiMan(NU_MAN, 1);
-const manHeiti = (m) => MAN_LANGT[Number(m.slice(5, 7)) - 1];
 const manStutt = (m) => m ? MAN[Number(m.slice(5, 7)) - 1].toLowerCase() + '. ' + m.slice(0, 4) : '';
 const idag = () => {
   const d = new Date();
@@ -50,8 +29,7 @@ async function start() {
   teiknaHaus(ek, 'Bókhald');
   const innihald = document.getElementById('innihald');
 
-  let medVsk = false;
-  try { medVsk = localStorage.getItem(LYKILL_VSK) === '1'; } catch (e) { /* lokað */ }
+  let medVsk = lesaMedVsk();
   let synaAr = NU_AR;
   let aukaSia = 'framundan';
 
@@ -70,16 +48,19 @@ async function start() {
     annad(p) ? el('small', { class: 'bok__alt', texti: annad(p) }) : null
   ]);
 
-  async function teikna() {
-    const [sam, auka, tax] = await Promise.all([
+  /* Gögnin eru sótt einu sinni. Flipar og síur teikna bara upp á nýtt
+     úr því sem er komið, það er það sem gerði flipana hæga. */
+  let hlad = null;
+  async function teikna(adeinsBirta) {
+    if (!adeinsBirta || !hlad) {
+      hlad = await Promise.all([
       g.bokhald('samningar'), g.bokhald('aukaverkefni'), g.bokhald('taxtar')
     ]);
+      geyma('bokhald', hlad);
+    }
+    const [sam, auka, tax] = hlad;
 
-    const virkurI = (s, m) => s.hefst && s.hefst <= m && (!s.lykur || s.lykur >= m);
-    const fastI = (m) => sam.reduce((t, s) => (virkurI(s, m) ? pPlus(t, pAf(s)) : t), P());
-    const aukaI = (m, kannski) => auka.reduce((t, a) =>
-      (String(a.dags || '').slice(0, 7) === m && (a.stada === 'kannski') === !!kannski
-        ? pPlus(t, pAf(a)) : t), P());
+    const { virkurI, fastI, aukaI } = reiknivel(sam, auka);
 
     /* ---------- tölurnar efst ---------- */
     const fastNu = fastI(NU_MAN);
@@ -148,10 +129,10 @@ async function start() {
             el('span', {}, [el('i', { class: 'bok__lit bok__lit--auka' }), document.createTextNode('Aukaverkefni')]),
             el('span', { class: 'bok__ar' }, [
               el('button', { type: 'button', class: 'loka', 'aria-label': 'Fyrra ár', texti: '‹',
-                             onclick: () => { synaAr--; teikna(); } }),
+                             onclick: () => { synaAr--; teikna(true); } }),
               el('b', { texti: String(synaAr) }),
               el('button', { type: 'button', class: 'loka', 'aria-label': 'Næsta ár', texti: '›',
-                             onclick: () => { synaAr++; teikna(); } })
+                             onclick: () => { synaAr++; teikna(true); } })
             ])
           ])
         ]),
@@ -218,10 +199,10 @@ async function start() {
           ]),
           el('div', { class: 'pflipar' }, [
             el('button', { type: 'button', class: 'pflipi', 'aria-pressed': String(aukaSia === 'framundan'),
-              onclick: () => { aukaSia = 'framundan'; teikna(); } },
+              onclick: () => { aukaSia = 'framundan'; teikna(true); } },
               [document.createTextNode('Opið og framundan '), el('b', { texti: String(opin.length) })]),
             el('button', { type: 'button', class: 'pflipi', 'aria-pressed': String(aukaSia === 'allt'),
-              onclick: () => { aukaSia = 'allt'; teikna(); } },
+              onclick: () => { aukaSia = 'allt'; teikna(true); } },
               [document.createTextNode('Allt '), el('b', { texti: String(auka.length) })])
           ]),
           syndar.length
@@ -304,7 +285,7 @@ async function start() {
       onclick: () => {
         medVsk = gildi;
         try { localStorage.setItem(LYKILL_VSK, gildi ? '1' : '0'); } catch (e) { /* lokað */ }
-        teikna();
+        teikna(true);
       }
     });
   }
@@ -500,5 +481,7 @@ async function start() {
     }, null);
   }
 
+  hlad = geymt('bokhald');
+  if (hlad) teikna(true);
   teikna();
 }

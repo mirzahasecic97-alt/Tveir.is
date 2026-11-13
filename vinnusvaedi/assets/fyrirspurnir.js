@@ -6,7 +6,8 @@
    ========================================================================== */
 
 import {
-  gogn, el, fylla, dags, sidan, kronur, lesaTolu, vardaHlid, teiknaHaus, uppfaeraMerki
+  gogn, el, fylla, dags, sidan, kronur, lesaTolu, vardaHlid, teiknaHaus, uppfaeraMerki,
+  geymt, geyma
 } from './portal.js';
 import { STODUR_FYRIRSPURN, UPPRUNI } from './gogn.js';
 
@@ -36,8 +37,15 @@ async function start() {
   const innihald = document.getElementById('innihald');
   let flipi = 'opid';
 
-  async function teikna() {
-    const [allar, notendur] = await Promise.all([g.fyrirspurnir(), g.notendur()]);
+  /* Gögnin eru sótt einu sinni. Flipar og síur teikna bara upp á nýtt
+     úr því sem er komið, það er það sem gerði flipana hæga. */
+  let hlad = null;
+  async function teikna(adeinsBirta) {
+    if (!adeinsBirta || !hlad) {
+      hlad = await Promise.all([g.fyrirspurnir(), g.notendur()]);
+      geyma('fyrirspurnir', hlad);
+    }
+    const [allar, notendur] = hlad;
     const vid = notendur.filter((n) => n.hlutverk === 'admin');
 
     const nyjar = allar.filter((f) => f.stada === 'ny');
@@ -137,7 +145,7 @@ async function start() {
     function hnappur(gildi, heiti, fjoldi) {
       return el('button', {
         type: 'button', class: 'pflipi', 'aria-pressed': String(flipi === gildi),
-        onclick: () => { flipi = gildi; teikna(); }
+        onclick: () => { flipi = gildi; teikna(true); }
       }, [document.createTextNode(heiti + ' '), el('b', { texti: String(fjoldi) })]);
     }
 
@@ -283,5 +291,7 @@ async function start() {
     }
   }
 
+  hlad = geymt('fyrirspurnir');
+  if (hlad) teikna(true);
   teikna();
 }
