@@ -170,29 +170,21 @@ sem enginn hefur svarað í sólarhring.
 
 ## Bókhald
 
-**Bókhald** í hausnum er ein tafla, `faerslur`, með tekjum og gjöldum. Upphæðin
-er alltaf geymd án VSK og prósentan (24, 11 eða 0) við hliðina. Skráirðu
-upphæð með VSK, af kvittun til dæmis, velurðu „með VSK“ og síðan reiknar hana
-niður.
+**Bókhald** í hausnum er gamla Yfirlit síðan komin inn í vinnusvæðið: þrjár
+töflur, `samningar`, `aukaverkefni` og `taxtar`, bara fyrir admin.
 
-Efst er VSK tímabilið, tveir mánuðir í senn, með tekjum, gjöldum, afkomu og
-VSK til greiðslu. Gjalddaginn er 5. dagur annars mánaðar eftir að tímabilinu
-lýkur. Örvarnar fletta á milli tímabila og „Allt árið“ sýnir árið.
+- **Efst:** hvað greiðist næstu tvö mánaðamót, fast á mánuði og hvað er komið
+  inn á árinu með spá. Vinna í mánuði greiðist 1. dag næsta mánaðar, svo
+  nóvembervinna greiðist 1. desember.
+- **Súlurit:** tekjur eftir vinnumánuðum, samningar og aukaverkefni hvort í
+  sínum lit. Framtíðarmánuðir eru daufir.
+- **Samningar:** fastar mánaðartekjur með upphafs- og lokamánuði.
+- **Aukaverkefni:** allt utan samninga. Staðfest eða kannski. Kannski telst
+  ekki með í tölunum efst nema sem athugasemd. Smellt á Greitt/Ógreitt breytir.
+- **Taxtar:** fast verð á einingu. Skrá spyr um fjölda og býr til aukaverkefni.
 
-Tvennt færist inn með einni ýtingu:
-
-- **Rukkuð verkefni.** Þegar verkefni er merkt rukkað á verkefnasíðunni og hefur
-  verð birtist það á bókhaldssíðunni þangað til það er fært.
-- **Áskriftir mánaðarins.** Fyrirtæki í áskrift birtast ef mánuðurinn er ekki
-  færður. Sama áskrift verður ekki færð tvisvar fyrir sama mánuð, gagnagrunnurinn
-  hafnar því.
-
-Til hliðar er það sem er útistandandi, með VSK, og takki til að merkja greitt.
-
-**Sækja CSV** gefur bókaranum tímabilið í skrá sem Excel opnar beint.
-
-Þetta er yfirlit fyrir okkur, ekki bókhaldskerfi. Reikningar eru enn gerðir í
-bankanum eða bókhaldskerfinu og bókarinn skilar VSK skýrslunni.
+Upphæðir eru geymdar án VSK. Sé hakað í **Ekkert VSK** er talan endanleg og
+rofinn Án VSK / Með VSK bætir ekki 24% ofan á hana.
 
 ---
 

@@ -62,25 +62,6 @@ export const UPPRUNI = {
   annad:      'Annar vefur'
 };
 
-/* Bókhaldsflokkar */
-export const FLOKKAR = {
-  tekjur: {
-    askrift:  'Áskrift',
-    verkefni: 'Verkefni',
-    annad:    'Annað'
-  },
-  gjold: {
-    hugbunadur:  'Hugbúnaður',
-    auglysingar: 'Auglýsingar',
-    verktakar:   'Verktakar',
-    husnaedi:    'Húsnæði',
-    taeki:       'Tæki og búnaður',
-    ferdir:      'Ferðir og bíll',
-    fundir:      'Fundir og matur',
-    annad:       'Annað'
-  }
-};
-
 /* ==========================================================================
    Supabase
    ========================================================================== */
@@ -393,30 +374,22 @@ async function supabaseBakendi() {
       kasta(svar);
     },
 
-    /* ---------- Bókhald ---------- */
+    /* ---------- Bókhald: samningar, aukaverkefni, taxtar ---------- */
 
-    async faerslur() {
-      const svar = await sb.from('faerslur')
-        .select('*, fyrirtaeki(nafn)')
-        .order('dags', { ascending: false });
+    async bokhald(tafla) {
+      const svar = await sb.from(tafla).select('*');
       kasta(svar); return svar.data;
     },
 
-    async nyFaersla(f) {
-      const ek = await eg();
-      const svar = await sb.from('faerslur').insert({ ...f, hofundur: ek.id })
-        .select('*, fyrirtaeki(nafn)').single();
+    async vistaBokhald(tafla, rod) {
+      const svar = rod.id
+        ? await sb.from(tafla).update(rod).eq('id', rod.id).select().single()
+        : await sb.from(tafla).insert(rod).select().single();
       kasta(svar); return svar.data;
     },
 
-    async uppfaeraFaerslu(id, breytingar) {
-      const svar = await sb.from('faerslur').update(breytingar).eq('id', id)
-        .select('*, fyrirtaeki(nafn)').single();
-      kasta(svar); return svar.data;
-    },
-
-    async eydaFaerslu(id) {
-      const svar = await sb.from('faerslur').delete().eq('id', id);
+    async eydaBokhald(tafla, id) {
+      const svar = await sb.from(tafla).delete().eq('id', id);
       kasta(svar);
     },
 
@@ -685,40 +658,44 @@ function prufuBakendi() {
         nota: 'Of dýrt í bili, heyrum í þeim í vor.', stofnad: dags(-30), uppfaert: dags(-22) }
     ];
 
-    /* Bókhaldið. Upphæðir án VSK. */
-    const manudur = (n) => {
+    /* Bókhaldið. Upphæðir án VSK nema vsklaust sé merkt. Vinna í mánuði
+       greiðist 1. dag næsta mánaðar. */
+    const man = (n) => {
       const d = new Date(nu); d.setDate(1); d.setMonth(d.getMonth() + n);
-      return d.toISOString().slice(0, 10);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
     };
-    const faerslaD = (o) => ({
-      flokkur: null, vsk: 24, greitt: false, greitt_dags: null, gjalddagi: null, reikningsnr: null,
-      fyrirtaeki_id: null, verkefni_id: null, askrift_manudur: null, nota: null,
-      hofundur: 'u-mirza', stofnad: dags(-1), uppfaert: dags(-1), ...o
-    });
-    const faerslur = [
-      faerslaD({ id: 'b1', tegund: 'tekjur', dags: manudur(0), lysing: 'Áskrift: Efni og samfélagsmiðlar',
-        flokkur: 'askrift', upphaed: 290000, fyrirtaeki_id: 'f1', askrift_manudur: manudur(0).slice(0, 7),
-        greitt: true, greitt_dags: dagsetning(-2), reikningsnr: '1042' }),
-      faerslaD({ id: 'b2', tegund: 'gjold', dags: dagsetning(-9), lysing: 'Adobe Creative Cloud',
-        flokkur: 'hugbunadur', upphaed: 9900, greitt: true, greitt_dags: dagsetning(-9) }),
-      faerslaD({ id: 'b3', tegund: 'gjold', dags: dagsetning(-6), lysing: 'Leiga á vinnustofu',
-        flokkur: 'husnaedi', upphaed: 85000, greitt: true, greitt_dags: dagsetning(-6) }),
-      faerslaD({ id: 'b4', tegund: 'gjold', dags: dagsetning(-4), lysing: 'Meta auglýsingar, herferð',
-        flokkur: 'auglysingar', upphaed: 60000, vsk: 0, greitt: true, greitt_dags: dagsetning(-4),
-        nota: 'Reikningur frá Írlandi, enginn VSK á honum.' }),
-      faerslaD({ id: 'b5', tegund: 'tekjur', dags: manudur(-1), lysing: 'Áskrift: Efni og samfélagsmiðlar',
-        flokkur: 'askrift', upphaed: 290000, fyrirtaeki_id: 'f1', askrift_manudur: manudur(-1).slice(0, 7),
-        greitt: true, greitt_dags: manudur(-1), reikningsnr: '1038' }),
-      faerslaD({ id: 'b6', tegund: 'tekjur', dags: manudur(-1), lysing: 'Áskrift: Vefsíða í áskrift',
-        flokkur: 'askrift', upphaed: 45000, fyrirtaeki_id: 'f2', askrift_manudur: manudur(-1).slice(0, 7),
-        greitt: false, reikningsnr: '1039', gjalddagi: dagsetning(-5) }),
-      faerslaD({ id: 'b7', tegund: 'gjold', dags: manudur(-1), lysing: 'Adobe Creative Cloud',
-        flokkur: 'hugbunadur', upphaed: 9900, greitt: true, greitt_dags: manudur(-1) })
+    const samningar = [
+      { id: 's1', vidskiptavinur: 'Hlíðarkaup', thjonusta: 'Efni og samfélagsmiðlar',
+        upphaed: 290000, vsklaust: false, hefst: man(-5), lykur: null },
+      { id: 's2', vidskiptavinur: 'Steinvík ehf.', thjonusta: 'Vefsíða í áskrift',
+        upphaed: 45000, vsklaust: false, hefst: man(-2), lykur: null },
+      { id: 's3', vidskiptavinur: 'Íþróttafélagið Hekla', thjonusta: 'Samfélagsmiðlar',
+        upphaed: 150000, vsklaust: true, hefst: man(-3), lykur: null },
+      { id: 's4', vidskiptavinur: 'Fossberg ehf.', thjonusta: 'Auglýsingar',
+        upphaed: 120000, vsklaust: false, hefst: man(1), lykur: null }
+    ];
+    const aukaverkefni = [
+      { id: 'a1', heiti: 'Tökudagur', vidskiptavinur: 'Steinvík ehf.', upphaed: 180000,
+        vsklaust: false, dags: man(0) + '-12', stada: 'stadfest', greitt: false },
+      { id: 'a2', heiti: '3 vidjó', vidskiptavinur: 'Hlíðarkaup', upphaed: 90000,
+        vsklaust: false, dags: man(0) + '-20', stada: 'stadfest', greitt: false },
+      { id: 'a3', heiti: 'Jólaherferð', vidskiptavinur: 'Hlíðarkaup', upphaed: 250000,
+        vsklaust: false, dags: man(1) + '-05', stada: 'kannski', greitt: false },
+      { id: 'a4', heiti: 'Lendingarsíða', vidskiptavinur: 'Fossberg ehf.', upphaed: 420000,
+        vsklaust: false, dags: man(-1) + '-18', stada: 'stadfest', greitt: true },
+      { id: 'a5', heiti: 'Myndataka', vidskiptavinur: 'Steinvík ehf.', upphaed: 150000,
+        vsklaust: false, dags: man(-3) + '-09', stada: 'stadfest', greitt: true }
+    ];
+    const taxtar = [
+      { id: 'x1', vidskiptavinur: 'Hlíðarkaup', heiti: 'Vidjó', eining: 'vidjó',
+        upphaed: 30000, vsklaust: false },
+      { id: 'x2', vidskiptavinur: 'Steinvík ehf.', heiti: 'Tökudagur', eining: 'dagur',
+        upphaed: 180000, vsklaust: false }
     ];
 
     return { fyrirtaeki: fyr, notendur, verkefni, taskar, athugasemdir,
              innri, timaskraning, snid, vidhengi: [], innri_taskar,
-             fyrirspurnir, faerslur, innskradur: null };
+             fyrirspurnir, samningar, aukaverkefni, taxtar, innskradur: null };
   };
 
   function les() {
@@ -1102,41 +1079,26 @@ function prufuBakendi() {
       vista();
     },
 
-    /* ---------- Bókhald ---------- */
+    /* ---------- Bókhald: samningar, aukaverkefni, taxtar ---------- */
 
-    async faerslur() {
-      return g.faerslur
-        .map((f) => ({ ...f, fyrirtaeki: f.fyrirtaeki_id ? fyrNafn(f.fyrirtaeki_id) : null }))
-        .sort((a, b) => (b.dags || '').localeCompare(a.dags || '') || nyjast(a, b));
+    async bokhald(tafla) {
+      return (g[tafla] || []).map((r) => ({ ...r }));
     },
 
-    async nyFaersla(f) {
-      const ek = await this.eg();
-      if (f.askrift_manudur && g.faerslur.some((x) =>
-          x.askrift_manudur === f.askrift_manudur && x.fyrirtaeki_id === f.fyrirtaeki_id)) {
-        throw new Error('Þessi áskrift er þegar færð fyrir þennan mánuð.');
+    async vistaBokhald(tafla, rod) {
+      g[tafla] = g[tafla] || [];
+      if (rod.id) {
+        const r = finna(g[tafla], rod.id);
+        if (r) Object.assign(r, rod);
+      } else {
+        rod = { ...rod, id: nyttId() };
+        g[tafla].push(rod);
       }
-      const ny = {
-        id: nyttId(), dags: new Date().toISOString().slice(0, 10), flokkur: null, vsk: 24,
-        greitt: false, greitt_dags: null, gjalddagi: null, reikningsnr: null,
-        fyrirtaeki_id: null, verkefni_id: null, askrift_manudur: null, nota: null,
-        ...f, hofundur: ek.id,
-        stofnad: new Date().toISOString(), uppfaert: new Date().toISOString()
-      };
-      g.faerslur.unshift(ny); vista();
-      return { ...ny, fyrirtaeki: ny.fyrirtaeki_id ? fyrNafn(ny.fyrirtaeki_id) : null };
+      vista(); return { ...rod };
     },
 
-    async uppfaeraFaerslu(id, breytingar) {
-      const f = finna(g.faerslur, id);
-      if (!f) return null;
-      Object.assign(f, breytingar, { uppfaert: new Date().toISOString() });
-      vista();
-      return { ...f, fyrirtaeki: f.fyrirtaeki_id ? fyrNafn(f.fyrirtaeki_id) : null };
-    },
-
-    async eydaFaerslu(id) {
-      g.faerslur = g.faerslur.filter((x) => x.id !== id);
+    async eydaBokhald(tafla, id) {
+      g[tafla] = (g[tafla] || []).filter((x) => x.id !== id);
       vista();
     },
 

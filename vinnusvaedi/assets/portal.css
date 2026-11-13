@@ -982,35 +982,75 @@
 .uppruni__sula span { display: block; height: 100%; border-radius: inherit; background: var(--acc); }
 
 /* --------------------------------------------------------------------------
-   25. Bókhald
+   25. Bókhald (sama uppsetning og gamla Yfirlit síðan)
    -------------------------------------------------------------------------- */
-.bok__timabil {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px;
+.bok__haus {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap;
 }
-.bok__timabil > strong {
-  font: 600 clamp(17px, 15px + .5vw, 20px)/1.2 var(--f-head); color: var(--ink);
-  min-width: 0; text-align: center; padding: 0 4px;
+.bok__tolur > div { display: flex; flex-direction: column; }
+.bok__undir {
+  margin: 8px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--soft);
 }
-.bok__hnappar { display: flex; gap: 8px; flex-wrap: wrap; }
-.bok__merki {
-  flex: none; width: 26px; height: 26px; border-radius: 50%;
-  display: inline-flex; align-items: center; justify-content: center;
-  font: 600 15px/1 var(--f-body);
+.bok__tolur .adal .bok__undir { color: var(--acc-on-navy); }
+
+.bok__skyring {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  font-size: 13px; color: var(--soft);
 }
-.bok__merki--tekjur { background: #e6f4ea; color: #1e6b34; }
-.bok__merki--gjold  { background: #f3f0f0; color: #8a7a78; }
+.bok__lit {
+  display: inline-block; width: 10px; height: 10px; border-radius: 3px;
+  margin-right: 6px; vertical-align: -1px;
+}
+.bok__lit--fast { background: var(--acc); }
+.bok__lit--auka { background: var(--ink); }
+.bok__ar { display: inline-flex; align-items: center; gap: 6px; }
+.bok__ar b { font-weight: 500; color: var(--ink); min-width: 40px; text-align: center; }
+
+.bok__sulur {
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(4px, .8vw, 10px); align-items: end; margin-top: 6px;
+}
+.bok__sula { display: flex; flex-direction: column; align-items: stretch; min-width: 0; }
+.bok__sulubox {
+  height: 170px; display: flex; flex-direction: column; justify-content: flex-end;
+}
+.bok__hluti { border-radius: 5px 5px 0 0; min-height: 0; }
+.bok__hluti--fast { background: var(--acc); }
+.bok__hluti--auka { background: var(--ink); }
+.bok__hluti.er-undir { border-radius: 0; }
+.bok__sula.er-framtid .bok__hluti { opacity: .32; }
+.bok__sulutala {
+  font-size: 11px; color: var(--soft); text-align: center; white-space: nowrap;
+  height: 16px; overflow: hidden;
+}
+.bok__man {
+  font-size: 11.5px; color: var(--soft); text-align: center; margin-top: 7px;
+  border-top: 1px solid var(--line); padding-top: 6px;
+}
+.bok__sula.er-nu .bok__man { color: var(--acc); font-weight: 600; }
+.bok__sula.er-nu .bok__sulutala { color: var(--ink); font-weight: 600; }
+
 .bok__upph { font: 500 14.5px/1 var(--f-body); color: var(--ink); white-space: nowrap; }
-.bok__upph.er-tekjur { color: #1e6b34; }
-.bok__smatt { display: block; font-size: 12.5px; color: var(--soft); margin-top: 3px; }
-.bok__upphaed { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.bok--kannski .task__titill { color: var(--soft); }
+.bok--kannski .bok__upph { color: var(--soft); }
+.bok__greitt { border: 0; cursor: pointer; font-family: var(--f-body); }
+.bok__greitt:hover { filter: brightness(.96); }
 .bok__tikk {
   display: inline-flex; align-items: center; gap: 10px; font-size: 14.5px;
   color: var(--ink); cursor: pointer; min-height: 44px;
 }
 .bok__tikk input { width: 20px; height: 20px; accent-color: var(--acc); }
-.tilkynning .btn { flex: none; }
+.bok__upphaedrod {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: end;
+}
 
 @media (max-width: 620px) {
-  .bok__timabil .pflipar { margin: 6px 0 0 !important; width: 100%; }
+  .bok__sulutala { font-size: 9px; }
+  .bok__sulubox { height: 140px; }
+  .bok__man { font-size: 10.5px; }
   .task__hofn { flex-direction: column; align-items: flex-end; gap: 6px; }
 }
+
+.tilkynning .btn { flex: none; }
+

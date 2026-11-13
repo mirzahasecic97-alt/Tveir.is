@@ -767,45 +767,57 @@ with (security_invoker = true) as
 
 
 -- ==========================================================================
--- 15. Bókhald
---     Ein tafla fyrir tekjur og gjöld. Upphæðin er alltaf án VSK og
---     prósentan liggur við hliðina, svo VSK uppgjörið reiknast beint.
---     Bara admin. Viðskiptavinur kemst aldrei hingað.
+-- 15. Bókhald: samningar, aukaverkefni og taxtar
+--     Sama og gamla Yfirlit síðan. Upphæð er án VSK nema vsklaust sé
+--     merkt, þá er hún endanleg. Vinna í mánuði greiðist 1. dag næsta
+--     mánaðar. Bara admin.
 -- ==========================================================================
 
-create table if not exists faerslur (
-  id               uuid primary key default gen_random_uuid(),
-  tegund           text not null check (tegund in ('tekjur', 'gjold')),
-  dags             date not null default current_date,
-  lysing           text not null,
-  flokkur          text,
-  upphaed          bigint not null check (upphaed >= 0),
-  vsk              numeric(4,1) not null default 24 check (vsk in (0, 11, 24)),
-  greitt           boolean not null default false,
-  greitt_dags      date,
-  gjalddagi        date,
-  reikningsnr      text,
-  fyrirtaeki_id    uuid references fyrirtaeki on delete set null,
-  verkefni_id      uuid references verkefni on delete set null,
-  askrift_manudur  text check (askrift_manudur ~ '^\d{4}-\d{2}$'),
-  nota             text,
-  hofundur         uuid references notendur on delete set null,
-  stofnad          timestamptz not null default now(),
-  uppfaert         timestamptz not null default now()
+create table if not exists samningar (
+  id              uuid primary key default gen_random_uuid(),
+  vidskiptavinur  text not null,
+  thjonusta       text,
+  upphaed         bigint not null check (upphaed >= 0),
+  vsklaust        boolean not null default false,
+  hefst           text not null check (hefst ~ '^\d{4}-\d{2}$'),
+  lykur           text check (lykur ~ '^\d{4}-\d{2}$'),
+  stofnad         timestamptz not null default now()
 );
 
-create index if not exists faerslur_dags_idx on faerslur (dags);
+create table if not exists aukaverkefni (
+  id              uuid primary key default gen_random_uuid(),
+  heiti           text not null,
+  vidskiptavinur  text,
+  upphaed         bigint not null check (upphaed >= 0),
+  vsklaust        boolean not null default false,
+  dags            date not null default current_date,
+  stada           text not null default 'stadfest' check (stada in ('stadfest', 'kannski')),
+  greitt          boolean not null default false,
+  stofnad         timestamptz not null default now()
+);
 
--- Sama áskrift verður ekki færð tvisvar fyrir sama mánuð
-create unique index if not exists faerslur_askrift_einu_sinni
-  on faerslur (fyrirtaeki_id, askrift_manudur) where askrift_manudur is not null;
+create table if not exists taxtar (
+  id              uuid primary key default gen_random_uuid(),
+  vidskiptavinur  text,
+  heiti           text not null,
+  eining          text,
+  upphaed         bigint not null check (upphaed >= 0),
+  vsklaust        boolean not null default false,
+  stofnad         timestamptz not null default now()
+);
 
-drop trigger if exists stimpla_faerslur on faerslur;
-create trigger stimpla_faerslur before update on faerslur
-  for each row execute function stimpla();
+alter table samningar    enable row level security;
+alter table aukaverkefni enable row level security;
+alter table taxtar       enable row level security;
 
-alter table faerslur enable row level security;
+drop policy if exists samningar_admin on samningar;
+create policy samningar_admin on samningar for all to authenticated
+  using (er_admin()) with check (er_admin());
 
-drop policy if exists faerslur_admin on faerslur;
-create policy faerslur_admin on faerslur for all to authenticated
+drop policy if exists aukaverkefni_admin on aukaverkefni;
+create policy aukaverkefni_admin on aukaverkefni for all to authenticated
+  using (er_admin()) with check (er_admin());
+
+drop policy if exists taxtar_admin on taxtar;
+create policy taxtar_admin on taxtar for all to authenticated
   using (er_admin()) with check (er_admin());

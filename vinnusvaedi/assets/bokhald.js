@@ -1,430 +1,469 @@
 /* ==========================================================================
    Tveir vinnusvæði — bókhald
-   Tekjur og gjöld á einum stað. Upphæðir eru geymdar án VSK og
-   prósentan við hliðina, svo VSK uppgjörið fyrir hvert tveggja mánaða
-   tímabil reiknast beint. Rukkuð verkefni og áskriftir mánaðarins
-   færast inn með einni ýtingu. Bókarinn fær CSV.
+   Sama og gamla Yfirlit síðan: samningar, aukaverkefni og taxtar, með
+   súluriti yfir tekjur eftir mánuðum. Vinna í mánuði greiðist 1. dag
+   næsta mánaðar, svo nóvembervinna greiðist 1. desember.
+
+   Upphæðir eru geymdar án VSK nema færslan sé merkt vsklaus, þá er talan
+   endanleg og rofinn má ekki bæta 24% ofan á hana. Því fer allur
+   reikningur fram í pari: [VSK-skylt, VSK-laust].
    ========================================================================== */
 
-import {
-  gogn, el, fylla, dags, kronur, lesaTolu, vardaHlid, teiknaHaus
-} from './portal.js';
-import { FLOKKAR } from './gogn.js';
+import { gogn, el, fylla, kronur, lesaTolu, vardaHlid, teiknaHaus } from './portal.js';
 
 const ek = await vardaHlid({ krefstAdmin: true });
 if (ek) start();
 
-const MANUDIR = ['janúar', 'febrúar', 'mars', 'apríl', 'maí', 'júní', 'júlí',
-                 'ágúst', 'september', 'október', 'nóvember', 'desember'];
+const MAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Maí', 'Jún', 'Júl', 'Ágú', 'Sep', 'Okt', 'Nóv', 'Des'];
+const MAN_LANGT = ['janúar', 'febrúar', 'mars', 'apríl', 'maí', 'júní', 'júlí',
+                   'ágúst', 'september', 'október', 'nóvember', 'desember'];
+const VSK = 0.24;
+const LYKILL_VSK = 'tveir-vsk';
 
+/* ---------- pörin ---------- */
+const P = (a, b) => [a || 0, b || 0];
+const pPlus = (a, b) => [a[0] + b[0], a[1] + b[1]];
+const pAf = (r) => (r && r.vsklaust ? [0, Number(r.upphaed) || 0] : [Number(r && r.upphaed) || 0, 0]);
+const pAn = (p) => p[0] + p[1];
+const pMed = (p) => p[0] * (1 + VSK) + p[1];
+
+/* ---------- mánuðir ---------- */
+const mk = (ar, i) => ar + '-' + String(i + 1).padStart(2, '0');
+const nuDags = new Date();
+const NU_AR = nuDags.getFullYear();
+const NU_MAN = mk(NU_AR, nuDags.getMonth());
+const naestiMan = (m, n) => {
+  const [a, mm] = m.split('-').map(Number);
+  const d = new Date(a, mm - 1 + n, 1);
+  return mk(d.getFullYear(), d.getMonth());
+};
+const NAESTI = naestiMan(NU_MAN, 1);
+const manHeiti = (m) => MAN_LANGT[Number(m.slice(5, 7)) - 1];
+const manStutt = (m) => m ? MAN[Number(m.slice(5, 7)) - 1].toLowerCase() + '. ' + m.slice(0, 4) : '';
 const idag = () => {
   const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-'
-    + String(d.getDate()).padStart(2, '0');
+  return mk(d.getFullYear(), d.getMonth()) + '-' + String(d.getDate()).padStart(2, '0');
 };
-const manudurNu = () => idag().slice(0, 7);
-const vskAf = (f) => Math.round(Number(f.upphaed) * Number(f.vsk) / 100);
-const flokkHeiti = (f) => (FLOKKAR[f.tegund] || {})[f.flokkur] || null;
-
-/* Tímabilin á Íslandi eru tveir mánuðir. Gjalddagi er 5. dagur annars
-   mánaðar eftir að tímabilinu lýkur. */
-function timabilAf(dagsetning) {
-  const d = new Date(dagsetning);
-  return { ar: d.getFullYear(), nr: Math.floor(d.getMonth() / 2) };
-}
-function timabilHeiti(t) {
-  const heiti = MANUDIR[t.nr * 2] + ' og ' + MANUDIR[t.nr * 2 + 1] + ' ' + t.ar;
-  return heiti.charAt(0).toUpperCase() + heiti.slice(1);
-}
-function vskGjalddagi(t) {
-  return new Date(t.ar, t.nr * 2 + 3, 5);
-}
-function iTimabili(f, t, heiltAr) {
-  const d = new Date(f.dags);
-  if (d.getFullYear() !== t.ar) return false;
-  return heiltAr || Math.floor(d.getMonth() / 2) === t.nr;
-}
 
 async function start() {
   const g = await gogn();
   teiknaHaus(ek, 'Bókhald');
-
   const innihald = document.getElementById('innihald');
-  let timabil = timabilAf(new Date());
-  let heiltAr = false;
-  let syna = 'allt';
+
+  let medVsk = false;
+  try { medVsk = localStorage.getItem(LYKILL_VSK) === '1'; } catch (e) { /* lokað */ }
+  let synaAr = NU_AR;
+  let aukaSia = 'framundan';
+
+  const syna = (p) => (medVsk ? pMed(p) : pAn(p));
+  const kr = (p) => kronur(Math.round(syna(Array.isArray(p) ? p : [p, 0]))) || '0 kr.';
+  const vskOrd = () => (medVsk ? 'með VSK' : 'án VSK');
 
   async function teikna() {
-    const [faerslur, verkefni, innri, fyrirtaeki] = await Promise.all([
-      g.faerslur(), g.verkefni(), g.innri(), g.fyrirtaeki()
+    const [sam, auka, tax] = await Promise.all([
+      g.bokhald('samningar'), g.bokhald('aukaverkefni'), g.bokhald('taxtar')
     ]);
 
-    const iTimab = faerslur.filter((f) => iTimabili(f, timabil, heiltAr));
-    const tekjur = iTimab.filter((f) => f.tegund === 'tekjur');
-    const gjold = iTimab.filter((f) => f.tegund === 'gjold');
-    const summa = (l) => l.reduce((a, f) => a + Number(f.upphaed), 0);
-    const tekjurAlls = summa(tekjur);
-    const gjoldAlls = summa(gjold);
-    const utskattur = tekjur.reduce((a, f) => a + vskAf(f), 0);
-    const innskattur = gjold.reduce((a, f) => a + vskAf(f), 0);
-    const vskTilGreidslu = utskattur - innskattur;
+    const virkurI = (s, m) => s.hefst && s.hefst <= m && (!s.lykur || s.lykur >= m);
+    const fastI = (m) => sam.reduce((t, s) => (virkurI(s, m) ? pPlus(t, pAf(s)) : t), P());
+    const aukaI = (m, kannski) => auka.reduce((t, a) =>
+      (String(a.dags || '').slice(0, 7) === m && (a.stada === 'kannski') === !!kannski
+        ? pPlus(t, pAf(a)) : t), P());
 
-    /* Rukkað á verkefnasíðunni en ekki komið í bókhaldið */
-    const innriEftirId = {};
-    (innri || []).forEach((i) => { innriEftirId[i.verkefni_id] = i; });
-    const faerdVerkefni = new Set(faerslur.filter((f) => f.verkefni_id).map((f) => f.verkefni_id));
-    const ofaerd = verkefni.filter((v) => {
-      const i = innriEftirId[v.id];
-      return i && i.reikningur !== 'ekki_rukkad' && Number(v.verd_okkar) > 0 && !faerdVerkefni.has(v.id);
-    });
+    /* ---------- tölurnar efst ---------- */
+    const fastNu = fastI(NU_MAN);
+    const aukaNu = aukaI(NU_MAN);
+    const kannskiNu = aukaI(NU_MAN, true);
+    const fastNaest = fastI(NAESTI);
+    const aukaNaest = aukaI(NAESTI);
+    const kannskiNaest = aukaI(NAESTI, true);
+    const virkir = sam.filter((s) => virkurI(s, NU_MAN)).length;
 
-    /* Áskriftir þessa mánaðar sem eru ekki færðar */
-    const man = manudurNu();
-    const faerdarAskriftir = new Set(faerslur.filter((f) => f.askrift_manudur === man)
-      .map((f) => f.fyrirtaeki_id));
-    const askriftirEftir = fyrirtaeki.filter((f) =>
-      f.er_askrift && Number(f.askrift_verd) > 0 && !faerdarAskriftir.has(f.id));
+    let komid = P(); let spa = P();
+    for (let i = 0; i < 12; i++) {
+      const m = mk(NU_AR, i);
+      const t = pPlus(fastI(m), aukaI(m));
+      if (m <= NU_MAN) komid = pPlus(komid, t);
+      spa = pPlus(spa, t);
+    }
 
-    /* Útistandandi: tekjur sem eru ekki greiddar, óháð tímabili */
-    const utistandandi = faerslur.filter((f) => f.tegund === 'tekjur' && !f.greitt)
-      .sort((a, b) => (a.dags || '').localeCompare(b.dags || ''));
-    const utistandandiAlls = utistandandi.reduce((a, f) => a + Number(f.upphaed) + vskAf(f), 0);
+    const greidslaNu = pPlus(fastNu, aukaNu);
+    const greidslaNaest = pPlus(fastNaest, aukaNaest);
 
-    const syndar = syna === 'allt' ? iTimab : iTimab.filter((f) => f.tegund === syna);
+    /* ---------- súluritið ---------- */
+    const radir = [];
+    let mest = 0;
+    for (let i = 0; i < 12; i++) {
+      const m = mk(synaAr, i);
+      const f = syna(fastI(m)); const a = syna(aukaI(m));
+      radir.push({ m, i, f, a });
+      mest = Math.max(mest, f + a);
+    }
 
-    const gjalddagi = vskGjalddagi(timabil);
+    const opidAuka = (a) => String(a.dags).slice(0, 7) >= NU_MAN || (!a.greitt && a.stada !== 'kannski');
 
     fylla(innihald, [
-      el('div', { class: 'page-head', style: 'padding-top:0' }, [
-        el('h1', { style: 'font-size:clamp(28px,24px+1.3vw,40px)', texti: 'Bókhald' }),
-        el('p', { class: 'lead', texti: 'Allar upphæðir eru án VSK nema annað sé tekið fram.' })
-      ]),
-
-      /* ---------- tímabilið ---------- */
-      el('div', { class: 'bok__timabil' }, [
-        el('button', { type: 'button', class: 'loka', 'aria-label': 'Fyrra tímabil', texti: '‹',
-          onclick: () => {
-            if (heiltAr) timabil = { ar: timabil.ar - 1, nr: timabil.nr };
-            else timabil = timabil.nr === 0 ? { ar: timabil.ar - 1, nr: 5 } : { ar: timabil.ar, nr: timabil.nr - 1 };
-            teikna();
-          } }),
-        el('strong', { texti: heiltAr ? 'Allt árið ' + timabil.ar : timabilHeiti(timabil) }),
-        el('button', { type: 'button', class: 'loka', 'aria-label': 'Næsta tímabil', texti: '›',
-          onclick: () => {
-            if (heiltAr) timabil = { ar: timabil.ar + 1, nr: timabil.nr };
-            else timabil = timabil.nr === 5 ? { ar: timabil.ar + 1, nr: 0 } : { ar: timabil.ar, nr: timabil.nr + 1 };
-            teikna();
-          } }),
-        el('div', { class: 'pflipar', style: 'margin:0 0 0 auto' }, [
-          el('button', { type: 'button', class: 'pflipi', 'aria-pressed': String(!heiltAr), texti: 'VSK tímabil',
-                         onclick: () => { heiltAr = false; teikna(); } }),
-          el('button', { type: 'button', class: 'pflipi', 'aria-pressed': String(heiltAr), texti: 'Allt árið',
-                         onclick: () => { heiltAr = true; teikna(); } })
-        ])
-      ]),
-
-      el('dl', { class: 'tekjur', style: 'margin-top:14px' }, [
-        el('div', { class: 'adal' }, [el('dt', { texti: 'Tekjur' }), el('dd', { texti: kronur(tekjurAlls) })]),
-        el('div', {}, [el('dt', { texti: 'Gjöld' }), el('dd', { texti: kronur(gjoldAlls) })]),
-        el('div', { class: tekjurAlls - gjoldAlls < 0 ? 'vidvorun' : '' }, [
-          el('dt', { texti: 'Afkoma' }), el('dd', { texti: kronur(tekjurAlls - gjoldAlls) })
-        ]),
+      el('div', { class: 'page-head bok__haus', style: 'padding-top:0' }, [
         el('div', {}, [
-          el('dt', { texti: heiltAr ? 'VSK á árinu' : 'VSK til greiðslu ' + dags(gjalddagi) }),
-          el('dd', { texti: kronur(vskTilGreidslu) })
+          el('h1', { style: 'font-size:clamp(28px,24px+1.3vw,40px)', texti: 'Bókhald' }),
+          el('p', { class: 'lead', texti: 'Samningar, föst mánaðartekjur og aukaverkefni.' })
+        ]),
+        el('div', { class: 'pflipar', style: 'margin:0', role: 'group', 'aria-label': 'Sýna upphæðir' }, [
+          vskHnappur(false, 'Án VSK'), vskHnappur(true, 'Með VSK')
         ])
+      ]),
+
+      el('dl', { class: 'tekjur bok__tolur', style: 'margin-top:4px' }, [
+        tala('adal', 'Greiðist 1. ' + manHeiti(NAESTI), kr(greidslaNu),
+          'fyrir ' + manHeiti(NU_MAN) + ': samningar ' + kr(fastNu) + ', aukaverkefni ' + kr(aukaNu)
+          + (pAn(kannskiNu) ? ', ' + kr(kannskiNu) + ' í kannski' : '')),
+        tala('', 'Greiðist 1. ' + manHeiti(naestiMan(NU_MAN, 2)), kr(greidslaNaest),
+          'fyrir ' + manHeiti(NAESTI)
+          + (pAn(kannskiNaest) ? ', ' + kr(kannskiNaest) + ' í kannski til viðbótar' : ', ekkert kannski skráð')),
+        tala('', 'Fast á mánuði', kr(fastNu),
+          (virkir === 1 ? '1 samningur í gildi' : virkir + ' samningar í gildi') + ', '
+          + kr([fastNu[0] * 12, fastNu[1] * 12]) + ' á ári'),
+        tala('', 'Komið inn ' + NU_AR, kr(komid), 'spá fyrir árið: ' + kr(spa))
       ]),
       el('p', { class: 'skyring', style: 'margin-top:10px',
-        texti: 'Útskattur ' + kronur(utskattur) + ', innskattur ' + kronur(innskattur) }),
+        texti: 'Allar tölur ' + vskOrd() + '. Vsklausir samningar eru eins í báðum.' }),
 
-      /* ---------- það sem á eftir að færa ---------- */
-      ofaerd.length ? el('div', { class: 'tilkynning', style: 'margin-top:20px' }, [
-        el('div', { class: 'tilkynning__inn' }, [
-          el('strong', { texti: ofaerd.length === 1
-            ? 'Eitt rukkað verkefni er ekki komið í bókhaldið'
-            : ofaerd.length + ' rukkuð verkefni eru ekki komin í bókhaldið' }),
-          el('ul', { class: 'rukkun', style: 'margin-top:6px' }, ofaerd.map((v) => el('li', {}, [
-            el('span', { class: 'nafn', texti: v.titill + (v.fyrirtaeki ? ', ' + v.fyrirtaeki.nafn : '') }),
-            el('span', { class: 'upph', texti: kronur(v.verd_okkar) }),
-            el('button', { type: 'button', texti: 'Færa', onclick: async (e) => {
-              e.currentTarget.disabled = true;
-              const i = innriEftirId[v.id];
-              await g.nyFaersla({
-                tegund: 'tekjur', dags: i.reikningur_dags || idag(), lysing: v.titill,
-                flokkur: 'verkefni', upphaed: Number(v.verd_okkar), vsk: 24,
-                fyrirtaeki_id: v.fyrirtaeki_id, verkefni_id: v.id,
-                greitt: i.reikningur === 'greitt',
-                greitt_dags: i.reikningur === 'greitt' ? idag() : null
-              });
-              teikna();
-            } })
-          ])))
-        ])
-      ]) : null,
-
-      askriftirEftir.length ? el('div', { class: 'tilkynning', style: 'margin-top:14px' }, [
-        el('div', { class: 'tilkynning__inn' }, [
-          el('strong', { texti: 'Áskriftir fyrir ' + MANUDIR[new Date().getMonth()] + ' eru ekki færðar' }),
-          el('span', { class: 'undir', texti: askriftirEftir.map((f) => f.nafn + ' ' + kronur(f.askrift_verd)).join(', ') })
-        ]),
-        el('button', { type: 'button', class: 'btn btn--sm', texti: askriftirEftir.length === 1 ? 'Færa' : 'Færa allar',
-          onclick: async (e) => {
-            e.currentTarget.disabled = true;
-            for (const f of askriftirEftir) {
-              await g.nyFaersla({
-                tegund: 'tekjur', dags: man + '-01', lysing: 'Áskrift: ' + (f.askrift || f.nafn),
-                flokkur: 'askrift', upphaed: Number(f.askrift_verd), vsk: 24,
-                fyrirtaeki_id: f.id, askrift_manudur: man
-              });
-            }
-            teikna();
-          } })
-      ]) : null,
-
-      el('div', { class: 'pgrid', style: 'margin-top:clamp(18px,2.2vw,26px)' }, [
-        el('div', { class: 'pmain' }, [
-          el('section', { class: 'card pblokk' }, [
-            el('div', { class: 'pyfir' }, [
-              el('h2', { texti: 'Færslur' }),
-              el('div', { class: 'bok__hnappar' }, [
-                el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Skrá gjöld',
-                               onclick: () => opna({ tegund: 'gjold' }) }),
-                el('button', { type: 'button', class: 'btn btn--sm', texti: 'Skrá tekjur',
-                               onclick: () => opna({ tegund: 'tekjur' }) })
-              ])
-            ]),
-            el('div', { class: 'okkar__sia', style: 'margin-top:0' }, [
-              el('div', { class: 'pflipar', style: 'margin-bottom:0' }, [
-                flipi('allt', 'Allt', iTimab.length),
-                flipi('tekjur', 'Tekjur', tekjur.length),
-                flipi('gjold', 'Gjöld', gjold.length)
-              ]),
-              el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Sækja CSV',
-                             disabled: !iTimab.length, onclick: () => saekjaCsv(iTimab) })
-            ]),
-            syndar.length
-              ? el('ul', { class: 'tasklisti' }, syndar.map(lina))
-              : el('p', { class: 'tomt', texti: 'Ekkert fært á þessu tímabili.' })
+      /* ---------- súlurit ---------- */
+      el('section', { class: 'card pblokk', style: 'margin-top:clamp(18px,2.2vw,26px)' }, [
+        el('div', { class: 'pyfir' }, [
+          el('h2', { texti: 'Tekjur eftir mánuðum ' + synaAr }),
+          el('div', { class: 'bok__skyring' }, [
+            el('span', {}, [el('i', { class: 'bok__lit bok__lit--fast' }), document.createTextNode('Samningar')]),
+            el('span', {}, [el('i', { class: 'bok__lit bok__lit--auka' }), document.createTextNode('Aukaverkefni')]),
+            el('span', { class: 'bok__ar' }, [
+              el('button', { type: 'button', class: 'loka', 'aria-label': 'Fyrra ár', texti: '‹',
+                             onclick: () => { synaAr--; teikna(); } }),
+              el('b', { texti: String(synaAr) }),
+              el('button', { type: 'button', class: 'loka', 'aria-label': 'Næsta ár', texti: '›',
+                             onclick: () => { synaAr++; teikna(); } })
+            ])
           ])
         ]),
-
-        el('aside', { class: 'pside' }, [
-          el('div', { class: 'card pblokk' }, [
-            el('div', { class: 'pyfir', style: 'margin-bottom:6px' }, [
-              el('h2', { texti: 'Útistandandi' }),
-              el('span', { class: 'pyfir__telja', texti: kronur(utistandandiAlls) + ' með VSK' })
+        el('div', { class: 'bok__sulur' }, radir.map((r) => {
+          const alls = r.f + r.a;
+          const h = (v) => (mest > 0 && v > 0 ? Math.max(2, (v / mest) * 100) + '%' : '0');
+          return el('div', {
+            class: 'bok__sula' + (r.m > NU_MAN ? ' er-framtid' : '') + (r.m === NU_MAN ? ' er-nu' : ''),
+            title: MAN_LANGT[r.i] + ' ' + synaAr + ': ' + kronur(Math.round(alls))
+              + (r.a ? ' (samningar ' + kronur(Math.round(r.f)) + ', aukaverkefni ' + kronur(Math.round(r.a)) + ')' : '')
+          }, [
+            el('span', { class: 'bok__sulutala', texti: alls ? stytt(alls) : '' }),
+            el('div', { class: 'bok__sulubox' }, [
+              r.a ? el('div', { class: 'bok__hluti bok__hluti--auka', style: 'height:' + h(r.a) }) : null,
+              r.f ? el('div', { class: 'bok__hluti bok__hluti--fast' + (r.a ? ' er-undir' : ''), style: 'height:' + h(r.f) }) : null
             ]),
-            utistandandi.length
-              ? el('ul', { class: 'rukkun' }, utistandandi.map((f) => el('li', {}, [
-                  el('span', { class: 'nafn' }, [
-                    document.createTextNode(f.fyrirtaeki ? f.fyrirtaeki.nafn : f.lysing),
-                    el('span', { class: 'bok__smatt',
-                      texti: (f.reikningsnr ? 'Nr. ' + f.reikningsnr + ', ' : '') + dags(f.dags)
-                        + (f.gjalddagi && new Date(f.gjalddagi) < new Date() ? ', komið fram yfir' : '') })
+            el('span', { class: 'bok__man', texti: MAN[r.i] })
+          ]);
+        }))
+      ]),
+
+      /* ---------- samningar ---------- */
+      el('section', { class: 'card pblokk', style: 'margin-top:clamp(16px,2vw,22px)' }, [
+        el('div', { class: 'pyfir' }, [
+          el('h2', { texti: 'Samningar' }),
+          el('button', { type: 'button', class: 'btn btn--sm', texti: 'Nýr samningur',
+                         onclick: () => opnaSamning({}) })
+        ]),
+        sam.length
+          ? el('ul', { class: 'tasklisti' }, [...sam]
+              .sort((a, b) => String(b.hefst || '').localeCompare(String(a.hefst || '')))
+              .map((s) => {
+                const st = s.hefst > NU_MAN ? ['bid', 'Væntanlegur']
+                  : s.lykur && s.lykur < NU_MAN ? ['hafnad', 'Lokið'] : ['ok', 'Virkur'];
+                return el('li', {}, [el('div', { class: 'task' + (st[1] === 'Lokið' ? ' task--lokid' : '') }, [
+                  el('div', { class: 'task__mid' }, [
+                    el('button', { type: 'button', class: 'task__titill', texti: s.vidskiptavinur,
+                                   onclick: () => opnaSamning(s) }),
+                    el('div', { class: 'task__undir' }, [
+                      s.thjonusta ? el('span', { texti: s.thjonusta }) : null,
+                      el('span', { texti: 'frá ' + manStutt(s.hefst) + (s.lykur ? ' til ' + manStutt(s.lykur) : '') }),
+                      s.vsklaust ? el('span', { texti: 'Ekkert VSK' }) : null
+                    ])
                   ]),
-                  el('span', { class: 'upph', texti: kronur(Number(f.upphaed) + vskAf(f)) }),
-                  el('button', { type: 'button', texti: 'Greitt', onclick: async (e) => {
-                    e.currentTarget.disabled = true;
-                    await g.uppfaeraFaerslu(f.id, { greitt: true, greitt_dags: idag() });
-                    teikna();
-                  } })
-                ])))
-              : el('p', { class: 'tomt', style: 'padding:20px 0', texti: 'Allt greitt.' })
+                  el('div', { class: 'task__hofn' }, [
+                    el('span', { class: 'bok__upph', texti: kr(pAf(s)) + ' á mán.' }),
+                    el('span', { class: 'pstat pstat--' + st[0], texti: st[1] })
+                  ])
+                ])]);
+              }))
+          : el('p', { class: 'tomt', texti: 'Engir samningar skráðir. Fastir samningar reiknast inn í mánaðartekjurnar frá upphafsmánuðinum.' })
+      ]),
+
+      /* ---------- aukaverkefni ---------- */
+      (() => {
+        const rodud = [...auka].sort((a, b) => String(b.dags || '').localeCompare(String(a.dags || '')));
+        const opin = rodud.filter(opidAuka);
+        const syndar = aukaSia === 'framundan' ? opin : rodud;
+        return el('section', { class: 'card pblokk', style: 'margin-top:clamp(16px,2vw,22px)' }, [
+          el('div', { class: 'pyfir' }, [
+            el('h2', { texti: 'Aukaverkefni' }),
+            el('button', { type: 'button', class: 'btn btn--sm', texti: 'Nýtt aukaverkefni',
+                           onclick: () => opnaAuka({}) })
           ]),
-          g.prufa ? el('div', { class: 'prufubanner', style: 'margin:0' }, [
-            el('strong', { texti: 'Prufustilling. ' }),
-            document.createTextNode('Þetta eru sýnidæmi í þessum vafra.')
-          ]) : null
-        ])
-      ])
+          el('div', { class: 'pflipar' }, [
+            el('button', { type: 'button', class: 'pflipi', 'aria-pressed': String(aukaSia === 'framundan'),
+              onclick: () => { aukaSia = 'framundan'; teikna(); } },
+              [document.createTextNode('Opið og framundan '), el('b', { texti: String(opin.length) })]),
+            el('button', { type: 'button', class: 'pflipi', 'aria-pressed': String(aukaSia === 'allt'),
+              onclick: () => { aukaSia = 'allt'; teikna(); } },
+              [document.createTextNode('Allt '), el('b', { texti: String(auka.length) })])
+          ]),
+          syndar.length
+            ? el('ul', { class: 'tasklisti' }, syndar.map((a) => el('li', {}, [
+                el('div', { class: 'task' + (a.stada === 'kannski' ? ' bok--kannski' : '') }, [
+                  el('div', { class: 'task__mid' }, [
+                    el('button', { type: 'button', class: 'task__titill', texti: a.heiti,
+                                   onclick: () => opnaAuka(a) }),
+                    el('div', { class: 'task__undir' }, [
+                      a.vidskiptavinur ? el('span', { texti: a.vidskiptavinur }) : null,
+                      el('span', { texti: manHeiti(String(a.dags).slice(0, 7)) + ' ' + String(a.dags).slice(0, 4)
+                        + ', greiðist 1. ' + manHeiti(naestiMan(String(a.dags).slice(0, 7), 1)) }),
+                      a.vsklaust ? el('span', { texti: 'Ekkert VSK' }) : null
+                    ])
+                  ]),
+                  el('div', { class: 'task__hofn' }, [
+                    el('span', { class: 'bok__upph', texti: kr(pAf(a)) }),
+                    a.stada === 'kannski'
+                      ? el('span', { class: 'pstat pstat--nytt', texti: 'Kannski' })
+                      : el('button', {
+                          type: 'button', class: 'pstat pstat--' + (a.greitt ? 'ok' : 'bid') + ' bok__greitt',
+                          title: a.greitt ? 'Merkja ógreitt' : 'Merkja greitt',
+                          texti: a.greitt ? 'Greitt' : 'Ógreitt',
+                          onclick: async () => {
+                            await g.vistaBokhald('aukaverkefni', { id: a.id, greitt: !a.greitt });
+                            teikna();
+                          }
+                        })
+                  ])
+                ])
+              ])))
+            : el('p', { class: 'tomt', texti: 'Ekkert opið. Allt utan fastra samninga fer hér: tökudagur, lendingarsíða, ein herferð.' })
+        ]);
+      })(),
+
+      /* ---------- taxtar ---------- */
+      el('section', { class: 'card pblokk', style: 'margin-top:clamp(16px,2vw,22px)' }, [
+        el('div', { class: 'pyfir' }, [
+          el('h2', { texti: 'Taxtar' }),
+          el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Nýr taxti',
+                         onclick: () => opnaTaxta({}) })
+        ]),
+        el('p', { class: 'skyring', style: 'margin:-6px 0 8px',
+          texti: 'Fast verð á einingu. Skrá býr til aukaverkefni á þeim taxta.' }),
+        tax.length
+          ? el('ul', { class: 'tasklisti' }, tax.map((t) => el('li', {}, [el('div', { class: 'task' }, [
+              el('div', { class: 'task__mid' }, [
+                el('button', { type: 'button', class: 'task__titill',
+                               texti: (t.vidskiptavinur ? t.vidskiptavinur + ', ' : '') + t.heiti,
+                               onclick: () => opnaTaxta(t) }),
+                el('div', { class: 'task__undir' }, [
+                  el('span', { texti: kr(pAf(t)) + ' á ' + (t.eining || 'einingu') })
+                ])
+              ]),
+              el('div', { class: 'task__hofn' }, [
+                el('button', { type: 'button', class: 'btn btn--sm', texti: 'Skrá',
+                               onclick: () => skraATaxta(t) })
+              ])
+            ])])))
+          : el('p', { class: 'tomt', texti: 'Engir taxtar skráðir.' })
+      ]),
+
+      el('p', { class: 'skyring', style: 'margin-top:18px',
+        texti: 'Tölur eru skráðar á þann mánuð sem unnið er. Greiðsla berst um mánaðamótin á eftir, '
+          + 'svo nóvembervinna greiðist 1. desember. Súluritið sýnir vinnumánuði, ekki greiðsludaga.' }),
+
+      g.prufa ? el('div', { class: 'prufubanner', style: 'margin-top:14px' }, [
+        el('strong', { texti: 'Prufustilling. ' }),
+        document.createTextNode('Þetta eru sýnidæmi. Alvöru tölurnar úr gamla Yfirlitinu koma hingað þegar Supabase er tengt.')
+      ]) : null
     ]);
-
-    function flipi(gildi, heiti, fjoldi) {
-      return el('button', {
-        type: 'button', class: 'pflipi', 'aria-pressed': String(syna === gildi),
-        onclick: () => { syna = gildi; teikna(); }
-      }, [document.createTextNode(heiti + ' '), el('b', { texti: String(fjoldi) })]);
-    }
-
-    function lina(f) {
-      const tekj = f.tegund === 'tekjur';
-      return el('li', {}, [el('div', { class: 'task' }, [
-        el('span', { class: 'bok__merki bok__merki--' + f.tegund, 'aria-hidden': 'true', texti: tekj ? '+' : '−' }),
-        el('div', { class: 'task__mid' }, [
-          el('button', { type: 'button', class: 'task__titill', texti: f.lysing, onclick: () => opna(f) }),
-          el('div', { class: 'task__undir' }, [
-            el('span', { texti: dags(f.dags) }),
-            flokkHeiti(f) ? el('span', { texti: flokkHeiti(f) }) : null,
-            f.fyrirtaeki ? el('span', { texti: f.fyrirtaeki.nafn }) : null,
-            el('span', { texti: 'VSK ' + String(f.vsk).replace('.0', '') + '%' })
-          ])
-        ]),
-        el('div', { class: 'task__hofn' }, [
-          el('span', { class: 'bok__upph' + (tekj ? ' er-tekjur' : ''), texti: (tekj ? '' : '−') + kronur(f.upphaed) }),
-          tekj ? el('span', { class: 'pstat pstat--' + (f.greitt ? 'ok' : 'bid'), texti: f.greitt ? 'Greitt' : 'Ógreitt' }) : null
-        ])
-      ])]);
-    }
-
-    /* ------------------------------------------------------------------
-       Spjaldið: ný færsla eða breyting
-       ------------------------------------------------------------------ */
-    function opna(f) {
-      const ny = !f.id;
-      const tegund = el('select', {}, [
-        el('option', { value: 'tekjur', selected: f.tegund === 'tekjur', texti: 'Tekjur' }),
-        el('option', { value: 'gjold', selected: f.tegund === 'gjold', texti: 'Gjöld' })
-      ]);
-      const flokkur = el('select', {});
-      const fyllaFlokka = () => {
-        fylla(flokkur, Object.entries(FLOKKAR[tegund.value]).map(([k, h]) =>
-          el('option', { value: k, selected: f.flokkur === k, texti: h })));
-      };
-      fyllaFlokka();
-
-      const dagsetning = el('input', { type: 'date', value: f.dags || idag(), required: true });
-      const lysing = el('input', { type: 'text', value: f.lysing || '', maxlength: '200', required: true,
-                                   placeholder: f.tegund === 'gjold' ? 'T.d. Adobe, leiga, auglýsingar' : 'T.d. Vefsíða fyrir Fossberg' });
-      const upphaed = el('input', { type: 'text', inputmode: 'numeric', required: true, placeholder: '0',
-                                    value: f.upphaed ? String(f.upphaed).replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '' });
-      const medVsk = el('select', { 'aria-label': 'Er upphæðin með eða án VSK' }, [
-        el('option', { value: 'an', texti: 'án VSK' }),
-        el('option', { value: 'med', selected: ny && f.tegund === 'gjold', texti: 'með VSK' })
-      ]);
-      const vsk = el('select', {}, [24, 11, 0].map((p) =>
-        el('option', { value: String(p), selected: Number(f.vsk ?? 24) === p, texti: p + '%' })));
-      const reikningur = el('input', { type: 'text', value: f.reikningsnr || '', maxlength: '40' });
-      const gjalddagi = el('input', { type: 'date', value: f.gjalddagi || '' });
-      const fyrVal = el('select', {}, [el('option', { value: '', texti: 'Ekkert' })].concat(
-        fyrirtaeki.map((x) => el('option', { value: x.id, selected: f.fyrirtaeki_id === x.id, texti: x.nafn }))));
-      const greitt = el('input', { type: 'checkbox' });
-      greitt.checked = ny ? f.tegund === 'gjold' : !!f.greitt;
-      const nota = el('textarea', { rows: '2' }, [f.nota || '']);
-      const reikningsLina = el('p', { class: 'skyring', style: 'margin-top:-6px' });
-      const stadan = el('div', { class: 'form-status', hidden: true });
-
-      function reikna() {
-        const tala = lesaTolu(upphaed.value) || 0;
-        const p = Number(vsk.value);
-        const an = medVsk.value === 'med' ? Math.round(tala / (1 + p / 100)) : tala;
-        const skattur = Math.round(an * p / 100);
-        reikningsLina.textContent = 'Án VSK ' + kronur(an) + ', VSK ' + kronur(skattur)
-          + ', alls ' + kronur(an + skattur);
-        return an;
-      }
-      [upphaed, vsk, medVsk].forEach((n) => n.addEventListener('input', reikna));
-      [vsk, medVsk].forEach((n) => n.addEventListener('change', reikna));
-      tegund.addEventListener('change', () => { f.flokkur = null; fyllaFlokka(); });
-      reikna();
-
-      let stadfest = false;
-      const eyda = ny ? null : el('button', { type: 'button', class: 'spjald__eyda', texti: 'Eyða',
-        onclick: async (e) => {
-          if (!stadfest) {
-            stadfest = true;
-            e.currentTarget.textContent = 'Ýttu aftur til að eyða';
-            e.currentTarget.classList.add('er-vis');
-            setTimeout(() => {
-              stadfest = false;
-              if (!eyda.isConnected) return;
-              eyda.textContent = 'Eyða'; eyda.classList.remove('er-vis');
-            }, 4000);
-            return;
-          }
-          await g.eydaFaerslu(f.id);
-          d.close(); teikna();
-        } });
-
-      const d = el('dialog', { class: 'pdialog' }, [el('div', { class: 'pdialog__kort' }, [
-        el('div', { class: 'pdialog__haus' }, [
-          el('h2', { texti: ny ? (f.tegund === 'gjold' ? 'Skrá gjöld' : 'Skrá tekjur') : 'Færsla' }),
-          el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '✕', onclick: () => d.close() })
-        ]),
-        el('form', {
-          style: 'margin-top:18px; display:flex; flex-direction:column; gap:16px',
-          novalidate: true,
-          onsubmit: async (e) => {
-            e.preventDefault();
-            const an = reikna();
-            if (!lysing.value.trim()) { lysing.focus(); return; }
-            if (!an) { upphaed.focus(); return; }
-            const faersla = {
-              tegund: tegund.value, dags: dagsetning.value || idag(), lysing: lysing.value.trim(),
-              flokkur: flokkur.value || null, upphaed: an, vsk: Number(vsk.value),
-              reikningsnr: reikningur.value.trim() || null, gjalddagi: gjalddagi.value || null,
-              fyrirtaeki_id: fyrVal.value || null, greitt: greitt.checked,
-              greitt_dags: greitt.checked ? (f.greitt_dags || idag()) : null,
-              nota: nota.value.trim() || null
-            };
-            try {
-              if (ny) await g.nyFaersla(faersla); else await g.uppfaeraFaerslu(f.id, faersla);
-              d.close(); teikna();
-            } catch (villa) {
-              stadan.hidden = false;
-              stadan.className = 'form-status form-status--err';
-              stadan.textContent = villa.message || 'Þetta gekk ekki.';
-            }
-          }
-        }, [
-          el('div', { class: 'field-row' }, [
-            el('label', { class: 'field' }, [el('span', { texti: 'Tegund' }), tegund]),
-            el('label', { class: 'field' }, [el('span', { texti: 'Dagsetning' }), dagsetning])
-          ]),
-          el('label', { class: 'field' }, [el('span', { texti: 'Lýsing' }), lysing]),
-          el('div', { class: 'field-row' }, [
-            el('label', { class: 'field' }, [el('span', { texti: 'Upphæð' }),
-              el('div', { class: 'bok__upphaed' }, [upphaed, medVsk])]),
-            el('label', { class: 'field' }, [el('span', { texti: 'VSK' }), vsk])
-          ]),
-          reikningsLina,
-          el('div', { class: 'field-row' }, [
-            el('label', { class: 'field' }, [el('span', { texti: 'Flokkur' }), flokkur]),
-            el('label', { class: 'field' }, [el('span', { texti: 'Fyrirtæki' }), fyrVal])
-          ]),
-          el('div', { class: 'field-row' }, [
-            el('label', { class: 'field' }, [el('span', { texti: 'Reikningsnúmer' }), reikningur]),
-            el('label', { class: 'field' }, [el('span', { texti: 'Gjalddagi' }), gjalddagi])
-          ]),
-          el('label', { class: 'bok__tikk' }, [greitt, el('span', { texti: 'Greitt' })]),
-          el('label', { class: 'field' }, [el('span', { texti: 'Nóta' }), nota]),
-          stadan,
-          el('div', { class: 'spjald__fot' }, [
-            el('button', { type: 'submit', class: 'btn btn--sm', texti: ny ? 'Skrá' : 'Vista' }),
-            eyda
-          ])
-        ])
-      ])]);
-
-      d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
-      d.addEventListener('close', () => d.remove());
-      document.body.append(d);
-      d.showModal();
-      if (ny) lysing.focus();
-    }
   }
 
-  /* CSV fyrir bókarann. Semíkomma og BOM svo Excel opni íslensku stafina rétt. */
-  function saekjaCsv(listi) {
-    const hreinsa = (v) => {
-      const s = v === null || v === undefined ? '' : String(v);
-      return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-    };
-    const linur = [['Dagsetning', 'Tegund', 'Lýsing', 'Flokkur', 'Fyrirtæki', 'Reikningsnr.',
-                    'Án VSK', 'VSK %', 'VSK', 'Með VSK', 'Greitt', 'Nóta']];
-    [...listi].sort((a, b) => (a.dags || '').localeCompare(b.dags || '')).forEach((f) => {
-      const s = vskAf(f);
-      linur.push([f.dags, f.tegund === 'tekjur' ? 'Tekjur' : 'Gjöld', f.lysing, flokkHeiti(f) || '',
-                  f.fyrirtaeki ? f.fyrirtaeki.nafn : '', f.reikningsnr || '',
-                  f.upphaed, String(f.vsk).replace('.0', ''), s, Number(f.upphaed) + s,
-                  f.greitt ? 'Já' : 'Nei', f.nota || '']);
+  /* ------------------------------------------------------------------
+     Hlutar
+     ------------------------------------------------------------------ */
+  function vskHnappur(gildi, heiti) {
+    return el('button', {
+      type: 'button', class: 'pflipi', 'aria-pressed': String(medVsk === gildi), texti: heiti,
+      onclick: () => {
+        medVsk = gildi;
+        try { localStorage.setItem(LYKILL_VSK, gildi ? '1' : '0'); } catch (e) { /* lokað */ }
+        teikna();
+      }
     });
-    const texti = '﻿' + linur.map((l) => l.map(hreinsa).join(';')).join('\r\n');
-    const slod = URL.createObjectURL(new Blob([texti], { type: 'text/csv;charset=utf-8' }));
-    const heiti = heiltAr ? 'bokhald-' + timabil.ar : 'bokhald-' + timabil.ar + '-'
-      + String(timabil.nr * 2 + 1).padStart(2, '0') + '-' + String(timabil.nr * 2 + 2).padStart(2, '0');
-    const a = el('a', { href: slod, download: heiti + '.csv' });
-    document.body.append(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(slod), 2000);
+  }
+
+  function tala(klasi, merki, gildi, undir) {
+    return el('div', { class: klasi }, [
+      el('dt', { texti: merki }),
+      el('dd', { texti: gildi }),
+      el('p', { class: 'bok__undir', texti: undir })
+    ]);
+  }
+
+  /* 1.147.500 -> "1,15 m", 400.000 -> "400 þ." */
+  function stytt(v) {
+    if (v >= 1e6) return String(Math.round(v / 1e4) / 100).replace('.', ',') + ' m';
+    return Math.round(v / 1000) + ' þ.';
+  }
+
+  /* Upphæðarreitur sem fylgir VSK rofanum. Vsklaus tala er alltaf endanleg. */
+  function upphaedInn(r) {
+    const tala = Number(r.upphaed) || 0;
+    const birt = tala ? Math.round(r.vsklaust || !medVsk ? tala : tala * (1 + VSK)) : '';
+    return el('input', { type: 'text', inputmode: 'numeric', required: true, placeholder: '0',
+      value: birt ? String(birt).replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '' });
+  }
+  function upphaedUt(reitur, vsklaust) {
+    const t = lesaTolu(reitur.value) || 0;
+    return medVsk && !vsklaust ? Math.round(t / (1 + VSK)) : t;
+  }
+
+  function spjald(titill, reitir, vista, eyda) {
+    const stadan = el('div', { class: 'form-status', hidden: true });
+    let stadfest = false;
+    const eydaHn = eyda ? el('button', { type: 'button', class: 'spjald__eyda', texti: 'Eyða',
+      onclick: async (e) => {
+        if (!stadfest) {
+          stadfest = true;
+          e.currentTarget.textContent = 'Ýttu aftur til að eyða';
+          setTimeout(() => { stadfest = false; if (eydaHn.isConnected) eydaHn.textContent = 'Eyða'; }, 4000);
+          return;
+        }
+        await eyda(); d.close(); teikna();
+      } }) : null;
+
+    const d = el('dialog', { class: 'pdialog' }, [el('div', { class: 'pdialog__kort' }, [
+      el('div', { class: 'pdialog__haus' }, [
+        el('h2', { texti: titill }),
+        el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '✕', onclick: () => d.close() })
+      ]),
+      el('form', {
+        style: 'margin-top:18px; display:flex; flex-direction:column; gap:16px', novalidate: true,
+        onsubmit: async (e) => {
+          e.preventDefault();
+          try {
+            const ok = await vista();
+            if (ok === false) return;
+            d.close(); teikna();
+          } catch (villa) {
+            stadan.hidden = false;
+            stadan.className = 'form-status form-status--err';
+            stadan.textContent = villa.message || 'Þetta gekk ekki.';
+          }
+        }
+      }, reitir.concat([
+        el('p', { class: 'skyring', style: 'margin-top:-6px', texti: 'Upphæðin er ' + vskOrd() + ', eins og rofinn efst.' }),
+        stadan,
+        el('div', { class: 'spjald__fot' }, [el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Vista' }), eydaHn])
+      ]))
+    ])]);
+    d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+    d.addEventListener('close', () => d.remove());
+    document.body.append(d);
+    d.showModal();
+  }
+
+  const reitur = (merki, inntak) => el('label', { class: 'field' }, [el('span', { texti: merki }), inntak]);
+  const tikk = (merki, inntak) => el('label', { class: 'bok__tikk' }, [inntak, el('span', { texti: merki })]);
+  const hak = (gildi) => { const i = el('input', { type: 'checkbox' }); i.checked = !!gildi; return i; };
+  const upphaedRod = (merki, upp, laust) => el('div', { class: 'bok__upphaedrod' }, [reitur(merki, upp), tikk('Ekkert VSK', laust)]);
+
+  function opnaSamning(s) {
+    const vid = el('input', { type: 'text', value: s.vidskiptavinur || '', required: true });
+    const thj = el('input', { type: 'text', value: s.thjonusta || '', placeholder: 'Samfélagsmiðlar' });
+    const upp = upphaedInn(s);
+    const laust = hak(s.vsklaust);
+    const hefst = el('input', { type: 'month', value: s.hefst || NU_MAN });
+    const lykur = el('input', { type: 'month', value: s.lykur || '' });
+    spjald(s.id ? 'Samningur' : 'Nýr samningur', [
+      reitur('Viðskiptavinur', vid), reitur('Þjónusta', thj),
+      upphaedRod('Kr. á mánuði', upp, laust),
+      el('div', { class: 'field-row' }, [reitur('Hefst', hefst), reitur('Lýkur (valfrjálst)', lykur)])
+    ], async () => {
+      if (!vid.value.trim()) { vid.focus(); return false; }
+      const u = upphaedUt(upp, laust.checked);
+      if (!u) { upp.focus(); return false; }
+      await g.vistaBokhald('samningar', {
+        ...(s.id ? { id: s.id } : {}), vidskiptavinur: vid.value.trim(), thjonusta: thj.value.trim() || null,
+        upphaed: u, vsklaust: laust.checked, hefst: hefst.value || NU_MAN, lykur: lykur.value || null
+      });
+    }, s.id ? () => g.eydaBokhald('samningar', s.id) : null);
+  }
+
+  function opnaAuka(a) {
+    const heiti = el('input', { type: 'text', value: a.heiti || '', required: true, placeholder: 'Tökudagur' });
+    const vid = el('input', { type: 'text', value: a.vidskiptavinur || '' });
+    const upp = upphaedInn(a);
+    const laust = hak(a.vsklaust);
+    const dags = el('input', { type: 'date', value: a.dags || idag() });
+    const stada = el('select', {}, [
+      el('option', { value: 'stadfest', selected: a.stada !== 'kannski', texti: 'Staðfest' }),
+      el('option', { value: 'kannski', selected: a.stada === 'kannski', texti: 'Kannski' })
+    ]);
+    const greitt = hak(a.greitt);
+    spjald(a.id ? 'Aukaverkefni' : 'Nýtt aukaverkefni', [
+      reitur('Verkefni', heiti), reitur('Viðskiptavinur', vid),
+      upphaedRod('Upphæð', upp, laust),
+      el('div', { class: 'field-row' }, [reitur('Dagsetning', dags), reitur('Staða', stada)]),
+      tikk('Greitt', greitt)
+    ], async () => {
+      if (!heiti.value.trim()) { heiti.focus(); return false; }
+      const u = upphaedUt(upp, laust.checked);
+      if (!u) { upp.focus(); return false; }
+      await g.vistaBokhald('aukaverkefni', {
+        ...(a.id ? { id: a.id } : {}), heiti: heiti.value.trim(), vidskiptavinur: vid.value.trim() || null,
+        upphaed: u, vsklaust: laust.checked, dags: dags.value || idag(), stada: stada.value, greitt: greitt.checked
+      });
+    }, a.id ? () => g.eydaBokhald('aukaverkefni', a.id) : null);
+  }
+
+  function opnaTaxta(t) {
+    const vid = el('input', { type: 'text', value: t.vidskiptavinur || '' });
+    const heiti = el('input', { type: 'text', value: t.heiti || '', required: true, placeholder: 'Vidjó' });
+    const eining = el('input', { type: 'text', value: t.eining || '', placeholder: 'vidjó' });
+    const upp = upphaedInn(t);
+    const laust = hak(t.vsklaust);
+    spjald(t.id ? 'Taxti' : 'Nýr taxti', [
+      reitur('Viðskiptavinur', vid),
+      el('div', { class: 'field-row' }, [reitur('Verk', heiti), reitur('Eining', eining)]),
+      upphaedRod('Verð á einingu', upp, laust)
+    ], async () => {
+      if (!heiti.value.trim()) { heiti.focus(); return false; }
+      const u = upphaedUt(upp, laust.checked);
+      if (!u) { upp.focus(); return false; }
+      await g.vistaBokhald('taxtar', {
+        ...(t.id ? { id: t.id } : {}), vidskiptavinur: vid.value.trim() || null, heiti: heiti.value.trim(),
+        eining: eining.value.trim() || null, upphaed: u, vsklaust: laust.checked
+      });
+    }, t.id ? () => g.eydaBokhald('taxtar', t.id) : null);
+  }
+
+  /* Skrá á taxta: spyr um fjölda og býr til aukaverkefni */
+  function skraATaxta(t) {
+    const fjoldi = el('input', { type: 'number', min: '1', step: '1', value: '1', required: true });
+    const dags = el('input', { type: 'date', value: idag() });
+    const lina = el('p', { class: 'skyring' });
+    const uppfaera = () => {
+      const n = Math.max(1, Number(fjoldi.value) || 1);
+      lina.textContent = n + ' × ' + kr(pAf(t)) + ' = ' + kr(pAf({ ...t, upphaed: t.upphaed * n }));
+    };
+    fjoldi.addEventListener('input', uppfaera); uppfaera();
+    spjald('Skrá: ' + (t.vidskiptavinur ? t.vidskiptavinur + ', ' : '') + t.heiti, [
+      el('div', { class: 'field-row' }, [reitur('Fjöldi', fjoldi), reitur('Dagsetning', dags)]), lina
+    ], async () => {
+      const n = Math.max(1, Number(fjoldi.value) || 1);
+      await g.vistaBokhald('aukaverkefni', {
+        heiti: n + ' ' + (t.eining || t.heiti), vidskiptavinur: t.vidskiptavinur || null,
+        upphaed: Number(t.upphaed) * n, vsklaust: !!t.vsklaust, dags: dags.value || idag(),
+        stada: 'stadfest', greitt: false
+      });
+    }, null);
   }
 
   teikna();
