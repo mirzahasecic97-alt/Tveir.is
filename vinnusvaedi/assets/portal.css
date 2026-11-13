@@ -1054,3 +1054,12 @@
 
 .tilkynning .btn { flex: none; }
 
+
+/* Hin VSK talan smátt undir upphæðinni */
+.bok__upph { display: inline-flex; flex-direction: column; align-items: flex-end; }
+.bok__alt {
+  display: block; margin-top: 4px;
+  font: 400 11.5px/1.2 var(--f-body); color: var(--soft); white-space: nowrap;
+}
+.bok__alt--stor { margin: 4px 0 0; font-size: 13px; }
+.bok__tolur .adal .bok__alt { color: var(--acc-on-navy); }

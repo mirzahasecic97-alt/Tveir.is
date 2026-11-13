@@ -2,7 +2,7 @@
    Tveir vinnusvæði — bókhald
    Sama og gamla Yfirlit síðan: samningar, aukaverkefni og taxtar, með
    súluriti yfir tekjur eftir mánuðum. Vinna í mánuði greiðist 1. dag
-   næsta mánaðar, svo nóvembervinna greiðist 1. desember.
+   næsta mánaðar, svo nóvembervinna greiðist í desember.
 
    Upphæðir eru geymdar án VSK nema færslan sé merkt vsklaus, þá er talan
    endanleg og rofinn má ekki bæta 24% ofan á hana. Því fer allur
@@ -58,6 +58,17 @@ async function start() {
   const syna = (p) => (medVsk ? pMed(p) : pAn(p));
   const kr = (p) => kronur(Math.round(syna(Array.isArray(p) ? p : [p, 0]))) || '0 kr.';
   const vskOrd = () => (medVsk ? 'með VSK' : 'án VSK');
+  /* Hin talan, smátt undir: með VSK þegar sýnt er án, og öfugt.
+     Vsklausar upphæðir eru eins í báðum og fá því bara athugasemd. */
+  const annad = (p) => {
+    p = Array.isArray(p) ? p : [p, 0];
+    if (!p[0]) return p[1] ? 'ekkert VSK' : '';
+    return kronur(Math.round(medVsk ? pAn(p) : pMed(p))) + ' ' + (medVsk ? 'án VSK' : 'með VSK');
+  };
+  const upphaedBox = (p, vidbot) => el('span', { class: 'bok__upph' }, [
+    document.createTextNode(kr(p) + (vidbot || '')),
+    annad(p) ? el('small', { class: 'bok__alt', texti: annad(p) }) : null
+  ]);
 
   async function teikna() {
     const [sam, auka, tax] = await Promise.all([
@@ -114,16 +125,16 @@ async function start() {
       ]),
 
       el('dl', { class: 'tekjur bok__tolur', style: 'margin-top:4px' }, [
-        tala('adal', 'Greiðist 1. ' + manHeiti(NAESTI), kr(greidslaNu),
+        tala('adal', 'Greiðist í ' + manHeiti(NAESTI), greidslaNu,
           'fyrir ' + manHeiti(NU_MAN) + ': samningar ' + kr(fastNu) + ', aukaverkefni ' + kr(aukaNu)
           + (pAn(kannskiNu) ? ', ' + kr(kannskiNu) + ' í kannski' : '')),
-        tala('', 'Greiðist 1. ' + manHeiti(naestiMan(NU_MAN, 2)), kr(greidslaNaest),
+        tala('', 'Greiðist í ' + manHeiti(naestiMan(NU_MAN, 2)), greidslaNaest,
           'fyrir ' + manHeiti(NAESTI)
           + (pAn(kannskiNaest) ? ', ' + kr(kannskiNaest) + ' í kannski til viðbótar' : ', ekkert kannski skráð')),
-        tala('', 'Fast á mánuði', kr(fastNu),
+        tala('', 'Fast á mánuði', fastNu,
           (virkir === 1 ? '1 samningur í gildi' : virkir + ' samningar í gildi') + ', '
           + kr([fastNu[0] * 12, fastNu[1] * 12]) + ' á ári'),
-        tala('', 'Komið inn ' + NU_AR, kr(komid), 'spá fyrir árið: ' + kr(spa))
+        tala('', 'Komið inn ' + NU_AR, komid, 'spá fyrir árið: ' + kr(spa))
       ]),
       el('p', { class: 'skyring', style: 'margin-top:10px',
         texti: 'Allar tölur ' + vskOrd() + '. Vsklausir samningar eru eins í báðum.' }),
@@ -186,7 +197,7 @@ async function start() {
                     ])
                   ]),
                   el('div', { class: 'task__hofn' }, [
-                    el('span', { class: 'bok__upph', texti: kr(pAf(s)) + ' á mán.' }),
+                    upphaedBox(pAf(s), ' á mán.'),
                     el('span', { class: 'pstat pstat--' + st[0], texti: st[1] })
                   ])
                 ])]);
@@ -222,12 +233,12 @@ async function start() {
                     el('div', { class: 'task__undir' }, [
                       a.vidskiptavinur ? el('span', { texti: a.vidskiptavinur }) : null,
                       el('span', { texti: manHeiti(String(a.dags).slice(0, 7)) + ' ' + String(a.dags).slice(0, 4)
-                        + ', greiðist 1. ' + manHeiti(naestiMan(String(a.dags).slice(0, 7), 1)) }),
+                        + ', greiðist í ' + manHeiti(naestiMan(String(a.dags).slice(0, 7), 1)) }),
                       a.vsklaust ? el('span', { texti: 'Ekkert VSK' }) : null
                     ])
                   ]),
                   el('div', { class: 'task__hofn' }, [
-                    el('span', { class: 'bok__upph', texti: kr(pAf(a)) }),
+                    upphaedBox(pAf(a)),
                     a.stada === 'kannski'
                       ? el('span', { class: 'pstat pstat--nytt', texti: 'Kannski' })
                       : el('button', {
@@ -275,7 +286,7 @@ async function start() {
 
       el('p', { class: 'skyring', style: 'margin-top:18px',
         texti: 'Tölur eru skráðar á þann mánuð sem unnið er. Greiðsla berst um mánaðamótin á eftir, '
-          + 'svo nóvembervinna greiðist 1. desember. Súluritið sýnir vinnumánuði, ekki greiðsludaga.' }),
+          + 'svo nóvembervinna greiðist í desember. Súluritið sýnir vinnumánuði, ekki greiðsludaga.' }),
 
       g.prufa ? el('div', { class: 'prufubanner', style: 'margin-top:14px' }, [
         el('strong', { texti: 'Prufustilling. ' }),
@@ -298,10 +309,11 @@ async function start() {
     });
   }
 
-  function tala(klasi, merki, gildi, undir) {
+  function tala(klasi, merki, p, undir) {
     return el('div', { class: klasi }, [
       el('dt', { texti: merki }),
-      el('dd', { texti: gildi }),
+      el('dd', { texti: kr(p) }),
+      annad(p) ? el('p', { class: 'bok__alt bok__alt--stor', texti: annad(p) }) : null,
       el('p', { class: 'bok__undir', texti: undir })
     ]);
   }

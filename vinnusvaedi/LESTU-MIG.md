@@ -175,7 +175,7 @@ töflur, `samningar`, `aukaverkefni` og `taxtar`, bara fyrir admin.
 
 - **Efst:** hvað greiðist næstu tvö mánaðamót, fast á mánuði og hvað er komið
   inn á árinu með spá. Vinna í mánuði greiðist 1. dag næsta mánaðar, svo
-  nóvembervinna greiðist 1. desember.
+  nóvembervinna greiðist í desember.
 - **Súlurit:** tekjur eftir vinnumánuðum, samningar og aukaverkefni hvort í
   sínum lit. Framtíðarmánuðir eru daufir.
 - **Samningar:** fastar mánaðartekjur með upphafs- og lokamánuði.
