@@ -139,56 +139,9 @@
     reikna();
   }
 
-  /* Thjonustan i rennu: orvar og framvindustrik */
-  function leidir() {
-    var renna = document.querySelector('.leidir--renna');
-    var stjorn = document.querySelector('.leidir__stjorn');
-    if (!renna || !stjorn) return;
-    var orvar = stjorn.querySelectorAll('.leidir__ora');
-    var strik = stjorn.querySelector('.leidir__brau span');
-    var rolegt = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var bidur3 = false;
-
-    function skref() {
-      var kort = renna.querySelector('.leid');
-      var bil = parseFloat(window.getComputedStyle(renna).columnGap) || 16;
-      return kort ? kort.getBoundingClientRect().width + bil : 300;
-    }
-
-    function uppfaera() {
-      bidur3 = false;
-      var mest = renna.scrollWidth - renna.clientWidth;
-      stjorn.hidden = mest <= 2;
-      if (mest <= 2) return;
-      var hluti = renna.clientWidth / renna.scrollWidth;
-      var p = renna.scrollLeft / mest;
-      strik.style.width = (hluti * 100).toFixed(2) + '%';
-      strik.style.transform = 'translateX(' + (p * (1 / hluti - 1) * 100).toFixed(2) + '%)';
-      orvar[0].disabled = renna.scrollLeft <= 2;
-      orvar[1].disabled = renna.scrollLeft >= mest - 2;
-    }
-
-    function vid() {
-      if (bidur3) return;
-      bidur3 = true;
-      window.requestAnimationFrame(uppfaera);
-    }
-
-    Array.prototype.forEach.call(orvar, function (b) {
-      b.addEventListener('click', function () {
-        renna.scrollBy({ left: Number(b.getAttribute('data-att')) * skref(),
-                         behavior: rolegt ? 'auto' : 'smooth' });
-      });
-    });
-    renna.addEventListener('scroll', vid, { passive: true });
-    window.addEventListener('resize', vid);
-    uppfaera();
-  }
-
   function raesa() {
     byrja();
     simi();
-    leidir();
   }
 
   if (document.readyState === 'loading') {
