@@ -431,3 +431,24 @@ Vikuleg áminning á mánudagsmorgni úr `bidur_vidskiptavina` er það sem held
 - Sniðum er breytt í SQL, ekki í viðmótinu
 - Reikningar eru merktir handvirkt, ekkert samband við bókhaldskerfi. Bókhaldssíðan
   heldur utan um tölurnar en býr ekki til reikninga
+
+---
+
+## Verk í tölvupósti: verk@tveir.is
+
+Viðskiptavinur sendir póst á **verk@tveir.is** og hann verður að task á listanum
+hans. Ef pósturinn er listi (línur sem byrja á `-`, `•`, `1.` eða `1)`) verður
+hver liður sinn taskur. Annars verður efnislínan titill og textinn lýsing.
+
+- `verk@tveir.is` er aukanetfang (alias) á tveir@tveir.is í Google Workspace.
+- Skriftan `verk-postur.gs` keyrir á script.google.com í reikningnum
+  tveir@tveir.is á 5 mínútna fresti. Hún svarar sendanda með lista yfir það
+  sem fór inn.
+- Hún kallar á fallið `taskur_ur_posti` (kafli 16 í `gagnagrunnur.sql`). Það
+  býr bara til task, og bara ef sendandinn er skráður notandi hjá viðskiptavini.
+  Lykillinn sem skriftan notar liggur í töflunni `stillingar_innri`, sem enginn
+  kemst í utan fallsins.
+- Óþekktir sendendur fá ekkert svar. Pósturinn fær merkið **Verk/Othekkt** í
+  Gmail.
+- Teams: Power Automate (Workflows í Teams) hjá viðskiptavininum getur sent
+  hvert skeyti í rás sem póst á verk@tveir.is. Þá þarf ekkert nýtt hjá okkur.

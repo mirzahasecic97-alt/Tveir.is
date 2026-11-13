@@ -821,3 +821,76 @@ create policy aukaverkefni_admin on aukaverkefni for all to authenticated
 drop policy if exists taxtar_admin on taxtar;
 create policy taxtar_admin on taxtar for all to authenticated
   using (er_admin()) with check (er_admin());
+
+-- --------------------------------------------------------------------------
+-- 16. Verk úr tölvupósti: verk@tveir.is
+-- Lítil skrifta í Google reikningnum okkar les póst sem berst á verk@tveir.is
+-- og kallar á fallið hér. Það býr bara til nýjan task, og bara ef sendandinn
+-- er þekktur notandi hjá viðskiptavini. Annað getur það ekki gert.
+-- Skriftan sannar sig með lykli sem liggur í töflunni stillingar_innri. Enginn
+-- kemst í þá töflu nema þetta fall, ekki einu sinni innskráðir notendur.
+-- --------------------------------------------------------------------------
+create table if not exists stillingar_innri (
+  lykill  text primary key,
+  gildi   text not null
+);
+alter table stillingar_innri enable row level security;
+revoke all on stillingar_innri from anon, authenticated;
+insert into stillingar_innri (lykill, gildi)
+values ('postur_lykill', encode(gen_random_bytes(24), 'hex'))
+on conflict (lykill) do nothing;
+
+create or replace function taskur_ur_posti(p_lykill text, p_fra text, p_efni text, p_texti text)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  n       record;
+  lina    text;
+  lidir   text[] := '{}';
+  efni    text := left(coalesce(nullif(trim(p_efni), ''), 'Verk úr tölvupósti'), 200);
+  texti   text := nullif(left(trim(coalesce(p_texti, '')), 5000), '');
+  fjoldi  int := 0;
+  lidur   text;
+begin
+  if p_lykill is null
+     or p_lykill is distinct from (select gildi from stillingar_innri where lykill = 'postur_lykill') then
+    return jsonb_build_object('ok', false, 'villa', 'lykill');
+  end if;
+
+  select id, fyrirtaeki_id, nafn into n
+    from notendur
+   where lower(netfang) = lower(trim(p_fra))
+     and hlutverk = 'vidskiptavinur'
+     and fyrirtaeki_id is not null
+   limit 1;
+  if n.id is null then
+    return jsonb_build_object('ok', false, 'villa', 'othekktur');
+  end if;
+
+  /* Listi í póstinum (línur sem byrja á -, *, • eða 1. / 1)) verður einn
+     taskur á hvern lið. Annars verður allur pósturinn einn taskur. */
+  foreach lina in array regexp_split_to_array(coalesce(texti, ''), E'\r?\n') loop
+    if lina ~ E'^\s*([-*•–]|\d{1,2}[.)])\s+\S' then
+      lidir := lidir || left(trim(regexp_replace(lina, E'^\s*([-*•–]|\d{1,2}[.)])\s+', '')), 200);
+    end if;
+  end loop;
+
+  if array_length(lidir, 1) >= 2 then
+    foreach lidur in array lidir[1:30] loop
+      insert into taskar (fyrirtaeki_id, titill, lysing, hofundur, stada)
+      values (n.fyrirtaeki_id, lidur, 'Úr tölvupósti: ' || efni, n.id, 'nytt');
+      fjoldi := fjoldi + 1;
+    end loop;
+  else
+    insert into taskar (fyrirtaeki_id, titill, lysing, hofundur, stada)
+    values (n.fyrirtaeki_id, efni, texti, n.id, 'nytt');
+    fjoldi := 1;
+  end if;
+
+  return jsonb_build_object('ok', true, 'fjoldi', fjoldi, 'nafn', n.nafn,
+    'titlar', case when fjoldi > 1 then to_jsonb(lidir[1:30]) else to_jsonb(array[efni]) end,
+    'fyrirtaeki', (select nafn from fyrirtaeki where id = n.fyrirtaeki_id));
+end;
+$$;
+revoke all on function taskur_ur_posti(text, text, text, text) from public;
+grant execute on function taskur_ur_posti(text, text, text, text) to anon;
