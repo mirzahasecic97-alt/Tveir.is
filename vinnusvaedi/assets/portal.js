@@ -458,6 +458,10 @@ function byggjaSpjald() {
   return spjald;
 }
 
+function fraVidskiptavini(t) {
+  return !!(t.hofundur_notandi && t.hofundur_notandi.nafn && t.hofundur_notandi.hlutverk !== 'admin');
+}
+
 export async function opnaTask(id, { admin, eftir } = {}) {
   const g = await gogn();
   const d = byggjaSpjald();
@@ -516,6 +520,8 @@ export async function opnaTask(id, { admin, eftir } = {}) {
 
     el('ul', { class: 'pmeta' }, [
       el('li', {}, [el('span', { texti: 'Staða' }), el('span', {}, [velStada])]),
+      t.hofundur_notandi && t.hofundur_notandi.nafn
+        ? el('li', {}, [el('span', { texti: 'Frá' }), el('span', { texti: t.hofundur_notandi.nafn })]) : null,
       el('li', {}, [el('span', { texti: 'Ábyrgð' }), el('span', {}, [velAbyrgd])]),
       el('li', {}, [el('span', { texti: 'Skiladagur' }), el('span', {
         class: erSeint(t.skiladagur) && t.stada !== 'lokid' ? 'seint' : '',
@@ -639,6 +645,9 @@ export function taskLina(t, { admin, eftir }) {
                      onclick: () => opnaTask(t.id, { admin, eftir }) }),
       el('div', { class: 'task__undir' }, [
         admin && t.fyrirtaeki ? el('span', { texti: t.fyrirtaeki.nafn }) : null,
+        /* Hver bað um þetta. Bara þegar það kom frá viðskiptavininum,
+           okkar eigin taskar þurfa það ekki. */
+        fraVidskiptavini(t) ? el('span', { class: 'task__fra', texti: 'Frá ' + t.hofundur_notandi.nafn }) : null,
         t.verkefni ? el('span', { texti: t.verkefni.titill }) : null,
         t.skiladagur ? el('span', {
           class: erSeint(t.skiladagur) && !lokid ? 'seint' : '',

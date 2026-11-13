@@ -1155,3 +1155,6 @@
 .tekjur > a.adal:hover { filter: brightness(1.15); }
 .tekjur .bok__alt { display: block; margin-top: 4px; }
 .tekjur .adal .bok__alt { color: rgba(255,255,255,.62); }
+
+/* Hver bað um taskinn */
+.task__fra { color: var(--acc); font-weight: 500; }

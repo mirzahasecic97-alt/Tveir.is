@@ -157,7 +157,7 @@ async function supabaseBakendi() {
 
     async taskar({ fyrirtaeki_id, verkefni_id } = {}) {
       let q = sb.from('taskar')
-        .select('*, fyrirtaeki(nafn), verkefni(titill), abyrgd_notandi:abyrgd(nafn)');
+        .select('*, fyrirtaeki(nafn), verkefni(titill), abyrgd_notandi:abyrgd(nafn), hofundur_notandi:hofundur(nafn, hlutverk)');
       if (fyrirtaeki_id) q = q.eq('fyrirtaeki_id', fyrirtaeki_id);
       if (verkefni_id) q = q.eq('verkefni_id', verkefni_id);
       /* Innan verkefnis ræður röðin, annars nýjast efst */
@@ -783,7 +783,8 @@ function prufuBakendi() {
       ...t,
       fyrirtaeki: fyrNafn(t.fyrirtaeki_id),
       verkefni: t.verkefni_id ? { titill: (finna(g.verkefni, t.verkefni_id) || {}).titill } : null,
-      abyrgd_notandi: t.abyrgd ? { nafn: (finna(g.notendur, t.abyrgd) || {}).nafn } : null
+      abyrgd_notandi: t.abyrgd ? { nafn: (finna(g.notendur, t.abyrgd) || {}).nafn } : null,
+      hofundur_notandi: t.hofundur ? (({ nafn, hlutverk }) => ({ nafn, hlutverk }))(finna(g.notendur, t.hofundur) || {}) : null
     };
   }
 
