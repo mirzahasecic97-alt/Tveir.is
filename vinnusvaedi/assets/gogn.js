@@ -39,6 +39,48 @@ export const FORGANGUR = {
   hatt:      'Hátt'
 };
 
+/* Fyrirspurnir af vefnum fara í gegnum þessi stig. */
+export const STODUR_FYRIRSPURN = {
+  ny:           { heiti: 'Ný',            litur: 'nytt' },
+  haft_samband: { heiti: 'Haft samband',  litur: 'vinnsla' },
+  fundur:       { heiti: 'Fundur',        litur: 'vinnsla' },
+  tilbod:       { heiti: 'Tilboð sent',   litur: 'bid' },
+  unnid:        { heiti: 'Unnið',         litur: 'ok' },
+  tapad:        { heiti: 'Tapað',         litur: 'hafnad' }
+};
+
+/* Hvaðan fólkið kom. Rakningin á vefnum skilar einu af þessum. */
+export const UPPRUNI = {
+  facebook:   'Facebook',
+  instagram:  'Instagram',
+  google_ads: 'Google auglýsing',
+  google:     'Google leit',
+  linkedin:   'LinkedIn',
+  tiktok:     'TikTok',
+  postur:     'Tölvupóstur',
+  beint:      'Beint',
+  annad:      'Annar vefur'
+};
+
+/* Bókhaldsflokkar */
+export const FLOKKAR = {
+  tekjur: {
+    askrift:  'Áskrift',
+    verkefni: 'Verkefni',
+    annad:    'Annað'
+  },
+  gjold: {
+    hugbunadur:  'Hugbúnaður',
+    auglysingar: 'Auglýsingar',
+    verktakar:   'Verktakar',
+    husnaedi:    'Húsnæði',
+    taeki:       'Tæki og búnaður',
+    ferdir:      'Ferðir og bíll',
+    fundir:      'Fundir og matur',
+    annad:       'Annað'
+  }
+};
+
 /* ==========================================================================
    Supabase
    ========================================================================== */
@@ -79,6 +121,12 @@ async function supabaseBakendi() {
     async utskra() { minn = null; await sb.auth.signOut(); },
 
     eg,
+
+    /* Harvey þarf að sanna fyrir fallinu á Vercel að við séum innskráð */
+    async adgangstokinn() {
+      const { data } = await sb.auth.getSession();
+      return data && data.session ? data.session.access_token : null;
+    },
 
     async verkefni(fyrirtaeki_id) {
       let q = sb.from('verkefni')
@@ -325,6 +373,53 @@ async function supabaseBakendi() {
       kasta(svar);
     },
 
+    /* ---------- Fyrirspurnir af vefnum ---------- */
+
+    async fyrirspurnir() {
+      const svar = await sb.from('fyrirspurnir')
+        .select('*, abyrgd_notandi:abyrgd(nafn)')
+        .order('stofnad', { ascending: false });
+      kasta(svar); return svar.data;
+    },
+
+    async uppfaeraFyrirspurn(id, breytingar) {
+      const svar = await sb.from('fyrirspurnir').update(breytingar).eq('id', id)
+        .select('*, abyrgd_notandi:abyrgd(nafn)').single();
+      kasta(svar); return svar.data;
+    },
+
+    async eydaFyrirspurn(id) {
+      const svar = await sb.from('fyrirspurnir').delete().eq('id', id);
+      kasta(svar);
+    },
+
+    /* ---------- Bókhald ---------- */
+
+    async faerslur() {
+      const svar = await sb.from('faerslur')
+        .select('*, fyrirtaeki(nafn)')
+        .order('dags', { ascending: false });
+      kasta(svar); return svar.data;
+    },
+
+    async nyFaersla(f) {
+      const ek = await eg();
+      const svar = await sb.from('faerslur').insert({ ...f, hofundur: ek.id })
+        .select('*, fyrirtaeki(nafn)').single();
+      kasta(svar); return svar.data;
+    },
+
+    async uppfaeraFaerslu(id, breytingar) {
+      const svar = await sb.from('faerslur').update(breytingar).eq('id', id)
+        .select('*, fyrirtaeki(nafn)').single();
+      kasta(svar); return svar.data;
+    },
+
+    async eydaFaerslu(id) {
+      const svar = await sb.from('faerslur').delete().eq('id', id);
+      kasta(svar);
+    },
+
     /* ---------- Merki viðskiptavinarins ---------- */
 
     async setjaMerki(fyrirtaeki_id, skra) {
@@ -382,7 +477,7 @@ function prufuBakendi() {
     ];
 
     const notendur = [
-      { id: 'u-mirza', nafn: 'Mirza Hasecic', netfang: 'mirza@tveir.is', hlutverk: 'admin', fyrirtaeki_id: null },
+      { id: 'u-mirza', nafn: 'Mirza Hasecic', netfang: 'tveir@tveir.is', hlutverk: 'admin', fyrirtaeki_id: null },
       { id: 'u-oskar', nafn: 'Óskar Hákonar', netfang: 'oskar@tveir.is', hlutverk: 'admin', fyrirtaeki_id: null },
       { id: 'u-haf',   nafn: 'Anna Jónsdóttir', netfang: 'anna@steinvik.is', hlutverk: 'vidskiptavinur', fyrirtaeki_id: 'f2' },
       { id: 'u-kron',  nafn: 'Páll Guðmundsson', netfang: 'pall@hlidarkaup.is', hlutverk: 'vidskiptavinur', fyrirtaeki_id: 'f1' }
@@ -535,9 +630,95 @@ function prufuBakendi() {
       ] }
     ];
 
+    /* Fyrirspurnir af vefnum, eins og þær kæmu úr formunum */
+    const klst = (n) => new Date(nu - n * 3600000).toISOString();
+    const fyrirspurnir = [
+      { id: 'q1', nafn: 'Guðrún Sigurðardóttir', netfang: 'gudrun@bakarigudrunar.is', simi: '899 1234',
+        fyrirtaeki_nafn: 'Bakarí Guðrúnar', thjonusta: 'Samfélagsmiðlar, Auglýsingar',
+        skilabod: 'Við erum að opna nýtt útibú í febrúar og viljum fá fólk inn frá fyrsta degi.',
+        form: 'Hafa samband', gogn: null,
+        uppruni: 'facebook', sidasti_uppruni: 'facebook', utm_source: 'facebook', utm_medium: 'paid',
+        utm_campaign: 'uttekt-nov', tilvisun: 'm.facebook.com', lendingarsida: '/herferd.html',
+        fyrsta_heimsokn: klst(5), stada: 'ny', abyrgd: null, verdmaeti: null, nota: null,
+        stofnad: klst(3), uppfaert: klst(3) },
+      { id: 'q2', nafn: 'Jón Ólafsson', netfang: null, simi: '777 4321',
+        fyrirtaeki_nafn: null, thjonusta: 'Vefsíða, Google',
+        skilabod: null, form: 'Markaðsúttekt (herferð)', gogn: { slod: 'olafssonverk.is' },
+        uppruni: 'facebook', sidasti_uppruni: 'facebook', utm_source: 'facebook', utm_medium: 'paid',
+        utm_campaign: 'uttekt-nov', tilvisun: 'l.facebook.com', lendingarsida: '/herferd.html',
+        fyrsta_heimsokn: klst(27), stada: 'ny', abyrgd: null, verdmaeti: null, nota: null,
+        stofnad: klst(26), uppfaert: klst(26) },
+      { id: 'q3', nafn: 'Sara Björk', netfang: 'sara@studiosara.is', simi: null,
+        fyrirtaeki_nafn: 'Stúdíó Sara', thjonusta: 'Vefsíða í áskrift',
+        skilabod: 'Hvað kostar að halda síðunni við mánaðarlega?', form: 'Vefsíða í áskrift', gogn: null,
+        uppruni: 'google', sidasti_uppruni: 'google', utm_source: null, utm_medium: null,
+        utm_campaign: null, tilvisun: 'www.google.com', lendingarsida: '/vefsida-askrift.html',
+        fyrsta_heimsokn: dags(-6), stada: 'haft_samband', abyrgd: 'u-oskar', verdmaeti: 45000,
+        nota: 'Hringdi, vill sjá dæmi um síður.', stofnad: dags(-4), uppfaert: dags(-3) },
+      { id: 'q4', nafn: 'Einar Þór Einarsson', netfang: 'einar@nordurvelar.is', simi: '862 5500',
+        fyrirtaeki_nafn: 'Norðurvélar ehf.', thjonusta: 'Auglýsingar, Sölutækifæri',
+        skilabod: 'Viljum fleiri fyrirspurnir frá verktökum.', form: 'Hafa samband', gogn: null,
+        uppruni: 'beint', sidasti_uppruni: 'linkedin', utm_source: 'linkedin', utm_medium: 'social',
+        utm_campaign: null, tilvisun: null, lendingarsida: '/',
+        fyrsta_heimsokn: dags(-14), stada: 'fundur', abyrgd: 'u-mirza', verdmaeti: 450000,
+        nota: 'Fundur á fimmtudag kl. 10.', stofnad: dags(-6), uppfaert: dags(-2) },
+      { id: 'q5', nafn: 'Helga Rún Pálsdóttir', netfang: 'helga@hotelfjordur.is', simi: null,
+        fyrirtaeki_nafn: 'Hótel Fjörður', thjonusta: 'Sölutækifæri',
+        skilabod: 'Við viljum ná til fyrirtækja sem halda árshátíðir.', form: 'Sölutækifæri', gogn: null,
+        uppruni: 'linkedin', sidasti_uppruni: 'linkedin', utm_source: 'linkedin', utm_medium: 'social',
+        utm_campaign: null, tilvisun: 'www.linkedin.com', lendingarsida: '/solutaekifaeri.html',
+        fyrsta_heimsokn: dags(-12), stada: 'tilbod', abyrgd: 'u-mirza', verdmaeti: 890000,
+        nota: 'Tilboð sent, bíður svars.', stofnad: dags(-10), uppfaert: dags(-5) },
+      { id: 'q6', nafn: 'Kristján Fossberg', netfang: 'kristjan@fossberg.is', simi: null,
+        fyrirtaeki_nafn: 'Fossberg ehf.', thjonusta: 'Vefsíða, Auglýsingar',
+        skilabod: 'Lendingarsíða og auglýsingar fyrir nýja vöru.', form: 'Hafa samband', gogn: null,
+        uppruni: 'google', sidasti_uppruni: 'google', utm_source: null, utm_medium: null,
+        utm_campaign: null, tilvisun: 'www.google.com', lendingarsida: '/',
+        fyrsta_heimsokn: dags(-28), stada: 'unnid', abyrgd: 'u-oskar', verdmaeti: 420000,
+        nota: null, stofnad: dags(-25), uppfaert: dags(-20) },
+      { id: 'q7', nafn: 'Arna Kristinsdóttir', netfang: 'arna@kaffikrokur.is', simi: null,
+        fyrirtaeki_nafn: 'Kaffi Krókur', thjonusta: 'Samfélagsmiðlar',
+        skilabod: null, form: 'Efni', gogn: null,
+        uppruni: 'instagram', sidasti_uppruni: 'instagram', utm_source: 'instagram', utm_medium: 'social',
+        utm_campaign: null, tilvisun: 'l.instagram.com', lendingarsida: '/efni.html',
+        fyrsta_heimsokn: dags(-31), stada: 'tapad', abyrgd: 'u-oskar', verdmaeti: null,
+        nota: 'Of dýrt í bili, heyrum í þeim í vor.', stofnad: dags(-30), uppfaert: dags(-22) }
+    ];
+
+    /* Bókhaldið. Upphæðir án VSK. */
+    const manudur = (n) => {
+      const d = new Date(nu); d.setDate(1); d.setMonth(d.getMonth() + n);
+      return d.toISOString().slice(0, 10);
+    };
+    const faerslaD = (o) => ({
+      flokkur: null, vsk: 24, greitt: false, greitt_dags: null, gjalddagi: null, reikningsnr: null,
+      fyrirtaeki_id: null, verkefni_id: null, askrift_manudur: null, nota: null,
+      hofundur: 'u-mirza', stofnad: dags(-1), uppfaert: dags(-1), ...o
+    });
+    const faerslur = [
+      faerslaD({ id: 'b1', tegund: 'tekjur', dags: manudur(0), lysing: 'Áskrift: Efni og samfélagsmiðlar',
+        flokkur: 'askrift', upphaed: 290000, fyrirtaeki_id: 'f1', askrift_manudur: manudur(0).slice(0, 7),
+        greitt: true, greitt_dags: dagsetning(-2), reikningsnr: '1042' }),
+      faerslaD({ id: 'b2', tegund: 'gjold', dags: dagsetning(-9), lysing: 'Adobe Creative Cloud',
+        flokkur: 'hugbunadur', upphaed: 9900, greitt: true, greitt_dags: dagsetning(-9) }),
+      faerslaD({ id: 'b3', tegund: 'gjold', dags: dagsetning(-6), lysing: 'Leiga á vinnustofu',
+        flokkur: 'husnaedi', upphaed: 85000, greitt: true, greitt_dags: dagsetning(-6) }),
+      faerslaD({ id: 'b4', tegund: 'gjold', dags: dagsetning(-4), lysing: 'Meta auglýsingar, herferð',
+        flokkur: 'auglysingar', upphaed: 60000, vsk: 0, greitt: true, greitt_dags: dagsetning(-4),
+        nota: 'Reikningur frá Írlandi, enginn VSK á honum.' }),
+      faerslaD({ id: 'b5', tegund: 'tekjur', dags: manudur(-1), lysing: 'Áskrift: Efni og samfélagsmiðlar',
+        flokkur: 'askrift', upphaed: 290000, fyrirtaeki_id: 'f1', askrift_manudur: manudur(-1).slice(0, 7),
+        greitt: true, greitt_dags: manudur(-1), reikningsnr: '1038' }),
+      faerslaD({ id: 'b6', tegund: 'tekjur', dags: manudur(-1), lysing: 'Áskrift: Vefsíða í áskrift',
+        flokkur: 'askrift', upphaed: 45000, fyrirtaeki_id: 'f2', askrift_manudur: manudur(-1).slice(0, 7),
+        greitt: false, reikningsnr: '1039', gjalddagi: dagsetning(-5) }),
+      faerslaD({ id: 'b7', tegund: 'gjold', dags: manudur(-1), lysing: 'Adobe Creative Cloud',
+        flokkur: 'hugbunadur', upphaed: 9900, greitt: true, greitt_dags: manudur(-1) })
+    ];
+
     return { fyrirtaeki: fyr, notendur, verkefni, taskar, athugasemdir,
              innri, timaskraning, snid, vidhengi: [], innri_taskar,
-             innskradur: null };
+             fyrirspurnir, faerslur, innskradur: null };
   };
 
   function les() {
@@ -550,6 +731,10 @@ function prufuBakendi() {
         for (const lykill of Object.keys(sjalf)) {
           if (vistað[lykill] === undefined) vistað[lykill] = sjalf[lykill];
         }
+        /* mirza@tveir.is er ekki til. Eldri vistun hafði það. */
+        (vistað.notendur || []).forEach((n) => {
+          if (n.netfang === 'mirza@tveir.is') n.netfang = 'tveir@tveir.is';
+        });
         return vistað;
       }
     } catch (e) { /* localStorage getur verið lokað */ }
@@ -617,6 +802,13 @@ function prufuBakendi() {
     };
   }
 
+  function skreytaFyrirspurn(f) {
+    return {
+      ...f,
+      abyrgd_notandi: f.abyrgd ? { nafn: (finna(g.notendur, f.abyrgd) || {}).nafn } : null
+    };
+  }
+
   const nyjast = (a, b) => new Date(b.stofnad) - new Date(a.stofnad);
 
   return {
@@ -624,11 +816,15 @@ function prufuBakendi() {
 
     async innskra(netfang) {
       const n = g.notendur.find((x) => x.netfang.toLowerCase() === netfang.trim().toLowerCase());
-      if (!n) throw new Error('Þetta netfang er ekki á prufulistanum. Prófaðu mirza@tveir.is eða anna@steinvik.is.');
+      if (!n) throw new Error('Þetta netfang er ekki á prufulistanum. Prófaðu tveir@tveir.is eða anna@steinvik.is.');
       g.innskradur = n.id; vista();
     },
 
     async utskra() { g.innskradur = null; vista(); },
+
+    /* Í prufu er engin Supabase lota og því ekkert tákn. Harvey notar
+       aðgangskóðann úr Vercel í staðinn. */
+    async adgangstokinn() { return null; },
 
     async eg() {
       if (!g.innskradur) return null;
@@ -885,6 +1081,62 @@ function prufuBakendi() {
 
     async eydaInnriTask(id) {
       g.innri_taskar = g.innri_taskar.filter((x) => x.id !== id);
+      vista();
+    },
+
+    /* ---------- Fyrirspurnir af vefnum ---------- */
+
+    async fyrirspurnir() {
+      return g.fyrirspurnir.map(skreytaFyrirspurn).sort(nyjast);
+    },
+
+    async uppfaeraFyrirspurn(id, breytingar) {
+      const f = finna(g.fyrirspurnir, id);
+      if (!f) return null;
+      Object.assign(f, breytingar, { uppfaert: new Date().toISOString() });
+      vista(); return skreytaFyrirspurn(f);
+    },
+
+    async eydaFyrirspurn(id) {
+      g.fyrirspurnir = g.fyrirspurnir.filter((x) => x.id !== id);
+      vista();
+    },
+
+    /* ---------- Bókhald ---------- */
+
+    async faerslur() {
+      return g.faerslur
+        .map((f) => ({ ...f, fyrirtaeki: f.fyrirtaeki_id ? fyrNafn(f.fyrirtaeki_id) : null }))
+        .sort((a, b) => (b.dags || '').localeCompare(a.dags || '') || nyjast(a, b));
+    },
+
+    async nyFaersla(f) {
+      const ek = await this.eg();
+      if (f.askrift_manudur && g.faerslur.some((x) =>
+          x.askrift_manudur === f.askrift_manudur && x.fyrirtaeki_id === f.fyrirtaeki_id)) {
+        throw new Error('Þessi áskrift er þegar færð fyrir þennan mánuð.');
+      }
+      const ny = {
+        id: nyttId(), dags: new Date().toISOString().slice(0, 10), flokkur: null, vsk: 24,
+        greitt: false, greitt_dags: null, gjalddagi: null, reikningsnr: null,
+        fyrirtaeki_id: null, verkefni_id: null, askrift_manudur: null, nota: null,
+        ...f, hofundur: ek.id,
+        stofnad: new Date().toISOString(), uppfaert: new Date().toISOString()
+      };
+      g.faerslur.unshift(ny); vista();
+      return { ...ny, fyrirtaeki: ny.fyrirtaeki_id ? fyrNafn(ny.fyrirtaeki_id) : null };
+    },
+
+    async uppfaeraFaerslu(id, breytingar) {
+      const f = finna(g.faerslur, id);
+      if (!f) return null;
+      Object.assign(f, breytingar, { uppfaert: new Date().toISOString() });
+      vista();
+      return { ...f, fyrirtaeki: f.fyrirtaeki_id ? fyrNafn(f.fyrirtaeki_id) : null };
+    },
+
+    async eydaFaerslu(id) {
+      g.faerslur = g.faerslur.filter((x) => x.id !== id);
       vista();
     },
 

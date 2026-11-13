@@ -420,10 +420,11 @@
     <span>Tveir</span>
     <span>Súðarvogi 9A, 104 Reykjavík</span>
     <span>857-2319</span>
-    <span>mirza@tveir.is</span>
+    <span>tveir@tveir.is</span>
   </div>
 </footer>
 
+<script src="assets/js/rakning.js"></script>
 <script>
   (function () {
     // Formspree endpoint. Stofnaðu sér form fyrir herferðina og skiptu um
@@ -487,6 +488,10 @@
       var data = new FormData(form);
       data.append('thjonusta', picked.map(function (b) { return b.value; }).join(', '));
       data.append('_subject', 'Markaðsúttekt, herferð');
+      if (window.tveirRakning) {
+        data.append('uppruni', window.tveirRakning.lysing());
+        window.tveirRakning.skra(data, 'Markaðsúttekt (herferð)');
+      }
 
       fetch(ENDPOINT, { method: 'POST', body: data, headers: { Accept: 'application/json' } })
         .then(function (r) {
@@ -498,7 +503,7 @@
           result.scrollIntoView({ block: 'center' });
         })
         .catch(function () {
-          fail('Formið komst ekki í gegn. Sendu á mirza@tveir.is eða hringdu í 857-2319.');
+          fail('Formið komst ekki í gegn. Sendu á tveir@tveir.is eða hringdu í 857-2319.');
         });
     });
   })();

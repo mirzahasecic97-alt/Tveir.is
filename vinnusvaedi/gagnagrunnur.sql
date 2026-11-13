@@ -701,3 +701,111 @@ with (security_invoker = true) as
    where t.stada <> 'lokid'
      and t.skiladagur is not null
      and t.skiladagur < current_date;
+
+
+-- ==========================================================================
+-- 14. Fyrirspurnir: formin á tveir.is og hvaðan fólkið kom
+--     Vefurinn skrifar hingað með anon lyklinum um leið og formið fer á
+--     Formspree. Stefnan leyfir honum bara að bæta við nýrri línu. Hann
+--     getur hvorki lesið, breytt né eytt, og getur ekki sett stöðu, verð
+--     eða ábyrgð. Það gerum við á vinnusvæðinu.
+-- ==========================================================================
+
+create table if not exists fyrirspurnir (
+  id               uuid primary key default gen_random_uuid(),
+  nafn             text check (length(nafn) <= 200),
+  netfang          text check (length(netfang) <= 200),
+  simi             text check (length(simi) <= 60),
+  fyrirtaeki_nafn  text check (length(fyrirtaeki_nafn) <= 200),
+  skilabod         text check (length(skilabod) <= 5000),
+  thjonusta        text check (length(thjonusta) <= 500),
+  form             text check (length(form) <= 200),
+  gogn             jsonb,
+  -- Rakningin. Fyrsta heimsókn ræður uppruna, sú síðasta er geymd með.
+  uppruni          text check (length(uppruni) <= 60),
+  sidasti_uppruni  text check (length(sidasti_uppruni) <= 60),
+  utm_source       text check (length(utm_source) <= 200),
+  utm_medium       text check (length(utm_medium) <= 200),
+  utm_campaign     text check (length(utm_campaign) <= 200),
+  tilvisun         text check (length(tilvisun) <= 500),
+  lendingarsida    text check (length(lendingarsida) <= 500),
+  fyrsta_heimsokn  timestamptz,
+  -- Það sem við stýrum
+  stada            text not null default 'ny'
+                   check (stada in ('ny', 'haft_samband', 'fundur', 'tilbod', 'unnid', 'tapad')),
+  abyrgd           uuid references notendur on delete set null,
+  verdmaeti        bigint check (verdmaeti >= 0),
+  nota             text,
+  stofnad          timestamptz not null default now(),
+  uppfaert         timestamptz not null default now()
+);
+
+create index if not exists fyrirspurnir_stada_idx on fyrirspurnir (stada, stofnad desc);
+
+drop trigger if exists stimpla_fyrirspurnir on fyrirspurnir;
+create trigger stimpla_fyrirspurnir before update on fyrirspurnir
+  for each row execute function stimpla();
+
+alter table fyrirspurnir enable row level security;
+
+drop policy if exists fyrirspurnir_admin on fyrirspurnir;
+create policy fyrirspurnir_admin on fyrirspurnir for all to authenticated
+  using (er_admin()) with check (er_admin());
+
+drop policy if exists fyrirspurnir_vefur on fyrirspurnir;
+create policy fyrirspurnir_vefur on fyrirspurnir for insert to anon
+  with check (stada = 'ny' and abyrgd is null and verdmaeti is null and nota is null);
+
+grant insert on fyrirspurnir to anon;
+
+-- Yfirlit fyrir Make: nýjar fyrirspurnir sem enginn hefur svarað í sólarhring
+create or replace view fyrirspurnir_osvaradar
+with (security_invoker = true) as
+  select id, nafn, netfang, simi, fyrirtaeki_nafn, form, uppruni, stofnad
+    from fyrirspurnir
+   where stada = 'ny' and stofnad < now() - interval '1 day';
+
+
+-- ==========================================================================
+-- 15. Bókhald
+--     Ein tafla fyrir tekjur og gjöld. Upphæðin er alltaf án VSK og
+--     prósentan liggur við hliðina, svo VSK uppgjörið reiknast beint.
+--     Bara admin. Viðskiptavinur kemst aldrei hingað.
+-- ==========================================================================
+
+create table if not exists faerslur (
+  id               uuid primary key default gen_random_uuid(),
+  tegund           text not null check (tegund in ('tekjur', 'gjold')),
+  dags             date not null default current_date,
+  lysing           text not null,
+  flokkur          text,
+  upphaed          bigint not null check (upphaed >= 0),
+  vsk              numeric(4,1) not null default 24 check (vsk in (0, 11, 24)),
+  greitt           boolean not null default false,
+  greitt_dags      date,
+  gjalddagi        date,
+  reikningsnr      text,
+  fyrirtaeki_id    uuid references fyrirtaeki on delete set null,
+  verkefni_id      uuid references verkefni on delete set null,
+  askrift_manudur  text check (askrift_manudur ~ '^\d{4}-\d{2}$'),
+  nota             text,
+  hofundur         uuid references notendur on delete set null,
+  stofnad          timestamptz not null default now(),
+  uppfaert         timestamptz not null default now()
+);
+
+create index if not exists faerslur_dags_idx on faerslur (dags);
+
+-- Sama áskrift verður ekki færð tvisvar fyrir sama mánuð
+create unique index if not exists faerslur_askrift_einu_sinni
+  on faerslur (fyrirtaeki_id, askrift_manudur) where askrift_manudur is not null;
+
+drop trigger if exists stimpla_faerslur on faerslur;
+create trigger stimpla_faerslur before update on faerslur
+  for each row execute function stimpla();
+
+alter table faerslur enable row level security;
+
+drop policy if exists faerslur_admin on faerslur;
+create policy faerslur_admin on faerslur for all to authenticated
+  using (er_admin()) with check (er_admin());

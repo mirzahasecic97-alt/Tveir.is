@@ -11,7 +11,7 @@ Prufuaðgangar:
 | Netfang | Sér |
 | --- | --- |
 | `anna@steinvik.is` | Vinnusvæði viðskiptavinar |
-| `mirza@tveir.is` | Stjórnborðið okkar |
+| `tveir@tveir.is` | Stjórnborðið okkar |
 | `oskar@tveir.is` | Stjórnborðið okkar |
 
 ---
@@ -50,6 +50,9 @@ vinnusvaedi/
   stjornbord.html    það sem við sjáum daglega
   tillogur.html      verkefnatillögur sem bíða svars
   okkar.html         okkar eigin listi, taskar milli okkar tveggja
+  harvey.html        spjallið við Harvey
+  fyrirspurnir.html  allt sem kemur inn um formin á tveir.is og hvaðan
+  bokhald.html       tekjur, gjöld og VSK uppgjör
   manifest.webmanifest  gerir þetta að appi á heimaskjá
   sw.js                 þjónustustarfi, geymir bara sambandsleysissíðuna
   ekkert-samband.html   það sem sést þegar netið dettur út
@@ -60,7 +63,14 @@ vinnusvaedi/
     portal.js        sameiginlegt, haus, taskar, spjöld, viðhengi
     tillogur.js      samþykktarsíðan
     okkar.js         okkar eigin listi
+    harvey.js        spjallið við Harvey
+    fyrirspurnir.js  fyrirspurnasíðan
+    bokhald.js       bókhaldssíðan
     portal.css       stíll ofan á styles.css
+
+api/
+  harvey.js          fallið sem talar við Claude. Lykillinn liggur þar.
+package.json         bara fyrir fallið. Vefurinn sjálfur er áfram kyrrar skrár.
 ```
 
 ---
@@ -115,12 +125,12 @@ lokaða og `merki` opna, og setur réttindin á þær.
 
 ### 6. Fyrsti aðgangur
 
-**Authentication → Users → Invite user** fyrir `mirza@tveir.is` og
+**Authentication → Users → Invite user** fyrir `tveir@tveir.is` og
 `oskar@tveir.is`. Svo í SQL Editor:
 
 ```sql
 update notendur set hlutverk = 'admin', nafn = 'Mirza Hasecic'
-where netfang = 'mirza@tveir.is';
+where netfang = 'tveir@tveir.is';
 
 update notendur set hlutverk = 'admin', nafn = 'Óskar Hákonar'
 where netfang = 'oskar@tveir.is';
@@ -128,6 +138,61 @@ where netfang = 'oskar@tveir.is';
 
 Eftir það býrðu til fyrirtæki á stjórnborðinu, býður viðskiptavini á sama hátt
 og tengir hann við fyrirtækið sitt þar.
+
+---
+
+## Fyrirspurnir
+
+Öll form á tveir.is senda áfram á Formspree eins og áður, svo pósturinn kemur
+enn. Um leið skrifar vefurinn línu í töfluna `fyrirspurnir`, og hún birtist
+undir **Fyrirspurnir** í hausnum.
+
+Rakningin er í `assets/js/rakning.js` á vefnum sjálfum. Hún man fyrstu og
+síðustu heimsókn gestsins í 90 daga: utm merkin í slóðinni, Facebook og
+Google auglýsingasmelli (`fbclid`, `gclid`), og af hvaða vef hann kom. Engar
+vafrakökur. Uppruninn fer líka sem ein lína í Formspree póstinn.
+
+Til að auglýsing sjáist rétt þarf slóðin í henni utm merki, til dæmis
+`https://tveir.is/herferd.html?utm_source=facebook&utm_medium=paid&utm_campaign=uttekt-nov`.
+Facebook bætir `fbclid` sjálft við, svo hún telst af Facebook þótt merkin vanti,
+en þá vantar nafnið á herferðinni.
+
+Vefurinn notar anon lykilinn. Stefnan `fyrirspurnir_vefur` leyfir honum bara að
+bæta við nýrri línu með stöðuna `ny`. Hann getur ekki lesið neitt til baka.
+
+Stigin eru: Ný, Haft samband, Fundur, Tilboð sent, Unnið, Tapað. Virðið er
+án VSK og telst í „Virði í ferli“ meðan fyrirspurnin er opin.
+
+Yfirlitið `fyrirspurnir_osvaradar` bíður fyrir Make ef við viljum póst um það
+sem enginn hefur svarað í sólarhring.
+
+---
+
+## Bókhald
+
+**Bókhald** í hausnum er ein tafla, `faerslur`, með tekjum og gjöldum. Upphæðin
+er alltaf geymd án VSK og prósentan (24, 11 eða 0) við hliðina. Skráirðu
+upphæð með VSK, af kvittun til dæmis, velurðu „með VSK“ og síðan reiknar hana
+niður.
+
+Efst er VSK tímabilið, tveir mánuðir í senn, með tekjum, gjöldum, afkomu og
+VSK til greiðslu. Gjalddaginn er 5. dagur annars mánaðar eftir að tímabilinu
+lýkur. Örvarnar fletta á milli tímabila og „Allt árið“ sýnir árið.
+
+Tvennt færist inn með einni ýtingu:
+
+- **Rukkuð verkefni.** Þegar verkefni er merkt rukkað á verkefnasíðunni og hefur
+  verð birtist það á bókhaldssíðunni þangað til það er fært.
+- **Áskriftir mánaðarins.** Fyrirtæki í áskrift birtast ef mánuðurinn er ekki
+  færður. Sama áskrift verður ekki færð tvisvar fyrir sama mánuð, gagnagrunnurinn
+  hafnar því.
+
+Til hliðar er það sem er útistandandi, með VSK, og takki til að merkja greitt.
+
+**Sækja CSV** gefur bókaranum tímabilið í skrá sem Excel opnar beint.
+
+Þetta er yfirlit fyrir okkur, ekki bókhaldskerfi. Reikningar eru enn gerðir í
+bankanum eða bókhaldskerfinu og bókarinn skilar VSK skýrslunni.
 
 ---
 
@@ -161,6 +226,49 @@ er ósnert eða komið fram úr skiladegi. Talan í hausnum telur allt sem er op
 
 Yfirlitið `okkar_a_eftir` bíður tilbúið fyrir Make, ef við viljum póst á
 morgnana um það sem er komið fram úr skiladegi.
+
+---
+
+## Harvey
+
+**Harvey** í hausnum er spjall við aðstoðarmann sem sér verkefnin, taskana,
+tímana og reikningsstöðuna. Hann er bara okkar megin, viðskiptavinur kemst
+aldrei inn á síðuna.
+
+Hann má leggja til þrennt: stofna task (á okkar lista eða hjá viðskiptavini),
+breyta task sem er til, og skrá tíma á verkefni. **Hann framkvæmir ekkert
+sjálfur.** Tillagan birtist sem spjald í spjallinu og þú ýtir á já. Þá fer
+breytingin inn um venjulega gagnalagið með þínum réttindum, svo Row Level
+Security heldur alveg eins og annars staðar.
+
+Vafrinn safnar stöðunni og sendir hana með hverri spurningu. Fallið á Vercel
+hefur því engin réttindi inn í gagnagrunninn og þarf ekki service_role
+lykilinn. Hann á áfram hvergi heima nema í Supabase sjálfu.
+
+### Lyklarnir í Vercel
+
+Settu þá undir Project -> Settings -> Environment Variables og veldu öll
+umhverfin þrjú.
+
+| Breyta | Skylda | Hvað |
+| --- | --- | --- |
+| `ANTHROPIC_API_KEY` | já | Lykill af console.anthropic.com. Copilot áskrift dugar ekki, hún má ekki keyra okkar eigin forrit. |
+| `SUPABASE_URL` | já, þegar Supabase er komið | Sama slóð og í `stillingar.js` |
+| `SUPABASE_ANON_KEY` | já, þegar Supabase er komið | Sami anon lykill og í `stillingar.js` |
+| `HARVEY_KODI` | nei | Kóði sem þú býrð til sjálfur og slærð inn á síðunni. Leyfir þér að prófa Harvey áður en Supabase er komið upp. Taktu hann út eftir á. |
+| `HARVEY_LIKAN` | nei | Sjálfgefið `claude-opus-5-5`. `claude-sonnet-5-5` er helmingi ódýrari og dugar í flestar spurningar. |
+| `HARVEY_LEYFI` | nei | Sjálfgefið `@tveir.is`. Hver má tala við hann. |
+
+Fallið hleypir engum að nema hann sé innskráður á vinnusvæðið og netfangið
+endi á `@tveir.is`. Það spyr Supabase sjálft hvort aðgangstáknið sé gilt, svo
+enginn kemst framhjá því með því að kalla á slóðina beint.
+
+### Hvað þetta kostar
+
+Hver spurning sendir stöðuna á vinnusvæðinu með sér. Eins og staðan er núna
+er það um þrjú bandarísk sent á spurningu á Opus, minna á Sonnet. Langt samtal
+kostar meira því öll fyrri skilaboð fylgja með. Harvey man ekkert milli
+heimsókna, hvert samtal byrjar hreint þegar síðan er opnuð.
 
 ---
 
@@ -329,4 +437,5 @@ Vikuleg áminning á mánudagsmorgni úr `bidur_vidskiptavina` er það sem held
 - Enginn póstur fer út fyrr en Make flæðið er sett upp
 - Engin leitarsía á gömlum verkefnum, það kemur þegar listinn verður langur
 - Sniðum er breytt í SQL, ekki í viðmótinu
-- Reikningar eru merktir handvirkt, ekkert samband við bókhaldskerfi
+- Reikningar eru merktir handvirkt, ekkert samband við bókhaldskerfi. Bókhaldssíðan
+  heldur utan um tölurnar en býr ekki til reikninga

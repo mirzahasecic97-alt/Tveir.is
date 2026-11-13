@@ -19,10 +19,11 @@ async function start() {
   let fyrirtaekiSia = '';
 
   async function teikna() {
-    const [verkefni, taskar, fyrirtaeki, notendur, innriOll, snidin, okkar] = await Promise.all([
+    const [verkefni, taskar, fyrirtaeki, notendur, innriOll, snidin, okkar, fyrirspurnir] = await Promise.all([
       g.verkefni(), g.taskar({}), g.fyrirtaeki(), g.notendur(), g.innri(), g.snid(),
-      g.innriTaskar()
+      g.innriTaskar(), g.fyrirspurnir().catch(() => [])
     ]);
+    const nyjarFyrirspurnir = fyrirspurnir.filter((f) => f.stada === 'ny');
     const innri = {};
     (innriOll || []).forEach((i) => { innri[i.verkefni_id] = i; });
 
@@ -91,6 +92,19 @@ async function start() {
             ? 'Ein tillaga bíður samþykkis'
             : tillogur.length + ' tillögur bíða samþykkis' }),
           el('span', { class: 'undir', texti: tillogur.map((v) => v.titill).join(', ') })
+        ]),
+        el('span', { class: 'tilkynning__or', 'aria-hidden': 'true', texti: '→' })
+      ]) : null,
+
+      /* ---------- nýjar fyrirspurnir af vefnum ---------- */
+      nyjarFyrirspurnir.length ? el('a', { class: 'tilkynning', href: 'fyrirspurnir.html',
+                                           style: 'margin-top:20px' }, [
+        el('div', { class: 'tilkynning__inn' }, [
+          el('strong', { texti: nyjarFyrirspurnir.length === 1
+            ? 'Ein ný fyrirspurn af vefnum'
+            : nyjarFyrirspurnir.length + ' nýjar fyrirspurnir af vefnum' }),
+          el('span', { class: 'undir', texti: nyjarFyrirspurnir
+            .map((f) => f.fyrirtaeki_nafn || f.nafn || f.netfang).join(', ') })
         ]),
         el('span', { class: 'tilkynning__or', 'aria-hidden': 'true', texti: '→' })
       ]) : null,

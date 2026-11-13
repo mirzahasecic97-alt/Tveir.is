@@ -319,9 +319,16 @@
         if (submit) { submit.disabled = true; submit.textContent = 'Sendi…'; }
         if (status) status.hidden = true;
 
+        var data = new FormData(form);
+        // Hvaðan gesturinn kom: í póstinn og inn á vinnusvæðið
+        if (window.tveirRakning) {
+          data.append('uppruni', window.tveirRakning.lysing());
+          window.tveirRakning.skra(data);
+        }
+
         fetch(endpoint, {
           method: 'POST',
-          body: new FormData(form),
+          body: data,
           headers: { Accept: 'application/json' }
         })
           .then(function (res) {

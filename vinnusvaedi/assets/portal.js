@@ -139,6 +139,7 @@ export async function vardaHlid({ krefstAdmin, badir } = {}) {
 let hausMerki = null;
 let hausOkkar = null;
 let hausEgId  = null;
+let hausFyrirspurnir = null;
 
 function setjaTolu(n, fjoldi) {
   n.textContent = String(fjoldi);
@@ -161,6 +162,12 @@ export function uppfaeraMerki() {
         listi.filter((t) => t.stada !== 'lokid' && t.abyrgd === hausEgId).length))
       .catch(() => { /* merkið bíður bara */ });
   }
+  if (hausFyrirspurnir) {
+    gogn()
+      .then((g) => g.fyrirspurnir())
+      .then((listi) => setjaTolu(hausFyrirspurnir, listi.filter((f) => f.stada === 'ny').length))
+      .catch(() => { /* merkið bíður bara */ });
+  }
 }
 
 export function teiknaHaus(ek, heiti) {
@@ -175,6 +182,9 @@ export function teiknaHaus(ek, heiti) {
     ? el('span', { class: 'phead__merki phead__merki--okkar', hidden: true }) : null;
   hausMerki = merki;
   hausOkkar = merkiOkkar;
+  const merkiFyrirspurna = admin
+    ? el('span', { class: 'phead__merki phead__merki--ny', hidden: true }) : null;
+  hausFyrirspurnir = merkiFyrirspurna;
   hausEgId = ek.id;
   uppfaeraMerki();
 
@@ -206,7 +216,17 @@ export function teiknaHaus(ek, heiti) {
               el('a', { href: 'okkar.html',
                         'aria-current': nuna === 'okkar.html' ? 'page' : null }, [
                 document.createTextNode('Okkar'), merkiOkkar
-              ])
+              ]),
+              el('a', { href: 'fyrirspurnir.html',
+                        'aria-current': nuna === 'fyrirspurnir.html' ? 'page' : null }, [
+                document.createTextNode('Fyrirspurnir'), merkiFyrirspurna
+              ]),
+              el('a', { href: 'bokhald.html', texti: 'Bókhald',
+                        'aria-current': nuna === 'bokhald.html' ? 'page' : null }),
+              /* Harvey spjallið er ekki komið í loftið, fallið undir api/ þarf
+                 API lykil. Kveikt í stillingar.js þegar það er tilbúið. */
+              stillingar.harvey ? el('a', { href: 'harvey.html', texti: 'Harvey',
+                        'aria-current': nuna === 'harvey.html' ? 'page' : null }) : null
             ])
           : el('div', { class: 'phead__heiti' }, [
               document.createTextNode(heiti ? heiti + ' ' : ''),
@@ -225,6 +245,13 @@ export function teiknaHaus(ek, heiti) {
       ])
     ])
   ]);
+
+  /* Liðirnir eru orðnir sex og komast ekki allir fyrir á þrengstu
+     símunum. Sá sem maður stendur á skal alltaf sjást. */
+  const virkur = haus.querySelector('.phead__nav a[aria-current="page"]');
+  if (virkur && virkur.parentElement.scrollWidth > virkur.parentElement.clientWidth) {
+    virkur.parentElement.scrollLeft = Math.max(0, virkur.offsetLeft - 10);
+  }
 }
 
 /* ==================================================================

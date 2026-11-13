@@ -18,7 +18,11 @@ export const stillingar = {
   /* Hvað þurfum við að fá á tímann til að þetta borgi sig. Verð á verkefni
      deilt með skráðum tímum birtist rautt á stjórnborðinu ef það fer undir
      þessa tölu. Bara fyrir okkur, viðskiptavinur sér hana aldrei. */
-  timagjald: 15500
+  timagjald: 15500,
+
+  /* Harvey spjallið í hausnum. Þarf fallið api/harvey.js á Vercel og
+     ANTHROPIC_API_KEY þar. Slökkt þangað til það er sett upp. */
+  harvey: false
 };
 
 /* anon key er ætlaður til að vera opinber. Það sem ver gögnin er Row Level
