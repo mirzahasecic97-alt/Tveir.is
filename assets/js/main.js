@@ -408,6 +408,12 @@
       b.addEventListener('click', function () { setja(b.getAttribute('data-lang')); });
     });
 
+    /* ?lang=en í slóðinni (t.d. úr enskum pósti) ræður og er munað, svo
+       allar síðurnar haldist á ensku eftir það. */
+    var urSlod = null;
+    try { urSlod = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+    if (urSlod === 'en' || urSlod === 'is') { setja(urSlod); return; }
+
     var valid = null;
     try { valid = localStorage.getItem(LYKILL); } catch (e) {}
     if (valid === 'en') setja('en');
