@@ -185,6 +185,13 @@ h1 em, h2 em {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  /* Skáletur hallar út fyrir kassann sinn og liturinn nær bara að brún hans,
+     svo síðasti stafurinn skarst ("need" missti hluta af d-inu). Smá rými
+     til hægri sem er tekið til baka, svo bilið breytist ekki. */
+  padding-right: .12em;
+  margin-right: -.12em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 .hero__yfir h1 em { background: none; color: var(--acc-on-navy); }
 
