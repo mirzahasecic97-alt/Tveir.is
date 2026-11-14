@@ -19,7 +19,6 @@
 ## Annað
 
 - [Verkefni](https://tveir.is/verkefni.html): Viðskiptavinir meðal annars Krónan, Pósturinn, BYD, Breiðablik, KSÍ, Skólahreysti, Chess After Dark, Snerpa Þjálfun, Vignir Vatnar, Reykjavík Global Forum, Emin Kadri, Golfspá og HAF.
-- [Þitt eigið kerfi](https://tveir.is/kerfi.html): Aðalvaran. Eitt kerfi í stað margra áskrifta (CRM, póstkerfi, bókanir, tilboð), hannað í kringum hvernig fyrirtækið vinnur, afhent og kennt. Eitt verð fyrir uppsetningu og fast mánaðargjald fyrir viðhald. Fyrir einyrkja og lítil og meðalstór fyrirtæki.
 - [Þjónusta](https://tveir.is/thjonusta.html): Allar þjónustuleiðir á einum stað, í þremur flokkum: fleiri viðskiptavinir, efni og útlit, vefur og rekstur.
 - [Hafa samband](https://tveir.is/hafa-samband.html): Netfang tveir@tveir.is, sími 857-2319, Instagram @tveir.is.
 

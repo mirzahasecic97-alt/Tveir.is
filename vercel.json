@@ -2,9 +2,24 @@
   "redirects": [
     {
       "source": "/:slod*",
-      "has": [{ "type": "host", "value": "www.tveir.is" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "www.tveir.is"
+        }
+      ],
       "destination": "https://tveir.is/:slod*",
       "permanent": true
+    },
+    {
+      "source": "/kerfi.html",
+      "destination": "/thjonusta.html",
+      "permanent": false
+    },
+    {
+      "source": "/kerfi",
+      "destination": "/thjonusta.html",
+      "permanent": false
     }
   ]
 }
