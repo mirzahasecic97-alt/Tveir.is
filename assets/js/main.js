@@ -1,12 +1,12 @@
 /* ==========================================================================
-   Tveir.is — main.js
+   Tveir.is: main.js
    Engin ytri bókasöfn. Allt keyrir eftir að DOM er tilbúinn.
    ========================================================================== */
 (function () {
   'use strict';
 
   /* ------------------------------------------------------------------
-     Dropdown ("Hafa samband ▾") — smellur opnar, Esc og smellur utan loka
+     Dropdown ("Hafa samband ▾"): smellur opnar, Esc og smellur utan loka
      ------------------------------------------------------------------ */
   function initDropdowns() {
     var dropdowns = Array.prototype.slice.call(document.querySelectorAll('.dropdown'));
@@ -79,7 +79,7 @@
   }
 
   /* ------------------------------------------------------------------
-     Lógóstrimill — tvöfaldar innihaldið svo lykkjan sé samfelld
+     Lógóstrimill: tvöfaldar innihaldið svo lykkjan sé samfelld
      ------------------------------------------------------------------ */
   function initMarquee() {
     document.querySelectorAll('.marquee__track').forEach(function (track) {
@@ -92,7 +92,7 @@
   }
 
   /* ------------------------------------------------------------------
-     Myndaslott — fela <video> sem tekst ekki að hlaða (líkt og img onerror)
+     Myndaslott: fela <video> sem tekst ekki að hlaða (líkt og img onerror)
      ------------------------------------------------------------------ */
   function initSlots() {
     document.querySelectorAll('.slot > video').forEach(function (video) {
@@ -105,7 +105,7 @@
       video.addEventListener('loadeddata', function () { video.classList.remove('is-missing'); });
 
       // autoplay-eigindin ein og sér bregst stundum. Við reynum bæði strax og
-      // aftur við canplay — canplay getur nefnilega verið búið að gerast áður
+      // aftur við canplay: canplay getur nefnilega verið búið að gerast áður
       // en þessi kóði keyrir, og þá grípur hlustarinn einn ekkert.
       if (video.autoplay) {
         var nudge = function () {
@@ -122,7 +122,7 @@
   }
 
   /* ------------------------------------------------------------------
-     Endalaus verkefnaröð — þrjú eintök af spjöldunum hlið við hlið og
+     Endalaus verkefnaröð: þrjú eintök af spjöldunum hlið við hlið og
      skrunið stokkið um eitt eintak þegar notandinn nálgast brúnina.
      Stökkið er ósýnilegt því eintökin eru eins.
      ------------------------------------------------------------------ */
@@ -182,7 +182,7 @@
   }
 
   /* ------------------------------------------------------------------
-     Myndbönd á verkefnaspjöldum — sækjast fyrst þegar spjaldið sést,
+     Myndbönd á verkefnaspjöldum: sækjast fyrst þegar spjaldið sést,
      svo forsíðan dragi ekki 14 MB niður við fyrstu heimsókn.
      Kyrrmyndin liggur undir og sést þar til myndbandið byrjar.
      ------------------------------------------------------------------ */
@@ -190,7 +190,7 @@
     var videos = Array.prototype.slice.call(document.querySelectorAll('video[data-src]'));
     if (!videos.length) return;
 
-    // Virðum val notandans um minni hreyfingu — þá stendur kyrrmyndin ein
+    // Virðum val notandans um minni hreyfingu: þá stendur kyrrmyndin ein
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     function tryPlay(video) {
@@ -254,7 +254,7 @@
   }
 
   /* ------------------------------------------------------------------
-     Tögg í formum — velja/afvelja, safnast í falið input
+     Tögg í formum: velja/afvelja, safnast í falið input
      ------------------------------------------------------------------ */
   function initChips() {
     document.querySelectorAll('[data-chips]').forEach(function (group) {
@@ -282,7 +282,7 @@
   }
 
   /* ------------------------------------------------------------------
-     Form — AJAX POST á Formspree, staða birt í .form-status
+     Form: AJAX POST á Formspree, staða birt í .form-status
      ------------------------------------------------------------------ */
   function initForms() {
     document.querySelectorAll('form[data-ajax]').forEach(function (form) {
@@ -300,7 +300,7 @@
       form.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        // Honeypot — vélmenni fylla þennan reit út
+        // Honeypot: vélmenni fylla þennan reit út
         var hp = form.querySelector('.hp input');
         if (hp && hp.value) return;
 
@@ -460,7 +460,7 @@
   }
 
   /* ------------------------------------------------------------------
-     Vinnulag — kaflinn festist og síminn gengur í gegnum skrefin
+     Vinnulag: kaflinn festist og síminn gengur í gegnum skrefin
      eftir því hvar í brautinni skrunið er statt
      ------------------------------------------------------------------ */
   function initVinnulag() {

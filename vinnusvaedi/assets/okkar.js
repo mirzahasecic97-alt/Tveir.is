@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir vinnusvæði — okkar eigin listi
+   Tveir vinnusvæði: okkar eigin listi
    Taskar milli okkar tveggja. Viðskiptavinur kemur hér aldrei nálægt,
    gögnin liggja í sérstakri töflu með stefnu sem hleypir bara admin inn.
    ========================================================================== */

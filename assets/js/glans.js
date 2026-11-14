@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir.is — glans
+   Tveir.is: glans
    Kaflar risa upp thegar skrunad er nidur a tha.
    Parast vid assets/css/glans.css. Takirdu badar skrarnar ut
    verdur sidan nakvaemlega eins og hun var adur.

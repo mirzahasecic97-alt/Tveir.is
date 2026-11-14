@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir — rakning
+   Tveir: rakning
    Man hvaðan gesturinn kom (auglýsing, Google, Instagram...) og hvar hann
    lenti fyrst. Þegar hann sendir form fer þetta með: í póstinn frá
    Formspree og inn í Fyrirspurnir á vinnusvæðinu.

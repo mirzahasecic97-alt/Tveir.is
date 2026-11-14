@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir.is — stílblað
+   Tveir.is: stílblað
    Byggt á hönnunarviðmiði (design_handoff_tveir_website).
    Ein responsive útfærsla: skalast frá 390px (mobile) upp í 1180px (desktop).
    ========================================================================== */
@@ -8,7 +8,7 @@
    1. Tokens
    -------------------------------------------------------------------------- */
 :root {
-  --ink: #1c3050;          /* navy — aðaltexti og dökk kort */
+  --ink: #1c3050;          /* navy: aðaltexti og dökk kort */
   --soft: #7189ac;         /* undirtexti */
   --acc: #5b93f0;          /* accent */
   --acc-hover: #4a83e2;
@@ -182,7 +182,7 @@ button { font: inherit; color: inherit; }
 }
 
 /* --------------------------------------------------------------------------
-   4. Myndaslott — sýnir merkimiða þar til alvöru mynd er sett inn
+   4. Myndaslott: sýnir merkimiða þar til alvöru mynd er sett inn
    -------------------------------------------------------------------------- */
 .slot {
   position: relative;
@@ -514,7 +514,7 @@ button { font: inherit; color: inherit; }
   object-fit: contain;
 }
 .logo-chip img.is-missing { display: none; }
-/* Nafnið er einungis varaskeifa — hverfur um leið og lógóið hleðst */
+/* Nafnið er einungis varaskeifa: hverfur um leið og lógóið hleðst */
 .logo-chip:has(img:not(.is-missing)) { color: transparent; }
 
 
@@ -633,7 +633,7 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
   display: flex; flex-direction: column; justify-content: flex-end;
 }
 
-/* Upphafsstafirnir eru skreyting — vatnsmerki í stað ljósmyndar */
+/* Upphafsstafirnir eru skreyting: vatnsmerki í stað ljósmyndar */
 .member__mono {
   position: absolute; top: clamp(14px, 1.5vw, 18px); right: clamp(16px, 1.7vw, 20px);
   font-family: var(--f-head); font-weight: 600;
@@ -729,7 +729,7 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
   border-color: var(--acc);
 }
 
-/* Listi yfir viðskiptavini — lógó, nafn, bransi, flokkur */
+/* Listi yfir viðskiptavini: lógó, nafn, bransi, flokkur */
 .clientlist {
   list-style: none;
   margin: clamp(22px, 2.9vw, 34px) 0 0;
@@ -772,7 +772,7 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
 }
 .clientlist__branch { font-size: 13px; color: var(--soft); }
 
-/* Röð sem vísar á vefinn sem við gerðum — allur reiturinn er smellanlegur */
+/* Röð sem vísar á vefinn sem við gerðum: allur reiturinn er smellanlegur */
 .clientlist__link { color: inherit; text-decoration: none; }
 .clientlist__link::after { content: ""; position: absolute; inset: 0; }
 .clientlist__row:has(.clientlist__link):hover .clientlist__name { color: var(--acc); }
@@ -936,7 +936,7 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
    16. Síðari lagfæringar
    -------------------------------------------------------------------------- */
 
-/* „Draga til hliðar" á aðeins við þar sem fingur skrunar — ekki á tölvu */
+/* „Draga til hliðar" á aðeins við þar sem fingur skrunar: ekki á tölvu */
 @media (min-width: 900px) {
   .drag-hint { display: none; }
 }
@@ -951,7 +951,7 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
   box-shadow: var(--sh-navy);
   padding: clamp(36px, 4.8vw, 68px) clamp(14px, 2.4vw, 32px);
   display: grid;
-  /* Ein röð, jafnir dálkar — óháð því hve margar tölurnar eru */
+  /* Ein röð, jafnir dálkar: óháð því hve margar tölurnar eru */
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   gap: clamp(10px, 1.6vw, 24px);
@@ -1116,7 +1116,7 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
 }
 
 /* --------------------------------------------------------------------------
-   16. Vinnulag — kaflinn festist og síminn segir söguna eftir skruni
+   16. Vinnulag: kaflinn festist og síminn segir söguna eftir skruni
    data-skref 0..3 á kaflanum ræður öllu. Engin tímataka, bara staða.
    -------------------------------------------------------------------------- */
 .vinnulag { position: relative; }
@@ -1456,7 +1456,7 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
 }
 
 /* ==========================================================================
-   21. Hausinn — merkið mátti ekki þjappast saman
+   21. Hausinn: merkið mátti ekki þjappast saman
    .pillnav__logo var venjulegur flex-hlutur og gaf eftir þegar plássið
    þraut. Á síma fór merkið úr 76 px niður í 32 og hvarf alveg á þeim
    þrengstu. Nú stendur það fast og takkinn þrengir sér í staðinn.

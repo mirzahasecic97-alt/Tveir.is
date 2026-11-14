@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir vinnusvæði — verkefnatillögur sem bíða okkar
+   Tveir vinnusvæði: verkefnatillögur sem bíða okkar
    ========================================================================== */
 
 import {

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir vinnusvæði — bókhald
+   Tveir vinnusvæði: bókhald
    Sama og gamla Yfirlit síðan: samningar, aukaverkefni og taxtar, með
    súluriti yfir tekjur eftir mánuðum. Vinna í mánuði greiðist 1. dag
    næsta mánaðar, svo nóvembervinna greiðist í desember.

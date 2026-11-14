@@ -1,5 +1,5 @@
 -- ==========================================================================
--- Tveir vinnusvæði — gagnagrunnur
+-- Tveir vinnusvæði: gagnagrunnur
 -- Keyrist einu sinni í Supabase: SQL Editor -> New query -> paste -> Run.
 -- ==========================================================================
 

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir vinnusvæði — stílblað
+   Tveir vinnusvæði: stílblað
    Byggir ofan á ../assets/css/styles.css og notar sömu tokens.
    ========================================================================== */
 
@@ -338,7 +338,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   12. Fellilistar — styles.css stílar bara input og textarea
+   12. Fellilistar: styles.css stílar bara input og textarea
    -------------------------------------------------------------------------- */
 .field select,
 .pmeta select,

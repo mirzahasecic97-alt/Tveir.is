@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir vinnusvæði — gagnalag
+   Tveir vinnusvæði: gagnalag
    Sama viðmót hvort gögnin koma úr Supabase eða úr prufudæmum.
    ========================================================================== */
 
@@ -444,7 +444,7 @@ async function supabaseBakendi() {
 }
 
 /* ==========================================================================
-   Prufudæmi — lifir í localStorage svo breytingar haldast milli endurhleðslna
+   Prufudæmi: lifir í localStorage svo breytingar haldast milli endurhleðslna
    ========================================================================== */
 
 function prufuBakendi() {

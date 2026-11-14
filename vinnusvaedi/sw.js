@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir vinnusvæði — þjónustustarfi
+   Tveir vinnusvæði: þjónustustarfi
    Geymir ekkert nema sambandsleysissíðuna. Allt annað kemur af netinu,
    svo enginn sitji uppi með gamla útgáfu af kóðanum.
    ========================================================================== */

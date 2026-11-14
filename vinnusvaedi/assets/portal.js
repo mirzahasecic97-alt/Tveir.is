@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir vinnusvæði — sameiginlegt
+   Tveir vinnusvæði: sameiginlegt
    ========================================================================== */
 
 import { gogn, STODUR_TASK, STODUR_VERK, STODUR_INNRI, FORGANGUR } from './gogn.js';

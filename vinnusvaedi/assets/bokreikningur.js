@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir vinnusvæði — reikningurinn á bak við bókhaldið
+   Tveir vinnusvæði: reikningurinn á bak við bókhaldið
    Bókhaldssíðan og stjórnborðið nota bæði þessa skrá, svo tölurnar eru
    alltaf þær sömu á báðum stöðum.
 

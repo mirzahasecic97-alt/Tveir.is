@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir vinnusvæði — stillingar
+   Tveir vinnusvæði: stillingar
    Þetta er eina skráin sem þarf að breyta til að tengja við Supabase.
    ========================================================================== */
 

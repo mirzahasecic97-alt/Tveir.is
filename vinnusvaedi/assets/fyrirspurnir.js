@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tveir vinnusvæði — fyrirspurnir
+   Tveir vinnusvæði: fyrirspurnir
    Allt sem kemur inn um formin á tveir.is, og hvaðan fólkið kom.
    Vefurinn skrifar línuna, við færum hana áfram: ný, haft samband,
    fundur, tilboð, unnið eða tapað. Bara admin kemst hingað.
