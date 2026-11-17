@@ -11,11 +11,16 @@
    Þegar task frá viðskiptavini er hakaður í lokið fær sá sem bað um hann
    póst um það, í sama póstþræði ef hann kom með pósti.
 
+   Undirverk: þegar við hökum í eitt (til dæmis myndband 2 af 4) fær
+   viðskiptavinurinn póst með hlekknum eða skránni. Sjá tilkynnaUndirverk_.
+
    LYKILL hér að neðan er skilinn eftir auður í þessu afriti. Raunverulegi
    lykillinn liggur bara í skriftunni í Google og í töflunni stillingar_innri.
    ========================================================================== */
 
-const GRUNNUR = 'https://wusqvolbwjysnjrfahjy.supabase.co/rest/v1/rpc/';
+const SUPABASE = 'https://wusqvolbwjysnjrfahjy.supabase.co';
+const GRUNNUR = SUPABASE + '/rest/v1/rpc/';
+const VINNUSVAEDI = 'https://tveir.is/vinnusvaedi/yfirlit.html';
 const ANON = 'SETTU_ANON_LYKILINN_HER';
 const LYKILL = 'SETTU_POSTUR_LYKILINN_HER';
 const NETFANG = 'verk@tveir.is';
@@ -67,6 +72,7 @@ function lesaVerk() {
   eiginlegir.setProperty('buid', JSON.stringify(buid));
 
   tilkynnaLokid_();
+  tilkynnaUndirverk_();
 }
 
 /* Taskar frá viðskiptavinum sem við hökuðum í lokið: segjum þeim það.
@@ -108,6 +114,122 @@ function tilkynnaLokid_() {
   });
 
   if (sent.length) kalla_('merkja_tilkynnt', { p_ids: sent });
+}
+
+/* Undirverk sem við hökuðum í lokið: viðskiptavinurinn fær hlekkinn.
+   Undirverk sama tasks sem klárast í sömu umferð fara í einum pósti.
+
+   Hlekkur (WeTransfer, Drive) fer eins og hann er. Skrá í geymslunni
+   fær hlekk sem gildir í 7 daga, en bara ef afhendingarnotandinn er
+   settur upp (Script Properties AFHENDING_NETFANG og AFHENDING_LYKILORD,
+   sjá LESTU-MIG.md). Annars fær viðskiptavinurinn hlekk á vinnusvæðið og
+   sækir skrána þar. */
+function tilkynnaUndirverk_() {
+  const listi = kalla_('undirverk_otilkynnt', {});
+  if (!Array.isArray(listi) || !listi.length) return;
+
+  const hopar = {};
+  listi.forEach((u) => {
+    const k = u.task_id + '|' + (u.netfong || []).join(',');
+    (hopar[k] = hopar[k] || []).push(u);
+  });
+
+  let tokn = null; /* sótt einu sinni, bara ef einhver skrá er í pósti */
+  const sent = [];
+
+  Object.keys(hopar).forEach((k) => {
+    const hopur = hopar[k];
+    const fyrsti = hopur[0];
+    const netfong = (fyrsti.netfong || []).filter(Boolean);
+    if (!netfong.length) return;
+
+    const linur = [];
+    hopur.forEach((u) => {
+      linur.push(u.titill);
+      if (u.tengill) linur.push(u.tengill);
+      if (u.skra_slod) {
+        if (tokn === null) tokn = afhendingartokn_() || '';
+        /* Takist ekki að búa til hlekk fer hlekkur á vinnusvæðið í staðinn */
+        const slod = tokn ? undirritud_(tokn, u.skra_slod) : null;
+        linur.push(slod
+          ? 'Sækja ' + (u.skra_nafn || 'skrána') + ' (hlekkurinn gildir í 7 daga):\n' + slod
+          : 'Skráin bíður þín á vinnusvæðinu: ' + VINNUSVAEDI);
+      }
+      linur.push('');
+    });
+
+    const fornafn = String(fyrsti.nafn || '').split(' ')[0];
+    const stada = fyrsti.lokin + ' af ' + fyrsti.fjoldi;
+    /* Titill tasksins getur komið frá viðskiptavini: engar línubreytingar í efnislínunni */
+    const efni = (hopur.length > 1
+      ? fyrsti.task_titill + ': ' + hopur.length + ' tilbúin (' + stada + ')'
+      : fyrsti.task_titill + ': ' + fyrsti.titill + ' er tilbúið (' + stada + ')')
+      .replace(/[\r\n]+/g, ' ').slice(0, 200);
+    const texti = (fornafn ? 'Hæ ' + fornafn + ',\n\n' : 'Hæ,\n\n')
+      + 'Þetta er tilbúið í ' + fyrsti.task_titill + ':\n\n'
+      + linur.join('\n') + '\n'
+      + 'Staðan: ' + stada + ' lokið. Þú sérð allt á ' + VINNUSVAEDI + '\n\nKveðja,\nTveir';
+
+    try {
+      const thradur = fyrsti.thradur ? GmailApp.getThreadById(fyrsti.thradur) : null;
+      const upphaf = thradur && netfong.length === 1
+        ? thradur.getMessages().find((m) => netfangUr_(m.getFrom()) === String(netfong[0]).toLowerCase())
+        : null;
+      if (upphaf) {
+        upphaf.reply(texti, { name: 'Tveir' });
+      } else {
+        GmailApp.sendEmail(netfong.join(','), efni, texti, { name: 'Tveir' });
+      }
+      hopur.forEach((u) => sent.push(u.id));
+    } catch (e) {
+      /* reynum aftur eftir 5 mínútur */
+    }
+  });
+
+  if (sent.length) kalla_('merkja_undirverk_sent', { p_ids: sent });
+}
+
+/* Skráir afhendingarnotandann inn. Hann má bara lesa skrár undirverka sem
+   er lokið, ekkert annað (stefnan vidhengi_afhending). Lykilorðið liggur
+   bara í Script Properties, aldrei í kóðanum. */
+function afhendingartokn_() {
+  const e = PropertiesService.getScriptProperties();
+  const netfang = e.getProperty('AFHENDING_NETFANG');
+  const lykilord = e.getProperty('AFHENDING_LYKILORD');
+  if (!netfang || !lykilord) return null;
+  try {
+    const r = UrlFetchApp.fetch(SUPABASE + '/auth/v1/token?grant_type=password', {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { apikey: ANON },
+      payload: JSON.stringify({ email: netfang, password: lykilord }),
+      muteHttpExceptions: true
+    });
+    if (r.getResponseCode() !== 200) return null;
+    return JSON.parse(r.getContentText()).access_token || null;
+  } catch (villa) {
+    return null;
+  }
+}
+
+/* Undirrituð slóð á skrá í lokuðu geymslunni, gildir í 7 daga */
+function undirritud_(tokn, slod) {
+  try {
+    const leid = String(slod).split('/').map(encodeURIComponent).join('/');
+    const r = UrlFetchApp.fetch(SUPABASE + '/storage/v1/object/sign/vidhengi/' + leid, {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { apikey: ANON, Authorization: 'Bearer ' + tokn },
+      payload: JSON.stringify({ expiresIn: 7 * 24 * 60 * 60 }),
+      muteHttpExceptions: true
+    });
+    if (r.getResponseCode() !== 200) return null;
+    const svar = JSON.parse(r.getContentText());
+    const hluti = svar.signedURL || svar.signedUrl;
+    return hluti ? SUPABASE + '/storage/v1' + hluti : null;
+  } catch (villa) {
+    return null;
+  }
 }
 
 function kalla_(fall, gogn) {

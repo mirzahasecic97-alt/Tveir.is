@@ -4,6 +4,21 @@
 
 import { gogn, STODUR_TASK, STODUR_VERK, STODUR_INNRI, FORGANGUR } from './gogn.js';
 import { stillingar } from './stillingar.js';
+import { undirverkHluti, undirverkTala } from './undirverk.js';
+
+/* Kom fólk inn með hlekk úr pósti? Supabase les slóðina og hreinsar hana
+   um leið og það ræsir, svo við lítum á hana fyrst. Geymt í flipanum því
+   admin er sendur áfram af yfirliti á stjórnborðið og slóðin týnist. */
+try {
+  const h = location.hash || '';
+  if (/access_token=/.test(h) && /type=(magiclink|invite|signup)/.test(h)) {
+    sessionStorage.setItem('tveir-kom-med-hlekk', 'ja');
+  }
+  if (/error_code=/.test(h)) {
+    sessionStorage.setItem('tveir-hlekkjavilla',
+      new URLSearchParams(h.slice(1)).get('error_code') || 'villa');
+  }
+} catch (e) { /* lokað sessionStorage */ }
 
 /* ------------------------------------------------------------------
    Smáhjálp
@@ -247,6 +262,12 @@ export function teiknaHaus(ek, heiti) {
             document.createTextNode(admin ? 'Tveir' : ek.netfang)
           ]),
           el('button', {
+            type: 'button', class: 'btn btn--sm btn--ghost phead__lykill',
+            'aria-label': 'Breyta lykilorði', title: 'Breyta lykilorði',
+            html: LYKILTAKN,
+            onclick: () => opnaLykilord({ heiti: 'Breyta lykilorði', netfang: ek.netfang })
+          }),
+          el('button', {
             type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Út',
             onclick: async () => { const g = await gogn(); await g.utskra(); location.replace('./'); }
           })
@@ -255,12 +276,141 @@ export function teiknaHaus(ek, heiti) {
     ])
   ]);
 
+  bjodaLykilord(ek);
+
   /* Liðirnir eru orðnir sex og komast ekki allir fyrir á þrengstu
      símunum. Sá sem maður stendur á skal alltaf sjást. */
   const virkur = haus.querySelector('.phead__nav a[aria-current="page"]');
   if (virkur && virkur.parentElement.scrollWidth > virkur.parentElement.clientWidth) {
     virkur.parentElement.scrollLeft = Math.max(0, virkur.offsetLeft - 10);
   }
+}
+
+/* ==================================================================
+   Lykilorð
+   ================================================================== */
+const LYKILTAKN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+  + 'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+  + '<circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M14 9l2 2"/></svg>';
+
+export const LYKILORD_LAGMARK = 10;
+
+/* Reitur með Sýna/Fela hnappi. Notað hér og á innskráningarsíðunni. */
+export function lykilordsreitur({ id, heiti, autocomplete }) {
+  const inntak = el('input', { type: 'password', id, name: id, required: true,
+                               autocomplete, minlength: String(LYKILORD_LAGMARK) });
+  const syna = el('button', { type: 'button', class: 'lykilord__syna', 'aria-pressed': 'false',
+                              'aria-controls': id, texti: 'Sýna' });
+  syna.addEventListener('click', () => {
+    const synilegt = inntak.type === 'password';
+    inntak.type = synilegt ? 'text' : 'password';
+    syna.textContent = synilegt ? 'Fela' : 'Sýna';
+    syna.setAttribute('aria-pressed', String(synilegt));
+  });
+  return el('div', { class: 'field' }, [
+    el('label', { for: id, texti: heiti }),
+    el('div', { class: 'lykilord' }, [inntak, syna])
+  ]);
+}
+
+/* Spjaldið til að velja lykilorð. Opnast eftir innskráningu með hlekk,
+   af hlekk til að endurstilla, og af lyklinum í hausnum. */
+export function opnaLykilord({ heiti = 'Veldu lykilorð', inngangur, netfang, bjodaSeinna, eftir } = {}) {
+  let vistad = false;
+  const stada = el('div', { class: 'form-status', role: 'status', hidden: true });
+  const nytt = lykilordsreitur({ id: 'nytt-lykilord', heiti: 'Nýtt lykilorð', autocomplete: 'new-password' });
+  const aftur = lykilordsreitur({ id: 'lykilord-aftur', heiti: 'Sláðu það inn aftur', autocomplete: 'new-password' });
+  const vista = el('button', { type: 'submit', class: 'btn btn--block', texti: 'Vista lykilorð' });
+
+  function segja(texti, tegund) {
+    stada.textContent = texti;
+    stada.className = 'form-status form-status--' + tegund;
+    stada.hidden = false;
+  }
+
+  const form = el('form', { class: 'lykilordform', novalidate: true }, [
+    /* Svo lykilorðageymslan viti fyrir hvaða netfang lykilorðið er */
+    netfang ? el('input', { type: 'email', name: 'username', autocomplete: 'username',
+                            value: netfang, hidden: true, readonly: true, tabindex: '-1' }) : null,
+    nytt,
+    el('p', { class: 'skyring', style: 'margin-top:-6px',
+              texti: 'Minnst ' + LYKILORD_LAGMARK + ' stafir. Nokkur orð saman eru bæði sterk og auðmunuð.' }),
+    aftur,
+    stada,
+    vista,
+    bjodaSeinna
+      ? el('button', { type: 'button', class: 'btn btn--block btn--ghost', texti: 'Seinna',
+                       onclick: () => d.close() })
+      : null
+  ]);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const a = form.querySelector('#nytt-lykilord');
+    const b = form.querySelector('#lykilord-aftur');
+    if (a.value.length < LYKILORD_LAGMARK) {
+      segja('Lykilorðið þarf að vera minnst ' + LYKILORD_LAGMARK + ' stafir.', 'err'); a.focus(); return;
+    }
+    if (a.value !== b.value) { segja('Lykilorðin eru ekki eins.', 'err'); b.focus(); return; }
+
+    vista.disabled = true;
+    vista.textContent = 'Augnablik';
+    try {
+      const g = await gogn();
+      await g.setjaLykilord(a.value);
+      vistad = true;
+      fylla(kort, [
+        el('div', { class: 'pdialog__haus' }, [el('h2', { texti: 'Lykilorðið er vistað' })]),
+        el('p', { class: 'lead', style: 'margin-top:10px',
+                  texti: 'Næst skráir þú þig inn með netfanginu og lykilorðinu. Hlekkurinn í pósti virkar áfram ef þú gleymir því.' }),
+        el('button', { type: 'button', class: 'btn btn--block', style: 'margin-top:20px',
+                       texti: 'Halda áfram', onclick: () => d.close() })
+      ]);
+      kort.querySelector('button').focus();
+    } catch (villa) {
+      segja(villa.message || 'Þetta gekk ekki. Prófaðu aftur.', 'err');
+      vista.disabled = false;
+      vista.textContent = 'Vista lykilorð';
+    }
+  });
+
+  const kort = el('div', { class: 'pdialog__kort' }, [
+    el('div', { class: 'pdialog__haus' }, [
+      el('h2', { texti: heiti }),
+      el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '✕',
+                     onclick: () => d.close() })
+    ]),
+    inngangur ? el('p', { class: 'lead', style: 'margin-top:10px', texti: inngangur }) : null,
+    form
+  ]);
+  const d = el('dialog', { class: 'pdialog pdialog--mjor' }, [kort]);
+
+  d.addEventListener('close', () => { d.remove(); if (eftir) eftir(vistad); });
+  document.body.append(d);
+  d.showModal();
+  form.querySelector('#nytt-lykilord').focus();
+  return d;
+}
+
+/* Eftir innskráningu með hlekk: bjóða einu sinni að velja lykilorð, svo
+   ekki þurfi hlekk næst. Ekki aftur fyrr en næst er komið inn með hlekk. */
+async function bjodaLykilord(ek) {
+  let kom = false;
+  try {
+    kom = sessionStorage.getItem('tveir-kom-med-hlekk') === 'ja';
+    sessionStorage.removeItem('tveir-kom-med-hlekk');
+  } catch (e) { /* lokað */ }
+  if (!kom) return;
+  try {
+    const g = await gogn();
+    if (!g.vantarLykilord || !(await g.vantarLykilord())) return;
+  } catch (e) { return; }
+  opnaLykilord({
+    heiti: 'Veldu lykilorð',
+    inngangur: 'Þá kemstu inn með netfangi og lykilorði næst, án þess að bíða eftir hlekk.',
+    netfang: ek.netfang,
+    bjodaSeinna: true
+  });
 }
 
 /* ==================================================================
@@ -374,8 +524,9 @@ export function opnaUppsetningu() {
 
     el('p', { class: 'skyring', style: 'margin-top:18px',
               texti: hvada === 'ios'
-                ? 'Appið heldur sinni eigin innskráningu, svo þú slærð netfangið inn einu '
-                  + 'sinni í viðbót þegar þú opnar það í fyrsta sinn.'
+                ? 'Appið heldur sinni eigin innskráningu, svo þú skráir þig inn einu sinni í '
+                  + 'viðbót þegar þú opnar það í fyrsta sinn. Notaðu lykilorðið þar, hlekkur úr '
+                  + 'pósti opnast í Safari en ekki í appinu.'
                 : 'Það þarf ekkert úr App Store eða Play. Þetta er síðan sjálf, bara í heilum skjá '
                   + 'og með tákni á heimaskjánum.' })
   ])]);
@@ -474,6 +625,13 @@ export async function opnaTask(id, { admin, eftir } = {}) {
   const notendur = admin ? await g.notendur() : [];
   const ath = await g.athugasemdir(id);
   const skrar = await g.vidhengi(id);
+  /* Sé taflan ekki komin í gagnagrunninn opnast spjaldið samt */
+  const undir = await g.undirverk(id).catch(() => []);
+
+  /* Spjaldið teiknast upp á nýtt eftir hverja breytingu. Það á að standa
+     kyrrt á sama stað, ekki hoppa upp á topp. */
+  const skrunad = d.open && kort.dataset.task === id ? kort.scrollTop : 0;
+  kort.dataset.task = id;
 
   const stodurILausu = admin
     ? Object.keys(STODUR_TASK)
@@ -530,6 +688,9 @@ export async function opnaTask(id, { admin, eftir } = {}) {
       t.verkefni ? el('li', {}, [el('span', { texti: 'Verkefni' }), el('span', { texti: t.verkefni.titill })]) : null,
       el('li', {}, [el('span', { texti: 'Stofnað' }), el('span', { texti: dags(t.stofnad, true) })])
     ]),
+
+    undirverkHluti({ t, listi: undir, admin, g, eftir,
+                     teiknaAftur: () => opnaTask(id, { admin, eftir }) }),
 
     el('h3', { style: 'margin-top:24px; font-family:var(--f-body); font-weight:500; font-size:15px',
                texti: 'Viðhengi' }),
@@ -597,6 +758,7 @@ export async function opnaTask(id, { admin, eftir } = {}) {
   ]);
 
   if (!d.open) d.showModal();
+  if (skrunad) kort.scrollTop = skrunad;
 }
 
 function skraLina(sk, g) {
@@ -653,7 +815,8 @@ export function taskLina(t, { admin, eftir }) {
           class: erSeint(t.skiladagur) && !lokid ? 'seint' : '',
           texti: (erSeint(t.skiladagur) && !lokid ? 'Rann út ' : 'Skil ') + dags(t.skiladagur)
         }) : null,
-        t.abyrgd_notandi ? el('span', { texti: t.abyrgd_notandi.nafn }) : null
+        t.abyrgd_notandi ? el('span', { texti: t.abyrgd_notandi.nafn }) : null,
+        undirverkTala(t)
       ])
     ]),
     el('div', { class: 'task__hofn' }, [
@@ -663,4 +826,4 @@ export function taskLina(t, { admin, eftir }) {
   ])]);
 }
 
-export { gogn, STODUR_TASK, STODUR_VERK, STODUR_INNRI, FORGANGUR, stillingar };
+export { gogn, STODUR_TASK, STODUR_VERK, STODUR_INNRI, FORGANGUR, stillingar, undirverkTala };

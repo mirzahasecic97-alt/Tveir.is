@@ -66,9 +66,84 @@ export const UPPRUNI = {
    Supabase
    ========================================================================== */
 
+/* Villur frá Supabase innskráningu koma á ensku. Hér verða þær að íslensku
+   sem segir fólki hvað það getur gert. */
+function innskraningarvilla(error) {
+  const kodi = String((error && error.code) || '');
+  const bod = String((error && error.message) || '');
+  const stada = error && error.status;
+
+  if ((typeof navigator !== 'undefined' && navigator.onLine === false) || stada === 0
+      || /failed to fetch|networkerror|load failed|network request failed/i.test(bod)) {
+    return 'Náði ekki sambandi. Athugaðu netið og prófaðu aftur.';
+  }
+  if (stada === 429 || /rate_limit/.test(kodi) || /rate limit|security purposes|too many/i.test(bod)) {
+    return 'Of margar tilraunir í röð. Bíddu í smá stund og prófaðu svo aftur.';
+  }
+  if (kodi === 'invalid_credentials' || /invalid login credentials/i.test(bod)) {
+    return 'Netfang eða lykilorð er ekki rétt. Ef þú hefur ekki valið lykilorð ennþá, notaðu Senda mér hlekk.';
+  }
+  if (kodi === 'email_not_confirmed' || /not confirmed/i.test(bod)) {
+    return 'Netfangið er ekki staðfest ennþá. Notaðu Senda mér hlekk í staðinn.';
+  }
+  if (kodi === 'same_password' || /different from the old/i.test(bod)) {
+    return 'Nýja lykilorðið má ekki vera það sama og það gamla.';
+  }
+  if (kodi === 'weak_password' || /password should/i.test(bod)) {
+    if (error.reasons && error.reasons.includes('pwned')) {
+      return 'Þetta lykilorð hefur komið fram í gagnaleka annars staðar. Veldu annað.';
+    }
+    return 'Lykilorðið er of veikt. Hafðu það minnst 10 stafi, til dæmis nokkur orð saman.';
+  }
+  if (kodi === 'reauthentication_needed' || /reauthenticat/i.test(bod)) {
+    return 'Af öryggisástæðum þarftu að skrá þig út og inn aftur með hlekk áður en þú breytir lykilorðinu.';
+  }
+  if (kodi === 'session_not_found' || /session missing|session.*expired/i.test(bod)) {
+    return 'Innskráningin er runnin út. Skráðu þig inn aftur.';
+  }
+  return 'Þetta gekk ekki. Prófaðu aftur eða sendu okkur línu.';
+}
+
+/* Villur í undirverkum: Supabase svarar á ensku, fólkið les íslensku.
+   Okkar eigin villur úr gagnagrunninum eru þegar á íslensku og fara óbreyttar. */
+function undirverkVilla(error) {
+  const bod = String((error && error.message) || '');
+  const stada = error && (error.status || error.statusCode);
+  if ((typeof navigator !== 'undefined' && navigator.onLine === false)
+      || /failed to fetch|networkerror|load failed|network request failed/i.test(bod)) {
+    return 'Náði ekki sambandi. Athugaðu netið og prófaðu aftur.';
+  }
+  if (/[þðæöáéíóúý]/i.test(bod) || /^Taskurinn fannst ekki/.test(bod)) return bod;
+  if (/jwt|session|token.*expired|not authenticated/i.test(bod) || String(stada) === '401') {
+    return 'Innskráningin er runnin út. Skráðu þig inn aftur.';
+  }
+  if (/exceeded|too large|maximum allowed size|payload/i.test(bod) || String(stada) === '413') {
+    return 'Skráin er of stór fyrir geymsluna. Settu hana á WeTransfer eða Google Drive og límdu hlekkinn.';
+  }
+  if (/row-level security|permission denied|unauthorized|forbidden/i.test(bod) || String(stada) === '403') {
+    return 'Þú hefur ekki aðgang að þessu.';
+  }
+  if (/tengill|check constraint/i.test(bod)) return 'Hlekkurinn þarf að byrja á https:// og vera án bila.';
+  if (/already exists|duplicate/i.test(bod)) return 'Skrá með þessu nafni er þegar til. Prófaðu aftur.';
+  if (/not found|does not exist/i.test(bod)) return 'Fannst ekki. Endurhlaðaðu síðuna og prófaðu aftur.';
+  return 'Þetta gekk ekki. Prófaðu aftur.';
+}
+
 async function supabaseBakendi() {
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm');
-  const sb = createClient(stillingar.supabaseUrl, stillingar.supabaseAnonKey);
+  /* Lotan er geymd í vafranum og endurnýjast sjálf, svo fólk helst inni á
+     sama tæki þar til það skráir sig út. Þetta eru sjálfgefin gildi, skrifuð
+     hér svo enginn breyti þeim óvart. */
+  const sb = createClient(stillingar.supabaseUrl, stillingar.supabaseAnonKey, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+
+  /* Hlekkur til að velja nýtt lykilorð skráir fólk inn og Supabase lætur
+     vita með PASSWORD_RECOVERY. Hlustað strax, áður en slóðin er lesin. */
+  let endurstilling = false;
+  sb.auth.onAuthStateChange((atburdur) => {
+    if (atburdur === 'PASSWORD_RECOVERY') endurstilling = true;
+  });
 
   /* Hver er innskráður. Lotan liggur í vafranum, svo hér er ekki farið á
      netið við hverja síðu. Prófíllinn er geymdur meðan flipinn er opinn.
@@ -97,6 +172,7 @@ async function supabaseBakendi() {
   }
 
   function kasta({ error }) { if (error) throw new Error(error.message); }
+  function kastaUv({ error }) { if (error) throw new Error(undirverkVilla(error)); }
 
   return {
     prufa: false,
@@ -106,8 +182,44 @@ async function supabaseBakendi() {
         email: netfang.trim().toLowerCase(),
         options: { shouldCreateUser: false, emailRedirectTo: stillingar.slod + 'yfirlit.html' }
       });
-      if (error) throw new Error(error.message);
+      /* Netfang sem er ekki með aðgang fær sama svar og hin, svo enginn geti
+         prófað sig áfram og fundið hverjir eru í kerfinu. */
+      if (error && (error.code === 'otp_disabled' || /signups not allowed/i.test(error.message || ''))) return;
+      if (error) throw new Error(innskraningarvilla(error));
     },
+
+    async innskraLykilord(netfang, lykilord) {
+      const { error } = await sb.auth.signInWithPassword({
+        email: netfang.trim().toLowerCase(),
+        password: lykilord
+      });
+      if (error) throw new Error(innskraningarvilla(error));
+      minn = null;
+    },
+
+    /* Supabase segir ekki hvort netfangið er til, og það gerum við ekki heldur */
+    async sendaEndurstillingu(netfang) {
+      const { error } = await sb.auth.resetPasswordForEmail(netfang.trim().toLowerCase(), {
+        redirectTo: stillingar.slod + '?endurstilla=1'
+      });
+      if (error) throw new Error(innskraningarvilla(error));
+    },
+
+    /* Merkið lykilord_sett í user_metadata segir okkur bara hvort við eigum
+       að bjóða fólki að velja lykilorð. Það stýrir engum réttindum. */
+    async setjaLykilord(lykilord) {
+      const { error } = await sb.auth.updateUser({ password: lykilord, data: { lykilord_sett: true } });
+      if (error) throw new Error(innskraningarvilla(error));
+      endurstilling = false;
+    },
+
+    async vantarLykilord() {
+      const { data: { session } } = await sb.auth.getSession();
+      const user = session && session.user;
+      return !!user && !(user.user_metadata && user.user_metadata.lykilord_sett);
+    },
+
+    erEndurstilling() { return endurstilling; },
 
     async utskra() {
       minn = null;
@@ -156,15 +268,21 @@ async function supabaseBakendi() {
     },
 
     async taskar({ fyrirtaeki_id, verkefni_id } = {}) {
-      let q = sb.from('taskar')
-        .select('*, fyrirtaeki(nafn), verkefni(titill), abyrgd_notandi:abyrgd(nafn), hofundur_notandi:hofundur(nafn, hlutverk)');
-      if (fyrirtaeki_id) q = q.eq('fyrirtaeki_id', fyrirtaeki_id);
-      if (verkefni_id) q = q.eq('verkefni_id', verkefni_id);
-      /* Innan verkefnis ræður röðin, annars nýjast efst */
-      q = verkefni_id
-        ? q.order('rod').order('stofnad')
-        : q.order('stofnad', { ascending: false });
-      const svar = await q; kasta(svar); return svar.data;
+      const grunnur = '*, fyrirtaeki(nafn), verkefni(titill), abyrgd_notandi:abyrgd(nafn), hofundur_notandi:hofundur(nafn, hlutverk)';
+      const saekja = (dalkar) => {
+        let q = sb.from('taskar').select(dalkar);
+        if (fyrirtaeki_id) q = q.eq('fyrirtaeki_id', fyrirtaeki_id);
+        if (verkefni_id) q = q.eq('verkefni_id', verkefni_id);
+        /* Innan verkefnis ræður röðin, annars nýjast efst */
+        return verkefni_id
+          ? q.order('rod').order('stofnad')
+          : q.order('stofnad', { ascending: false });
+      };
+      /* Undirverkin fylgja með svo spjöldin sýni "2 af 4 lokið". Sé taflan
+         ekki komin í gagnagrunninn virkar listinn samt, bara án þeirra. */
+      let svar = await saekja(grunnur + ', undirverk(id, lokid)');
+      if (svar.error && /undirverk/i.test(svar.error.message || '')) svar = await saekja(grunnur);
+      kasta(svar); return svar.data;
     },
 
     async nyrTask(task) {
@@ -332,6 +450,67 @@ async function supabaseBakendi() {
     async slodAVidhengi(v) {
       const svar = await sb.storage.from('vidhengi').createSignedUrl(v.slod, 60);
       if (svar.error) throw new Error(svar.error.message);
+      return svar.data.signedUrl;
+    },
+
+    /* ---------- Undirverk ----------
+       Bara við bætum við, breytum og eyðum (RLS). Viðskiptavinur les.
+       fyrirtaeki_id er sett í gagnagrunninum úr taskinum.
+       Villur koma á ensku frá Supabase og verða íslenskar í kastaUv. */
+
+    async undirverk(task_id) {
+      const svar = await sb.from('undirverk').select('*')
+        .eq('task_id', task_id).order('rod').order('stofnad');
+      kastaUv(svar); return svar.data;
+    },
+
+    async nyUndirverk(task_id, titlar) {
+      const sidast = await sb.from('undirverk').select('rod')
+        .eq('task_id', task_id).order('rod', { ascending: false }).limit(1);
+      kastaUv(sidast);
+      const fra = sidast.data && sidast.data[0] ? Number(sidast.data[0].rod) + 1 : 1;
+      const svar = await sb.from('undirverk')
+        .insert(titlar.map((titill, i) => ({ task_id, titill: String(titill).slice(0, 200), rod: fra + i })))
+        .select();
+      kastaUv(svar); return svar.data;
+    },
+
+    async uppfaeraUndirverk(id, breytingar) {
+      const svar = await sb.from('undirverk').update(breytingar).eq('id', id).select().single();
+      kastaUv(svar); return svar.data;
+    },
+
+    async eydaUndirverk(u) {
+      if (u.skra_slod) await sb.storage.from('vidhengi').remove([u.skra_slod]);
+      const svar = await sb.from('undirverk').delete().eq('id', u.id);
+      kastaUv(svar);
+    },
+
+    /* Slóðin er <fyrirtaeki>/undirverk/<task>/<undirverk>/<nafn>. Gagnagrunnurinn
+       hafnar annarri slóð, og fyrirtækið er tekið úr undirverkinu sjálfu. */
+    async skraAUndirverk(u, fyrirtaeki_id, skra) {
+      const hreintNafn = skra.name.replace(/[^\w.\- ]+/g, '_').slice(-120) || 'skra';
+      const slod = (u.fyrirtaeki_id || fyrirtaeki_id) + '/undirverk/' + u.task_id + '/' + u.id + '/'
+        + Date.now() + '-' + hreintNafn;
+      const upp = await sb.storage.from('vidhengi')
+        .upload(slod, skra, { upsert: false, contentType: skra.type || undefined });
+      if (upp.error) throw new Error(undirverkVilla(upp.error));
+      const svar = await sb.from('undirverk').update({
+        skra_slod: slod, skra_nafn: skra.name.slice(0, 300), skra_staerd: skra.size
+      }).eq('id', u.id).select().single();
+      if (svar.error) {
+        await sb.storage.from('vidhengi').remove([slod]);
+        kastaUv(svar);
+      }
+      /* Gamla skráin fer þegar ný kemur í staðinn */
+      if (u.skra_slod && u.skra_slod !== slod) await sb.storage.from('vidhengi').remove([u.skra_slod]);
+      return svar.data;
+    },
+
+    /* Hlekkurinn gildir í eina mínútu, bara til að opna skrána núna */
+    async slodAUndirverki(u) {
+      const svar = await sb.storage.from('vidhengi').createSignedUrl(u.skra_slod, 60);
+      if (svar.error) throw new Error(undirverkVilla(svar.error));
       return svar.data.signedUrl;
     },
 
@@ -534,7 +713,27 @@ function prufuBakendi() {
       { id: 't8', rod: 0, fyrirtaeki_id: 'f1', verkefni_id: null, titill: 'Uppfæra verð í auglýsingum',
         lysing: 'Verðið á kjúklingi fór úr 1.890 í 2.090.',
         stada: 'nytt', forgangur: 'hatt', abyrgd: 'u-oskar', hofundur: 'u-kron',
-        skiladagur: dagsetning(1), lokid_dags: null, stofnad: dags(0), uppfaert: dags(0) }
+        skiladagur: dagsetning(1), lokid_dags: null, stofnad: dags(0), uppfaert: dags(0) },
+      { id: 't9', rod: 2, fyrirtaeki_id: 'f2', verkefni_id: 'v2', titill: 'Klippa fjögur reels',
+        lysing: 'Eitt reel á viku í desember. Hvert fer til ykkar um leið og það er klárt.',
+        stada: 'i_vinnslu', forgangur: 'venjulegt', abyrgd: 'u-oskar', hofundur: 'u-oskar',
+        skiladagur: dagsetning(14), lokid_dags: null, stofnad: dags(-3), uppfaert: dags(-1) }
+    ];
+
+    /* Undirverk: mörg skil innan eins tasks */
+    const undirverk = [
+      { id: 'uv1', task_id: 't9', fyrirtaeki_id: 'f2', rod: 1, titill: 'Reel 1: Opnunartilboð',
+        lokid: true, lokid_dags: dags(-2), skra_slod: null, skra_nafn: null, skra_staerd: null,
+        tengill: 'https://we.tl/t-sYnIdAEmI1', senda: true, sent_dags: dags(-2), stofnad: dags(-3) },
+      { id: 'uv2', task_id: 't9', fyrirtaeki_id: 'f2', rod: 2, titill: 'Reel 2: Á bak við tjöldin',
+        lokid: true, lokid_dags: dags(-1), skra_slod: 'prufa', skra_nafn: 'reel-2-bak-vid-tjoldin.mp4',
+        skra_staerd: 38200000, tengill: null, senda: true, sent_dags: null, stofnad: dags(-3) },
+      { id: 'uv3', task_id: 't9', fyrirtaeki_id: 'f2', rod: 3, titill: 'Reel 3: Starfsfólkið',
+        lokid: false, lokid_dags: null, skra_slod: null, skra_nafn: null, skra_staerd: null,
+        tengill: null, senda: true, sent_dags: null, stofnad: dags(-3) },
+      { id: 'uv4', task_id: 't9', fyrirtaeki_id: 'f2', rod: 4, titill: 'Reel 4: Jólakveðja',
+        lokid: false, lokid_dags: null, skra_slod: null, skra_nafn: null, skra_staerd: null,
+        tengill: null, senda: true, sent_dags: null, stofnad: dags(-3) }
     ];
 
     /* Okkar eigin listi. Enginn viðskiptavinur kemur nálægt þessu. */
@@ -710,7 +909,7 @@ function prufuBakendi() {
     ];
 
     return { fyrirtaeki: fyr, notendur, verkefni, taskar, athugasemdir,
-             innri, timaskraning, snid, vidhengi: [], innri_taskar,
+             innri, timaskraning, snid, vidhengi: [], innri_taskar, undirverk,
              fyrirspurnir, samningar, aukaverkefni, taxtar, innskradur: null };
   };
 
@@ -784,7 +983,9 @@ function prufuBakendi() {
       fyrirtaeki: fyrNafn(t.fyrirtaeki_id),
       verkefni: t.verkefni_id ? { titill: (finna(g.verkefni, t.verkefni_id) || {}).titill } : null,
       abyrgd_notandi: t.abyrgd ? { nafn: (finna(g.notendur, t.abyrgd) || {}).nafn } : null,
-      hofundur_notandi: t.hofundur ? (({ nafn, hlutverk }) => ({ nafn, hlutverk }))(finna(g.notendur, t.hofundur) || {}) : null
+      hofundur_notandi: t.hofundur ? (({ nafn, hlutverk }) => ({ nafn, hlutverk }))(finna(g.notendur, t.hofundur) || {}) : null,
+      undirverk: (g.undirverk || []).filter((u) => u.task_id === t.id)
+        .map((u) => ({ id: u.id, lokid: u.lokid }))
     };
   }
 
@@ -813,6 +1014,25 @@ function prufuBakendi() {
       if (!n) throw new Error('Þetta netfang er ekki á prufulistanum. Prófaðu tveir@tveir.is eða anna@steinvik.is.');
       g.innskradur = n.id; vista();
     },
+
+    /* Í prufu dugar hvaða lykilorð sem er, það er ekkert til að verja */
+    async innskraLykilord(netfang, lykilord) {
+      if (!lykilord) throw new Error('Lykilorðið vantar.');
+      await this.innskra(netfang);
+    },
+
+    async sendaEndurstillingu() { /* enginn póstur fer út í prufu */ },
+
+    async setjaLykilord() {
+      g.lykilordSett = { ...(g.lykilordSett || {}), [g.innskradur]: true };
+      vista();
+    },
+
+    async vantarLykilord() {
+      return !!g.innskradur && !(g.lykilordSett && g.lykilordSett[g.innskradur]);
+    },
+
+    erEndurstilling() { return false; },
 
     async utskra() { g.innskradur = null; vista(); },
 
@@ -1044,6 +1264,58 @@ function prufuBakendi() {
       const skra = BLOB.get(v.id);
       if (!skra) throw new Error('Skráin er horfin. Í prufustillingu lifa viðhengi bara þá '
         + 'lötu sem síðan er opin.');
+      return URL.createObjectURL(skra);
+    },
+
+    /* ---------- Undirverk ----------
+       Skrárnar sjálfar lifa bara í minni, eins og viðhengin. */
+
+    async undirverk(task_id) {
+      return (g.undirverk || []).filter((u) => u.task_id === task_id)
+        .sort((a, b) => (a.rod - b.rod) || (new Date(a.stofnad) - new Date(b.stofnad)))
+        .map((u) => ({ ...u }));
+    },
+
+    async nyUndirverk(task_id, titlar) {
+      const t = finna(g.taskar, task_id);
+      g.undirverk = g.undirverk || [];
+      const minir = g.undirverk.filter((u) => u.task_id === task_id);
+      const fra = minir.length ? Math.max(...minir.map((u) => Number(u.rod) || 0)) + 1 : 1;
+      const nyjir = titlar.map((titill, i) => ({
+        id: nyttId(), task_id, fyrirtaeki_id: t ? t.fyrirtaeki_id : null, rod: fra + i, titill,
+        lokid: false, lokid_dags: null, skra_slod: null, skra_nafn: null, skra_staerd: null,
+        tengill: null, senda: true, sent_dags: null, stofnad: new Date().toISOString()
+      }));
+      g.undirverk.push(...nyjir);
+      vista(); return nyjir;
+    },
+
+    async uppfaeraUndirverk(id, breytingar) {
+      const u = finna(g.undirverk || [], id);
+      if (!u) return null;
+      const varLokid = u.lokid;
+      Object.assign(u, breytingar);
+      if (u.lokid && !varLokid) u.lokid_dags = new Date().toISOString();
+      if (!u.lokid) u.lokid_dags = null;
+      vista(); return { ...u };
+    },
+
+    async eydaUndirverk(u) {
+      g.undirverk = (g.undirverk || []).filter((x) => x.id !== u.id);
+      BLOB.delete(u.id);
+      vista();
+    },
+
+    async skraAUndirverk(u, fyrirtaeki_id, skra) {
+      BLOB.set(u.id, skra);
+      return this.uppfaeraUndirverk(u.id, {
+        skra_slod: 'prufa', skra_nafn: skra.name, skra_staerd: skra.size
+      });
+    },
+
+    async slodAUndirverki(u) {
+      const skra = BLOB.get(u.id);
+      if (!skra) throw new Error('Í prufustillingu lifa skrár bara meðan síðan er opin.');
       return URL.createObjectURL(skra);
     },
 

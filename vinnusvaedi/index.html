@@ -29,17 +29,32 @@
   <div class="card inn__kort">
     <img class="inn__logo" src="../assets/img/tveir-logo-3d.png" alt="Tveir" width="110" height="30">
     <h1>Vinnusvæði</h1>
-    <p class="lead">Sláðu inn netfangið þitt og við sendum þér hlekk til að komast inn. Ekkert lykilorð.</p>
+    <p class="lead" id="inngangur">Skráðu þig inn með netfangi og lykilorði, eða fáðu hlekk sendan í póstinum.</p>
+
+    <div class="pflipar inn__flipar" id="flipar" role="group" aria-label="Leið inn">
+      <button type="button" class="pflipi" data-leid="lykilord" aria-pressed="true">Lykilorð</button>
+      <button type="button" class="pflipi" data-leid="hlekkur" aria-pressed="false">Senda mér hlekk</button>
+    </div>
 
     <form id="innform" novalidate>
       <div class="field">
-        <span>Netfang</span>
-        <input type="email" id="netfang" name="netfang" required autocomplete="email"
+        <label for="netfang">Netfang</label>
+        <input type="email" id="netfang" name="netfang" required autocomplete="username"
                inputmode="email" placeholder="nafn@fyrirtaeki.is">
       </div>
+      <div class="field" id="lykilordreitur">
+        <label for="lykilord">Lykilorð</label>
+        <div class="lykilord">
+          <input type="password" id="lykilord" name="lykilord" autocomplete="current-password">
+          <button type="button" class="lykilord__syna" id="syna" aria-pressed="false" aria-controls="lykilord">Sýna</button>
+        </div>
+      </div>
       <div class="form-status" id="stada" role="status" hidden></div>
-      <button type="submit" class="btn btn--block" id="senda" style="margin-top:18px">Senda mér hlekk</button>
+      <button type="submit" class="btn btn--block" id="senda" style="margin-top:18px">Skrá inn</button>
+      <button type="button" class="inn__gleymt" id="gleymt">Gleymt lykilorð?</button>
     </form>
+
+    <p class="skyring inn__taeki" id="taeki">Þú helst inni á þessu tæki þar til þú skráir þig út.</p>
 
     <div class="prufubanner" id="prufubanner" hidden></div>
 
@@ -51,13 +66,29 @@
 </main>
 
 <script type="module">
-import { gogn, stillingar } from './assets/portal.js';
+import { gogn, opnaLykilord } from './assets/portal.js';
+
+/* Slóðin lesin áður en Supabase ræsir og hreinsar hana */
+const vildiEndurstilla = new URLSearchParams(location.search).has('endurstilla')
+  || /type=recovery/.test(location.hash);
+let hlekkjavilla = null;
+try {
+  hlekkjavilla = sessionStorage.getItem('tveir-hlekkjavilla');
+  sessionStorage.removeItem('tveir-hlekkjavilla');
+} catch (e) { /* lokað */ }
 
 const form   = document.getElementById('innform');
 const netf   = document.getElementById('netfang');
+const lyk    = document.getElementById('lykilord');
+const reitur = document.getElementById('lykilordreitur');
+const syna   = document.getElementById('syna');
 const stada  = document.getElementById('stada');
 const senda  = document.getElementById('senda');
+const gleymt = document.getElementById('gleymt');
+const flipar = document.getElementById('flipar');
 const banner = document.getElementById('prufubanner');
+
+let leid = 'lykilord';
 
 function segja(texti, tegund) {
   stada.textContent = texti;
@@ -65,38 +96,106 @@ function segja(texti, tegund) {
   stada.hidden = false;
 }
 
-const g = await gogn();
+function hnappatexti() { return leid === 'lykilord' ? 'Skrá inn' : 'Senda mér hlekk'; }
 
-/* Þegar þegar innskráður: fara beint inn */
+function veljaLeid(ny) {
+  leid = ny;
+  flipar.querySelectorAll('.pflipi').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.leid === ny)));
+  reitur.hidden = ny !== 'lykilord';
+  gleymt.hidden = ny !== 'lykilord';
+  lyk.required = ny === 'lykilord';
+  senda.textContent = hnappatexti();
+  stada.hidden = true;
+}
+
+flipar.addEventListener('click', (e) => {
+  const b = e.target.closest('.pflipi');
+  if (b) veljaLeid(b.dataset.leid);
+});
+
+syna.addEventListener('click', () => {
+  const synilegt = lyk.type === 'password';
+  lyk.type = synilegt ? 'text' : 'password';
+  syna.textContent = synilegt ? 'Fela' : 'Sýna';
+  syna.setAttribute('aria-pressed', String(synilegt));
+});
+
+function netfangid() {
+  const gildi = netf.value.trim();
+  return gildi && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(gildi) ? gildi : null;
+}
+
+const g = await gogn();
+const inn = (n) => location.replace(n && n.hlutverk === 'admin' ? 'stjornbord.html' : 'yfirlit.html');
+
+/* Þegar innskráður: fara beint inn. Nema hann hafi komið af hlekk til að
+   velja nýtt lykilorð, þá fær hann að gera það fyrst. */
 const ek = await g.eg();
-if (ek) location.replace(ek.hlutverk === 'admin' ? 'stjornbord.html' : 'yfirlit.html');
+if (ek && (vildiEndurstilla || g.erEndurstilling())) {
+  history.replaceState(null, '', location.pathname);
+  opnaLykilord({
+    heiti: 'Veldu nýtt lykilorð',
+    inngangur: 'Fyrir ' + ek.netfang + '. Þú ert skráð/ur inn og ferð beint inn þegar það er komið.',
+    netfang: ek.netfang,
+    eftir: () => inn(ek)
+  });
+} else if (ek) {
+  inn(ek);
+} else if (hlekkjavilla || vildiEndurstilla) {
+  history.replaceState(null, '', location.pathname);
+  segja('Hlekkurinn er útrunninn eða hefur þegar verið notaður. Hann gildir í eina klukkustund og bara einu sinni. '
+    + 'Skrifaðu netfangið og biddu um nýjan.', 'err');
+}
 
 if (g.prufa) {
   banner.hidden = false;
   banner.innerHTML = '<strong>Prufustilling.</strong> Gögnin eru sýnidæmi í þessum vafra og fara ekki út á netið. '
-    + 'Skráðu þig inn sem viðskiptavinur með <code>anna@steinvik.is</code> eða sem Tveir með <code>tveir@tveir.is</code>.';
+    + 'Skráðu þig inn sem viðskiptavinur með <code>anna@steinvik.is</code> eða sem Tveir með <code>tveir@tveir.is</code>, '
+    + 'með hvaða lykilorði sem er.';
 }
+
+gleymt.addEventListener('click', async () => {
+  const gildi = netfangid();
+  if (!gildi) { segja('Skrifaðu netfangið þitt fyrst og ýttu svo aftur á Gleymt lykilorð.', 'err'); netf.focus(); return; }
+
+  gleymt.disabled = true;
+  try {
+    await g.sendaEndurstillingu(gildi);
+    segja(g.prufa
+      ? 'Í prufu fer enginn póstur út. Í alvöru kæmi hlekkur á ' + gildi + '.'
+      : 'Ef ' + gildi + ' er með aðgang kemur hlekkur þangað til að velja nýtt lykilorð. Hann gildir í eina klukkustund.', 'ok');
+  } catch (villa) {
+    segja(villa.message || 'Þetta gekk ekki. Prófaðu aftur eða sendu okkur línu.', 'err');
+  } finally {
+    gleymt.disabled = false;
+  }
+});
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const gildi = netf.value.trim();
-  if (!gildi || !gildi.includes('@')) { segja('Netfangið vantar.', 'err'); netf.focus(); return; }
+  const gildi = netfangid();
+  if (!gildi) { segja(netf.value.trim() ? 'Netfangið lítur ekki rétt út.' : 'Netfangið vantar.', 'err'); netf.focus(); return; }
+  if (leid === 'lykilord' && !lyk.value) { segja('Lykilorðið vantar.', 'err'); lyk.focus(); return; }
 
   senda.disabled = true;
   senda.textContent = 'Augnablik';
   try {
-    await g.innskra(gildi);
-    if (g.prufa) {
-      const n = await g.eg();
-      location.replace(n.hlutverk === 'admin' ? 'stjornbord.html' : 'yfirlit.html');
+    if (leid === 'lykilord') {
+      await g.innskraLykilord(gildi, lyk.value);
+      inn(await g.eg());
       return;
     }
+    await g.innskra(gildi);
+    if (g.prufa) { inn(await g.eg()); return; }
     form.hidden = true;
-    segja('Hlekkur er á leiðinni á ' + gildi + '. Hann gildir í eina klukkustund.', 'ok');
+    flipar.hidden = true;
+    segja('Ef ' + gildi + ' er með aðgang er hlekkur á leiðinni þangað. Hann gildir í eina klukkustund. '
+      + 'Kemur ekkert eftir nokkrar mínútur? Athugaðu ruslpóstinn eða sendu okkur línu.', 'ok');
+    form.before(stada);
   } catch (villa) {
     segja(villa.message || 'Þetta gekk ekki. Prófaðu aftur eða sendu okkur línu.', 'err');
     senda.disabled = false;
-    senda.textContent = 'Senda mér hlekk';
+    senda.textContent = hnappatexti();
   }
 });
 </script>

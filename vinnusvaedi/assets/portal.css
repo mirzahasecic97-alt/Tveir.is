@@ -1158,3 +1158,155 @@
 
 /* Hver bað um taskinn */
 .task__fra { color: var(--acc); font-weight: 500; }
+
+/* --------------------------------------------------------------------------
+   Lykilorð: innskráning, spjaldið og lykillinn í hausnum
+   -------------------------------------------------------------------------- */
+.field > label { font-size: 13px; color: var(--soft); }
+.lykilord { position: relative; }
+.lykilord input { padding-right: 76px; }
+.lykilord__syna {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  min-height: 40px; padding: 0 14px; border: 0; background: transparent;
+  border-radius: var(--r-pill); cursor: pointer;
+  font: 500 13px/1 var(--f-body); color: var(--acc);
+}
+.lykilord__syna:hover { background: var(--accs); }
+
+.inn__flipar { margin: 22px 0 0; flex-wrap: nowrap; }
+.inn__flipar[hidden] { display: none; }
+.inn__kort > .form-status { margin-top: 22px; text-align: left; }
+.inn__flipar .pflipi { flex: 1 1 0; justify-content: center; padding-inline: 10px; }
+.inn__flipar + form { margin-top: 16px; }
+.inn__kort form .field + .field { margin-top: 14px; }
+.inn__gleymt {
+  display: block; margin: 10px auto 0; min-height: 44px; padding: 8px 12px;
+  border: 0; background: none; cursor: pointer;
+  font: 400 14px/1.4 var(--f-body); color: var(--acc);
+}
+.inn__gleymt:hover { text-decoration: underline; }
+.inn__gleymt[hidden] { display: none; }
+.inn__taeki { margin-top: 14px; }
+
+.pdialog--mjor { max-width: 460px; }
+.lykilordform { margin-top: 18px; display: flex; flex-direction: column; gap: 14px; }
+.lykilordform .btn--ghost { margin-top: -4px; }
+
+.phead__lykill { width: 44px; padding: 0; }
+/* Viðskiptavinahausinn hefur enga valmynd. Þar styttist heitið frekar en
+   að hnapparnir fari á nýja línu. */
+.phead__inn:has(.phead__heiti) { flex-wrap: nowrap; }
+.phead__lykill svg { display: block; }
+
+/* --------------------------------------------------------------------------
+   27. Undirverk: mörg skil innan eins tasks
+   -------------------------------------------------------------------------- */
+.uvtala {
+  display: inline-flex; align-items: center;
+  font: 500 12.5px/1 var(--f-body); color: var(--acc);
+  background: var(--accs); border-radius: var(--r-pill); padding: 5px 9px;
+}
+.uvtala--buid { background: #e6f4ea; color: #1e6b34; }
+
+.uvhluti { margin-top: 24px; }
+.uvhluti__haus { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.uvhluti__haus h3 { font-family: var(--f-body); font-weight: 500; font-size: 15px; }
+.uvhluti__mael {
+  height: 6px; margin-top: 12px;
+  background: var(--accs); border-radius: var(--r-pill); overflow: hidden;
+}
+.uvhluti__mael span {
+  display: block; height: 100%; background: var(--acc);
+  border-radius: var(--r-pill); transition: width .3s ease;
+}
+
+.uvlisti { list-style: none; margin: 10px 0 0; padding: 0; }
+.uv { border-top: 1px solid var(--line); }
+.uvlisti .uv:first-child { border-top: 0; }
+.uv__rod { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; }
+.uv__mid { flex: 1 1 auto; min-width: 0; }
+.uv__titill {
+  font: 500 15px/1.4 var(--f-body); color: var(--ink);
+  background: none; border: 0; padding: 0; text-align: left; display: block;
+  overflow-wrap: break-word;
+}
+button.uv__titill { cursor: text; }
+button.uv__titill:hover { color: var(--acc); }
+.uv--lokid .uv__titill { color: var(--soft); text-decoration: line-through; }
+.uv__inntak {
+  width: 100%; font: 500 15px/1.4 var(--f-body); color: var(--ink);
+  border: 1px solid var(--acc); border-radius: var(--r-input);
+  padding: 6px 10px; background: #fff;
+}
+.uv__undir { margin-top: 5px; }
+.uv__skil {
+  color: var(--acc); font: 500 13px/1.3 var(--f-body);
+  text-decoration: none; overflow-wrap: anywhere;
+}
+.uv__skil:hover { text-decoration: underline; }
+.uv__skil--hnappur {
+  background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
+}
+.uv__skil--hnappur:disabled { color: var(--soft); cursor: default; }
+.uv__sent { color: #1e6b34; }
+.uv__bidur { color: var(--acc); }
+
+.uv__tol { flex: none; display: flex; align-items: center; gap: 6px; }
+.uv__tol .skref__fera { flex-direction: row; }
+.uv__festa, .uv__eyda {
+  background: none; border: 0; cursor: pointer; padding: 6px 4px; min-height: 32px;
+  font: 500 13px/1 var(--f-body); color: var(--acc);
+}
+.uv__festa:hover, .uv__eyda:hover { text-decoration: underline; }
+.uv__eyda { color: var(--soft); }
+.uv__eyda.er-viss { color: #a3312a; }
+
+.uv__afhending {
+  margin: 0 0 14px 36px; padding: 16px;
+  background: var(--accs); border-radius: var(--r-input);
+}
+.uv__afhending[hidden] { display: none; }
+.uv__form { display: grid; gap: 10px; }
+.uv__form .skyring { margin-top: 0; }
+.uv__skraval { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.uv__skraval .btn { background: #fff; }
+.uv__valin {
+  font-size: 13.5px; color: var(--soft); min-width: 0; overflow-wrap: anywhere;
+}
+.uv__hlekkur { margin: 0; }
+.uv__hlekkur > span { font-size: 13.5px; }
+.uv__val {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; color: var(--ink); cursor: pointer;
+}
+.uv__val input { width: 18px; height: 18px; accent-color: var(--acc); margin: 0; }
+.uv__hnappar { display: flex; gap: 8px; flex-wrap: wrap; }
+.uv__hnappar .btn--ghost { background: #fff; }
+
+.uv__nytt { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.uv__nytt input {
+  font: 400 14.5px/1.3 var(--f-body); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--r-input);
+  background: #fff; padding: 9px 12px; min-height: 42px; min-width: 0;
+}
+.uv__nytt input[type="text"] { flex: 1 1 auto; }
+.uv__nytt .uv__fjoldi { flex: none; width: 64px; text-align: center; }
+.uv__sinnum { color: var(--soft); font-size: 15px; }
+.uv__nytt .btn { flex: none; }
+
+.uv__allt {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin-top: 14px; padding: 12px 14px; border-radius: var(--r-input);
+  background: #e6f4ea; color: #1e6b34; font-size: 14px;
+}
+
+@media (max-width: 560px) {
+  .uv__afhending { margin-left: 0; }
+  /* Í síma fara hnapparnir í línu undir nafninu, svo nafnið brotni ekki */
+  .uv__rod { flex-wrap: wrap; row-gap: 2px; }
+  .uv__mid { flex-basis: calc(100% - 36px); }
+  .uv__tol { flex-basis: 100%; padding-left: 36px; gap: 10px; }
+  .uv__tol .skref__fera { display: flex; }
+  .uv__nytt { flex-wrap: wrap; }
+  .uv__nytt input[type="text"] { flex-basis: 100%; }
+}

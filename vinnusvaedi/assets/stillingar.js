@@ -20,6 +20,12 @@ export const stillingar = {
      þessa tölu. Bara fyrir okkur, viðskiptavinur sér hana aldrei. */
   timagjald: 15500,
 
+  /* Stærsta skrá sem má setja á undirverk, í MB. Supabase Free leyfir
+     mest 50 MB á skrá. Stærri myndbönd fara á WeTransfer eða Google Drive
+     og hlekkurinn er límdur inn. Á Pro má hækka þetta, en þá þarf líka að
+     hækka hámarkið í Supabase: Storage -> Settings. */
+  undirverkHamarkMb: 50,
+
   /* Harvey spjallið í hausnum. Þarf fallið api/harvey.js á Vercel og
      ANTHROPIC_API_KEY þar. Slökkt þangað til það er sett upp. */
   harvey: false

@@ -57,10 +57,13 @@ vinnusvaedi/
   sw.js                 þjónustustarfi, geymir bara sambandsleysissíðuna
   ekkert-samband.html   það sem sést þegar netið dettur út
   gagnagrunnur.sql   allar töflur og réttindi, keyrist einu sinni
+  migrations/        viðbætur við gagnagrunn sem er þegar til, ein skrá í einu
+  verk-postur.gs     Google skriftan: verk@tveir.is, lokið pósturinn og undirverkin
   assets/
     stillingar.js    eina skráin sem þarf að breyta
     gogn.js          sækir gögnin, úr Supabase eða úr prufudæmum
     portal.js        sameiginlegt, haus, taskar, spjöld, viðhengi
+    undirverk.js     undirverk inni í taski: listinn, hakið og skilin
     tillogur.js      samþykktarsíðan
     okkar.js         okkar eigin listi
     harvey.js        spjallið við Harvey
@@ -99,7 +102,10 @@ farið framhjá með því að opna Developer Tools.
 **Authentication → URL Configuration**:
 
 - Site URL: `https://tveir.is/vinnusvaedi/`
-- Redirect URLs: `https://tveir.is/vinnusvaedi/yfirlit.html`
+- Redirect URLs: `https://tveir.is/vinnusvaedi/yfirlit.html` og
+  `https://tveir.is/vinnusvaedi/?endurstilla=1` (hlekkurinn fyrir gleymt lykilorð)
+
+Lykilorðin sjálf eru útskýrð í kaflanum **Innskráning með lykilorði** neðar.
 
 **Authentication → Email Templates → Magic Link**: skrifaðu íslenskan texta.
 Sjálfgefni textinn er enskur og lítur út eins og ruslpóstur.
@@ -138,6 +144,63 @@ where netfang = 'oskar@tveir.is';
 
 Eftir það býrðu til fyrirtæki á stjórnborðinu, býður viðskiptavini á sama hátt
 og tengir hann við fyrirtækið sitt þar.
+
+---
+
+## Innskráning með lykilorði
+
+Það eru tvær leiðir inn og báðar virka alltaf:
+
+- **Lykilorð** (sjálfgefið): netfang og lykilorð, ýta á Skrá inn.
+- **Senda mér hlekk**: hlekkur kemur í póstinum, eins og áður.
+
+Fólk helst inni á sama tæki þar til það ýtir á **Út**. Það þarf ekki að skrá
+sig inn í hvert sinn.
+
+### Að velja lykilorð í fyrsta sinn
+
+1. Farðu á `tveir.is/vinnusvaedi/`, veldu **Senda mér hlekk** og opnaðu hlekkinn
+   úr póstinum.
+2. Þegar þú kemur inn spyr vinnusvæðið hvort þú viljir velja lykilorð. Sláðu það
+   inn tvisvar, minnst 10 stafir, og ýttu á **Vista lykilorð**.
+3. Misstirðu af því? Ýttu á **lykiltáknið** efst, við hliðina á **Út**. Það
+   heitir Breyta lykilorði og opnar sama spjald.
+
+Næst velur þú **Lykilorð** á innskráningarsíðunni og þarft engan hlekk.
+Viðskiptavinir gera þetta á sama hátt.
+
+**Gleymt lykilorð?** Skrifaðu netfangið og ýttu á Gleymt lykilorð. Hlekkur
+kemur í póstinum, hann opnar vinnusvæðið og biður um nýtt lykilorð strax.
+
+### Stillingar í Supabase (einu sinni)
+
+Í Supabase verkefninu **Tveir.is CRM**:
+
+0. **Mikilvægast. Authentication → Sign In / Providers → User Signups →
+   Allow new users to sign up**: slökkt. Annars getur hver sem er búið sér
+   til aðgang með lykilorði og sett sjálfur hlutverkið sitt í leiðinni, því
+   `nyr_notandi()` les hlutverk og fyrirtæki úr því sem notandinn sendir.
+   Boð úr **Authentication → Users → Invite** virka áfram þó slökkt sé.
+1. **Authentication → Sign In / Providers → Email**: kveikt á `Email` (það
+   er þegar kveikt fyrir hlekkina). Lykilorð virka sjálfkrafa þegar Email er á.
+   Ef þar er rofi fyrir lykilorð, hafðu hann á.
+2. Á sama stað: **Minimum password length** = `10`. Undir **Password
+   requirements** dugar sjálfgefið, lengdin skiptir mestu.
+3. **Prevent use of leaked passwords**: kveiktu á því ef það er í boði. Það er
+   bara á Pro áskrift og ofar. Á Free áskrift er það grátt og þá sleppum við því.
+4. **Secure password change**: má vera slökkt. Ef kveikt er á því þarf fólk sem
+   hefur verið inni lengur en sólarhring að skrá sig út og inn með hlekk áður
+   en það breytir lykilorði. Vinnusvæðið segir þeim það ef svo er.
+5. **Authentication → URL Configuration → Redirect URLs**: bættu við
+   `https://tveir.is/vinnusvaedi/?endurstilla=1`. Án þess fer hlekkurinn fyrir
+   gleymt lykilorð á forsíðu vinnusvæðisins og biður ekki um nýtt lykilorð.
+6. **Authentication → Emails → Reset Password**: skrifaðu íslenskan texta,
+   eins og í Magic Link. Til dæmis fyrirsögn `Nýtt lykilorð fyrir vinnusvæði
+   Tveir` og hnappur `Velja nýtt lykilorð`. Hlekkurinn er `{{ .ConfirmationURL }}`.
+
+Lykilorðin sjálf sjáum við aldrei. Supabase geymir þau dulkóðuð. Merkið
+`lykilord_sett` í notandanum segir vinnusvæðinu bara hvort það eigi að bjóða
+fólki að velja lykilorð, það stýrir engum réttindum.
 
 ---
 
@@ -362,8 +425,9 @@ nafn seinna er það ein lína þar og ein í `apple-mobile-web-app-title` á
 síðunum fimm.
 
 **Á iPhone heldur appið sinni eigin innskráningu.** Safari og heimaskjásappið
-deila ekki gögnum, svo viðskiptavinurinn slær netfangið inn einu sinni í
-viðbót þegar hann opnar appið í fyrsta sinn. Þetta stendur í leiðbeiningunum.
+deila ekki gögnum, svo viðskiptavinurinn skráir sig inn einu sinni í viðbót
+þegar hann opnar appið í fyrsta sinn. Þar er lykilorðið best: hlekkur úr pósti
+opnast í Safari en ekki í appinu. Þetta stendur í leiðbeiningunum.
 
 Þjónustustarfinn geymir ekkert nema sambandsleysissíðuna. Það er viljandi:
 ef hann geymdi kóðann sjálfan gætu viðskiptavinir setið uppi með gamla útgáfu
@@ -377,6 +441,149 @@ Smelltu á task og þú sérð **Bæta við skrá**. Hámark 25 MB á skrá.
 
 Í prufustillingu lifa skrárnar bara meðan síðan er opin, því localStorage
 þolir ekki myndir. Þegar Supabase er komið fara þær í Storage og haldast.
+
+---
+
+## Undirverk
+
+Taskur getur haft undirverk. Dæmi: fjögur myndbönd fyrir sama viðskiptavin.
+Hvert myndband er undirverk og þegar eitt er klárt fær viðskiptavinurinn
+póst með því, án þess að bíða eftir hinum þremur.
+
+### Svona notar þú það
+
+1. **Nýr taskur með undirverkum:** á verkefnasíðu, ýttu á **Bæta við
+   skrefi**. Í reitinn **Undirverk** skrifar þú eitt í línu, til dæmis
+   Myndband 1 til Myndband 4.
+2. **Á task sem er til:** opnaðu taskinn. Undir **Undirverk** skrifar þú
+   nafn, til dæmis `Myndband`, og fjölda, til dæmis `4`, og ýtir á **Bæta
+   við**. Þá verða til Myndband 1, 2, 3 og 4.
+3. **Myndband klárt:** hakaðu í það. Þá opnast lítið spjald:
+   - **Velja skrá** ef skráin er undir 50 MB, eða
+   - límdu **hlekk** (WeTransfer, Google Drive, Dropbox), eða
+   - hakaðu í **Senda án skrár eða hlekks** ef það á bara að segja þeim
+     að þetta sé klárt.
+   - **Senda viðskiptavininum póst** er hakað sjálfgefið. Taktu hakið af ef
+     þú ert þegar búinn að senda það sjálfur.
+   - Ýttu á **Merkja lokið**.
+4. Innan 5 mínútna fer pósturinn. Á línunni stendur fyrst **Póstur fer
+   innan 5 mín.** og svo **Sent** með dagsetningu.
+
+Smelltu á nafnið til að breyta því. Örvarnar færa það ofar eða neðar.
+**Eyða** þarf tvo smelli og eyðir skránni líka. **Skrá eða hlekkur** setur
+skilin inn án þess að haka í lokið, til dæmis þegar skráin er tilbúin en
+þú vilt ekki senda strax. Viltu senda aftur, taktu hakið af og hakaðu aftur.
+
+Á spjaldinu stendur **2 af 4 lokið**, bæði hjá ykkur og hjá
+viðskiptavininum. Þegar öll eru búin birtist hnappur til að merkja
+taskinn sjálfan lokið. Það gerist ekki sjálfkrafa.
+
+Viðskiptavinurinn sér listann og hakið, og hlekkinn eða skrána um leið og
+undirverkið er lokið. Hann getur engu breytt. Það er í gagnagrunninum
+sjálfum, ekki bara á síðunni.
+
+### Hver fær póstinn
+
+- Bað viðskiptavinur um taskinn fær hann póstinn. Kom taskurinn með pósti
+  á verk@tveir.is fer svarið í sama póstþráð.
+- Stofnuðum við taskinn fá allir notendur fyrirtækisins póstinn.
+- Hafi fyrirtækið engan notanda fer enginn póstur. Hann fer þegar
+  notandi er tengdur fyrirtækinu.
+
+### Af hverju ekki WeTransfer sjálfkrafa
+
+WeTransfer lokaði fyrir tengingar annarra forrita árið 2022. Vinnusvæðið
+getur því ekki búið til WeTransfer hlekk sjálft. Þú setur myndbandið á
+WeTransfer eins og venjulega og límir hlekkinn inn. Póstur með skránni
+sjálfri í viðhengi gengur ekki heldur, Gmail tekur mest 25 MB.
+
+### Stór myndbönd
+
+Supabase Free leyfir mest **50 MB á skrá**. Stærri skrá er stöðvuð strax
+með skilaboðum um að nota hlekk. Á Pro (um 25 dollarar á mánuði) má fara
+miklu hærra. Þá þarf að hækka `undirverkHamarkMb` í `assets/stillingar.js`
+og hámarkið í Supabase: **Storage -> Settings -> Upload file size limit**.
+Það kostar peninga, svo það er ákvörðun sem þú tekur, ekki við.
+
+### Að setja það upp (einu sinni)
+
+**1. Gagnagrunnurinn.** Í Supabase verkefninu **Tveir.is CRM**: **SQL
+Editor -> New query**, límdu inn allt úr
+`migrations/2026-11-16-undirverk.sql` og ýttu á **Run**. Það á að enda á
+`Success. No rows returned`. Það má keyra aftur án skaða.
+
+Það býr til töfluna `undirverk` með Row Level Security, föllin
+`undirverk_otilkynnt` og `merkja_undirverk_sent` fyrir skriftuna, og
+stefnuna `vidhengi_afhending` á geymsluna. Sama efni er kafli 18 í
+`gagnagrunnur.sql`.
+
+Það herðir líka tvennt sem var til fyrir:
+
+- **Stefnan `vidhengi_les` á geymslunni.** Viðskiptavinur sækir skrá
+  undirverks bara þegar því er lokið, ekki drög sem bíða. Venjuleg
+  viðhengi eru óbreytt.
+- **Notandi breytir ekki eigin fyrirtæki, hlutverki eða netfangi.**
+  Áður gat innskráður viðskiptavinur breytt sinni línu í `notendur`
+  beint, sett á sig annað fyrirtæki og lesið gögn þess, eða sett annað
+  netfang og fengið póstinn sendan þangað. Nafnið má hann áfram laga.
+  Þið sem admin tengið áfram notendur við fyrirtæki á stjórnborðinu.
+
+Gagnagrunnurinn hafnar líka skrá sem liggur ekki í möppu síns undirverks,
+svo skrá eins fyrirtækis getur aldrei farið í póst til annars.
+
+**Gerðu þetta áður en nýju skrárnar fara á vefinn.** Vinnusvæðið virkar
+samt ef röðin snýst við, en undirverkin sjást ekki fyrr en taflan er til.
+
+**2. Vefurinn.** Nýju og breyttu skrárnar fara á Vercel eins og venjulega:
+`assets/undirverk.js` (ný), `assets/portal.js`, `assets/gogn.js`,
+`assets/verk.js`, `assets/stillingar.js` og `assets/portal.css`.
+
+**3. Google skriftan.** Á script.google.com, skráð inn sem tveir@tveir.is:
+
+1. Opnaðu verkefnið með `verk-postur.gs`.
+2. Afritaðu **allt** úr nýju `verk-postur.gs` og límdu yfir það sem er þar.
+3. Settu aftur inn línurnar tvær sem eru auðar í afritinu: `ANON` (anon
+   lykillinn úr `assets/stillingar.js`) og `LYKILL` (sami lykill og var
+   þar áður, hann liggur í töflunni `stillingar_innri`).
+4. Ýttu á **Save**. Vaktin sem keyrir á 5 mínútna fresti kallar sjálf á
+   nýja hlutann, það þarf ekki að setja hana upp aftur.
+5. Prófaðu: hakaðu í undirverk hjá prufufyrirtæki með hlekk, bíddu í 5
+   mínútur og sjáðu póstinn koma. Undir **Executions** sérðu ef eitthvað
+   klikkar.
+
+**4. Valkvætt: hlekkur beint á skrána.** Án þessa skrefs fær
+viðskiptavinurinn hlekk á vinnusvæðið þegar skráin liggur hjá okkur, og
+sækir hana þar eftir innskráningu. Það er öruggast. Viltu að pósturinn hafi
+beinan hlekk á skrána, sem gildir í 7 daga eins og WeTransfer:
+
+1. **Authentication -> Users -> Add user -> Create new user**. Netfang
+   `afhending@tveir.is`, langt lykilorð úr lykilorðageymslunni þinni,
+   hakaðu í **Auto Confirm User**. Netfangið þarf ekki að vera til.
+2. Í **SQL Editor**:
+   ```sql
+   insert into stillingar_innri (lykill, gildi)
+   select 'afhending_notandi', id::text from auth.users
+    where email = 'afhending@tveir.is'
+   on conflict (lykill) do update set gildi = excluded.gildi;
+   ```
+3. Á script.google.com: **Project Settings -> Script Properties -> Add
+   script property**. Tvær línur: `AFHENDING_NETFANG` =
+   `afhending@tveir.is` og `AFHENDING_LYKILORD` = lykilorðið. Aldrei í
+   kóðann sjálfan.
+
+Þessi notandi má lesa skrár undirverka sem er lokið og ekkert annað. Hann
+sér engin gögn viðskiptavina, ekkert fyrirtæki og enga aðra skrá (eins og
+allir innskráðir sér hann bara nöfnin ykkar Óskars). Hann birtist á
+notendalistanum á stjórnborðinu: **tengdu hann aldrei við fyrirtæki**. Við notum hann en ekki
+`service_role` lykilinn, því sá lykill opnar allan gagnagrunninn og á
+hvergi heima utan Supabase. Hver sem fær hlekkinn úr póstinum getur sótt
+skrána í 7 daga, nákvæmlega eins og með WeTransfer hlekk.
+
+**Öryggisatriði sem þarf að laga fyrst.** Kaflinn **Innskráning með
+lykilorði** segir að slökkva á **Allow new users to sign up**. Meðan
+kveikt er á því getur hver sem er búið til aðgang og gert sig að admin,
+og þá líka séð og breytt undirverkum. Kláraðu það áður en þetta fer í
+notkun.
 
 ---
 

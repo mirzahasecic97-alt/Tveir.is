@@ -4,7 +4,7 @@
 
 import {
   gogn, el, tom, fylla, dags, sidan, erSeint, pilla, opnaTask, kronur, lesaTolu,
-  vardaHlid, teiknaHaus, uppfaeraMerki, STODUR_VERK, stillingar
+  vardaHlid, teiknaHaus, uppfaeraMerki, STODUR_VERK, stillingar, undirverkTala
 } from './portal.js';
 
 const ek = await vardaHlid({ badir: true });
@@ -203,7 +203,8 @@ async function start() {
             class: erSeint(t.skiladagur) && !lokid ? 'seint' : '',
             texti: (erSeint(t.skiladagur) && !lokid ? 'Rann út ' : 'Skil ') + dags(t.skiladagur)
           }) : null,
-          lokid && t.lokid_dags ? el('span', { texti: 'Lokið ' + dags(t.lokid_dags) }) : null
+          lokid && t.lokid_dags ? el('span', { texti: 'Lokið ' + dags(t.lokid_dags) }) : null,
+          undirverkTala(t)
         ])
       ]),
 
@@ -333,6 +334,8 @@ async function start() {
   function nyrTaskIVerk(v) {
     const titill = el('input', { type: 'text', required: true, placeholder: 'Hvað þarf að gerast' });
     const lysing = el('textarea', { rows: '3' });
+    /* Bara við: skipta taskinum í undirverk strax, eitt í línu */
+    const undir = admin ? el('textarea', { rows: '4', placeholder: 'Myndband 1\nMyndband 2\nMyndband 3\nMyndband 4' }) : null;
     const villa = el('div', { class: 'form-status form-status--err', hidden: true });
 
     const d = el('dialog', { class: 'pdialog' }, [el('div', { class: 'pdialog__kort' }, [
@@ -346,15 +349,23 @@ async function start() {
         e.preventDefault();
         if (!titill.value.trim()) { villa.textContent = 'Titill vantar.'; villa.hidden = false; return; }
         try {
-          await g.nyrTask({
+          const nyr = await g.nyrTask({
             titill: titill.value.trim(), lysing: lysing.value.trim() || null,
             verkefni_id: v.id, fyrirtaeki_id: v.fyrirtaeki_id, stada: 'nytt'
           });
+          const titlar = undir
+            ? undir.value.split(/\r?\n/).map((l) => l.trim().slice(0, 200)).filter(Boolean).slice(0, 30)
+            : [];
+          if (titlar.length) await g.nyUndirverk(nyr.id, titlar);
           d.close(); teikna();
         } catch (f) { villa.textContent = f.message; villa.hidden = false; }
       } }, [
         el('label', { class: 'field' }, [el('span', { texti: 'Titill' }), titill]),
         el('label', { class: 'field' }, [el('span', { texti: 'Lýsing' }), lysing]),
+        undir ? el('label', { class: 'field' }, [
+          el('span', { texti: 'Undirverk, eitt í línu (valkvætt)' }), undir,
+          el('span', { class: 'skyring', texti: 'Til dæmis fjögur myndbönd. Þegar þú hakar í eitt og setur skrána eða hlekkinn með fær viðskiptavinurinn póst.' })
+        ]) : null,
         villa,
         el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Senda' })
       ])
