@@ -97,15 +97,22 @@ function tilkynnaLokid_() {
       + (taskar.length > 1 ? 'Þessi verk eru klár:' : 'Þetta er klárt:')
       + '\n\n' + taskar.map((t) => '- ' + t.titill).join('\n')
       + '\n\nÞú sérð stöðuna á https://tveir.is/vinnusvaedi\n\nKveðja,\nTveir';
+    const html = postHtml_({
+      fornafn: fornafn,
+      fyrirsogn: taskar.length > 1 ? 'Verkin eru klár' : 'Verkið er klárt',
+      inngangur: taskar.length > 1 ? 'Þessi verk eru klár:' : 'Þetta er klárt:',
+      atridi: taskar.map((t) => ({ titill: t.titill }))
+    });
     try {
       const thradur = fyrsti.thradur ? GmailApp.getThreadById(fyrsti.thradur) : null;
       /* Svarað á upprunalega póstinn frá þeim, ekki okkar eigið svar */
       const upphaf = thradur ? thradur.getMessages().find((m) => netfangUr_(m.getFrom()) === String(fyrsti.netfang).toLowerCase()) : null;
       if (upphaf) {
-        upphaf.reply(texti, { name: 'Tveir' });
+        upphaf.reply(texti, { name: 'Tveir', htmlBody: html });
       } else {
-        const efni = taskar.length > 1 ? 'Klárt: ' + taskar.length + ' verk' : 'Klárt: ' + fyrsti.titill;
-        GmailApp.sendEmail(fyrsti.netfang, efni, texti, { name: 'Tveir' });
+        const efni = (taskar.length > 1 ? 'Klárt: ' + taskar.length + ' verk' : 'Klárt: ' + fyrsti.titill)
+          .replace(/[\r\n]+/g, ' ').slice(0, 200);
+        GmailApp.sendEmail(fyrsti.netfang, efni, texti, { name: 'Tveir', htmlBody: html });
       }
       taskar.forEach((t) => sent.push(t.id));
     } catch (e) {
@@ -144,9 +151,14 @@ function tilkynnaUndirverk_() {
     if (!netfong.length) return;
 
     const linur = [];
+    const atridi = [];
     hopur.forEach((u) => {
+      const a = { titill: u.titill, hlekkir: [] };
       linur.push(u.titill);
-      if (u.tengill) linur.push(u.tengill);
+      if (u.tengill) {
+        linur.push(u.tengill);
+        a.hlekkir.push({ texti: 'Opna hlekkinn', slod: u.tengill });
+      }
       if (u.skra_slod) {
         if (tokn === null) tokn = afhendingartokn_() || '';
         /* Takist ekki að búa til hlekk fer hlekkur á vinnusvæðið í staðinn */
@@ -154,8 +166,15 @@ function tilkynnaUndirverk_() {
         linur.push(slod
           ? 'Sækja ' + (u.skra_nafn || 'skrána') + ' (hlekkurinn gildir í 7 daga):\n' + slod
           : 'Skráin bíður þín á vinnusvæðinu: ' + VINNUSVAEDI);
+        if (slod && oruggSlod_(slod)) {
+          a.hlekkir.push({ texti: 'Sækja ' + (u.skra_nafn || 'skrána'), slod: slod });
+          a.athugasemd = 'Hlekkurinn gildir í 7 daga.';
+        } else {
+          a.athugasemd = 'Skráin bíður þín á vinnusvæðinu.';
+        }
       }
       linur.push('');
+      atridi.push(a);
     });
 
     const fornafn = String(fyrsti.nafn || '').split(' ')[0];
@@ -170,15 +189,24 @@ function tilkynnaUndirverk_() {
       + linur.join('\n') + '\n'
       + 'Staðan: ' + stada + ' lokið. Þú sérð allt á ' + VINNUSVAEDI + '\n\nKveðja,\nTveir';
 
+    const html = postHtml_({
+      fornafn: fornafn,
+      fyrirsogn: hopur.length > 1 ? 'Þetta er tilbúið' : fyrsti.titill + ' er tilbúið',
+      inngangur: 'Úr verkinu ' + fyrsti.task_titill + ':',
+      atridi: atridi,
+      lokin: fyrsti.lokin,
+      fjoldi: fyrsti.fjoldi
+    });
+
     try {
       const thradur = fyrsti.thradur ? GmailApp.getThreadById(fyrsti.thradur) : null;
       const upphaf = thradur && netfong.length === 1
         ? thradur.getMessages().find((m) => netfangUr_(m.getFrom()) === String(netfong[0]).toLowerCase())
         : null;
       if (upphaf) {
-        upphaf.reply(texti, { name: 'Tveir' });
+        upphaf.reply(texti, { name: 'Tveir', htmlBody: html });
       } else {
-        GmailApp.sendEmail(netfong.join(','), efni, texti, { name: 'Tveir' });
+        GmailApp.sendEmail(netfong.join(','), efni, texti, { name: 'Tveir', htmlBody: html });
       }
       hopur.forEach((u) => sent.push(u.id));
     } catch (e) {
@@ -187,6 +215,105 @@ function tilkynnaUndirverk_() {
   });
 
   if (sent.length) kalla_('merkja_undirverk_sent', { p_ids: sent });
+}
+
+/* ==========================================================================
+   Póstur í Tveir útliti
+   Venjulegi textinn fer alltaf með, svo póstforrit sem sýna ekki HTML
+   fá hann. Allt sem kemur frá viðskiptavini eða úr gagnagrunninum
+   (titlar, nöfn, hlekkir) fer í gegnum esc_ áður en það lendir í HTML.
+   Töflur og stílar í línu, því Gmail og Outlook hunsa flest annað.
+   ========================================================================== */
+
+const MERKI = 'https://tveir.is/assets/img/tveir-logo-3d.png';
+
+function esc_(t) {
+  return String(t == null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* Bara https hlekkir fara í hnapp, annars ekkert */
+function oruggSlod_(slod) {
+  const s = String(slod || '').trim();
+  return /^https:\/\/[^\s"'<>]+$/.test(s) ? s : null;
+}
+
+function takki_(texti, slod, adal) {
+  const bg = adal ? '#5b93f0' : '#e7f0fd';
+  const lit = adal ? '#ffffff' : '#2c62c4';
+  const pad = adal ? '15px 28px' : '9px 16px';
+  const st = adal ? '16px' : '14px';
+  return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;max-width:100%;"><tr>'
+    + '<td bgcolor="' + bg + '" style="background:' + bg + ';border-radius:999px;">'
+    + '<a href="' + esc_(slod) + '" target="_blank" style="display:inline-block;padding:' + pad + ';font-family:Inter,-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;font-size:' + st + ';font-weight:600;line-height:1.3;text-align:center;word-break:break-word;overflow-wrap:anywhere;color:' + lit + ';text-decoration:none;border-radius:999px;">'
+    + esc_(texti) + '</a></td></tr></table>';
+}
+
+/* v: { fornafn, fyrirsogn, inngangur, atridi: [{ titill, hlekkir: [{ texti, slod }], athugasemd }],
+        lokin, fjoldi }   lokin og fjoldi bara fyrir undirverk */
+function postHtml_(v) {
+  const letur = "font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
+  const fyrirsagnaletur = "font-family:Fraunces,Georgia,'Times New Roman',serif;";
+  const lokin = Number(v.lokin) || 0;
+  const fjoldi = Number(v.fjoldi) || 0;
+  const hlutfall = fjoldi > 0 ? Math.max(0, Math.min(100, Math.round(lokin / fjoldi * 100))) : 0;
+
+  const listi = (v.atridi || []).map((a) => {
+    const hnappar = (a.hlekkir || []).map((h) => {
+      const s = oruggSlod_(h.slod);
+      return s
+        ? '<div style="padding-top:10px;">' + takki_(h.texti, s, false) + '</div>'
+        : '<div style="' + letur + 'font-size:13px;line-height:1.5;color:#7189ac;padding-top:6px;">Hlekkurinn bíður þín á vinnusvæðinu.</div>';
+    }).join('');
+    const ath = a.athugasemd
+      ? '<div style="' + letur + 'font-size:13px;line-height:1.5;color:#7189ac;padding-top:6px;">' + esc_(a.athugasemd) + '</div>'
+      : '';
+    return '<tr><td style="padding:0 0 12px 0;">'
+      + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;background:#f2f8fe;border-radius:14px;">'
+      + '<tr><td width="44" valign="top" style="padding:16px 0 16px 16px;">'
+      + '<div style="width:28px;height:28px;line-height:28px;border-radius:999px;background:#e6f4ea;color:#1e6b34;text-align:center;' + letur + 'font-size:15px;font-weight:700;">&#10003;</div>'
+      + '</td><td valign="top" style="padding:16px 16px 16px 12px;">'
+      + '<div style="' + letur + 'font-size:16px;line-height:1.4;font-weight:600;color:#1c3050;padding-top:3px;word-break:break-word;overflow-wrap:anywhere;">' + esc_(a.titill) + '</div>'
+      + ath + hnappar
+      + '</td></tr></table></td></tr>';
+  }).join('');
+
+  const framvinda = fjoldi > 0
+    ? '<tr><td style="padding:8px 0 4px 0;">'
+      + '<div style="' + letur + 'font-size:14px;line-height:1.4;color:#1c3050;font-weight:600;padding-bottom:8px;">'
+      + esc_(lokin + ' af ' + fjoldi + ' lokið') + '</div>'
+      + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;background:#e7f0fd;border-radius:999px;">'
+      + '<tr>' + (hlutfall > 0 ? '<td width="' + hlutfall + '%" height="10" bgcolor="#5b93f0" style="background:#5b93f0;border-radius:999px;font-size:0;line-height:0;">&nbsp;</td>' : '')
+      + (hlutfall < 100 ? '<td height="10" style="font-size:0;line-height:0;">&nbsp;</td>' : '')
+      + '</tr></table></td></tr>'
+    : '';
+
+  const kvedja = v.fornafn ? 'Hæ ' + v.fornafn + ',' : 'Hæ,';
+
+  return '<!doctype html><html lang="is"><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only">'
+    + '<title>' + esc_(v.fyrirsogn) + '</title></head>'
+    + '<body style="margin:0;padding:0;background:#f2f8fe;">'
+    + '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' + esc_(v.fyrirsogn) + '</div>'
+    + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f2f8fe" style="background:#f2f8fe;">'
+    + '<tr><td align="center" style="padding:32px 16px;">'
+    + '<table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;">'
+    + '<tr><td align="center" style="padding:0 0 22px 0;">'
+    + '<a href="https://tveir.is" target="_blank" style="text-decoration:none;"><img src="' + MERKI + '" width="132" alt="TVEIR" style="display:block;width:132px;height:auto;border:0;' + letur + 'font-size:24px;font-weight:800;color:#5b93f0;"></a>'
+    + '</td></tr>'
+    + '<tr><td bgcolor="#ffffff" style="background:#ffffff;border-radius:20px;padding:32px 28px;box-shadow:0 12px 30px rgba(28,48,80,.10);">'
+    + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
+    + '<tr><td style="padding:0 0 14px 0;"><span style="display:inline-block;background:#e6f4ea;color:#1e6b34;border-radius:999px;padding:6px 12px;' + letur + 'font-size:12.5px;font-weight:600;letter-spacing:.02em;">&#10003;&nbsp; Verk lokið</span></td></tr>'
+    + '<tr><td style="padding:0 0 8px 0;' + fyrirsagnaletur + 'font-size:28px;line-height:1.2;font-weight:600;color:#1c3050;word-break:break-word;overflow-wrap:anywhere;">' + esc_(v.fyrirsogn) + '</td></tr>'
+    + '<tr><td style="padding:0 0 20px 0;' + letur + 'font-size:16px;line-height:1.55;color:#4a5f80;word-break:break-word;overflow-wrap:anywhere;">' + esc_(kvedja) + '<br>' + esc_(v.inngangur) + '</td></tr>'
+    + listi + framvinda
+    + '<tr><td align="center" style="padding:24px 0 6px 0;">' + takki_('Smelltu hér til að sjá stöðuna á þínum verkefnum', VINNUSVAEDI, true) + '</td></tr>'
+    + '</table></td></tr>'
+    + '<tr><td align="center" style="padding:22px 12px 0 12px;' + letur + 'font-size:13px;line-height:1.6;color:#7189ac;">'
+    + 'Kveðja, Tveir<br><a href="https://tveir.is" target="_blank" style="color:#5b93f0;text-decoration:none;">tveir.is</a>'
+    + '</td></tr>'
+    + '</table></td></tr></table></body></html>';
 }
 
 /* Skráir afhendingarnotandann inn. Hann má bara lesa skrár undirverka sem
@@ -226,7 +353,8 @@ function undirritud_(tokn, slod) {
     if (r.getResponseCode() !== 200) return null;
     const svar = JSON.parse(r.getContentText());
     const hluti = svar.signedURL || svar.signedUrl;
-    return hluti ? SUPABASE + '/storage/v1' + hluti : null;
+    /* Supabase skilar slóðinni óumritaðri, svo bil í skráarnafni brjóta hlekkinn */
+    return hluti ? SUPABASE + '/storage/v1' + encodeURI(hluti) : null;
   } catch (villa) {
     return null;
   }
