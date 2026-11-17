@@ -644,8 +644,17 @@ Vikuleg áminning á mánudagsmorgni úr `bidur_vidskiptavina` er það sem held
 ## Verk í tölvupósti: verk@tveir.is
 
 Viðskiptavinur sendir póst á **verk@tveir.is** og hann verður að task á listanum
-hans. Ef pósturinn er listi (línur sem byrja á `-`, `•`, `1.` eða `1)`) verður
-hver liður sinn taskur. Annars verður efnislínan titill og textinn lýsing.
+hans. Ef pósturinn er listi verður hver liður sinn taskur:
+
+- línur sem byrja á `-`, `•`, `1.` eða `1)`, eða
+- 2 til 15 stuttar línur án merkja, til dæmis `hanna logo` / `laga vefsíðu` /
+  `finna bolta`. Kveðju efst (Hæ Jón,), inngangslínu sem endar á tvípunkti og
+  undirskrift neðst (Kveðja, nafn, sími, netfang, Sent úr iPhone) er sleppt.
+
+Annars, til dæmis venjulegur póstur í heilum setningum eða spurning, verður
+efnislínan titill og textinn lýsing. Hver taskur úr lista fær allan póstinn í
+lýsinguna, svo ekkert týnist þótt skiptingin fari fram hjá einhverju.
+Póstur frá @tveir.is verður aldrei að task.
 
 - `verk@tveir.is` er aukanetfang (alias) á tveir@tveir.is í Google Workspace.
 - Skriftan `verk-postur.gs` keyrir á script.google.com í reikningnum
@@ -659,3 +668,39 @@ hver liður sinn taskur. Annars verður efnislínan titill og textinn lýsing.
   Gmail.
 - Teams: Power Automate (Workflows í Teams) hjá viðskiptavininum getur sent
   hvert skeyti í rás sem póst á verk@tveir.is. Þá þarf ekkert nýtt hjá okkur.
+
+## Póstur strax: vefapp skriftunnar
+
+Þegar taskur eða undirverk er hakað í lokið kallar gagnagrunnurinn strax á
+skriftuna, og viðskiptavinurinn fær póstinn innan nokkurra sekúndna. 5 mínútna
+vaktin er áfram til vara. Þetta notar `pg_net` í Supabase og fallið
+`vekja_postinn` (kafli 19 í `gagnagrunnur.sql`).
+
+Uppsetning, einu sinni:
+
+1. script.google.com, verkefnið verk-postur: **Deploy** > **New deployment**.
+2. Tannhjólið við **Select type** > **Web app**.
+3. **Execute as:** Me (tveir@tveir.is). **Who has access:** Anyone. Ekki
+   "Anyone within Tveir", því Supabase er ekki innskráð hjá Google.
+4. **Deploy**, leyfa aðganginn, og afrita **Web app URL** (endar á `/exec`).
+5. Í SQL Editor í Supabase:
+
+   ```sql
+   insert into stillingar_innri (lykill, gildi)
+   values ('postur_vefkrokur', 'https://script.google.com/macros/s/.../exec')
+   on conflict (lykill) do update set gildi = excluded.gildi;
+   ```
+
+6. Prófa: haka í lokið á prufutask og athuga að pósturinn komi innan mínútu.
+   Svarið frá Google sést í `select status_code, content from net._http_response
+   order by created desc limit 5;` (`ok` er gott, `nei` þýðir rangan lykil,
+   `gamalt` þýðir gamla útgáfu).
+
+**Eftir hverja breytingu á kóðanum** (þar á meðal nýjan LYKILL):
+
+1. Hækka `UTGAFA` efst í skriftunni og vista.
+2. **Deploy** > **Manage deployments** > blýanturinn > **Version: New version**
+   > **Deploy**. Slóðin helst sú sama.
+
+Gleymist skref 2 sendir vefappið ekkert. 5 mínútna vaktin sendir þá póstinn með
+nýja kóðanum og tveir@tveir.is fær einn póst um að birta nýja útgáfu.

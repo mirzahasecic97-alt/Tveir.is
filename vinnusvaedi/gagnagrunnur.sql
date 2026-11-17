@@ -855,6 +855,11 @@ declare
   texti   text := nullif(left(trim(coalesce(p_texti, '')), 5000), '');
   fjoldi  int := 0;
   lidur   text;
+  linur   text[];
+  stuttar boolean;
+  fyrri   text;
+  fj      int;
+  undirskrift boolean;
 begin
   if p_lykill is null
      or p_lykill is distinct from (select gildi from stillingar_innri where lykill = 'postur_lykill') then
@@ -872,17 +877,97 @@ begin
   end if;
 
   /* Listi í póstinum (línur sem byrja á -, *, • eða 1. / 1)) verður einn
-     taskur á hvern lið. Annars verður allur pósturinn einn taskur. */
+     taskur á hvern lið. */
   foreach lina in array regexp_split_to_array(coalesce(texti, ''), '\r?\n') loop
     if lina ~ '^\s*([-*•–]|\d{1,2}[.)])\s+\S' then
       lidir := lidir || left(trim(regexp_replace(lina, '^\s*([-*•–]|\d{1,2}[.)])\s+', '')), 200);
     end if;
   end loop;
 
+  /* Enginn listi með merkjum? Þá telst hver lína eitt verk, ef pósturinn er
+     bara stuttar línur (til dæmis "hanna logo / laga vefsíðu / finna bolta").
+     Kveðja efst, inngangslína sem endar á tvípunkti og undirskrift neðst
+     sleppa. Venjulegur póstur með heilum setningum verður áfram eitt verk. */
+  if coalesce(array_length(lidir, 1), 0) < 2 then
+    linur := '{}';
+    stuttar := true;
+    undirskrift := false;
+    fyrri := '';
+    foreach lina in array regexp_split_to_array(coalesce(texti, ''), '\r?\n') loop
+      lina := trim(regexp_replace(lina, '[\s\u00a0\u2007\u202f\u200b\ufeff]+', ' ', 'g'));
+      continue when lina !~ '[[:alnum:]]';   -- auðar línur og skil eins og ____ eða ---
+      fj := coalesce(array_length(linur, 1), 0);
+
+      -- Kveðja eða þakkir: þar byrjar undirskriftin. Efst í póstinum er þeim sleppt.
+      if lina ~* '^(kveðja|kveðjur|kv\.?|kær kveðja|kær kv\.?|kærar kveðjur|bestu kveðjur|bestu kv\.?|með kveðju|með bestu kveðju|með bestu kveðjum|mbk\.?|bkv\.?|regards|best regards|kind regards|cheers)([\s,]+[^\s,]+){0,3}[\s,!.]*$'
+         or lina ~* '^(takk|takk takk|takk fyrir|takk fyrir mig|takk kærlega|takk kærlega fyrir|kærar þakkir|fyrirfram þakkir|þakka þér fyrir|þakka ykkur fyrir|thanks|thank you)[\s,!.]*$' then
+        exit when fj >= 1;
+        continue;
+      end if;
+      exit when lina ~* '^(sent (from|úr|frá) |sendur (úr|frá) |get outlook|sækja outlook)';
+
+      -- Kveðja efst: "Hæ", "Hæ Jón,", "Sæl Anna", "Góðan daginn"
+      continue when fj = 0 and (
+            lina ~* '^(hæ|hæhæ|hæ hæ|halló|hallo|hi|hello|hey|sæl|sæll|sælir|sælar|sæl öll|sæl og blessuð|sæll og blessaður|góðan dag|góðan daginn|gott kvöld|dear|kæri|kæra|kæru)[\s,!.]*$'
+         or lina ~* '^(hæ|hæhæ|halló|hallo|hi|hello|hey|sæl|sæll|sælir|sælar|sæl og blessuð|sæll og blessaður|góðan dag|góðan daginn|dear|kæri|kæra|kæru)(\s+[^\s,!.]+){1,3}\s*[,!]$'
+         or lina ~ '^([Hh]æ|[Hh]alló|[Hh]i|[Hh]ello|[Hh]ey|[Ss]æl|[Ss]æll|[Ss]ælir|[Ss]ælar|[Kk]æri|[Kk]æra|[Kk]æru|[Dd]ear)\s+([[:upper:]]|[ÁÐÉÍÓÚÝÞÆÖ])[^\s,!.]*(\s+([[:upper:]]|[ÁÐÉÍÓÚÝÞÆÖ])[^\s,!.]*)?[.]?$');
+
+      -- Inngangur eins og "Hér eru verkin:"
+      continue when lina ~ ':$';
+
+      -- Undirskrift án kveðju: sími, netfang, vefur eða fyrirtæki ein á línu
+      if fj >= 1 and (
+            lina ~* '^(s\.|sími|gsm|tel\.?|farsími|mobile|m\.)\s*:?\s*\+?[0-9 ()-]{7,}$'
+         or lina ~ '^\+?[0-9 ()-]{7,}$'
+         or lina ~ '^\S+@\S+$'
+         or lina ~* '^(www\.|https?://)\S+$'
+         or lina ~ '^\[image'
+         or lina ~* '\s(ehf|hf|slf|sf)\.?$') then
+        undirskrift := true;
+        exit;
+      end if;
+
+      -- Setningar, spurningar eða framhald línu: þetta er venjulegur póstur, ekki listi
+      if length(lina) > 150
+         or lina ~ '[[:alpha:]]{3,}[.]\s+([[:upper:]]|[ÁÐÉÍÓÚÝÞÆÖ])'
+         or lina ~ '[!?]\s+[[:alpha:]]'
+         or lina ~ '[?]$'
+         or lina ~* '^(ég|mér|mig|okkur|við (erum|vorum|viljum|þurfum|ætlum|værum)|það|þetta|hér er|svo|en|og|því|af því|ef|getið|gætuð|gætir|geturðu|getur þú|væri|viljið|vonandi)(\s|,|$)'
+         or (lina ~ '^[[:lower:]]' and length(fyrri) >= 60) then
+        stuttar := false;
+        exit;
+      end if;
+
+      linur := linur || left(lina, 200);
+      fyrri := lina;
+    end loop;
+
+    -- Nafn neðst án kveðju: "Jón Jónsson", eða "Anna" á eftir einni beiðni
+    fj := coalesce(array_length(linur, 1), 0);
+    -- Fyrir ofan síma eða netfang standa nafn og starfsheiti: þeim er sleppt líka
+    if undirskrift then
+      while fj >= 1 and linur[fj] ~ '^([[:upper:]]|[ÁÐÉÍÓÚÝÞÆÖ])[^\s0-9]*(\s+([[:upper:]]|[ÁÐÉÍÓÚÝÞÆÖ])[^\s0-9]*){0,2}$' loop
+        linur := linur[1:fj - 1];
+        fj := fj - 1;
+      end loop;
+    end if;
+    if fj >= 2
+       and linur[fj] ~ '^([[:upper:]]|[ÁÐÉÍÓÚÝÞÆÖ])[^\s0-9]*(\s+([[:upper:]]|[ÁÐÉÍÓÚÝÞÆÖ])[^\s0-9]*){0,2}$'
+       and (fj = 2 or linur[fj] ~ '\s') then
+      linur := linur[1:fj - 1];
+      fj := fj - 1;
+    end if;
+
+    -- Bara 2 til 15 stuttar línur teljast listi, annað verður eitt verk
+    if stuttar and fj between 2 and 15 then
+      lidir := linur;
+    end if;
+  end if;
+
   if array_length(lidir, 1) >= 2 then
     foreach lidur in array lidir[1:30] loop
       insert into taskar (fyrirtaeki_id, titill, lysing, hofundur, stada, postur_thradur)
-      values (n.fyrirtaeki_id, lidur, 'Úr tölvupósti: ' || efni, n.id, 'nytt', p_thradur);
+      values (n.fyrirtaeki_id, lidur, 'Úr tölvupósti: ' || efni || coalesce(E'\n\n' || texti, ''), n.id, 'nytt', p_thradur);
       fjoldi := fjoldi + 1;
     end loop;
   else
@@ -1216,3 +1301,67 @@ drop trigger if exists vernda_notanda_trigger on notendur;
 create trigger vernda_notanda_trigger
   before update on notendur
   for each row execute function vernda_notanda();
+
+-- ==========================================================================
+-- 19. Póstur strax þegar hakað er í lokið
+--     Áður beið pósturinn eftir 5 mínútna vakt Google skriftunnar. Nú kallar
+--     gagnagrunnurinn á skriftuna (vefapp) um leið og taskur eða undirverk
+--     er hakað í lokið, og pósturinn fer innan nokkurra sekúndna.
+--     5 mínútna vaktin er áfram til vara: takist kallið ekki fer pósturinn
+--     í næstu umferð hennar.
+--
+--     pg_net sendir kallið eftir að færslan hefur verið vistuð, svo skriftan
+--     sér alltaf nýju stöðuna og skrána eða hlekkinn sem fylgdi.
+--
+--     Slóð vefappsins er sett einu sinni (sjá LESTU-MIG.md):
+--       insert into stillingar_innri (lykill, gildi)
+--       values ('postur_vefkrokur', 'https://script.google.com/macros/s/.../exec')
+--       on conflict (lykill) do update set gildi = excluded.gildi;
+--     Án hennar gerist ekkert nýtt og allt virkar eins og áður.
+-- ==========================================================================
+
+create extension if not exists pg_net with schema extensions;
+
+create or replace function vekja_postinn() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare
+  slod   text := (select gildi from stillingar_innri where lykill = 'postur_vefkrokur');
+  lykill text := (select gildi from stillingar_innri where lykill = 'postur_lykill');
+begin
+  /* Bara Google vefapp, svo lykillinn fari aldrei annað */
+  if slod is null or lykill is null
+     or slod !~ '^https://script\.google\.com/(a/macros/[a-z0-9.-]+|macros)/s/[A-Za-z0-9_-]+/exec$' then
+    return null;
+  end if;
+  begin
+    perform net.http_post(
+      url := slod,
+      body := jsonb_build_object('lykill', lykill),
+      headers := '{"Content-Type": "application/json"}'::jsonb,
+      timeout_milliseconds := 30000
+    );
+  exception when others then
+    null;  /* hakið má aldrei mistakast út af póstinum, vaktin nær honum */
+  end;
+  return null;
+end;
+$$;
+revoke all on function vekja_postinn() from public, anon, authenticated;
+
+drop trigger if exists vekja_postinn_taskar on taskar;
+create trigger vekja_postinn_taskar
+  after update of stada on taskar
+  for each row when (new.stada = 'lokid' and old.stada is distinct from 'lokid')
+  execute function vekja_postinn();
+
+drop trigger if exists vekja_postinn_undirverk_nytt on undirverk;
+create trigger vekja_postinn_undirverk_nytt
+  after insert on undirverk
+  for each row when (new.lokid and new.senda)
+  execute function vekja_postinn();
+
+drop trigger if exists vekja_postinn_undirverk on undirverk;
+create trigger vekja_postinn_undirverk
+  after update of lokid on undirverk
+  for each row when (new.lokid and not old.lokid and new.senda)
+  execute function vekja_postinn();

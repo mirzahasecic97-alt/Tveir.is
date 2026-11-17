@@ -14,6 +14,9 @@
    Undirverk: þegar við hökum í eitt (til dæmis myndband 2 af 4) fær
    viðskiptavinurinn póst með hlekknum eða skránni. Sjá tilkynnaUndirverk_.
 
+   Póstur um lokið fer strax: gagnagrunnurinn kallar á doPost um leið og
+   hakað er. 5 mínútna vaktin sendir það sem kallið náði ekki.
+
    LYKILL hér að neðan er skilinn eftir auður í þessu afriti. Raunverulegi
    lykillinn liggur bara í skriftunni í Google og í töflunni stillingar_innri.
    ========================================================================== */
@@ -24,6 +27,11 @@ const VINNUSVAEDI = 'https://tveir.is/vinnusvaedi/yfirlit.html';
 const ANON = 'SETTU_ANON_LYKILINN_HER';
 const LYKILL = 'SETTU_POSTUR_LYKILINN_HER';
 const NETFANG = 'verk@tveir.is';
+/* Hækka í hvert sinn sem kóðanum er breytt. Vefappið keyrir útgáfuna sem var
+   birt síðast, en 5 mínútna vaktin keyrir alltaf nýjasta kóðann. Passi
+   útgáfurnar ekki saman sendir vefappið ekkert, vaktin tekur við og
+   tveir@tveir.is fær einn póst um að birta nýja útgáfu. */
+const UTGAFA = '2026-11-17-1';
 
 /* Keyrt einu sinni með höndunum: setur upp 5 mínútna vaktina */
 function setja() {
@@ -33,6 +41,7 @@ function setja() {
 }
 
 function lesaVerk() {
+  PropertiesService.getScriptProperties().setProperty('utgafa', UTGAFA);
   const skrad = merki_('Verk/Skrad');
   const othekkt = merki_('Verk/Othekkt');
   const eiginlegir = PropertiesService.getScriptProperties();
@@ -71,8 +80,55 @@ function lesaVerk() {
   if (buid.length > 500) buid = buid.slice(-500);
   eiginlegir.setProperty('buid', JSON.stringify(buid));
 
-  tilkynnaLokid_();
-  tilkynnaUndirverk_();
+  tilkynna_();
+}
+
+/* Vefapp: gagnagrunnurinn kallar hingað um leið og hakað er í lokið
+   (stofnun vefapps: sjá LESTU-MIG.md, kaflann Póstur strax). Kallið þarf
+   að bera lykilinn, annars gerist ekkert. */
+function doPost(e) {
+  let gogn = {};
+  try {
+    gogn = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+  } catch (villa) {
+    gogn = {};
+  }
+  if (!gogn || typeof gogn.lykill !== 'string' || gogn.lykill !== LYKILL) {
+    return ContentService.createTextOutput('nei');
+  }
+  const eiginlegir = PropertiesService.getScriptProperties();
+  const nyjust = eiginlegir.getProperty('utgafa');
+  if (nyjust && nyjust !== UTGAFA) {
+    /* Gamla útgáfan: sendum ekkert, vaktin sendir með nýja kóðanum */
+    if (eiginlegir.getProperty('utgafa_vidvorun') !== nyjust) {
+      eiginlegir.setProperty('utgafa_vidvorun', nyjust);
+      try {
+        GmailApp.sendEmail('tveir@tveir.is', 'Vinnusvæðið: birta þarf nýja útgáfu af skriftunni',
+          'Kóðinn í verk-postur var uppfærður en vefappið keyrir enn gömlu útgáfuna (' + UTGAFA + ').\n'
+          + 'Póstur um lokin verk fer því á 5 mínútna fresti en ekki strax.\n\n'
+          + 'Lagfæring í script.google.com: Deploy > Manage deployments > blýanturinn > '
+          + 'Version: New version > Deploy.', { name: 'Vinnusvæðið' });
+      } catch (villa) {
+        /* skiptir ekki máli */
+      }
+    }
+    return ContentService.createTextOutput('gamalt');
+  }
+  tilkynna_();
+  return ContentService.createTextOutput('ok');
+}
+
+/* Bara ein umferð í einu. Kemur kall á meðan vaktin er að senda bíður það
+   eftir henni og sendir svo það sem bættist við, svo ekkert fari tvisvar. */
+function tilkynna_() {
+  const las = LockService.getScriptLock();
+  if (!las.tryLock(60000)) return; /* vaktin eftir 5 mín nær þessu */
+  try {
+    tilkynnaLokid_();
+    tilkynnaUndirverk_();
+  } finally {
+    las.releaseLock();
+  }
 }
 
 /* Taskar frá viðskiptavinum sem við hökuðum í lokið: segjum þeim það.
@@ -388,7 +444,10 @@ function hreinsa_(texti) {
   const ut = [];
   for (let i = 0; i < linur.length; i++) {
     const l = linur[i];
-    if (/^(On .+wrote:|Þann .+skrifaði|Den .+skrev:|-----Original Message-----|From: |Frá: |Sent from my )/.test(l.trim())) break;
+    const tvaer = l.trim() + ' ' + String(linur[i + 1] || '').trim();
+    if (/^(On .+wrote:|Þann .+skrifaði|Den .+skrev:|-----Original Message-----|From: |Frá: |Sent from my |Sent (úr|frá) |Sendur (úr|frá) |Get Outlook|Sækja Outlook)/.test(l.trim())) break;
+    if (/^(On .+wrote:|Þann .+skrifaði)/.test(tvaer)) break;  /* Gmail brýtur þessa línu stundum í tvennt */
+    if (/^_{5,}$/.test(l.trim())) break;                       /* Outlook setur strik á undan eldri pósti */
     if (/^-- ?$/.test(l)) break;
     if (/^>/.test(l)) continue;
     ut.push(l);
