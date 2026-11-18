@@ -1442,6 +1442,13 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
   .vinnulag[data-skref="0"] .vinnulag__listi li:first-child { opacity: .55; }
   .vinnulag__listi li.er-lokid { opacity: 0; }
   .vinnulag__fyrirsogn { font-size: clamp(24px, 6vw, 30px); }
+  /* Allt þarf að komast á skjáinn meðan kaflinn er fastur: síminn ofar
+     og aðeins lægri, kortið fyrir neðan með táknið við hlið textans */
+  .vinnulag__fast { align-items: flex-start; padding-top: 100px; }
+  .vinnulag__inni { padding-block: 6px 14px; }
+  .vinnulag__fyrirsogn { margin-bottom: 12px; }
+  .vinnulag .simi__skjar { height: min(48vh, 440px); }
+  .vinnulag__listi { margin-top: 14px; }
 }
 
 /* ---------- Þegar JS nær ekki í gegn eða hreyfing er slökkt ---------- */

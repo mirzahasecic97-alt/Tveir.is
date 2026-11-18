@@ -778,3 +778,11 @@ h1 em, h2 em {
 .btn::after { display: none; }
 .pillnav__logo:hover::after { animation-duration: inherit; }
 .hero__ljos { display: none !important; }
+
+/* Í síma: táknið við hlið textans svo skrefakortið taki minna pláss */
+@media (max-width: 759px) {
+  .vinnulag__listi li { display: grid; grid-template-columns: 34px 1fr; column-gap: 12px; align-items: start; }
+  .vinnulag__listi li::before { width: 34px; height: 34px; margin: 0; grid-row: 1 / span 2; }
+  .vinnulag__listi b, .vinnulag__listi span { grid-column: 2; }
+  .vinnulag__listi span { margin-top: 3px; }
+}
