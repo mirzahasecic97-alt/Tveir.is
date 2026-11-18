@@ -820,8 +820,49 @@ async function supabaseBakendi() {
     async eydaMyndbandstolu(myndband_id, manudur) {
       const svar = await sb.from('myndband_tolur').delete().eq('myndband_id', myndband_id).eq('manudur', manudur);
       kastaTf(svar);
+    },
+
+    /* ---------- Samskipti: Gmail pósthólfið (kafli 24) ----------
+       Apps Script afritar pósthólfið hingað á 5 mínútna fresti. Bara
+       stjórnendur sjá það. Svar bíður í postholf_svor og fer frá tveir@tveir.is. */
+    async postholf() {
+      const svar = await sb.from('postholf_thraedir')
+        .select('id, efni, fra_nafn, fra_netfang, snid, sidast, fjoldi, olesid_gmail, lesid_kerfi, tengill, fyrirtaeki_id, fyr:fyrirtaeki(nafn)')
+        .order('sidast', { ascending: false }).limit(200);
+      kastaPost(svar); return svar.data;
+    },
+
+    async postholfThradur(id) {
+      const [skilabod, svor] = await Promise.all([
+        sb.from('postholf_skilabod').select('*').eq('thradur_id', id).order('dags'),
+        sb.from('postholf_svor').select('id, texti, stada, villa, stofnad, sent_dags').eq('thradur_id', id).order('stofnad')
+      ]);
+      kastaPost(skilabod); kastaPost(svor);
+      return { skilabod: skilabod.data, svor: svor.data };
+    },
+
+    async merkjaPostLesinn(id) {
+      const svar = await sb.from('postholf_thraedir').update({ lesid_kerfi: new Date().toISOString() }).eq('id', id);
+      kastaPost(svar);
+    },
+
+    async svaraPosti(thradur_id, texti) {
+      const svar = await sb.from('postholf_svor').insert({ thradur_id, texti: String(texti || '').slice(0, 10000) })
+        .select('id, texti, stada, villa, stofnad, sent_dags').single();
+      kastaPost(svar); return svar.data;
     }
   };
+
+  function kastaPost({ error }) {
+    if (!error) return;
+    const bod = String(error.message || '');
+    if (error.code === '42P01' || /does not exist|could not find the table|schema cache/i.test(bod)) {
+      throw new Error('Pósthólfið er ekki komið í gagnagrunninn. Keyrðu migrations/2026-11-19-samskipti.sql í Supabase.');
+    }
+    if (/[þðæöáéíóúý]/i.test(bod)) throw new Error(bod);
+    if (/row-level security|permission denied/i.test(bod)) throw new Error('Þú hefur ekki aðgang að pósthólfinu.');
+    throw new Error('Þetta gekk ekki. Prófaðu aftur.');
+  }
 
   function kastaTf({ error }) { if (error) throw new Error(tolfraediVilla(error)); }
 
@@ -1810,6 +1851,31 @@ function prufuBakendi() {
       if (m) { m.tolur = (m.tolur || []).filter((t) => t.manudur !== manudur); vista(); }
     },
 
+    /* ---------- Pósthólfið í prufu: sýnidæmi, ekkert fer út ---------- */
+    async postholf() {
+      krefjastAdmin(); prufuPostholf();
+      for (const s of g.postholf.svor) {
+        if (s.stada === 'bidur' && Date.now() - new Date(s.stofnad).getTime() > 4000) { s.stada = 'send'; s.sent_dags = new Date().toISOString(); }
+      }
+      return JSON.parse(JSON.stringify(g.postholf.thraedir)).map((t) => ({ ...t, fyr: t.fyrirtaeki_id ? { nafn: (finna(g.fyrirtaeki, t.fyrirtaeki_id) || {}).nafn } : null }))
+        .sort((a, b) => b.sidast.localeCompare(a.sidast));
+    },
+    async postholfThradur(id) {
+      krefjastAdmin(); prufuPostholf();
+      return { skilabod: JSON.parse(JSON.stringify(g.postholf.skilabod.filter((m) => m.thradur_id === id))).sort((a, b) => a.dags.localeCompare(b.dags)),
+               svor: JSON.parse(JSON.stringify(g.postholf.svor.filter((s) => s.thradur_id === id))) };
+    },
+    async merkjaPostLesinn(id) {
+      krefjastAdmin(); prufuPostholf();
+      const t = finna(g.postholf.thraedir, id); if (t) { t.lesid_kerfi = new Date().toISOString(); vista(); }
+    },
+    async svaraPosti(thradur_id, texti) {
+      krefjastAdmin(); prufuPostholf();
+      if (!String(texti || '').trim()) throw new Error('Skrifaðu eitthvað fyrst.');
+      const s = { id: 'sv' + Date.now(), thradur_id, texti: String(texti).slice(0, 10000), stada: 'bidur', villa: null, stofnad: new Date().toISOString(), sent_dags: null };
+      g.postholf.svor.push(s); vista(); return { ...s };
+    },
+
     async sendaTolfraedi(rod) {
       if (!erAdminPrufa()) throw new Error('Bara stjórnendur senda tölfræði');
       if (!rod.netfong || !rod.netfong.length) throw new Error('Veldu 1 til 10 viðtakendur');
@@ -1842,6 +1908,33 @@ function prufuBakendi() {
       smida(fid, 3, 'Viðtal við eigandann', 'facebook', 1, [3900, 1600].map((x) => Math.round(x * (1 - n * 0.2))), false),
       smida(fid, 4, 'Jólatilboðin', 'instagram', 0, [2650].map((x) => Math.round(x * (1 - n * 0.2))), false)
     ]);
+    vista();
+  }
+
+  /* Nokkrir sýniþræðir: tveir frá viðskiptavinum, einn nýr og einn gamall */
+  function prufuPostholf() {
+    if (g.postholf) return;
+    const kl = (dagar, klst) => new Date(Date.now() - dagar * 864e5 - klst * 36e5).toISOString();
+    const vid = (g.notendur || []).filter((n) => n.hlutverk === 'vidskiptavinur' && n.fyrirtaeki_id);
+    const a = vid[0] || { nafn: 'Anna Sigurðardóttir', netfang: 'anna@hlidarkaup.is', fyrirtaeki_id: null };
+    const b = vid[1] || { nafn: 'Jón Steinsson', netfang: 'jon@steinvik.is', fyrirtaeki_id: null };
+    const thraedir = [
+      { id: 'p1', efni: 'Myndböndin fyrir desember', fra_nafn: a.nafn, fra_netfang: a.netfang, fyrirtaeki_id: a.fyrirtaeki_id, sidast: kl(0, 1), fjoldi: 2, olesid_gmail: true, lesid_kerfi: null, tengill: null },
+      { id: 'p2', efni: 'Reikningur fyrir nóvember', fra_nafn: b.nafn, fra_netfang: b.netfang, fyrirtaeki_id: b.fyrirtaeki_id, sidast: kl(0, 5), fjoldi: 1, olesid_gmail: true, lesid_kerfi: null, tengill: null },
+      { id: 'p3', efni: 'Fyrirspurn um vefsíðu', fra_nafn: 'Guðrún Pálsdóttir', fra_netfang: 'gudrun@bakaribaer.is', fyrirtaeki_id: null, sidast: kl(1, 2), fjoldi: 1, olesid_gmail: false, lesid_kerfi: null, tengill: null },
+      { id: 'p4', efni: 'Takk fyrir fundinn', fra_nafn: 'Einar Már', fra_netfang: 'einar@fjallakofinn.is', fyrirtaeki_id: null, sidast: kl(3, 4), fjoldi: 3, olesid_gmail: false, lesid_kerfi: kl(3, 1), tengill: null }
+    ];
+    const stofa = (g.notendur || []).find((n) => n.hlutverk === 'admin') || { nafn: 'Við', netfang: 'stofan@demo.is' };
+    const skilabod = [
+      { id: 'pm1', thradur_id: 'p1', fra_nafn: stofa.nafn, fra_netfang: stofa.netfang, dags: kl(1, 3), fra_okkur: true, vidhengi: 0, texti: 'Hæ ' + String(a.nafn).split(' ')[0] + ',\n\nHér eru drögin að fjórum myndböndum fyrir desember. Segðu mér hvað þér finnst.\n\nKveðja' },
+      { id: 'pm2', thradur_id: 'p1', fra_nafn: a.nafn, fra_netfang: a.netfang, dags: kl(0, 1), fra_okkur: false, vidhengi: 0, texti: 'Þetta lítur vel út! Getið þið bætt við einu myndbandi um jólatilboðin?\n\nKveðja,\n' + a.nafn },
+      { id: 'pm3', thradur_id: 'p2', fra_nafn: b.nafn, fra_netfang: b.netfang, dags: kl(0, 5), fra_okkur: false, vidhengi: 1, texti: 'Sæl,\n\nGætuð þið sent reikninginn fyrir nóvember á bokhald@? Hann kom ekki til okkar.\n\nTakk,\n' + b.nafn },
+      { id: 'pm4', thradur_id: 'p3', fra_nafn: 'Guðrún Pálsdóttir', fra_netfang: 'gudrun@bakaribaer.is', dags: kl(1, 2), fra_okkur: false, vidhengi: 0, texti: 'Góðan dag,\n\nVið erum lítið bakarí og okkur vantar nýja vefsíðu. Hvað myndi það kosta?\n\nBestu kveðjur,\nGuðrún' },
+      { id: 'pm5', thradur_id: 'p4', fra_nafn: stofa.nafn, fra_netfang: stofa.netfang, dags: kl(4, 2), fra_okkur: true, vidhengi: 0, texti: 'Takk fyrir góðan fund í dag. Við sendum tillögu fyrir föstudag.' },
+      { id: 'pm6', thradur_id: 'p4', fra_nafn: 'Einar Már', fra_netfang: 'einar@fjallakofinn.is', dags: kl(3, 4), fra_okkur: false, vidhengi: 0, texti: 'Sömuleiðis, hlakka til.' }
+    ];
+    thraedir.forEach((t) => { const s = skilabod.filter((m) => m.thradur_id === t.id); t.snid = s.length ? s[s.length - 1].texti.replace(/\s+/g, ' ').slice(0, 160) : ''; });
+    g.postholf = { thraedir, skilabod, svor: [] };
     vista();
   }
 

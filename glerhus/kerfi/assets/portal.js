@@ -237,6 +237,8 @@ let hausMerki = null;
 let hausOkkar = null;
 let hausEgId  = null;
 let hausFyrirspurnir = null;
+let hausPostholf = null;
+let hausSamskipti = null;
 
 function setjaTolu(n, fjoldi) {
   n.textContent = String(fjoldi);
@@ -260,11 +262,31 @@ export function uppfaeraMerki() {
       .catch(() => { /* merkið bíður bara */ });
   }
   if (hausFyrirspurnir) {
-    gogn()
-      .then((g) => g.fyrirspurnir())
-      .then((listi) => setjaTolu(hausFyrirspurnir, listi.filter((f) => f.stada === 'ny').length))
-      .catch(() => { /* merkið bíður bara */ });
+    /* Samskipti: nýjar fyrirspurnir og ólesnir póstþræðir, saman og hvort í sínu lagi */
+    gogn().then(async (g) => {
+      const [fsp, post] = await Promise.all([
+        g.fyrirspurnir().then((l) => l.filter((f) => f.stada === 'ny').length).catch(() => 0),
+        g.postholf ? g.postholf().then((l) => l.filter(postOlesinn).length).catch(() => 0) : 0
+      ]);
+      setjaTolu(hausFyrirspurnir, fsp);
+      if (hausPostholf) setjaTolu(hausPostholf, post);
+      if (hausSamskipti) setjaTolu(hausSamskipti, fsp + post);
+    }).catch(() => { /* merkið bíður bara */ });
   }
+}
+
+/* Ólesinn á vinnusvæðinu: aldrei opnaður, eða nýr póstur kom eftir að hann var opnaður */
+export const postOlesinn = (t) => !t.lesid_kerfi || new Date(t.lesid_kerfi) < new Date(t.sidast);
+
+/* Flipar efst á Samskiptum: Pósthólf og Fyrirspurnir, Messenger og Instagram koma */
+export function samskiptaFlipar(virkur) {
+  const flipi = (slod, heiti, kodi) => el('a', { class: 'sk-flipi', href: slod, 'aria-current': virkur === kodi ? 'page' : null, texti: heiti });
+  return el('nav', { class: 'sk-flipar', 'aria-label': 'Samskipti' }, [
+    flipi('samskipti.html', 'Pósthólf', 'postholf'),
+    flipi('fyrirspurnir.html', 'Fyrirspurnir', 'fyrirspurnir'),
+    el('span', { class: 'sk-flipi sk-flipi--kemur', title: 'Kemur þegar Meta appið er tilbúið', texti: 'Messenger' }),
+    el('span', { class: 'sk-flipi sk-flipi--kemur', title: 'Kemur þegar Meta appið er tilbúið', texti: 'Instagram' })
+  ]);
 }
 
 export function teiknaHaus(ek, heiti) {
@@ -282,6 +304,10 @@ export function teiknaHaus(ek, heiti) {
   const merkiFyrirspurna = admin
     ? el('span', { class: 'phead__merki phead__merki--ny', hidden: true }) : null;
   hausFyrirspurnir = merkiFyrirspurna;
+  const merkiPostholf = admin ? el('span', { class: 'phead__merki phead__merki--ny', hidden: true }) : null;
+  const merkiSamskipti = admin ? el('span', { class: 'phead__merki phead__merki--ny', hidden: true }) : null;
+  hausPostholf = merkiPostholf;
+  hausSamskipti = merkiSamskipti;
   hausEgId = ek.id;
   uppfaeraMerki();
 
@@ -321,9 +347,17 @@ export function teiknaHaus(ek, heiti) {
                         'aria-current': nuna === 'okkar.html' ? 'page' : null }, [
                 document.createTextNode('Okkar'), merkiOkkar
               ]),
-              el('a', { href: 'fyrirspurnir.html',
-                        'aria-current': nuna === 'fyrirspurnir.html' ? 'page' : null }, [
-                document.createTextNode('Fyrirspurnir'), merkiFyrirspurna
+              /* Samskipti: pósthólfið og fyrirspurnirnar, fellivalmynd í tölvu */
+              el('div', { class: 'phead__hopur' }, [
+                el('a', { href: 'samskipti.html', class: 'phead__hopur-hn', 'aria-haspopup': 'true',
+                          'aria-current': ['samskipti.html', 'fyrirspurnir.html'].includes(nuna) ? 'page' : null }, [
+                  document.createTextNode('Samskipti'), merkiSamskipti
+                ]),
+                el('div', { class: 'phead__fellival' }, [
+                  el('a', { href: 'samskipti.html', class: 'phead__undir' }, [document.createTextNode('Pósthólf'), merkiPostholf]),
+                  el('a', { href: 'fyrirspurnir.html', class: 'phead__undir' }, [document.createTextNode('Fyrirspurnir'), merkiFyrirspurna]),
+                  el('span', { class: 'phead__undir phead__undir--kemur', texti: 'Messenger og Instagram koma' })
+                ])
               ]),
               ervalid('tekjur') ? el('a', { href: 'bokhald.html', texti: 'Bókhald',
                         'aria-current': nuna === 'bokhald.html' ? 'page' : null }) : null,
