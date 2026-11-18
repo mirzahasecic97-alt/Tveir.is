@@ -1526,3 +1526,50 @@ button.uv__titill:hover { color: var(--acc); }
   .tf-faersla__mid { flex-basis: calc(100% - 64px); }
   .tf-faersla__opna { margin-left: 64px; align-self: flex-start; }
 }
+
+/* Tölfræði: yfirlit með spjaldi á fyrirtæki */
+.tf-tilbaka {
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px;
+  font: 500 14px/1 var(--f-body); color: var(--soft); text-decoration: none;
+}
+.tf-tilbaka::before { content: '\2190'; }
+.tf-tilbaka:hover { color: var(--acc); }
+.tf-kortin {
+  display: grid; gap: clamp(12px, 1.6vw, 18px);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+}
+.tf-kort {
+  display: flex; flex-direction: column; gap: 14px; padding: 18px;
+  background: var(--sur); border: 1px solid var(--line); border-radius: var(--r-card);
+  box-shadow: var(--sh-card); color: var(--ink); text-decoration: none;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.tf-kort:hover, .tf-kort:focus-visible {
+  transform: translateY(-2px); box-shadow: var(--sh-drop); border-color: rgba(91, 147, 240, .35);
+}
+.tf-kort:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+.tf-kort__haus { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.tf-kort__merki {
+  flex: none; width: 44px; height: 44px; border-radius: 12px; object-fit: contain;
+  background: var(--bg); border: 1px solid var(--line);
+}
+.tf-kort__merki--stafur {
+  display: grid; place-items: center; background: var(--accs); color: var(--acc);
+  font: 600 19px/1 var(--f-head); border: 0;
+}
+.tf-kort__nafn { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.tf-kort__nafn strong {
+  font: 600 17px/1.2 var(--f-head); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tf-kort__midlar { display: flex; flex-wrap: wrap; gap: 4px 10px; font: 400 12.5px/1.3 var(--f-body); color: var(--soft); }
+.tf-kort__midlar > span { display: inline-flex; align-items: center; gap: 5px; }
+.tf-kort__ferill { display: block; width: 100%; height: 34px; }
+.tf-kort__ferill--tomt { border-bottom: 1px dashed var(--line); }
+.tf-kort__svaedi { fill: rgba(91, 147, 240, .12); }
+.tf-kort__lina { fill: none; stroke: var(--acc); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.tf-kort__tolur { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; }
+.tf-kort__tolur > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.tf-kort__tolur dt { font: 400 12px/1.3 var(--f-body); color: var(--soft); }
+.tf-kort__tolur dd { margin: 0; font: 600 20px/1.15 var(--f-head); }
+.tf-kort__tolur .tf-breyting { font-size: 12.5px; }
+@media (prefers-reduced-motion: reduce) { .tf-kort { transition: none; } .tf-kort:hover { transform: none; } }

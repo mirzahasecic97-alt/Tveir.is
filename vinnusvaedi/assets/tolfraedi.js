@@ -530,8 +530,12 @@ async function start() {
     try { fyrirtaekin = await g.fyrirtaeki(); } catch (villa) { synaVillu(villa); return; }
   }
 
-  let fid = admin ? geymt('tolfraedi-fyrirtaeki') : ek.fyrirtaeki_id;
-  if (admin && !fyrirtaekin.some((f) => f.id === fid)) fid = fyrirtaekin.length ? fyrirtaekin[0].id : null;
+  /* Admin byrjar á yfirliti með spjaldi fyrir hvert fyrirtæki. Fyrirtækið
+     sem er opið stendur í slóðinni (?f=...), svo Til baka í vafranum fer
+     aftur á yfirlitið og hlekkinn má senda Óskari. */
+  const slodF = new URLSearchParams(location.search).get('f');
+  let fid = admin ? (fyrirtaekin.some((f) => f.id === slodF) ? slodF : null) : ek.fyrirtaeki_id;
+  const opna = (id) => { location.search = '?f=' + encodeURIComponent(id); };
   let timabil = TIMABIL.some(([k]) => k === geymt('tolfraedi-timabil')) ? geymt('tolfraedi-timabil') : '30';
   let sia = 'allir';
 
@@ -564,6 +568,7 @@ async function start() {
 
   if (!fid) {
     teiknaHausinn();
+    if (admin && fyrirtaekin.length) { await teiknaYfirlit(); return; }
     fylla(hlutar.tolur, [el('div', { class: 'card pblokk' }, [
       el('p', { class: 'tomt', texti: 'Ekkert fyrirtæki skráð ennþá. Stofnaðu það á stjórnborðinu fyrst.' })
     ])]);
@@ -577,28 +582,148 @@ async function start() {
      Haus síðunnar og fyrirtækjaval
      ------------------------------------------------------------------ */
   function teiknaHausinn() {
+    const yfirlit = admin && !fid;
     fylla(hlutar.haus, [
+      admin && fid
+        ? el('a', { class: 'tf-tilbaka', href: 'tolfraedi.html', texti: 'Öll fyrirtæki' })
+        : null,
       el('div', { class: 'page-head tf-haus', style: 'padding-top:0' }, [
         el('div', {}, [
-          el('h1', { style: 'font-size:clamp(28px,24px+1.3vw,40px)', texti: 'Tölfræði' }),
-          el('p', { class: 'lead', texti: admin
-            ? 'Fylgjendur, áhorf og færslur á samfélagsmiðlum viðskiptavina, dag fyrir dag.'
-            : 'Fylgjendur, áhorf og færslur á samfélagsmiðlunum ykkar, dag fyrir dag.' })
+          el('h1', { style: 'font-size:clamp(28px,24px+1.3vw,40px)',
+                     texti: admin && fid ? fyrNafn() || 'Tölfræði' : 'Tölfræði' }),
+          el('p', { class: 'lead', texti: yfirlit
+            ? 'Veldu fyrirtæki til að sjá fylgjendur, áhorf og færslur dag fyrir dag.'
+            : admin
+              ? 'Fylgjendur, áhorf og færslur á samfélagsmiðlum, dag fyrir dag.'
+              : 'Fylgjendur, áhorf og færslur á samfélagsmiðlunum ykkar, dag fyrir dag.' })
         ]),
-        admin && fyrirtaekin.length
+        admin && fid && fyrirtaekin.length > 1
           ? el('label', { class: 'pyfir tf-velja', style: 'margin:0' }, [
-              el('span', { class: 'sr-only', texti: 'Fyrirtæki' }),
-              el('select', {
-                onchange: (e) => {
-                  fid = e.target.value;
-                  geyma('tolfraedi-fyrirtaeki', fid);
-                  sia = 'allir';
-                  hlada();
-                }
-              }, fyrirtaekin.map((f) => el('option', { value: f.id, selected: f.id === fid, texti: f.nafn })))
+              el('span', { class: 'sr-only', texti: 'Skipta um fyrirtæki' }),
+              el('select', { onchange: (e) => opna(e.target.value) },
+                fyrirtaekin.map((f) => el('option', { value: f.id, selected: f.id === fid, texti: f.nafn })))
             ])
           : null
       ])
+    ]);
+  }
+
+  /* ------------------------------------------------------------------
+     Yfirlit: eitt spjald á fyrirtæki með helstu tölum síðustu 30 daga
+     ------------------------------------------------------------------ */
+  async function teiknaYfirlit() {
+    fylla(hlutar.tolur, [el('div', { class: 'card pblokk' }, [el('p', { class: 'tomt', texti: 'Sæki tölurnar' })])]);
+    const nu = idag();
+    const fra = plusDagar(nu, -90);
+    const gogn30 = await Promise.all(fyrirtaekin.map(async (f) => {
+      try {
+        const [m, ma] = await Promise.all([g.midlar(f.id), g.maelingar(f.id, fra, nu)]);
+        return { f, midlar: m || [], maelingar: ma || [] };
+      } catch (villa) {
+        return { f, midlar: [], maelingar: [], villa };
+      }
+    }));
+
+    const tolu = (v) => (v === null || v === undefined || v === '' || !isFinite(Number(v)) ? null : Number(v));
+    const samantekt = (x) => {
+      const virkir = x.midlar.filter((m) => m.virkt !== false);
+      /* Sömu 30 dagar og á síðu fyrirtækisins: enda á síðasta degi með tölum */
+      const lok = x.maelingar.reduce((h, r) => (String(r.dags).slice(0, 10) > h ? String(r.dags).slice(0, 10) : h), '') || nu;
+      const skil = plusDagar(lok, -29);
+      const fyrriFra = plusDagar(lok, -59);
+      let nyleg = 0, fyrri = 0, nyHefur = false, fyrriHefur = false;
+      const dagleg = new Map();
+      const sidustuFylgj = new Map();
+      for (const r of x.maelingar) {
+        const d = String(r.dags).slice(0, 10);
+        const a = tolu(r.ahorf);
+        if (a != null) {
+          if (d >= skil && d <= lok) { nyleg += a; nyHefur = true; dagleg.set(d, (dagleg.get(d) || 0) + a); }
+          else if (d >= fyrriFra && d < skil) { fyrri += a; fyrriHefur = true; }
+        }
+        const fy = tolu(r.fylgjendur);
+        if (fy != null) {
+          const fyrir = sidustuFylgj.get(r.midill_id);
+          if (!fyrir || d > fyrir.d) sidustuFylgj.set(r.midill_id, { d, fy });
+        }
+      }
+      let fylgjendur = null;
+      sidustuFylgj.forEach((v) => { fylgjendur = (fylgjendur || 0) + v.fy; });
+      const ferill = [];
+      for (let i = 29; i >= 0; i--) ferill.push(dagleg.get(plusDagar(lok, -i)) || 0);
+      return {
+        virkir,
+        ahorf: nyHefur ? nyleg : null,
+        breyting: nyHefur && fyrriHefur && fyrri > 0 ? (nyleg - fyrri) / fyrri : null,
+        fylgjendur,
+        ferill: nyHefur ? ferill : null
+      };
+    };
+
+    const ferilsRit = (gildi) => {
+      const B = 120, H = 34;
+      const hamark = Math.max(...gildi, 1);
+      const pt = gildi.map((v, i) => (i * B / (gildi.length - 1)).toFixed(1) + ',' + (H - 2 - v / hamark * (H - 4)).toFixed(1));
+      const svg = document.createElementNS(SVGNS, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + B + ' ' + H);
+      svg.setAttribute('class', 'tf-kort__ferill');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('preserveAspectRatio', 'none');
+      const svaedi = document.createElementNS(SVGNS, 'polygon');
+      svaedi.setAttribute('points', '0,' + H + ' ' + pt.join(' ') + ' ' + B + ',' + H);
+      svaedi.setAttribute('class', 'tf-kort__svaedi');
+      const lina = document.createElementNS(SVGNS, 'polyline');
+      lina.setAttribute('points', pt.join(' '));
+      lina.setAttribute('class', 'tf-kort__lina');
+      svg.append(svaedi, lina);
+      return svg;
+    };
+
+    const rodud = gogn30.map((x) => ({ ...x, s: samantekt(x) }))
+      .sort((a, b) => (b.s.virkir.length > 0) - (a.s.virkir.length > 0)
+        || (b.s.ahorf || 0) - (a.s.ahorf || 0)
+        || a.f.nafn.localeCompare(b.f.nafn, 'is'));
+
+    const spjald = ({ f, s, villa }) => {
+      const tegundir = RODMIDLA.filter((k) => s.virkir.some((m) => m.midill === k));
+      const merkiSlod = oruggSlod(f.merki_url);
+      return el('a', { class: 'tf-kort', href: 'tolfraedi.html?f=' + encodeURIComponent(f.id),
+                       'aria-label': f.nafn + ', opna tölfræði' }, [
+        el('div', { class: 'tf-kort__haus' }, [
+          merkiSlod
+            ? el('img', { class: 'tf-kort__merki', src: merkiSlod, alt: '' })
+            : el('span', { class: 'tf-kort__merki tf-kort__merki--stafur', 'aria-hidden': 'true',
+                           texti: (f.nafn || '?').trim().charAt(0).toUpperCase() }),
+          el('div', { class: 'tf-kort__nafn' }, [
+            el('strong', { texti: f.nafn }),
+            el('span', { class: 'tf-kort__midlar' }, tegundir.length
+              ? tegundir.map((k) => el('span', {}, [
+                  el('i', { class: 'tf-punktur', style: 'background:' + MIDLAR[k].litur, 'aria-hidden': 'true' }),
+                  document.createTextNode(MIDLAR[k].heiti)
+                ]))
+              : [document.createTextNode(villa ? 'Tölurnar komu ekki' : 'Engir miðlar tengdir')])
+          ])
+        ]),
+        s.ferill ? ferilsRit(s.ferill) : el('div', { class: 'tf-kort__ferill tf-kort__ferill--tomt' }),
+        el('dl', { class: 'tf-kort__tolur' }, [
+          el('div', {}, [
+            el('dt', { texti: 'Áhorf, 30 dagar' }),
+            el('dd', { texti: s.ahorf != null ? tala(s.ahorf) : 'Engin gögn' }),
+            s.breyting != null
+              ? el('span', { class: 'tf-breyting ' + (s.breyting >= 0 ? 'tf-breyting--upp' : 'tf-breyting--nidur'),
+                             texti: (s.breyting >= 0 ? '▲ ' : '▼ ') + prosenta(Math.abs(s.breyting)) })
+              : null
+          ]),
+          el('div', {}, [
+            el('dt', { texti: 'Fylgjendur' }),
+            el('dd', { texti: s.fylgjendur != null ? tala(s.fylgjendur) : 'Engin gögn' })
+          ])
+        ])
+      ]);
+    };
+
+    fylla(hlutar.tolur, [
+      el('div', { class: 'tf-kortin' }, rodud.map(spjald))
     ]);
   }
 
