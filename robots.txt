@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /vinnusvaedi/
+Disallow: /glerhus/
 
 User-agent: GPTBot
 Allow: /

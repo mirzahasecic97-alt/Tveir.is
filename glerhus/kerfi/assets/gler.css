@@ -1,0 +1,323 @@
+/* ==========================================================================
+   Glerhúsið: dökkt gler. Hlaðið síðast, ofan á styles.css, glans.css,
+   portal.css og gler-litir.css (sjálfgerðu dökku litina).
+   Fyrirmynd: gegnsæ, mött spjöld á móðukenndum dökkum bakgrunni,
+   hvítur texti, litlir hástafamiðar, gull og grænt sem áherslur.
+   ========================================================================== */
+:root {
+  color-scheme: dark;
+  --ink: #f4f5f7;
+  --soft: rgba(244, 245, 247, .66);
+  --acc: #f0c75e;              /* gull */
+  --acc-hover: #f6d47c;
+  --accs: rgba(240, 199, 94, .14);
+  --acc-on-navy: #f0c75e;
+  --ok: #7fd6a0;               /* grænt */
+  --bg: #24272d;
+  --sur: rgba(255, 255, 255, .07);
+  --line: rgba(255, 255, 255, .14);
+
+  --g-fyll: linear-gradient(150deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .05));
+  --g-brun: rgba(255, 255, 255, .26);
+  --g-ljos: inset 0 1px 0 rgba(255, 255, 255, .28), inset 0 0 0 1px rgba(255, 255, 255, .04);
+  --g-fall: 0 30px 60px -30px rgba(0, 0, 0, .65);
+  --g-blur: blur(28px) saturate(1.5);
+
+  /* glans.css notar sín eigin heiti, beint á sömu gildin */
+  --gl-fill: var(--g-fyll);
+  --gl-brun: var(--g-brun);
+  --gl-inn: var(--g-ljos);
+  --gl-fall: var(--g-fall);
+  --gl-fall-h: var(--g-fall), 0 0 0 1px rgba(255, 255, 255, .3);
+  --gl-blur: var(--g-blur);
+}
+
+/* Bakgrunnurinn: dökkur, móðukenndur, eins og ljós á bak við matt gler */
+html {
+  background:
+    radial-gradient(38% 42% at 72% 18%, rgba(255, 214, 140, .38), transparent 70%),
+    radial-gradient(30% 36% at 58% 60%, rgba(255, 236, 200, .16), transparent 70%),
+    radial-gradient(44% 46% at 12% 30%, rgba(150, 170, 196, .34), transparent 72%),
+    radial-gradient(40% 40% at 88% 92%, rgba(120, 150, 140, .26), transparent 72%),
+    radial-gradient(60% 50% at 30% 100%, rgba(60, 64, 74, .9), transparent 70%),
+    linear-gradient(180deg, #5c6270 0%, #3a3e46 45%, #26292f 100%);
+  background-attachment: fixed;
+  background-color: #2a2d33;
+  color: var(--ink);
+}
+/* Fínt korn ofan á, eins og í ljósmynd */
+html::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .14;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+body { background: transparent; color: var(--ink); position: relative; z-index: 1; }
+body::before, body::after { display: none !important; }   /* gömlu ljósin úr glans.css */
+
+/* Merkið hvítt á dökku */
+.phead__tveir, .inn__logo { filter: invert(1) brightness(1.1); }
+.phead__tveir { height: 28px; width: auto; }
+.inn__logo { height: 40px; width: auto; }
+
+/* Haus úr gleri */
+.phead {
+  background: rgba(30, 33, 39, .35) !important;
+  -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur);
+  border-bottom: 1px solid rgba(255, 255, 255, .12) !important;
+  box-shadow: 0 20px 40px -30px rgba(0, 0, 0, .7) !important;
+}
+.phead a, .phead button { color: var(--ink); }
+.phead__nav a[aria-current="page"] { background: rgba(255, 255, 255, .16) !important; color: #fff !important; }
+
+/* Öll kort, spjöld og gluggar úr möttu gleri */
+.card, .pdialog__kort, .inn__kort, .pkort, .tf-kort {
+  background: var(--g-fyll) !important;
+  -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur);
+  border: 1px solid var(--g-brun) !important;
+  box-shadow: var(--g-ljos), var(--g-fall) !important;
+  color: var(--ink);
+  border-radius: 28px;
+}
+.card--navy {
+  background: linear-gradient(150deg, rgba(0, 0, 0, .32), rgba(0, 0, 0, .18)) !important;
+}
+dialog { color: var(--ink); }
+dialog::backdrop { background: rgba(10, 12, 15, .5); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+
+/* Fyrirsagnir og miðar eins og í fyrirmyndinni */
+h1, h2, h3 { color: #fff; }
+.skyring, small { color: var(--soft); }
+
+/* Hnappar: ljóst gler með ljósri brún; aðalhnappurinn með gullbrún */
+.btn {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .08)) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, .32) !important;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 14px 30px -18px rgba(0, 0, 0, .7) !important;
+}
+.btn:hover { background: linear-gradient(180deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, .12)) !important; }
+.btn[type="submit"] {
+  border-color: rgba(240, 199, 94, .75) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 0 0 1px rgba(240, 199, 94, .15), 0 14px 30px -18px rgba(0, 0, 0, .7) !important;
+}
+.btn--ghost, .btn--white { background: rgba(255, 255, 255, .08) !important; color: #fff !important; }
+
+/* Reitir */
+input, textarea, select {
+  background: rgba(0, 0, 0, .18) !important; color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, .18) !important;
+}
+input::placeholder, textarea::placeholder { color: rgba(255, 255, 255, .4); }
+input:focus, textarea:focus, select:focus {
+  outline: none; border-color: rgba(240, 199, 94, .7) !important;
+  box-shadow: 0 0 0 4px rgba(240, 199, 94, .12) !important;
+}
+input[type="checkbox"] { accent-color: var(--ok); }
+select option { background: #2a2d33; color: #fff; }
+
+/* Litlu miðarnir yfir tölunum, í hástöfum eins og í fyrirmyndinni */
+.tekjur dt, .tf-kort dt { text-transform: uppercase; letter-spacing: .08em; font-size: 11.5px; color: rgba(255, 255, 255, .7); }
+.tekjur .adal dt { color: var(--acc); }
+.tekjur dd { color: #fff; }
+
+/* --------------------------------------------------------------------------
+   Glerspjöldin efst á stjórnborðinu (eins og fyrirmyndin)
+   -------------------------------------------------------------------------- */
+.gk-grind { display: grid; gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 6px; }
+@media (max-width: 760px) { .gk-grind { grid-template-columns: 1fr; } }
+.gk {
+  position: relative; display: flex; flex-direction: column; gap: 14px;
+  padding: 30px 32px 30px; border-radius: 40px; min-height: 210px;
+  color: #fff; text-decoration: none;
+  background: linear-gradient(150deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .06));
+  -webkit-backdrop-filter: blur(30px) saturate(1.4); backdrop-filter: blur(30px) saturate(1.4);
+  border: 1.5px solid rgba(255, 255, 255, .34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 34px 70px -34px rgba(0, 0, 0, .7);
+  transition: border-color .25s ease, background .25s ease;
+  overflow: hidden;
+}
+.gk::after {   /* korn í glerinu */
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .12; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.gk:hover { border-color: rgba(255, 255, 255, .5); background: linear-gradient(150deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .08)); }
+.gk__or { position: absolute; top: 26px; right: 30px; color: var(--acc); font-size: 26px; line-height: 1; }
+.gk__midi { text-transform: uppercase; letter-spacing: .04em; font: 400 15px/1.2 var(--f-body); color: rgba(255, 255, 255, .9); }
+.gk__tala { font: 600 clamp(30px, 24px + 1.6vw, 44px)/1.05 var(--f-head); letter-spacing: -.02em; color: #fff; }
+.gk--vidvorun .gk__tala { color: #ffb4a6; }
+.gk__undir { font-size: 13.5px; color: rgba(255, 255, 255, .62); margin-top: auto; }
+
+/* Súlurit í gulli */
+.gk__sulur { display: flex; align-items: flex-end; justify-content: space-between; height: 76px; margin: 4px 0 2px; }
+.gk__sulur i {
+  flex: none; width: 6px; border-radius: 3px;
+  background: linear-gradient(180deg, #f2b705, rgba(255, 244, 214, .85));
+}
+.gk__sulur i.framtid { background: linear-gradient(180deg, rgba(255, 255, 255, .45), rgba(255, 255, 255, .15)); }
+
+/* Framvindustika: litur fyllir upp í --p, textinn beggja vegna */
+.gk__stika {
+  position: relative; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 13px 18px; border-radius: 16px; margin-top: auto;
+  font: 500 14.5px/1.2 var(--f-body); color: #fff;
+  border: 1px solid rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .06); overflow: hidden;
+}
+.gk__stika::before {
+  content: ''; position: absolute; inset: 0 auto 0 0; width: var(--p);
+  background: linear-gradient(90deg, rgba(83, 156, 104, .95), rgba(150, 214, 162, .75) 85%, rgba(150, 214, 162, 0));
+}
+.gk__stika--hlytt::before { background: linear-gradient(90deg, rgba(196, 160, 118, .85), rgba(222, 190, 150, .6) 85%, rgba(222, 190, 150, 0)); }
+.gk__stika span { position: relative; }
+
+/* Stöðupilla með ljósi */
+.gk__pilla {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 10px;
+  padding: 11px 20px; border-radius: 999px; font: 400 15px/1 var(--f-body); color: rgba(255, 255, 255, .92);
+  border: 1px solid rgba(255, 255, 255, .3); background: rgba(255, 255, 255, .08);
+}
+.gk__pilla i { width: 9px; height: 9px; border-radius: 50%; background: #39e75f; box-shadow: 0 0 10px #39e75f; }
+.gk__pilla--gult i { background: #f2c94c; box-shadow: 0 0 10px #f2c94c; }
+.gk__pilla--raudt i { background: #ff7a6b; box-shadow: 0 0 10px #ff7a6b; }
+
+/* Fólkið */
+.gk__folk { display: flex; margin-top: auto; }
+.gk__haus {
+  width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
+  margin-left: -10px; font: 600 15px/1 var(--f-body); color: #fff;
+  border: 2px solid rgba(255, 255, 255, .5); box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .6);
+}
+.gk__haus:first-child { margin-left: 0; }
+.gk__haus--0 { background: linear-gradient(140deg, #c79a52, #7b5a2c); }
+.gk__haus--1 { background: linear-gradient(140deg, #6f8fae, #3a5068); }
+.gk__haus--2 { background: linear-gradient(140deg, #7fae8c, #3f6a4b); }
+.gk__haus--3 { background: linear-gradient(140deg, #ad7f9c, #634057); }
+.gk__haus--4 { background: linear-gradient(140deg, #9a9fae, #555a66); }
+.gk__haus--fleiri { background: rgba(70, 60, 54, .85); font-weight: 500; }
+
+/* --------------------------------------------------------------------------
+   Hamborgari í síma: valmyndin felst og opnast sem glerlisti undir hausnum
+   -------------------------------------------------------------------------- */
+.phead__hamborgari { display: none; }
+@media (max-width: 900px) {
+  .phead__hamborgari {
+    display: inline-block; position: relative; padding: 0;
+    width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
+    background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .28);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25);
+  }
+  .phead__hamborgari span {
+    position: absolute; left: 50%; top: 50%; width: 18px; height: 2px; margin: -1px 0 0 -9px;
+    border-radius: 2px; background: #fff; transition: transform .25s ease, opacity .2s ease;
+  }
+  .phead__hamborgari span:nth-child(1) { transform: translateY(-6px); }
+  .phead__hamborgari span:nth-child(3) { transform: translateY(6px); }
+  .phead.er-opin .phead__hamborgari span:nth-child(1) { transform: rotate(45deg); }
+  .phead.er-opin .phead__hamborgari span:nth-child(2) { opacity: 0; }
+  .phead.er-opin .phead__hamborgari span:nth-child(3) { transform: rotate(-45deg); }
+
+  .phead__inn { flex-wrap: wrap; }
+  .phead__nav { display: none !important; }
+  .phead.er-opin .phead__nav {
+    display: flex !important; order: 3; width: 100%;
+    flex-direction: column; align-items: stretch; gap: 4px;
+    margin-top: 10px; padding: 8px; overflow: visible;
+    border-radius: 22px; background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .16);
+  }
+  .phead.er-opin .phead__nav a { justify-content: space-between; padding: 14px 16px; font-size: 16px; min-height: 48px; }
+  .phead__notandi { display: none; }
+}
+
+@media (max-width: 560px) {
+  .gk { padding: 24px 22px; border-radius: 32px; min-height: 0; }
+  .gk__or { top: 22px; right: 22px; }
+  .gk__stika { font-size: 13px; padding: 12px 14px; }
+  .gk__stika span:first-child { white-space: nowrap; }
+}
+
+/* Eitt spjald þegar tekjurnar voru ekki valdar */
+.gk-grind--eitt { grid-template-columns: minmax(0, 1fr); }
+
+/* Glerborðinn neðst þegar gesturinn kom úr "Settu saman ykkar kerfi" */
+.gh-bordi {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 90;
+  display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; border-radius: 999px;
+  background: rgba(30, 33, 39, .62); border: 1px solid rgba(255, 255, 255, .24);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 20px 50px -20px rgba(0, 0, 0, .8);
+  animation: gh-inn .7s cubic-bezier(.22, 1, .36, 1) .4s both; max-width: calc(100vw - 24px);
+}
+@keyframes gh-inn { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.gh-bordi__punktur { width: 9px; height: 9px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 10px var(--acc); flex: none; }
+.gh-bordi__texti { font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gh-bordi__hn {
+  flex: none; padding: 10px 14px; border-radius: 999px; font: 500 13.5px/1 var(--f-body); color: #fff; text-decoration: none;
+  background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .26); transition: background .3s ease;
+}
+.gh-bordi__hn:hover { background: rgba(255, 255, 255, .2); }
+.gh-bordi__hn--gull { border-color: var(--acc); }
+@media (max-width: 520px) { .gh-bordi__texti { display: none; } .gh-bordi { padding-left: 12px; } }
+body { padding-bottom: 80px; }
+@media (prefers-reduced-motion: reduce) { .gh-bordi { animation: none; } }
+
+
+/* --------------------------------------------------------------------------
+   Sami gljáandi glerbakgrunnur og á vefnum (assets/vefur.css)
+   -------------------------------------------------------------------------- */
+body::before, body::after {
+  content: ''; position: fixed; inset: -12%; z-index: -1; pointer-events: none; display: block !important;
+}
+/* Ljósið: þrír mjúkir hnettir sem líða hægt um */
+body::before {
+  background:
+    radial-gradient(28% 32% at 30% 30%, rgba(255, 214, 150, .34), transparent 70%),
+    radial-gradient(26% 30% at 72% 46%, rgba(150, 190, 255, .3), transparent 70%),
+    radial-gradient(30% 30% at 46% 82%, rgba(230, 160, 220, .24), transparent 70%);
+  animation: gl-lida 38s ease-in-out infinite alternate;
+}
+@keyframes gl-lida {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50% { transform: translate3d(4%, -3%, 0) rotate(6deg) scale(1.06); }
+  100% { transform: translate3d(-3%, 4%, 0) rotate(-4deg) scale(1.02); }
+}
+/* Glerplöturnar með gljáa og endurskini */
+body::after {
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 900' preserveAspectRatio='xMidYMid slice'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.2'/%3E%3Cstop offset='.45' stop-color='%23fff' stop-opacity='.05'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='.1'/%3E%3C/linearGradient%3E%3ClinearGradient id='s' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='0'/%3E%3Cstop offset='.5' stop-color='%23fff' stop-opacity='.38'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='0'/%3E%3C/linearGradient%3E%3Cfilter id='b'%3E%3CfeGaussianBlur stdDeviation='6'/%3E%3C/filter%3E%3C/defs%3E%3Cg transform='rotate(-14 1040 260)'%3E%3Crect x='860' y='40' width='520' height='420' rx='70' fill='url(%23g)' stroke='%23fff' stroke-opacity='.32' stroke-width='1.5'/%3E%3Crect x='900' y='60' width='60' height='380' rx='30' fill='url(%23s)' filter='url(%23b)' transform='rotate(18 930 250)'/%3E%3C/g%3E%3Cg transform='rotate(10 300 640)'%3E%3Crect x='60' y='470' width='460' height='340' rx='64' fill='url(%23g)' stroke='%23fff' stroke-opacity='.28' stroke-width='1.5'/%3E%3Crect x='120' y='490' width='44' height='300' rx='22' fill='url(%23s)' filter='url(%23b)' transform='rotate(16 142 640)'/%3E%3C/g%3E%3Cg transform='rotate(-6 760 720)'%3E%3Crect x='600' y='640' width='320' height='220' rx='50' fill='url(%23g)' stroke='%23fff' stroke-opacity='.22' stroke-width='1.2'/%3E%3C/g%3E%3Cg transform='rotate(22 260 150)'%3E%3Crect x='140' y='40' width='240' height='200' rx='46' fill='url(%23g)' stroke='%23fff' stroke-opacity='.2' stroke-width='1.2'/%3E%3C/g%3E%3C/svg%3E") center / cover no-repeat;
+  opacity: .7;
+}
+@media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
+/* Í síma: engin hreyfing á bakgrunninum, sparar rafhlöðuna og heldur listunum mjúkum */
+@media (hover: none) and (pointer: coarse) { body::before { animation: none; } }
+
+/* Tengingarnar sem voru valdar */
+.gh-teng ul { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.gh-teng li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; }
+.gh-teng b { font: 600 15px/1.2 var(--f-head); color: #fff; }
+.gh-teng span { grid-column: 1; font-size: 13px; color: var(--soft); line-height: 1.4; }
+.gh-teng em { grid-column: 2; grid-row: 1; font-style: normal; font-size: 12px; color: #7fe39b; opacity: 0; animation: gh-tengist .5s cubic-bezier(.22,1,.36,1) var(--d) forwards; }
+.gh-teng em::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #39e75f; box-shadow: 0 0 8px #39e75f; margin-right: 6px; }
+@keyframes gh-tengist { from { opacity: 0; transform: translateX(6px); } to { opacity: 1; transform: none; } }
+
+/* Bókhaldskerfið (Payday eða DK) efst á Bókhaldi */
+.gh-bok { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 18px; }
+.gh-bok__haus { display: flex; align-items: center; gap: 14px; }
+.gh-bok__haus strong { display: block; font: 600 18px/1.2 var(--f-head); color: #fff; }
+.gh-bok__merki { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font: 700 15px/1 var(--f-head); color: #15120a; background: var(--acc); }
+.gh-bok__stada { font-size: 13px; color: #7fe39b; }
+.gh-bok__stada::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #39e75f; box-shadow: 0 0 8px #39e75f; margin-right: 6px; }
+.gh-bok p { color: var(--soft); font-size: 14.5px; }
+.gh-bok .btn { align-self: flex-start; }
+
+/* Tilkynningar */
+.gh-tk-svid { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); z-index: 95; display: flex; flex-direction: column; gap: 8px; align-items: center; width: min(92vw, 520px); pointer-events: none; }
+.gh-tk {
+  display: flex; align-items: center; gap: 12px; padding: 13px 18px; border-radius: 18px; font-size: 14.5px; color: #fff;
+  background: rgba(30, 33, 39, .74); border: 1px solid rgba(255, 255, 255, .22);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, .8);
+  animation: gh-tk-inn .45s cubic-bezier(.22,1,.36,1); transition: opacity .35s ease, transform .35s ease;
+}
+.gh-tk > i { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #39e75f; box-shadow: 0 0 10px #39e75f; }
+.gh-tk.er-farin { opacity: 0; transform: translateY(8px); }
+@keyframes gh-tk-inn { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }

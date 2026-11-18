@@ -1,0 +1,2021 @@
+/* SJÁLFGERT af verkfaeri/gera-gler.py. Ekki breyta hér, breyttu skriftunni. */
+
+/* úr assets/css/styles.css */
+:root {
+  --ink: rgba(212, 219, 224, 1);
+  --soft: rgba(172, 179, 184, 1);
+  --acc: rgba(142, 169, 189, 1);
+  --acc-hover: rgba(156, 178, 193, 1);
+  --accs: rgba(123, 158, 183, 0.16);
+  --acc-on-navy: rgba(188, 204, 216, 1);
+  --bg: rgba(122, 158, 184, 0.16);
+  --sur: rgba(255, 255, 255, 0.06);
+  --line: rgba(255, 255, 255, 0.176);
+  --sh-card: 0 2px 10px rgba(0, 0, 0, 0.096);
+  --sh-drop: 0 12px 30px rgba(0, 0, 0, 0.256);
+  --sh-navy: 0 8px 24px rgba(0, 0, 0, 0.288);
+  --sh-btn: 0 4px 14px rgba(0, 0, 0, 0.55);
+  --sh-nav: 0 6px 22px rgba(0, 0, 0, 0.128);
+  --r-card: 20px;
+  --r-block: 28px;
+  --r-input: 12px;
+  --r-pill: 999px;
+  --gut: clamp(16px, 2.8vw, 32px);
+  --sec: clamp(46px, 6.6vw, 96px);
+  --f-head: 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --f-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+:root {
+  --fs-h1-hero: clamp(33px, 20.7px + 3.17vw, 58px);
+  --fs-h1-page: clamp(34px, 23.1px + 2.79vw, 56px);
+  --fs-h2: clamp(27px, 20.6px + 1.65vw, 40px);
+  --fs-h2-sm: clamp(25px, 20.6px + 1.14vw, 34px);
+  --fs-h3: clamp(16px, 14.5px + 0.38vw, 19px);
+  --fs-lead: clamp(16px, 14.5px + 0.38vw, 19px);
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+h1 em,
+h2 em {
+  color: var(--acc);
+}
+a {
+  color: var(--acc);
+}
+button {
+  color: inherit;
+}
+:focus-visible {
+  outline: 2px solid var(--acc);
+}
+.sr-only {
+  border: 0;
+}
+.skip-link {
+  background: rgba(0, 0, 0, .34);
+  color: rgba(255, 255, 255, 1);
+}
+.lead {
+  color: var(--soft);
+}
+.drag-hint {
+  color: var(--soft);
+}
+.btn {
+  background: var(--acc);
+  color: rgba(255, 255, 255, 1);
+  border: 1.5px solid transparent;
+  box-shadow: var(--sh-btn);
+}
+.btn:hover {
+  background: var(--acc-hover);
+  color: rgba(255, 255, 255, 1);
+}
+.btn--ghost {
+  background: rgba(255, 255, 255, 0.033);
+  color: var(--ink);
+  border-color: var(--acc);
+  box-shadow: none;
+}
+.btn--ghost:hover {
+  background: var(--acc);
+  color: rgba(255, 255, 255, 1);
+}
+.btn--white {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  box-shadow: none;
+}
+.btn--white:hover {
+  background: rgba(117, 159, 189, 0.16);
+  color: var(--ink);
+}
+.badge {
+  background: var(--accs);
+  color: var(--acc);
+}
+.card {
+  background: var(--sur);
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-card);
+}
+.card--navy {
+  background: rgba(0, 0, 0, .34);
+  border-color: transparent;
+  color: rgba(255, 255, 255, 1);
+}
+.slot {
+  background: var(--accs);
+}
+.slot::before {
+  color: rgba(212, 219, 224, 0.38);
+}
+.site-head {
+  background: linear-gradient(to bottom, var(--bg) 72%, rgba(122, 158, 184, 0));
+}
+.pillnav {
+  background: rgba(255, 255, 255, 0.054);
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-nav);
+}
+.pillnav__links a {
+  color: var(--soft);
+}
+.pillnav__links a:hover,
+.pillnav__links a[aria-current="page"] {
+  color: var(--ink);
+}
+.burger {
+  background: none;
+  border: 0;
+}
+.burger span {
+  background: rgba(0, 0, 0, .34);
+}
+.mobilemenu {
+  background: var(--sur);
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-drop);
+}
+.mobilemenu a {
+  color: var(--ink);
+}
+.mobilemenu a:hover {
+  background: var(--accs);
+}
+.dropdown__toggle[aria-expanded="true"] {
+  background: var(--acc-hover);
+}
+.dropdown__menu {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-drop);
+}
+.dropdown__menu a {
+  color: var(--ink);
+}
+.dropdown__menu a:hover {
+  background: var(--accs);
+}
+.dropdown__menu span {
+  color: var(--soft);
+}
+.hero {
+  box-shadow: var(--sh-navy);
+}
+.hero::after {
+  background: linear-gradient(to top,
+    rgba(0, 0, 0, 0.282) 0%,
+    rgba(0, 0, 0, 0.258) 26%,
+    rgba(0, 0, 0, 0.126) 54%,
+    rgba(0, 0, 0, 0.024) 78%,
+    rgba(0, 0, 0, 0) 100%);
+}
+.hero__yfir {
+  color: rgba(255, 255, 255, 1);
+}
+.hero__yfir h1 {
+  color: rgba(255, 255, 255, 1);
+}
+.hero__yfir h1 em {
+  color: var(--acc-on-navy);
+}
+.hero__yfir .lead {
+  color: rgba(255, 255, 255, 0.8);
+}
+.btn--aglas {
+  background: rgba(255, 255, 255, 0.006);
+  color: rgba(255, 255, 255, 1);
+  border-color: rgba(255, 255, 255, 0.121);
+  box-shadow: none;
+}
+.btn--aglas:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.hero__nofn {
+  color: rgba(255, 255, 255, 0.66);
+}
+.leid {
+  color: inherit;
+}
+.leid__texti {
+  color: var(--soft);
+}
+.leid__or {
+  color: var(--acc);
+}
+.leid:hover {
+  border-color: var(--acc);
+  box-shadow: var(--sh-nav);
+}
+.leid:focus-visible {
+  outline: 2px solid var(--acc);
+}
+.logo-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-card);
+  color: rgba(212, 219, 224, 0.45);
+}
+.logo-chip:has(img:not(.is-missing)) {
+  color: transparent;
+}
+.hscroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.048);
+}
+.work-tile {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.224);
+  background: var(--accs);
+  color: inherit;
+}
+.work-tile__meta {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.264), rgba(0, 0, 0, 0));
+}
+.work-tile__cat {
+  color: rgba(255, 255, 255, 0.7);
+}
+.work-tile__name {
+  color: rgba(255, 255, 255, 1);
+}
+.services-rail::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.048);
+}
+.service {
+  color: inherit;
+}
+a.service:hover .service__icon {
+  border-color: var(--acc);
+  box-shadow: var(--sh-nav);
+}
+a.service:hover h3 {
+  color: var(--acc);
+}
+a.service:focus-visible {
+  outline: 2px solid var(--acc);
+}
+.service__icon {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  color: var(--acc);
+}
+.service p {
+  color: var(--soft);
+}
+.member {
+  background: rgba(0, 0, 0, .34);
+  box-shadow: var(--sh-navy);
+}
+.member__mono {
+  color: rgba(142, 169, 189, 0.22);
+}
+.member__name {
+  color: rgba(255, 255, 255, 1);
+}
+.member__role {
+  color: var(--acc-on-navy);
+}
+.member__desc {
+  color: rgba(255, 255, 255, 0.62);
+  border-top: 1px solid rgba(255, 255, 255, 0.0264);
+}
+.cta {
+  background: rgba(0, 0, 0, .34);
+  box-shadow: var(--sh-navy);
+}
+.cta h2 {
+  color: rgba(255, 255, 255, 1);
+}
+.site-foot {
+  border-top: 1px solid var(--line);
+  color: var(--soft);
+}
+.site-foot a {
+  color: var(--soft);
+}
+.site-foot a:hover {
+  color: var(--ink);
+}
+.filter {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--soft);
+  border: 1px solid var(--line);
+}
+.filter:hover {
+  border-color: var(--acc);
+  color: var(--ink);
+}
+.filter[aria-pressed="true"] {
+  background: var(--acc);
+  color: rgba(255, 255, 255, 1);
+  border-color: var(--acc);
+}
+.clientlist {
+  border-top: 1px solid var(--line);
+}
+.clientlist__row {
+  border-bottom: 1px solid var(--line);
+}
+.clientlist__row:hover {
+  background: rgba(255, 255, 255, 0.042);
+}
+.clientlist__logo {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-card);
+}
+.clientlist__branch {
+  color: var(--soft);
+}
+.clientlist__link {
+  color: inherit;
+}
+.clientlist__row:has(.clientlist__link):hover .clientlist__name {
+  color: var(--acc);
+}
+.clientlist__ext {
+  color: var(--acc);
+}
+.clientlist__cat {
+  color: var(--acc);
+  background: var(--accs);
+}
+.no-results {
+  color: var(--soft);
+}
+.field > span,
+.fieldset > legend {
+  color: var(--soft);
+}
+.field input,
+.field textarea {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  outline: none;
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: rgba(172, 179, 184, 0.75);
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.256);
+}
+.field input:user-invalid,
+.field textarea:user-invalid {
+  border-color: rgba(212, 87, 79, 1);
+}
+.fieldset {
+  border: 0;
+}
+.chip {
+  background: var(--accs);
+  color: var(--acc);
+  border: 1px solid transparent;
+}
+.chip:hover {
+  background: rgba(121, 158, 185, 0.16);
+}
+.chip[aria-pressed="true"] {
+  background: var(--acc);
+  color: rgba(255, 255, 255, 1);
+}
+.form-status--ok {
+  background: rgba(113, 193, 136, 0.16);
+  color: rgba(189, 233, 202, 1);
+}
+.form-status--err {
+  background: rgba(236, 79, 70, 0.16);
+  color: rgba(227, 168, 165, 1);
+}
+.info-card__label {
+  color: var(--acc);
+}
+.info-card ul a {
+  color: var(--ink);
+}
+.info-card ul a:hover {
+  color: var(--acc);
+}
+.info-card--navy h2 {
+  color: rgba(255, 255, 255, 1);
+}
+.info-card--navy p {
+  color: rgba(255, 255, 255, 0.7);
+}
+.kit-card__num {
+  color: var(--acc);
+}
+.kit-card p {
+  color: var(--soft);
+}
+.form-navy h2 {
+  color: rgba(255, 255, 255, 1);
+}
+.form-navy > div > p {
+  color: rgba(255, 255, 255, 0.7);
+}
+.form-navy__inner {
+  background: rgba(255, 255, 255, 0.06);
+}
+.stats {
+  background: rgba(0, 0, 0, .34);
+  box-shadow: var(--sh-navy);
+}
+.stat__num {
+  color: rgba(255, 255, 255, 1);
+}
+.stat__label {
+  color: rgba(255, 255, 255, 0.62);
+}
+.stat__label em {
+  color: var(--acc-on-navy);
+}
+.stats--sm .stat__label {
+  color: rgba(255, 255, 255, 0.7);
+}
+.case-figs li {
+  color: var(--soft);
+  border-top: 1px solid var(--line);
+}
+.case-figs li:first-child {
+  border-top: 0;
+}
+.case-figs b {
+  color: var(--ink);
+}
+.case-note {
+  color: var(--soft);
+}
+.daemi span {
+  color: var(--soft);
+}
+.sec-intro {
+  color: var(--soft);
+}
+.stat-cap {
+  color: var(--soft);
+}
+.fit h3 {
+  color: rgba(255, 255, 255, 1);
+}
+.fit__list li {
+  color: rgba(255, 255, 255, 0.78);
+}
+.fit__list--ja li::before {
+  color: var(--acc-on-navy);
+}
+.fit__list--nei li::before {
+  color: rgba(255, 255, 255, 0.38);
+}
+.step__n {
+  background: var(--accs);
+  color: var(--acc);
+}
+.step p {
+  color: var(--soft);
+}
+.deliver li::before {
+  color: var(--acc);
+}
+.faq summary::after {
+  color: var(--acc);
+}
+.faq summary:focus-visible {
+  outline: 2px solid var(--acc);
+}
+.faq p {
+  color: var(--soft);
+}
+.langsw {
+  background: var(--accs);
+}
+.langsw__btn {
+  border: 0;
+  background: transparent;
+  color: var(--soft);
+}
+.langsw__btn:hover {
+  color: var(--ink);
+}
+.langsw__btn.is-on {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.192);
+}
+.fljot {
+  background: var(--sur);
+  border: 1px solid var(--line);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.288);
+}
+.fljot strong {
+  color: var(--ink);
+}
+.fljot__undir {
+  color: var(--soft);
+}
+.fljot__merki {
+  color: rgba(236, 204, 163, 1);
+  background: rgba(255, 169, 51, 0.16);
+}
+.fljot__merki i {
+  background: currentColor;
+}
+.fljot__merki--blar {
+  color: var(--acc);
+  background: var(--accs);
+}
+.fljot__verd {
+  color: rgba(189, 233, 202, 1);
+  background: rgba(113, 193, 136, 0.16);
+}
+.fljot__punktar i {
+  background: var(--accs);
+}
+.fljot__punktar i.er-lokid {
+  background: var(--acc);
+}
+.fljot__hak {
+  background: rgba(113, 193, 136, 0.16);
+}
+.fljot__hak::after {
+  border: solid rgba(76, 205, 113, 1);
+}
+@media (min-width: 1040px) {
+.fljot--1 {
+  --fx: -26px;
+}
+.fljot--2 {
+  --fx: -30px;
+}
+.fljot--3 {
+  --fx: 30px;
+}
+.fljot--4 {
+  --fx: 26px;
+}
+}
+@media (min-width: 820px) and (max-width: 1039px) {
+.fljot--1 {
+  --fx: -22px;
+}
+.fljot--2 {
+  --fx: -22px;
+}
+.fljot--3 {
+  --fx: 22px;
+}
+.fljot--4 {
+  --fx: 22px;
+}
+}
+.simi {
+  background: rgba(0, 0, 0, .34);
+  box-shadow: var(--sh-navy);
+}
+.simi__skjar {
+  background: var(--bg);
+}
+.simi__haus {
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--line);
+}
+.simi__fyr {
+  color: var(--soft);
+}
+.m-bidur {
+  background: rgba(0, 0, 0, .34);
+}
+.m-bidur__heiti {
+  color: var(--acc-on-navy);
+}
+.m-bidur__tala {
+  color: rgba(255, 255, 255, 1);
+}
+.m-verk {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+}
+.m-verk__titill {
+  color: var(--ink);
+}
+.m-sla {
+  background: var(--accs);
+}
+.m-sla__fyll {
+  background: var(--acc);
+}
+.m-hlut {
+  color: var(--soft);
+}
+.m-task {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+}
+.m-hak {
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.06);
+}
+.m-hak::after {
+  border: solid rgba(255, 255, 255, 0.22);
+}
+.m-task__titill {
+  color: var(--ink);
+}
+.m-task__titill::after {
+  background: currentColor;
+}
+.m-task__merki {
+  color: var(--acc);
+  background: var(--accs);
+}
+.m-bubla {
+  background: var(--accs);
+  color: var(--acc);
+}
+.vinnulag[data-skref="2"] .m-verk {
+  border-color: rgba(139, 170, 192, 0.5);
+  box-shadow: var(--sh-btn);
+}
+.vinnulag[data-skref="3"] .m-hak {
+  background: var(--acc);
+  border-color: var(--acc);
+}
+.vinnulag[data-skref="3"] .m-task__titill {
+  color: var(--soft);
+}
+.vinnulag__listi li {
+  background: var(--sur);
+  border: 1px solid var(--line);
+}
+.vinnulag__listi li::before {
+  background: var(--accs);
+  color: var(--acc);
+}
+.vinnulag__listi b {
+  color: var(--ink);
+}
+.vinnulag__listi span {
+  color: var(--soft);
+}
+.vinnulag__listi li.er-virkt {
+  border-color: rgba(139, 170, 192, 0.45);
+  box-shadow: var(--sh-card);
+}
+.vinnulag__listi li.er-virkt::before {
+  background: var(--acc);
+  color: rgba(255, 255, 255, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+.vinnulag .m-hak {
+  background: var(--acc);
+  border-color: var(--acc);
+}
+}
+
+/* úr assets/css/glans.css */
+:root {
+  --gl-fill:   linear-gradient(145deg, rgba(255, 255, 255, 0.036), rgba(255, 255, 255, 0.018));
+  --gl-brun:   rgba(255, 255, 255, 0.132);
+  --gl-inn:    inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(212, 219, 224, 0.04);
+  --gl-fall:   0 18px 40px -22px rgba(0, 0, 0, 0.544), 0 2px 8px rgba(0, 0, 0, 0.08);
+  --gl-fall-h: 0 30px 60px -26px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.416);
+  --gl-blur:   blur(26px) saturate(1.9);
+  --soft: rgba(186, 193, 197, 1);
+  --lj-bla:    rgba(139, 170, 192, 0.5);
+  --lj-ljos:   rgba(122, 158, 184, 0.072);
+  --lj-himinn: rgba(152, 178, 197, 0.42);
+  --lj-lilla:  rgba(123, 158, 183, 0.072);
+}
+html {
+  background:
+    linear-gradient(158deg, rgba(120, 158, 186, 0.16) 0%, rgba(123, 158, 183, 0.16) 34%, rgba(126, 158, 180, 0.16) 62%, rgba(125, 158, 181, 0.16) 100%)
+    fixed no-repeat;
+  background-color: var(--bg);
+}
+body {
+  background: transparent;
+}
+body::before {
+  background:
+    radial-gradient(54vmax 44vmax at 6% 2%,  var(--lj-bla),    transparent 62%),
+    radial-gradient(48vmax 42vmax at 94% 10%, var(--lj-lilla),  transparent 60%),
+    radial-gradient(52vmax 46vmax at 48% 52%, var(--lj-himinn), transparent 64%);
+}
+body::after {
+  background:
+    radial-gradient(56vmax 48vmax at 90% 90%, var(--lj-bla),  transparent 62%),
+    radial-gradient(46vmax 40vmax at 8% 94%,  var(--lj-ljos), transparent 60%);
+}
+.card {
+  background: var(--gl-fill);
+  border: 1px solid var(--gl-brun);
+  box-shadow: var(--gl-inn), var(--gl-fall);
+}
+.card--navy {
+  background: linear-gradient(155deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, .34) 58%);
+  border-color: rgba(186, 205, 218, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(0, 0, 0, 0.448),
+    0 26px 56px -24px rgba(0, 0, 0, 0.55);
+}
+.btn {
+  background: linear-gradient(180deg, rgba(122, 158, 184, 0.16), var(--acc) 52%, rgba(125, 156, 178, 1));
+  box-shadow:
+    inset 0 1px 0 rgba(0, 0, 0, 0.55),
+    0 10px 24px -8px rgba(0, 0, 0, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.192);
+}
+.btn::after {
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.0252), transparent);
+}
+.btn:hover {
+  background: linear-gradient(180deg, rgba(121, 158, 185, 0.16), var(--acc) 48%, rgba(123, 154, 177, 1));
+  box-shadow:
+    inset 0 1px 0 rgba(0, 0, 0, 0.55),
+    0 18px 34px -10px rgba(0, 0, 0, 0.55),
+    0 3px 8px rgba(0, 0, 0, 0.224);
+}
+.btn--ghost {
+  background: rgba(255, 255, 255, 0.033);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.55), 0 8px 20px -12px rgba(0, 0, 0, 0.48);
+}
+.btn--ghost:hover {
+  background: linear-gradient(180deg, rgba(122, 158, 184, 0.16), var(--acc) 52%, rgba(125, 156, 178, 1));
+  color: rgba(255, 255, 255, 1);
+}
+.btn--white {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(121, 158, 185, 0.16));
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.55), 0 10px 24px -12px rgba(0, 0, 0, 0.55);
+}
+.btn--white:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(121, 158, 185, 0.16));
+}
+.btn--aglas {
+  background: rgba(255, 255, 255, 0.0084);
+  border-color: rgba(255, 255, 255, 0.121);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.55), 0 10px 26px -14px rgba(0, 0, 0, 0.55);
+}
+.btn--aglas:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+}
+.site-head {
+  background: none;
+}
+.pillnav {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.0348), rgba(255, 255, 255, 0.018));
+  border-color: rgba(255, 255, 255, 0.143);
+  box-shadow:
+    inset 0 1px 0 rgba(0, 0, 0, 0.55),
+    0 14px 34px -18px rgba(0, 0, 0, 0.55);
+}
+.dropdown__menu,
+.mobilemenu {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.048), rgba(255, 255, 255, 0.0372));
+  border: 1px solid rgba(255, 255, 255, 0.176);
+  box-shadow: var(--gl-inn), 0 24px 50px -22px rgba(0, 0, 0, 0.55);
+}
+.section-title em,
+h1 em,
+h2 em {
+  background: linear-gradient(100deg, var(--acc), rgba(124, 158, 182, 0.16) 55%, rgba(123, 158, 183, 0.16));
+  color: transparent;
+}
+.hero__yfir h1 em {
+  background: none;
+  color: var(--acc-on-navy);
+}
+.leid::before {
+  background: radial-gradient(60% 90% at 0% 50%, rgba(139, 170, 192, 0.16), transparent 70%);
+}
+.leid:hover {
+  border-color: rgba(255, 255, 255, 0.209);
+  box-shadow:
+    var(--gl-inn),
+    0 34px 62px -26px rgba(0, 0, 0, 0.55),
+    0 0 40px -12px rgba(0, 0, 0, 0.55);
+}
+.cta {
+  background: linear-gradient(152deg, rgba(64, 80, 91, 1), rgba(0, 0, 0, .34) 52%, rgba(0, 0, 0, 0.3));
+  box-shadow:
+    inset 0 1px 0 rgba(0, 0, 0, 0.48),
+    0 34px 70px -30px rgba(0, 0, 0, 0.55);
+}
+.cta::before {
+  background:
+    radial-gradient(42% 70% at 12% 8%,  rgba(139, 170, 192, 0.38), transparent 68%),
+    radial-gradient(38% 64% at 90% 92%, rgba(125, 158, 181, 0.0416), transparent 68%);
+}
+.badge {
+  background: linear-gradient(180deg, rgba(123, 158, 183, 0.152), rgba(122, 158, 184, 0.144));
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.55), 0 4px 12px -6px rgba(0, 0, 0, 0.55);
+}
+@media (max-width: 760px) {
+:root {
+  --gl-fill: linear-gradient(145deg, rgba(255, 255, 255, 0.0444), rgba(255, 255, 255, 0.0312));
+  --gl-blur: blur(12px) saturate(1.5);
+}
+}
+.pillnav__logo::after {
+  background: linear-gradient(104deg,
+    transparent 36%,
+    rgba(255, 255, 255, 0.021) 44%,
+    rgba(255, 255, 255, 0.057) 50%,
+    rgba(255, 255, 255, 0.021) 56%,
+    transparent 64%);
+}
+.fljot {
+  background: var(--gl-fill);
+  border: 1px solid var(--gl-brun);
+  box-shadow: var(--gl-inn), 0 20px 44px -20px rgba(0, 0, 0, 0.55);
+}
+.simi {
+  background: linear-gradient(155deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, .34) 58%);
+  box-shadow:
+    inset 0 1px 0 rgba(0, 0, 0, 0.48),
+    0 30px 64px -26px rgba(0, 0, 0, 0.55);
+}
+.vinnulag__listi li {
+  background: var(--gl-fill);
+  border: 1px solid var(--gl-brun);
+  box-shadow: var(--gl-inn), var(--gl-fall);
+}
+.vinnulag__listi li::before {
+  background: center / contain no-repeat;
+}
+.vinnulag__listi li:nth-child(1)::before {
+  background-image: url('../img/takn/elding.svg');
+}
+.vinnulag__listi li:nth-child(2)::before {
+  background-image: url('../img/takn/listi.svg');
+}
+.vinnulag__listi li:nth-child(3)::before {
+  background-image: url('../img/takn/flugvel.svg');
+}
+.vinnulag__listi li.er-virkt {
+  border-color: rgba(255, 255, 255, 0.209);
+  box-shadow:
+    var(--gl-inn),
+    0 34px 64px -26px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 0, 0, 0.48),
+    0 0 42px -10px rgba(0, 0, 0, 0.55);
+}
+.vinnulag__listi li.er-virkt::before {
+  background-color: transparent;
+}
+.work-tile {
+  border: 1px solid rgba(255, 255, 255, 0.121);
+  box-shadow: var(--gl-fall);
+}
+.work-tile:hover {
+  box-shadow: var(--gl-fall-h);
+}
+@media (max-width: 759px) {
+.vinnulag__listi li {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.0558), rgba(255, 255, 255, 0.0492));
+}
+}
+.burger {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.0432), rgba(255, 255, 255, 0.024));
+  border: 1px solid rgba(255, 255, 255, 0.172);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.55), 0 6px 16px -9px rgba(0, 0, 0, 0.55);
+}
+.burger span:not(.sr-only) {
+  background: var(--acc);
+}
+.burger[aria-expanded="true"] {
+  background: linear-gradient(180deg, rgba(122, 158, 184, 0.16), var(--acc) 52%, rgba(125, 156, 178, 1));
+  border-color: transparent;
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.55), 0 10px 24px -9px rgba(0, 0, 0, 0.55);
+}
+.burger[aria-expanded="true"] span:not(.sr-only) {
+  background: rgba(255, 255, 255, 0.06);
+}
+.mobilemenu a:hover,
+.mobilemenu a:focus-visible {
+  background: linear-gradient(100deg, rgba(139, 170, 192, 0.16), rgba(125, 158, 181, 0.016));
+}
+.simi {
+  box-shadow:
+    inset 0 1px 0 rgba(0, 0, 0, 0.48),
+    0 48px 84px -30px rgba(0, 0, 0, 0.55);
+}
+@media (min-width: 1040px) {
+.fljot--1 {
+  --fx: -26px;
+}
+.fljot--5 {
+  --fx: -30px;
+}
+.fljot--2 {
+  --fx: -28px;
+}
+.fljot--3 {
+  --fx: 30px;
+}
+.fljot--6 {
+  --fx: 26px;
+}
+.fljot--4 {
+  --fx: 28px;
+}
+}
+@media (min-width: 820px) and (max-width: 1039px) {
+.fljot--1 {
+  --fx: -22px;
+}
+.fljot--5 {
+  --fx: -22px;
+}
+.fljot--2 {
+  --fx: -22px;
+}
+.fljot--3 {
+  --fx: 22px;
+}
+.fljot--6 {
+  --fx: 22px;
+}
+.fljot--4 {
+  --fx: 22px;
+}
+}
+@media (hover: none) and (pointer: coarse) {
+.card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.0516), rgba(255, 255, 255, 0.0408));
+}
+.btn--ghost {
+  background: rgba(255, 255, 255, 0.0492);
+}
+.btn--aglas {
+  background: rgba(0, 0, 0, 0.126);
+}
+.pillnav {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.0564), rgba(117, 159, 189, 0.141));
+}
+.site-head::before {
+  background: rgba(120, 158, 186, 0.144);
+}
+.dropdown__menu,
+.mobilemenu {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.0582), rgba(117, 159, 189, 0.152));
+}
+}
+
+/* úr kerfi/assets/portal.css */
+.phead {
+  background: rgba(122, 158, 184, 0.141);
+  border-bottom: 1px solid var(--line);
+}
+.phead__skil {
+  background: var(--line);
+}
+.phead__heiti {
+  color: var(--soft);
+}
+.phead__heiti strong {
+  color: var(--ink);
+}
+.phead__notandi {
+  color: var(--soft);
+}
+.phead__notandi strong {
+  color: var(--ink);
+}
+.pstat::before {
+  background: currentColor;
+}
+.pstat--nytt {
+  background: rgba(255, 255, 255, 0.0906);
+  color: rgba(188, 193, 196, 1);
+}
+.pstat--vinnsla {
+  background: var(--accs);
+  color: var(--acc);
+}
+.pstat--bid {
+  background: rgba(255, 169, 51, 0.16);
+  color: rgba(236, 204, 163, 1);
+}
+.pstat--ok {
+  background: rgba(113, 193, 136, 0.16);
+  color: rgba(189, 233, 202, 1);
+}
+.pstat--lokid {
+  background: rgba(113, 193, 136, 0.16);
+  color: rgba(189, 233, 202, 1);
+}
+.pstat--hafnad {
+  background: rgba(255, 255, 255, 0.0918);
+  color: rgba(189, 181, 180, 1);
+}
+.pforg {
+  color: rgba(236, 204, 163, 1);
+  background: rgba(255, 169, 51, 0.16);
+}
+.pyfir__telja {
+  color: var(--soft);
+}
+.bidur h2 {
+  color: var(--acc-on-navy);
+}
+.bidur__tala {
+  color: rgba(255, 255, 255, 1);
+}
+.bidur__texti {
+  color: rgba(255, 255, 255, 0.78);
+}
+.bidur__listi li {
+  border-top: 1px solid rgba(255, 255, 255, 0.0308);
+}
+.bidur__listi a {
+  color: rgba(255, 255, 255, 1);
+}
+.bidur__listi a:hover {
+  color: var(--acc-on-navy);
+}
+.bidur__listi .dags {
+  color: rgba(255, 255, 255, 0.6);
+}
+.bidur--tomt .bidur__tala {
+  color: var(--acc-on-navy);
+}
+.verk {
+  color: inherit;
+  background: var(--sur);
+  border: 1px solid var(--line);
+}
+.verk:hover {
+  border-color: rgba(139, 170, 192, 0.45);
+  box-shadow: var(--sh-card);
+}
+.verk__titill {
+  color: var(--ink);
+}
+.verk__fyr {
+  color: var(--soft);
+}
+.verk__lysing {
+  color: var(--soft);
+}
+.verk__fot {
+  color: var(--soft);
+}
+.framvinda {
+  background: var(--accs);
+}
+.framvinda span {
+  background: var(--acc);
+}
+.task {
+  border-top: 1px solid var(--line);
+}
+.tasklisti li:first-child .task {
+  border-top: 0;
+}
+.hak {
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.06);
+}
+.hak:hover {
+  border-color: var(--acc);
+  background: var(--accs);
+}
+.hak[aria-pressed="true"] {
+  background: var(--acc);
+  border-color: var(--acc);
+}
+.hak[aria-pressed="true"]::after {
+  border: solid rgba(255, 255, 255, 0.22);
+}
+.task__titill {
+  color: var(--ink);
+  background: none;
+  border: 0;
+}
+.task__titill:hover {
+  color: var(--acc);
+}
+.task--lokid .task__titill {
+  color: var(--soft);
+}
+.task__undir {
+  color: var(--soft);
+}
+.task__undir .seint {
+  color: rgba(227, 168, 165, 1);
+}
+.pdialog {
+  border: 0;
+  background: transparent;
+}
+.pdialog::backdrop {
+  background: rgba(0, 0, 0, 0.15);
+}
+.pdialog__kort {
+  background: var(--sur);
+  box-shadow: var(--sh-drop);
+}
+.loka {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--soft);
+}
+.loka:hover {
+  background: var(--accs);
+  color: var(--acc);
+}
+.pmeta li {
+  border-top: 1px solid var(--line);
+}
+.pmeta li > span:first-child {
+  color: var(--soft);
+}
+.pmeta select {
+  color: var(--ink);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+}
+.ath {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+}
+.ath--tveir {
+  background: var(--accs);
+  border-color: transparent;
+}
+.ath__haus {
+  color: var(--soft);
+}
+.ath__haus strong {
+  color: var(--ink);
+}
+.pflipi {
+  color: var(--soft);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+}
+.pflipi:hover {
+  border-color: var(--acc);
+  color: var(--acc);
+}
+.pflipi[aria-pressed="true"] {
+  background: rgba(0, 0, 0, .34);
+  border-color: rgba(255, 255, 255, .5);
+  color: rgba(255, 255, 255, 1);
+}
+.tomt {
+  color: var(--soft);
+}
+.inn__fot {
+  color: var(--soft);
+}
+.inn__fot a {
+  color: var(--acc);
+}
+.prufubanner {
+  background: rgba(255, 169, 51, 0.16);
+  color: rgba(240, 214, 174, 1);
+}
+.prufubanner code {
+  background: rgba(0, 0, 0, 0.015);
+}
+.tillaga {
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 177, 51, 0.16);
+}
+.ptafla th {
+  color: var(--soft);
+}
+.ptafla td {
+  border-top: 1px solid var(--line);
+}
+.ptafla select {
+  color: var(--ink);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+}
+.sodull {
+  color: var(--soft);
+}
+.field select,
+.pmeta select,
+.pyfir select,
+.flyti select,
+.okkar__sia select {
+  color: var(--ink);
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5l5-5' fill='none' stroke='%237189ac' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
+.field select:focus,
+.pmeta select:focus,
+.pyfir select:focus,
+.flyti select:focus,
+.okkar__sia select:focus {
+  outline: none;
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.256);
+}
+.field input[type="range"] {
+  border: 0;
+  accent-color: var(--acc);
+}
+.verd {
+  background: rgba(113, 193, 136, 0.16);
+  color: rgba(189, 233, 202, 1);
+}
+.verd--innan {
+  background: var(--accs);
+  color: var(--acc);
+}
+.verd--vantar {
+  background: rgba(236, 79, 70, 0.16);
+  color: rgba(227, 168, 165, 1);
+}
+.verdlina {
+  border-top: 1px solid var(--line);
+}
+.verdlina > span:first-child {
+  color: var(--soft);
+}
+.verdlina--okkar strong {
+  color: rgba(189, 233, 202, 1);
+}
+.budgetflyt button {
+  color: var(--soft);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+}
+.budgetflyt button:hover {
+  border-color: var(--acc);
+  color: var(--acc);
+}
+.skyring {
+  color: var(--soft);
+}
+.skra {
+  border-top: 1px solid var(--line);
+}
+.skra__meta {
+  color: var(--soft);
+}
+.skra__opna {
+  background: none;
+  border: 0;
+  color: var(--acc);
+}
+.skra__opna:disabled {
+  color: var(--soft);
+}
+.timar__tala {
+  color: var(--ink);
+}
+.timar__hja {
+  color: var(--soft);
+}
+.timar__hja strong {
+  color: var(--ink);
+}
+.timar__hja.er-lagt strong {
+  color: rgba(227, 168, 165, 1);
+}
+.timar__hnappar button {
+  color: var(--acc);
+  background: var(--accs);
+  border: 1px solid transparent;
+}
+.timar__hnappar button:hover {
+  background: rgba(121, 158, 185, 0.16);
+}
+.timalog li {
+  border-top: 1px solid var(--line);
+  color: var(--soft);
+}
+.timalog b {
+  color: var(--ink);
+}
+.timalog button {
+  background: none;
+  border: 0;
+  color: var(--soft);
+}
+.timalog button:hover {
+  color: rgba(227, 168, 165, 1);
+}
+.tekjur {
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.tekjur > div {
+  background: var(--sur);
+}
+.tekjur dt {
+  color: var(--soft);
+}
+.tekjur dd {
+  color: var(--ink);
+}
+.tekjur .adal {
+  background: rgba(0, 0, 0, .34);
+}
+.tekjur .adal dt {
+  color: var(--acc-on-navy);
+}
+.tekjur .adal dd {
+  color: rgba(255, 255, 255, 1);
+}
+.tekjur .vidvorun dd {
+  color: rgba(227, 168, 165, 1);
+}
+.rukkun li {
+  border-top: 1px solid var(--line);
+}
+.rukkun button {
+  background: var(--accs);
+  color: var(--acc);
+  border: 0;
+}
+.rukkun button:hover {
+  background: var(--acc);
+  color: rgba(255, 255, 255, 1);
+}
+.skref::before {
+  background: var(--line);
+}
+.skref--lokid::before {
+  background: rgba(139, 170, 192, 0.45);
+}
+.skref__hak {
+  border: 2px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--soft);
+}
+.skref__hak:hover:not(:disabled) {
+  border-color: var(--acc);
+  color: var(--acc);
+}
+.skref--nuna .skref__hak {
+  border-color: var(--acc);
+  color: var(--acc);
+  background: var(--accs);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.224);
+}
+.skref--lokid .skref__hak {
+  background: var(--acc);
+  border-color: var(--acc);
+}
+.skref--lokid .skref__hak::after {
+  border: solid rgba(255, 255, 255, 0.22);
+}
+.skref__titill {
+  color: var(--ink);
+  background: none;
+  border: 0;
+}
+.skref__titill:hover {
+  color: var(--acc);
+}
+.skref--lokid .skref__titill {
+  color: var(--soft);
+}
+.skref--nuna .skref__titill {
+  color: var(--ink);
+}
+.skref__fera button {
+  background: none;
+  border: 0;
+  color: rgba(172, 179, 184, 0.55);
+}
+.skref__fera button:hover:not(:disabled) {
+  color: var(--acc);
+}
+.phead__nav a {
+  color: var(--soft);
+}
+.phead__nav a:hover {
+  background: rgba(0, 0, 0, 0.015);
+  color: var(--ink);
+}
+.phead__nav a[aria-current="page"] {
+  background: var(--accs);
+  color: var(--acc);
+}
+.phead__merki {
+  background: rgba(164, 104, 26, 1);
+  color: rgba(255, 255, 255, 1);
+}
+.phead__nav a[aria-current="page"] .phead__merki {
+  background: var(--acc);
+}
+.tilkynning {
+  color: inherit;
+  background: rgba(255, 177, 51, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+}
+.tilkynning:hover {
+  border-color: rgba(224, 151, 57, 0.5);
+}
+.tilkynning strong {
+  color: var(--ink);
+}
+.tilkynning span.undir {
+  color: var(--soft);
+}
+.tilkynning__or {
+  color: rgba(236, 204, 163, 1);
+}
+.uppsetning__haus {
+  background: var(--bg);
+}
+.uppsetning__haus strong {
+  color: var(--ink);
+}
+.uppsetning li {
+  border-top: 1px solid var(--line);
+}
+.uppsetning li:first-child {
+  border-top: 0;
+}
+.uppsetning__nr {
+  background: var(--accs);
+  color: var(--acc);
+}
+.simakort__loka {
+  background: none;
+  border: 0;
+  color: var(--soft);
+}
+.simakort__loka:hover {
+  color: var(--ink);
+}
+.simabordi {
+  background: rgba(0, 0, 0, .34);
+  color: rgba(255, 255, 255, 1);
+  box-shadow: 0 -12px 44px rgba(0, 0, 0, 0.48);
+}
+.simabordi strong {
+  color: rgba(255, 255, 255, 1);
+}
+.simabordi span {
+  color: var(--acc-on-navy);
+}
+.simabordi__loka {
+  background: rgba(255, 255, 255, 0.0072);
+  border: 0;
+  color: rgba(255, 255, 255, 0.75);
+}
+.simabordi__loka:hover {
+  background: rgba(255, 255, 255, 0.0132);
+  color: rgba(255, 255, 255, 1);
+}
+.merkikort__synd {
+  background: var(--bg);
+  border: 1px dashed rgba(255, 255, 255, 0.32);
+}
+.merkikort__synd span {
+  color: var(--soft);
+}
+.merkikort__henda {
+  background: none;
+  border: 0;
+  color: var(--soft);
+}
+.merkikort__henda:hover {
+  color: rgba(227, 168, 165, 1);
+}
+.phead__merki--okkar {
+  background: rgba(0, 0, 0, .34);
+}
+.flyti input {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  outline: none;
+}
+.flyti input::placeholder {
+  color: rgba(172, 179, 184, 0.75);
+}
+.flyti input:focus {
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.256);
+}
+.spjald__eyda {
+  background: none;
+  border: 0;
+  color: var(--soft);
+}
+.spjald__eyda:hover {
+  color: rgba(227, 168, 165, 1);
+}
+.spjald__eyda.er-vis {
+  color: rgba(227, 168, 165, 1);
+}
+.spjall__tomt p {
+  color: var(--soft);
+}
+.bod--eg .bod__inn {
+  background: rgba(0, 0, 0, .34);
+  color: rgba(255, 255, 255, 1);
+}
+.bod--harvey .bod__inn {
+  background: var(--sur);
+  color: var(--ink);
+}
+.bod__bid {
+  color: var(--soft);
+}
+.bod__villa {
+  background: rgba(236, 79, 70, 0.16);
+  color: rgba(227, 168, 165, 1);
+}
+.tillaga-kort {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+}
+.tillaga-kort strong {
+  color: var(--ink);
+}
+.tillaga-kort .undir {
+  color: var(--soft);
+}
+.tillaga-kort--gert,
+.tillaga-kort--hafnad {
+  background: transparent;
+}
+.tillaga-kort--gert {
+  border-color: rgba(255, 255, 255, 0.32);
+}
+.tillaga-kort--gert .tillaga-kort__hak {
+  color: rgba(189, 233, 202, 1);
+}
+.spjall__inn {
+  border-top: 1px solid var(--line);
+}
+.spjall__inn textarea {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  outline: none;
+}
+.spjall__inn textarea::placeholder {
+  color: rgba(172, 179, 184, 0.75);
+}
+.spjall__inn textarea:focus {
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.256);
+}
+.phead__merki--ny {
+  background: rgba(0, 0, 0, 0.3);
+}
+.fsp__punktur {
+  background: rgba(0, 0, 0, 0.042);
+}
+.fsp__punktur.er-ny {
+  background: var(--acc);
+  box-shadow: 0 0 0 4px var(--accs);
+}
+.fsp__uppruni {
+  color: var(--ink);
+}
+.fsp__virdi {
+  color: var(--ink);
+}
+.fsp__skilabod {
+  background: var(--accs);
+  color: var(--ink);
+}
+.fsp__undirfyrirsogn {
+  color: var(--ink);
+}
+.uppruni__lina {
+  color: var(--ink);
+}
+.uppruni__lina b {
+  color: var(--soft);
+}
+.uppruni__sula {
+  background: rgba(0, 0, 0, 0.021);
+}
+.uppruni__sula span {
+  background: var(--acc);
+}
+.bok__undir {
+  color: var(--soft);
+}
+.bok__tolur .adal .bok__undir {
+  color: var(--acc-on-navy);
+}
+.bok__skyring {
+  color: var(--soft);
+}
+.bok__lit--fast {
+  background: var(--acc);
+}
+.bok__lit--auka {
+  background: rgba(0, 0, 0, .34);
+}
+.bok__ar b {
+  color: var(--ink);
+}
+.bok__hluti--fast {
+  background: var(--acc);
+}
+.bok__hluti--auka {
+  background: rgba(0, 0, 0, .34);
+}
+.bok__sulutala {
+  color: var(--soft);
+}
+.bok__man {
+  color: var(--soft);
+  border-top: 1px solid var(--line);
+}
+.bok__sula.er-nu .bok__man {
+  color: var(--acc);
+}
+.bok__sula.er-nu .bok__sulutala {
+  color: var(--ink);
+}
+.bok__upph {
+  color: var(--ink);
+}
+.bok--kannski .task__titill {
+  color: var(--soft);
+}
+.bok--kannski .bok__upph {
+  color: var(--soft);
+}
+.bok__greitt {
+  border: 0;
+}
+.bok__tikk {
+  color: var(--ink);
+}
+.bok__tikk input {
+  accent-color: var(--acc);
+}
+.bok__alt {
+  color: var(--soft);
+}
+.bok__tolur .adal .bok__alt {
+  color: var(--acc-on-navy);
+}
+:root {
+  --gler: linear-gradient(145deg, rgba(255, 255, 255, 0.0468), rgba(255, 255, 255, 0.0336));
+}
+.phead {
+  background: transparent;
+  border-bottom: 0;
+}
+.phead__inn {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.0372), rgba(255, 255, 255, 0.0204));
+  border: 1px solid rgba(255, 255, 255, 0.143);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.55), 0 14px 34px -18px rgba(0, 0, 0, 0.55);
+}
+.phead__nav a:hover {
+  background: rgba(255, 255, 255, 0.033);
+}
+.phead__nav a[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.051);
+  color: var(--ink);
+  box-shadow: 0 4px 14px -6px rgba(0, 0, 0, 0.4);
+}
+.verk,
+.ath,
+.tillaga,
+.tilkynning,
+.pdialog__kort,
+.tekjur > div:not(.adal) {
+  background: var(--gler);
+  border-color: rgba(255, 255, 255, 0.154);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.55), 0 18px 40px -26px rgba(0, 0, 0, 0.544);
+}
+.tekjur {
+  background: rgba(255, 255, 255, 0.03);
+}
+.pflipi {
+  background: rgba(255, 255, 255, 0.042);
+  border-color: rgba(255, 255, 255, 0.176);
+}
+.pflipi[aria-pressed="true"] {
+  background: rgba(0, 0, 0, .34);
+  border-color: rgba(255, 255, 255, .5);
+}
+@media (hover: none) and (pointer: coarse) {
+.phead__inn {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.054), rgba(255, 255, 255, 0.0456));
+}
+}
+@media (hover: none) and (pointer: coarse) {
+.phead::before {
+  background: linear-gradient(to bottom, rgba(122, 158, 184, 0.16) 60%, rgba(122, 158, 184, 0));
+}
+}
+.tekjur > a {
+  color: inherit;
+  background: var(--gler);
+}
+.tekjur > a.adal {
+  background: rgba(0, 0, 0, .34);
+}
+.tekjur .adal .bok__alt {
+  color: rgba(255, 255, 255, 0.62);
+}
+.task__fra {
+  color: var(--acc);
+}
+.field > label {
+  color: var(--soft);
+}
+.lykilord__syna {
+  border: 0;
+  background: transparent;
+  color: var(--acc);
+}
+.lykilord__syna:hover {
+  background: var(--accs);
+}
+.inn__gleymt {
+  border: 0;
+  background: none;
+  color: var(--acc);
+}
+.uvtala {
+  color: var(--acc);
+  background: var(--accs);
+}
+.uvtala--buid {
+  background: rgba(113, 193, 136, 0.16);
+  color: rgba(189, 233, 202, 1);
+}
+.uvhluti__mael {
+  background: var(--accs);
+}
+.uvhluti__mael span {
+  background: var(--acc);
+}
+.uv {
+  border-top: 1px solid var(--line);
+}
+.uvlisti .uv:first-child {
+  border-top: 0;
+}
+.uv__titill {
+  color: var(--ink);
+  background: none;
+  border: 0;
+}
+button.uv__titill:hover {
+  color: var(--acc);
+}
+.uv--lokid .uv__titill {
+  color: var(--soft);
+}
+.uv__inntak {
+  color: var(--ink);
+  border: 1px solid var(--acc);
+  background: rgba(255, 255, 255, 0.06);
+}
+.uv__skil {
+  color: var(--acc);
+}
+.uv__skil--hnappur {
+  background: none;
+  border: 0;
+}
+.uv__skil--hnappur:disabled {
+  color: var(--soft);
+}
+.uv__sent {
+  color: rgba(189, 233, 202, 1);
+}
+.uv__bidur {
+  color: var(--acc);
+}
+.uv__festa,
+.uv__eyda {
+  background: none;
+  border: 0;
+  color: var(--acc);
+}
+.uv__eyda {
+  color: var(--soft);
+}
+.uv__eyda.er-viss {
+  color: rgba(227, 168, 165, 1);
+}
+.uv__afhending {
+  background: var(--accs);
+}
+.uv__skraval .btn {
+  background: rgba(255, 255, 255, 0.06);
+}
+.uv__valin {
+  color: var(--soft);
+}
+.uv__val {
+  color: var(--ink);
+}
+.uv__val input {
+  accent-color: var(--acc);
+}
+.uv__hnappar .btn--ghost {
+  background: rgba(255, 255, 255, 0.06);
+}
+.uv__nytt input {
+  color: var(--ink);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+}
+.uv__sinnum {
+  color: var(--soft);
+}
+.uv__allt {
+  background: rgba(113, 193, 136, 0.16);
+  color: rgba(189, 233, 202, 1);
+}
+.tf-tolur dd.tf-engin {
+  color: var(--soft);
+}
+.tf-breyting {
+  color: var(--soft);
+}
+.tf-breyting--upp {
+  color: rgba(189, 233, 202, 1);
+}
+.tf-breyting--nidur {
+  color: rgba(227, 168, 165, 1);
+}
+.tf-rit__skyring {
+  color: var(--soft);
+}
+.tf-rit__texti {
+  fill: var(--soft);
+}
+.tf-rit__lina {
+  stroke: rgba(212, 219, 224, 0.08);
+}
+.tf-rit__grunnur {
+  stroke: rgba(212, 219, 224, 0.2);
+}
+.tf-rit__leidari {
+  stroke: rgba(212, 219, 224, 0.35);
+}
+.tf-rit__abending {
+  background: rgba(0, 0, 0, .34);
+  color: rgba(255, 255, 255, 1);
+  box-shadow: var(--sh-drop);
+}
+.tf-rit__abending strong {
+  color: var(--acc-on-navy);
+}
+.tf-faersla {
+  border-top: 1px solid var(--line);
+}
+.tf-faerslur li:first-child {
+  border-top: 0;
+}
+.tf-faersla__mynd {
+  background: var(--accs);
+}
+.tf-faersla__mynd--tom {
+  color: rgba(255, 255, 255, 1);
+}
+.tf-faersla__haus {
+  color: var(--soft);
+}
+.tf-faersla__midill {
+  color: var(--ink);
+}
+.tf-faersla__texti {
+  color: var(--ink);
+}
+.tf-faersla__tolur {
+  color: var(--soft);
+}
+.tf-faersla__tolur b {
+  color: var(--ink);
+}
+.tf-faersla__opna {
+  color: var(--acc);
+  background: var(--accs);
+}
+.tf-faersla__opna:hover {
+  background: var(--acc);
+  color: rgba(255, 255, 255, 1);
+}
+.tf-skyrsla {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.033);
+}
+.tf-skyrsla > summary::after {
+  border: solid var(--soft);
+}
+.tf-skyrsla__man {
+  color: var(--ink);
+}
+.tf-netfong {
+  color: var(--ink);
+}
+.tf-netfong li {
+  border-top: 1px solid var(--line);
+}
+.tf-netfong li:first-child {
+  border-top: 0;
+}
+.tf-postur {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+}
+.tf-postur__haus strong {
+  color: var(--ink);
+}
+.tf-postur__haus > span:last-child {
+  color: var(--soft);
+}
+.tf-postur__merki {
+  color: var(--acc);
+}
+.tf-postur__reitur {
+  background: var(--bg);
+}
+.tf-postur__reitur .tf-postur__merki {
+  color: var(--soft);
+}
+.tf-postur__reitur strong {
+  color: var(--ink);
+}
+.tf-postur__texti {
+  color: var(--ink);
+}
+.tf-postur__bestu ol {
+  color: var(--ink);
+}
+.tf-postur__bestu a {
+  color: var(--acc);
+}
+.tf-postur__ftexti {
+  color: var(--soft);
+}
+.tf-ovirkt .task__titill {
+  color: var(--soft);
+}
+.tf-rofi {
+  border: 0;
+}
+.task__undir a {
+  color: var(--acc);
+}
+.tf-tilbaka {
+  color: var(--soft);
+}
+.tf-tilbaka:hover {
+  color: var(--acc);
+}
+.tf-kort {
+  background: var(--sur);
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-card);
+  color: var(--ink);
+}
+.tf-kort:hover,
+.tf-kort:focus-visible {
+  box-shadow: var(--sh-drop);
+  border-color: rgba(139, 170, 192, 0.35);
+}
+.tf-kort:focus-visible {
+  outline: 2px solid var(--acc);
+}
+.tf-kort__merki {
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+.tf-kort__merki--stafur {
+  background: var(--accs);
+  color: var(--acc);
+  border: 0;
+}
+.tf-kort__midlar {
+  color: var(--soft);
+}
+.tf-kort__ferill--tomt {
+  border-bottom: 1px dashed var(--line);
+}
+.tf-kort__svaedi {
+  fill: rgba(142, 169, 189, 0.12);
+}
+.tf-kort__lina {
+  fill: none;
+  stroke: var(--acc);
+}
+.tf-kort__tolur dt {
+  color: var(--soft);
+}

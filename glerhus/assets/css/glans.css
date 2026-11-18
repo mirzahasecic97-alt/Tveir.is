@@ -1,0 +1,788 @@
+/* ==========================================================================
+   Tveir.is: glans
+   Glerlag ofan a styles.css. Breytir utliti, ekki uppbyggingu.
+   Takirdu <link> a thessa skra ut verdur sidan eins og hun var adur.
+   ========================================================================== */
+
+:root {
+  /* Glerfletir */
+  --gl-fill:   linear-gradient(145deg, rgba(255,255,255,.6), rgba(255,255,255,.3));
+  --gl-brun:   rgba(255,255,255,.6);
+  --gl-inn:    inset 0 1px 0 rgba(255,255,255,.75), inset 0 -1px 0 rgba(28,48,80,.04);
+  --gl-fall:   0 18px 40px -22px rgba(28,48,80,.34), 0 2px 8px rgba(28,48,80,.05);
+  --gl-fall-h: 0 30px 60px -26px rgba(28,48,80,.42), 0 0 0 1px rgba(91,147,240,.26);
+  --gl-blur:   blur(26px) saturate(1.9);
+
+  /* Undirtextinn situr nuna a litudum fleti, svo hann tharf ad vera dekkri
+     en adur til ad vera laesilegur. */
+  --soft: #526a8f;
+
+  /* Ljomi */
+  --lj-bla:    rgba(91,147,240,.5);
+  --lj-ljos:   rgba(137,176,246,.45);
+  --lj-himinn: rgba(109,194,240,.42);
+  --lj-lilla:  rgba(154,160,246,.45);
+}
+
+/* --------------------------------------------------------------------------
+   1. Umhverfisljomi: lifandi bakgrunnur a bak vid allt
+   -------------------------------------------------------------------------- */
+html {
+  background:
+    linear-gradient(158deg, #e9f1fe 0%, #d9e7fc 34%, #e2e6fb 62%, #d7ebfa 100%)
+    fixed no-repeat;
+  background-color: var(--bg);
+}
+body { background: transparent; position: relative; }
+
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: -25vmax;
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform;
+}
+
+body::before {
+  background:
+    radial-gradient(54vmax 44vmax at 6% 2%,  var(--lj-bla),    transparent 62%),
+    radial-gradient(48vmax 42vmax at 94% 10%, var(--lj-lilla),  transparent 60%),
+    radial-gradient(52vmax 46vmax at 48% 52%, var(--lj-himinn), transparent 64%);
+  animation: gl-svif-a 34s ease-in-out infinite alternate;
+}
+
+body::after {
+  background:
+    radial-gradient(56vmax 48vmax at 90% 90%, var(--lj-bla),  transparent 62%),
+    radial-gradient(46vmax 40vmax at 8% 94%,  var(--lj-ljos), transparent 60%);
+  animation: gl-svif-b 44s ease-in-out infinite alternate;
+}
+
+@keyframes gl-svif-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(4vmax, 3vmax, 0) scale(1.12); }
+}
+@keyframes gl-svif-b {
+  from { transform: translate3d(0, 0, 0) scale(1.08); }
+  to   { transform: translate3d(-5vmax, -3vmax, 0) scale(1); }
+}
+
+/* --------------------------------------------------------------------------
+   2. Kort ur gleri
+   -------------------------------------------------------------------------- */
+.card {
+  background: var(--gl-fill);
+  border: 1px solid var(--gl-brun);
+  backdrop-filter: var(--gl-blur);
+  -webkit-backdrop-filter: var(--gl-blur);
+  box-shadow: var(--gl-inn), var(--gl-fall);
+}
+
+.card--navy {
+  background: linear-gradient(155deg, #23406c, var(--ink) 58%);
+  border-color: rgba(157,192,247,.22);
+  box-shadow:
+    inset 0 1px 0 rgba(157,192,247,.28),
+    0 26px 56px -24px rgba(28,48,80,.6);
+}
+
+/* --------------------------------------------------------------------------
+   3. Hnappar med gljaa
+   -------------------------------------------------------------------------- */
+.btn {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #74a4f5, var(--acc) 52%, #4b83e4);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.5),
+    0 10px 24px -8px rgba(91,147,240,.65),
+    0 2px 6px rgba(28,48,80,.12);
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.btn > * { position: relative; z-index: 1; }
+
+/* Ljosrak sem rennur yfir hnappinn */
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: -60%;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.42), transparent);
+  transform: skewX(-18deg);
+  transition: left .55s ease;
+  pointer-events: none;
+}
+.btn:hover::after { left: 115%; }
+
+.btn:hover {
+  background: linear-gradient(180deg, #7fabf7, var(--acc) 48%, #4a83e2);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55),
+    0 18px 34px -10px rgba(91,147,240,.7),
+    0 3px 8px rgba(28,48,80,.14);
+}
+.btn:active { transform: translateY(0); }
+
+.btn--ghost {
+  background: rgba(255,255,255,.55);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 8px 20px -12px rgba(28,48,80,.3);
+}
+.btn--ghost:hover {
+  background: linear-gradient(180deg, #74a4f5, var(--acc) 52%, #4b83e4);
+  color: #fff;
+}
+
+.btn--white {
+  background: linear-gradient(180deg, #fff, #eaf1fe);
+  box-shadow: inset 0 1px 0 #fff, 0 10px 24px -12px rgba(28,48,80,.45);
+}
+.btn--white:hover { background: linear-gradient(180deg, #fff, #dfe9fd); }
+
+.btn--aglas {
+  background: rgba(255,255,255,.14);
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  border-color: rgba(255,255,255,.55);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 10px 26px -14px rgba(0,0,0,.5);
+}
+.btn--aglas:hover { background: #fff; color: var(--ink); }
+
+/* --------------------------------------------------------------------------
+   4. Valmyndin
+   -------------------------------------------------------------------------- */
+.site-head { background: none; }
+
+.pillnav {
+  background: linear-gradient(145deg, rgba(255,255,255,.58), rgba(255,255,255,.3));
+  backdrop-filter: blur(26px) saturate(1.9);
+  -webkit-backdrop-filter: blur(26px) saturate(1.9);
+  border-color: rgba(255,255,255,.65);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.8),
+    0 14px 34px -18px rgba(28,48,80,.4);
+}
+
+.dropdown__menu,
+.mobilemenu {
+  background: linear-gradient(150deg, rgba(255,255,255,.8), rgba(255,255,255,.62));
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  border: 1px solid rgba(255,255,255,.8);
+  box-shadow: var(--gl-inn), 0 24px 50px -22px rgba(28,48,80,.45);
+}
+
+/* --------------------------------------------------------------------------
+   5. Fyrirsagnir
+   -------------------------------------------------------------------------- */
+.section-title em,
+h1 em, h2 em {
+  background: linear-gradient(100deg, var(--acc), #7fc4f2 55%, #8fa6f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Skáletur hallar út fyrir kassann sinn og liturinn nær bara að brún hans,
+     svo síðasti stafurinn skarst ("need" missti hluta af d-inu). Smá rými
+     til hægri sem er tekið til baka, svo bilið breytist ekki. */
+  padding-right: .12em;
+  margin-right: -.12em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.hero__yfir h1 em { background: none; color: var(--acc-on-navy); }
+
+/* --------------------------------------------------------------------------
+   6. Thjonustukortin med glertakni
+   -------------------------------------------------------------------------- */
+.leid {
+  grid-template-columns: auto 1fr auto;
+  position: relative;
+  overflow: hidden;
+}
+.leid__takn {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  width: clamp(36px, 3.3vw, 44px);
+  height: clamp(36px, 3.3vw, 44px);
+  object-fit: contain;
+  transition: transform .25s ease;
+}
+.leid__titill, .leid__texti { grid-column: 2; }
+.leid__or { grid-column: 3; }
+
+.leid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 90% at 0% 50%, rgba(91,147,240,.16), transparent 70%);
+  opacity: 0;
+  transition: opacity .25s ease;
+  pointer-events: none;
+}
+.leid:hover::before { opacity: 1; }
+.leid:hover {
+  transform: translateY(-9px) scale(1.015);
+  border-color: rgba(255,255,255,.95);
+  box-shadow:
+    var(--gl-inn),
+    0 34px 62px -26px rgba(28,48,80,.45),
+    0 0 40px -12px rgba(91,147,240,.55);
+}
+.leid:hover .leid__takn { transform: translateY(-6px) scale(1.16) rotate(-5deg); }
+.leid { transition: transform .3s cubic-bezier(.17,1.5,.36,1), box-shadow .3s ease, border-color .3s ease; }
+.leid__takn { transition: transform .3s cubic-bezier(.17,1.5,.36,1); }
+
+/* --------------------------------------------------------------------------
+   7. Logostrimill og traust
+   -------------------------------------------------------------------------- */
+.trust { position: relative; }
+
+/* --------------------------------------------------------------------------
+   8. Lokakall
+   -------------------------------------------------------------------------- */
+.cta {
+  position: relative;
+  /* Ekkert overflow: hidden hér. Fellivalmyndin undir hnappinum teygir sig
+     nidur fyrir bordann og klipptist af. */
+  background: linear-gradient(152deg, #274774, var(--ink) 52%, #15253e);
+  box-shadow:
+    inset 0 1px 0 rgba(157,192,247,.3),
+    0 34px 70px -30px rgba(28,48,80,.7);
+}
+
+/* Mjukur blar ljomi ut fra hornunum, enginn myndabakgrunnur. */
+.cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(42% 70% at 12% 8%,  rgba(91,147,240,.38), transparent 68%),
+    radial-gradient(38% 64% at 90% 92%, rgba(124,200,240,.26), transparent 68%);
+  pointer-events: none;
+}
+.cta > * { position: relative; z-index: 1; }
+
+/* --------------------------------------------------------------------------
+   9. Bordar og merki
+   -------------------------------------------------------------------------- */
+.badge {
+  background: linear-gradient(180deg, rgba(231,240,253,.95), rgba(214,229,252,.9));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 12px -6px rgba(91,147,240,.5);
+}
+
+/* --------------------------------------------------------------------------
+   10. Minni hreyfing
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  body::before, body::after, .cta::before { animation: none; }
+  .btn::after { display: none; }
+  .btn:hover, .leid:hover { transform: none; }
+  .pillnav__logo::after { animation: none; display: none; }
+  .leid:hover .leid__takn { transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   11. Kaflar risa upp vid skrun
+   Listinn hér verdur ad vera eins og listinn i assets/js/glans.js.
+   gl-js kemur a <html> adeins thegar skriftan keyrir, svo sidan an JavaScript
+   synir allt eins og adur.
+   -------------------------------------------------------------------------- */
+.gl-js .section-title:not(.vinnulag__fyrirsogn),
+.gl-js .leid,
+.gl-js .cta,
+.gl-js .trust h2 {
+  opacity: 0;
+  transform: translateY(30px) scale(.93);
+}
+
+/* Hver lina hér verdur ad vera jafn thung og felu-linan ad ofan, annars
+   vinnur felu-linan og kaflinn kemur aldrei i ljos. Thad skildi eftir tomt
+   bil thar sem fyrirsognin atti ad vera. */
+.gl-js .section-title.gl-komid,
+.gl-js .leid.gl-komid,
+.gl-js .cta.gl-komid,
+.gl-js .trust h2.gl-komid {
+  opacity: 1;
+  transform: none;
+  /* Fjodrun med yfirskoti, svo kortin skjotist upp i stad thess ad renna. */
+  transition: opacity .42s ease, transform .78s cubic-bezier(.17,1.55,.36,1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gl-js .section-title,
+  .gl-js .leid,
+  .gl-js .cta,
+  .gl-js .trust h2 { opacity: 1; transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   12. Simar
+   Backdrop-filter er thungt thegar morg spjold liggja hvert ofan a odru.
+   A litlum skjam er thvi minna moskvad og spjoldin adeins thettari i stadinn.
+   -------------------------------------------------------------------------- */
+@media (max-width: 760px) {
+  :root {
+    --gl-fill: linear-gradient(145deg, rgba(255,255,255,.74), rgba(255,255,255,.52));
+    --gl-blur: blur(12px) saturate(1.5);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   13. Merkid i valmyndinni
+   Glermerkid tharf adeins meiri haed en flata merkid til ad glansinn sjaist.
+   -------------------------------------------------------------------------- */
+.pillnav__logo {
+  position: relative;
+  display: inline-block;
+}
+
+.pillnav__logo img {
+  height: clamp(19px, 1.9vw, 23px);
+  filter: drop-shadow(0 2px 4px rgba(28,48,80,.18));
+}
+
+/* Ljosrak sem rennur yfir stafina eins og birta a is.
+   Grima i lögun merkisins heldur rakinni inni i stofunum sjalfum,
+   svo hun smitast ekki ut i ferninginn i kring. */
+.pillnav__logo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(104deg,
+    transparent 36%,
+    rgba(255,255,255,.35) 44%,
+    rgba(255,255,255,.95) 50%,
+    rgba(255,255,255,.35) 56%,
+    transparent 64%);
+  background-size: 280% 100%;
+  background-repeat: no-repeat;
+  -webkit-mask: url('../img/tveir-logo-3d.png') center / contain no-repeat;
+          mask: url('../img/tveir-logo-3d.png') center / contain no-repeat;
+  animation: gl-isglit 5s ease-in-out infinite;
+}
+
+.pillnav__logo:hover::after { animation-duration: 1.6s; }
+
+@keyframes gl-isglit {
+  0%   { background-position: 170% 0; }
+  52%  { background-position: -70% 0; }
+  100% { background-position: -70% 0; }
+}
+
+/* --------------------------------------------------------------------------
+   14. Hlif undir valmyndinni
+   Hausinn var med mjukri deyfingu nidur i bakgrunnslitinn adur en pillan
+   vard ad gleri. Solid litur gengur ekki lengur, bakgrunnurinn er stigull.
+   Thess i stad moskvast thad sem rennur undir og fjarar ut ad nedan.
+   -------------------------------------------------------------------------- */
+.site-head::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: calc(100% + 26px);
+  z-index: -1;
+  pointer-events: none;
+  backdrop-filter: blur(11px);
+  -webkit-backdrop-filter: blur(11px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 56%, rgba(0,0,0,.45) 78%, transparent);
+          mask-image: linear-gradient(to bottom, #000 56%, rgba(0,0,0,.45) 78%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   15. Vinnulagskaflinn
+   Thessi hluti sat eftir i gamla flata utlitinu og er naestum helmingur
+   forsidunnar, svo skilin voru augljos a leidinni nidur.
+   -------------------------------------------------------------------------- */
+
+/* Fljotandi spjoldin kringum simann */
+.fljot {
+  background: var(--gl-fill);
+  border: 1px solid var(--gl-brun);
+  box-shadow: var(--gl-inn), 0 20px 44px -20px rgba(28,48,80,.4);
+}
+
+/* Siminn sjalfur. Skjarinn ad innan er latinn i fridi, app i gegnsaeju
+   gleri liti ut eins og villa. */
+.simi {
+  background: linear-gradient(155deg, #26446f, var(--ink) 58%);
+  box-shadow:
+    inset 0 1px 0 rgba(157,192,247,.3),
+    0 30px 64px -26px rgba(28,48,80,.65);
+}
+
+/* Skrefin thrju */
+.vinnulag__listi li {
+  background: var(--gl-fill);
+  border: 1px solid var(--gl-brun);
+  box-shadow: var(--gl-inn), var(--gl-fall);
+}
+
+/* Tolustafurinn vikur fyrir glertakni, eins og a thjonustukortunum */
+.vinnulag__listi li::before {
+  content: '';
+  width: 46px;
+  height: 46px;
+  margin-bottom: 12px;
+  border-radius: 0;
+  background: center / contain no-repeat;
+  transition: transform .45s cubic-bezier(.22,1,.36,1);
+}
+.vinnulag__listi li:nth-child(1)::before { background-image: url('../img/takn/elding.svg'); }
+.vinnulag__listi li:nth-child(2)::before { background-image: url('../img/takn/listi.svg'); }
+.vinnulag__listi li:nth-child(3)::before { background-image: url('../img/takn/flugvel.svg'); }
+
+.vinnulag__listi li.er-virkt {
+  border-color: rgba(255,255,255,.95);
+  transform: translateY(-9px);
+  box-shadow:
+    var(--gl-inn),
+    0 34px 64px -26px rgba(28,48,80,.45),
+    0 0 0 1px rgba(91,147,240,.3),
+    0 0 42px -10px rgba(91,147,240,.5);
+}
+/* styles.css setur `background: var(--acc)` a virka skrefid. Sa stytti
+   ritháttur nullstillir lika size, position og repeat, svo taknid var
+   teiknad i fullri staerd uppi i vinstra horni og sast ekki. */
+.vinnulag__listi li.er-virkt::before {
+  background-color: transparent;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* Skoppar inn i hvert sinn sem skrefid tekur vid, ekki bara rennur. */
+  animation: gl-popp .58s cubic-bezier(.26,1.62,.45,1) both;
+}
+
+@keyframes gl-popp {
+  0%   { transform: scale(.35) translateY(20px) rotate(-10deg); }
+  55%  { transform: scale(1.3)  translateY(-10px) rotate(5deg); }
+  78%  { transform: scale(1.0)  translateY(1px)  rotate(-2deg); }
+  100% { transform: scale(1.08) translateY(-2px) rotate(0); }
+}
+
+/* --------------------------------------------------------------------------
+   16. Verkefnaspjoldin
+   Thau voru einu kortin sem lyftust ekki og hogudu ser odruvisi en hin.
+   -------------------------------------------------------------------------- */
+.work-tile {
+  border-radius: var(--r-card);
+  border: 1px solid rgba(255,255,255,.55);
+  box-shadow: var(--gl-fall);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.work-tile:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--gl-fall-h);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-tile, .vinnulag__listi li::before { transition: none; }
+  .work-tile:hover { transform: none; }
+  .vinnulag__listi li.er-virkt::before { transform: none; }
+}
+
+/* A simum liggja skrefin thrju hvert ofan a odru og skiptast a. Thar ma
+   glerid ekki vera of gegnsaett, annars skin textinn a bak vid i gegn
+   medan skipt er um skref. */
+@media (max-width: 759px) {
+  .vinnulag__listi li {
+    background: linear-gradient(145deg, rgba(255,255,255,.93), rgba(255,255,255,.82));
+  }
+}
+
+/* --------------------------------------------------------------------------
+   17. Hamborgarinn
+   Hann var tvaer harfinar strikur an nokkurs forms, vid hlidina a glansandi
+   blaum hnappi. Nu er hann glerhnappur sem snyst i kross.
+   -------------------------------------------------------------------------- */
+.burger {
+  /* Hann var ad skreppa saman i sporoskju og standa ut fyrir pilluna.
+     Threngslin voru til stadar adur en sastu ekki a berum strikum. */
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0 11px;
+  border-radius: 50%;
+  background: linear-gradient(150deg, rgba(255,255,255,.72), rgba(255,255,255,.4));
+  border: 1px solid rgba(255,255,255,.78);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.92), 0 6px 16px -9px rgba(28,48,80,.45);
+  transition: transform .36s cubic-bezier(.3,1.45,.4,1),
+              background .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+
+/* Hnappurinn hefur thrju span: tvaer strikur og falinn texta fyrir
+   skjalesara. Gamla reglan notadi span:last-child og sneri thvi alltaf
+   falda textanum en ekki seinni strikunni, svo krossinn vard aldrei kross.
+   Her er talid i staerdinni og falda spanid latid i fridi. */
+.burger span:not(.sr-only) {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--acc);
+  transition: transform .36s cubic-bezier(.3,1.45,.4,1), background .25s ease;
+}
+
+/* Strikurnar skrida sitt i hvora att thegar bendillinn kemur */
+.burger:hover { transform: scale(1.07); }
+.burger:hover span:nth-child(1) { transform: translateX(2.5px); }
+.burger:hover span:nth-child(2) { transform: translateX(-2.5px); }
+
+/* Opinn: hnappurinn snyst og fyllist, strikurnar verda ad krossi */
+.burger[aria-expanded="true"] {
+  transform: rotate(90deg);
+  background: linear-gradient(180deg, #74a4f5, var(--acc) 52%, #4b83e4);
+  border-color: transparent;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 10px 24px -9px rgba(91,147,240,.75);
+}
+.burger[aria-expanded="true"]:hover { transform: rotate(90deg) scale(1.07); }
+.burger[aria-expanded="true"] span:not(.sr-only) { background: #fff; }
+.burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(3.3px) rotate(45deg); }
+.burger[aria-expanded="true"] span:nth-child(2) { transform: translateY(-3.3px) rotate(-45deg); }
+.burger span.sr-only { transform: none; }
+
+/* Valmyndin dettur nidur og linurnar koma hver af annarri.
+   Hun er falin med hidden, svo hreyfingin keyrir upp a nytt i hvert sinn. */
+.mobilemenu { animation: gl-valmynd .34s cubic-bezier(.22,1,.36,1) both; transform-origin: top right; }
+.mobilemenu a { animation: gl-lina .4s cubic-bezier(.22,1,.36,1) both; }
+.mobilemenu a:nth-child(1)  { animation-delay: .04s; }
+.mobilemenu a:nth-child(2)  { animation-delay: .07s; }
+.mobilemenu a:nth-child(3)  { animation-delay: .10s; }
+.mobilemenu a:nth-child(4)  { animation-delay: .13s; }
+.mobilemenu a:nth-child(5)  { animation-delay: .16s; }
+.mobilemenu a:nth-child(6)  { animation-delay: .19s; }
+.mobilemenu a:nth-child(7)  { animation-delay: .21s; }
+.mobilemenu a:nth-child(8)  { animation-delay: .23s; }
+.mobilemenu a:nth-child(9)  { animation-delay: .25s; }
+.mobilemenu a:nth-child(n+10) { animation-delay: .27s; }
+
+.mobilemenu a {
+  transition: background .18s ease, transform .18s ease, color .18s ease;
+}
+.mobilemenu a:hover,
+.mobilemenu a:focus-visible {
+  background: linear-gradient(100deg, rgba(91,147,240,.16), rgba(124,200,240,.1));
+  transform: translateX(4px);
+}
+
+@keyframes gl-valmynd {
+  from { opacity: 0; transform: translateY(-10px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes gl-lina {
+  from { opacity: 0; transform: translateY(-9px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .burger, .burger span, .mobilemenu, .mobilemenu a { animation: none; transition: none; }
+  .burger:hover { transform: none; }
+  .burger:hover span:first-child,
+  .burger:hover span:last-child { transform: none; }
+  .mobilemenu a:hover { transform: none; }
+}
+
+/* Thad er throngt i pillunni a mjosta simanum, svo allt gefur eftir
+   um nokkra punkta til ad hamborgarinn fai ad vera heill hringur. */
+@media (max-width: 430px) {
+  .pillnav {
+    gap: 8px;
+    padding-left: 14px;
+    padding-right: 8px;
+  }
+  .pillnav__right { gap: 6px; }
+  .btn--sm { padding-left: 13px; padding-right: 13px; }
+}
+
+/* --------------------------------------------------------------------------
+   18. Siminn kemur ut ur skjanum
+   glans.js reiknar hve langt skrunid er komid i gegnum kaflann og setur
+   transform beint a simann. Hann snyst ur hallanum og faerist naer.
+   -------------------------------------------------------------------------- */
+.vinnulag__taeki { perspective: 1500px; }
+
+/* glans.js setur transform beint a simann vid hvert skrun. Skugginn er
+   fastur: hann staekkadi adur med skruninu, og 100px moda sem breytist
+   tharf ad teiknast upp a nytt i hverjum ramma, sem hokkti. */
+.simi {
+  transform-origin: 50% 56%;
+  will-change: transform;
+  box-shadow:
+    inset 0 1px 0 rgba(157,192,247,.3),
+    0 48px 84px -30px rgba(28,48,80,.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .simi { transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   19. Taknin a thjonustukortunum skoppa inn
+   backwards heldur upphafsstodunni medan beđid er, en skilar tákninu svo
+   aftur i venjulega stodu svo lyftan vid bendil virki afram.
+   -------------------------------------------------------------------------- */
+.gl-js .leid.gl-komid .leid__takn {
+  animation: gl-popp-takn .6s cubic-bezier(.26,1.62,.45,1) backwards;
+}
+
+@keyframes gl-popp-takn {
+  0%   { opacity: 0; transform: scale(.45) translateY(16px) rotate(-12deg); }
+  62%  { opacity: 1; transform: scale(1.14) translateY(-5px) rotate(3deg); }
+  100% { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gl-js .leid.gl-komid .leid__takn,
+  .vinnulag__listi li.er-virkt::before { animation: none; }
+  .vinnulag__listi li.er-virkt { transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   20. Staerri simi og fleiri kort i kringum hann
+   Skjarinn staekkar, endastodan i skruninu er naer, og tvo ny kort koma inn
+   svo eitthvad poppi upp vid hvert skref i stad thess ad eitt komi i einu.
+   -------------------------------------------------------------------------- */
+.simi__skjar { height: min(62vh, 580px); }
+
+/* Kortin skjotast inn med fjodrun i stad thess ad renna */
+.fljot {
+  transition: opacity .4s ease, transform .72s cubic-bezier(.18,1.55,.36,1);
+}
+
+@media (min-width: 1040px) {
+  .fljot--1 { right: calc(100% + 46px); top: 0;      --fx: -26px; }
+  .fljot--5 { right: calc(100% + 80px); top: 37%;    --fx: -30px; }
+  .fljot--2 { right: calc(100% + 60px); bottom: 1%;  --fx: -28px; }
+  .fljot--3 { left:  calc(100% + 72px); top: 4%;     --fx: 30px; }
+  .fljot--6 { left:  calc(100% + 40px); top: 41%;    --fx: 26px; }
+  .fljot--4 { left:  calc(100% + 56px); bottom: -1%; --fx: 28px; }
+}
+
+/* Simiin staekkar um 10% i lokin, sem etur upp bilid ad kortunum. Thvi
+   tharf meira svigrum her en i gamla utlitinu, annars snertast their. */
+@media (min-width: 820px) and (max-width: 1039px) {
+  .fljot--1 { right: calc(100% + 42px); top: 0;     --fx: -22px; }
+  .fljot--5 { right: calc(100% + 42px); top: 39%;   --fx: -22px; }
+  .fljot--2 { right: calc(100% + 42px); bottom: 1%; --fx: -22px; }
+  .fljot--3 { left:  calc(100% + 42px); top: 4%;    --fx: 22px; }
+  .fljot--6 { left:  calc(100% + 42px); top: 41%;   --fx: 22px; }
+  .fljot--4 { left:  calc(100% + 42px); bottom: 1%; --fx: 22px; }
+}
+
+/* Nyju kortin fylgja sama taktinum: tvo kort poppa upp vid hvert skref */
+.vinnulag[data-skref="2"] .fljot--5,
+.vinnulag[data-skref="3"] .fljot--5 {
+  opacity: 1; transform: translate(0, 0) scale(1) rotate(1.6deg);
+}
+.vinnulag[data-skref="3"] .fljot--6 {
+  opacity: 1; transform: translate(0, 0) scale(1) rotate(-1.9deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fljot { transition: none; }
+  .vinnulag .fljot--5, .vinnulag .fljot--6 { opacity: 1; transform: none; }
+}
+
+
+/* --------------------------------------------------------------------------
+   21. Snertitaeki: glerid an thess ad hokta
+   A sima var thrennt sem helt skjanum uppteknum vid hvert skrun:
+   - fastur bakgrunnur a html, sem simar teikna allan upp a nytt i hverjum ramma
+   - blettirnir i bakgrunni hreyfdust stodugt, og hvert glerspjald ofan a
+     theim (valmyndin, hausinn, kortin) var moskad upp a nytt med
+   - moskunin sjalf, sem tharf ad endurreikna i hverjum ramma thegar
+     efnid undir faerist
+   Her er bakgrunnurinn kyrr og glerid thettara i stadinn fyrir moskad.
+   Utlitid helst nanast eins, en skjarinn tharf ekkert ad endurteikna.
+   -------------------------------------------------------------------------- */
+@media (hover: none) and (pointer: coarse) {
+  html { background-attachment: scroll; }
+
+  body::before,
+  body::after {
+    animation: none;
+    will-change: auto;
+  }
+
+  .card,
+  .fljot,
+  .btn--ghost,
+  .btn--aglas,
+  .site-head::before {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .card {
+    background: linear-gradient(145deg, rgba(255,255,255,.86), rgba(255,255,255,.68));
+  }
+  .btn--ghost { background: rgba(255,255,255,.82); }
+  .btn--aglas { background: rgba(28,48,80,.42); }
+
+  /* Valmyndin og hausinn: thett gler i stad moskunar */
+  .pillnav {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: linear-gradient(145deg, rgba(255,255,255,.94), rgba(244,248,255,.88));
+  }
+  .site-head::before { background: rgba(233,241,254,.9); }
+
+  .dropdown__menu,
+  .mobilemenu {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: linear-gradient(150deg, rgba(255,255,255,.97), rgba(246,249,255,.95));
+  }
+
+  /* Skrefaspjoldin: skugginn breytist ekki i fjoru, hann er teiknadur
+     einu sinni og bara lyftan fjadrar */
+  .vinnulag__listi li { transition: opacity .35s ease, transform .35s ease; }
+}
+
+/* --------------------------------------------------------------------------
+   22. Thjonustusidan og thrju kort a forsidu
+   Tiu kort a forsidunni voru of mikid. Thar eru nu thrju og hnappur a
+   thjonustusiduna, thar sem leidirnar eru flokkadar i thrja hopa.
+   -------------------------------------------------------------------------- */
+.leidir__fleiri {
+  display: flex; justify-content: center;
+  margin-top: clamp(20px, 2.6vw, 30px);
+}
+
+.thj-hopur { margin-top: clamp(30px, 4vw, 52px); }
+.thj-hopur:first-of-type { margin-top: clamp(8px, 1.4vw, 18px); }
+.thj-hopur__titill {
+  font-size: clamp(20px, 17px + .8vw, 26px);
+  margin: 0 0 clamp(4px, .6vw, 8px);
+}
+.thj-hopur .leidir { margin-top: clamp(12px, 1.6vw, 18px); }
+@media (min-width: 900px) {
+  .leidir--tvo { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* --------------------------------------------------------------------------
+   Ekkert hreyfist þegar músin fer yfir (ósk Mirza, 18. nóv 2026).
+   Litir mega breytast, en ekkert lyftist, stækkar, snýst eða rennur.
+   -------------------------------------------------------------------------- */
+.btn:hover, .btn--ghost:hover, .btn--aglas:hover,
+.leid:hover, .hr-js .leid:hover,
+.leid:hover .leid__takn, .hr-js .leid:hover .leid__takn,
+.leid:hover .leid__or, .hr-js .leid:hover .leid__or,
+.work-tile:hover, a.service:hover,
+.burger:not([aria-expanded="true"]):hover,
+.burger:not([aria-expanded="true"]):hover span,
+.mobilemenu a:hover { transform: none !important; }
+.burger[aria-expanded="true"]:hover { transform: rotate(90deg) !important; }
+.btn::after { display: none; }
+.pillnav__logo:hover::after { animation-duration: inherit; }
+.hero__ljos { display: none !important; }
+
+/* Í síma: táknið við hlið textans svo skrefakortið taki minna pláss */
+@media (max-width: 759px) {
+  .vinnulag__listi li { display: grid; grid-template-columns: 34px 1fr; column-gap: 12px; align-items: start; }
+  .vinnulag__listi li::before { width: 34px; height: 34px; margin: 0; grid-row: 1 / span 2; }
+  .vinnulag__listi b, .vinnulag__listi span { grid-column: 2; }
+  .vinnulag__listi span { margin-top: 3px; }
+}
