@@ -66,14 +66,14 @@
     fyrstaSinn = !window.sessionStorage.getItem('hr-opnun');
     window.sessionStorage.setItem('hr-opnun', '1');
   } catch (e) { /* einkagluggi: sýnum opnunina */ }
-  var h = fyrstaSinn ? 1 : 0.5;
-  /* Þyrlan flýgur bara yfir í fyrsta sinn í hverri heimsókn */
-  if (opnun && !fyrstaSinn) opnun.classList.add('hr-opnun--stutt');
+  /* Í GTA þemanu flýgur þyrlan yfir í hvert sinn sem forsíðan opnast */
+  var gta = document.documentElement.getAttribute('data-thema') === 'naeturborg';
+  var h = (fyrstaSinn || gta) ? 1 : 0.5;
 
   var inn = gsap.timeline({ defaults: { ease: 'power4.out' } });
 
   /* Í GTA þemanu flýgur þyrlan yfir fyrst, svo opnunin bíður eftir henni */
-  var thyrla = !!(opnun && fyrstaSinn && document.documentElement.getAttribute('data-thema') === 'naeturborg');
+  var thyrla = !!(opnun && gta);
 
   if (opnun) {
     var merki = opnun.querySelector('.hr-opnun__merki img');
