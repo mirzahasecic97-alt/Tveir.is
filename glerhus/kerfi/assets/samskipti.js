@@ -301,7 +301,11 @@ async function start() {
       const hreint = {};
       for (const k of ['kvedja', 'nafn', 'starf', 'simi', 'netfang', 'vefur', 'merki']) hreint[k] = String(u[k] || '').trim().slice(0, 160);
       hreint.virk = u.virk !== false;
-      try { await g.vistaUndirskrift(hreint); undirskrift = { ...SJALFGEFIN, ...hreint }; d.close(); if (eftir) eftir(); }
+      try {
+        await g.vistaUndirskrift(hreint); undirskrift = { ...SJALFGEFIN, ...hreint }; d.close();
+        if (eftir) eftir();
+        else { const opid = opinn && thraedir.find((x) => x.id === opinn); if (opid && opinnGogn) teiknaThrad(opid); }
+      }
       catch (e) { villa.textContent = e.message || 'Vistaðist ekki.'; villa.hidden = false; vistaHn.disabled = false; }
     });
     fylla(kort, [
