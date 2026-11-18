@@ -412,6 +412,12 @@ button { font: inherit; color: inherit; }
   color: rgba(255,255,255,.66);
 }
 
+/* A breidum skja: myndin naer ut fyrir haegri brunina svo vid sitjum
+   haegra megin og textinn hefur pláss vinstra megin */
+@media (min-width: 1001px) {
+  .hero__bak { width: 124%; max-width: none; object-position: 50% 24%; }
+}
+
 /* I sima: myndin verdur haerri og skugginn kemur ad nedan svo andlitin
    sjaist fyrir ofan textann i stad thess ad hverfa undir hann. */
 @media (max-width: 1000px) {
