@@ -847,10 +847,24 @@ async function supabaseBakendi() {
       kastaPost(svar);
     },
 
-    async svaraPosti(thradur_id, texti) {
-      const svar = await sb.from('postholf_svor').insert({ thradur_id, texti: String(texti || '').slice(0, 10000) })
+    async svaraPosti(thradur_id, texti, html) {
+      const svar = await sb.from('postholf_svor').insert({ thradur_id, texti: String(texti || '').slice(0, 10000),
+        html: html ? String(html).slice(0, 60000) : null })
         .select('id, texti, stada, villa, stofnad, sent_dags').single();
       kastaPost(svar); return svar.data;
+    },
+
+    /* Undirskrift stjórnandans, fylgir á milli tækja (kafli 25) */
+    async undirskrift() {
+      const svar = await sb.from('undirskriftir').select('gogn').maybeSingle();
+      if (svar.error) { if (/does not exist|schema cache/i.test(String(svar.error.message))) return null; kastaPost(svar); }
+      return svar.data ? svar.data.gogn : null;
+    },
+
+    async vistaUndirskrift(gogn) {
+      const notandi = minn && minn.id;
+      const svar = await sb.from('undirskriftir').upsert({ notandi_id: notandi, gogn, uppfaert: new Date().toISOString() }, { onConflict: 'notandi_id' });
+      kastaPost(svar);
     }
   };
 
@@ -1861,6 +1875,8 @@ function prufuBakendi() {
       krefjastAdmin(); prufuPostholf();
       const t = finna(g.postholf.thraedir, id); if (t) { t.lesid_kerfi = new Date().toISOString(); vista(); }
     },
+    async undirskrift() { krefjastAdmin(); return g.undirskrift || null; },
+    async vistaUndirskrift(gogn) { krefjastAdmin(); g.undirskrift = gogn; vista(); },
     async svaraPosti(thradur_id, texti) {
       krefjastAdmin(); prufuPostholf();
       if (!String(texti || '').trim()) throw new Error('Skrifaðu eitthvað fyrst.');

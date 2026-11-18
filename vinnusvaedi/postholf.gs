@@ -101,7 +101,10 @@ function sendaPostholfSvor_() {
       const skilabod = th.getMessages();
       const theirra = skilabod.filter((m) => !/@tveir\.is$/.test(netfangUr_(m.getFrom())));
       const svaraTil = theirra.length ? theirra[theirra.length - 1] : skilabod[skilabod.length - 1];
-      svaraTil.reply(String(s.texti), { name: 'Tveir' });
+      /* HTML útgáfan (texti og undirskrift með merki) var smíðuð á vinnusvæðinu */
+      const valkostir = { name: 'Tveir' };
+      if (s.html && String(s.html).length <= 60000) valkostir.htmlBody = String(s.html);
+      svaraTil.reply(String(s.texti), valkostir);
       kalla_('merkja_postholf_svar', { p_id: s.id });
       delete sidast[s.thradur_id];   /* næsta umferð sækir þráðinn aftur, með svarinu */
     } catch (villa) {
