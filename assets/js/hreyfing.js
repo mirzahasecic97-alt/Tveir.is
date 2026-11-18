@@ -254,22 +254,6 @@
   }
 
   /* ------------------------------------------------------------------
-     Segultakkar (bara með mús)
-     ------------------------------------------------------------------ */
-  if (fin) {
-    document.querySelectorAll('.hero__actions .btn, .cta .btn, .pillnav .btn, .leidir__fleiri .btn').forEach(function (b) {
-      var bx = gsap.quickTo(b, 'x', { duration: 0.5, ease: 'power3' });
-      var by = gsap.quickTo(b, 'y', { duration: 0.5, ease: 'power3' });
-      b.addEventListener('pointermove', function (e) {
-        var r = b.getBoundingClientRect();
-        bx((e.clientX - (r.left + r.width / 2)) * 0.35);
-        by((e.clientY - (r.top + r.height / 2)) * 0.45);
-      });
-      b.addEventListener('pointerleave', function () { bx(0); by(0); });
-    });
-  }
-
-  /* ------------------------------------------------------------------
      Endurreikna þegar letrið er komið og myndir hafa hlaðist
      ------------------------------------------------------------------ */
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { ScrollTrigger.refresh(); });

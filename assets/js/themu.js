@@ -16,7 +16,7 @@
 
   var THEMU = {
     venjulegt:  { heiti: 'Venjulegt', en: 'Classic' },
-    naeturborg: { heiti: 'Næturborg', en: 'Night city' }
+    naeturborg: { heiti: 'GTA', en: 'GTA', hetja: 'assets/img/themu/okkur-gta.jpg' }
   };
   var SJALFGEFID = 'naeturborg';
 
@@ -46,8 +46,19 @@
   }
   html.setAttribute('data-thema', val || SJALFGEFID);
 
+  /* Þema getur haft sína eigin mynd í hero (hetja) */
+  function setjaMynd(nafn) {
+    var img = document.querySelector('.hero__bak');
+    if (!img) return;
+    if (!img.dataset.upphafleg) img.dataset.upphafleg = img.getAttribute('src');
+    var ny = (THEMU[nafn] && THEMU[nafn].hetja) || img.dataset.upphafleg;
+    if (img.getAttribute('src') !== ny) img.setAttribute('src', ny);
+  }
+  document.addEventListener('DOMContentLoaded', function () { setjaMynd(html.getAttribute('data-thema')); });
+
   function setja(nafn) {
     html.setAttribute('data-thema', nafn);
+    setjaMynd(nafn);
     try { window.localStorage.setItem('tveir-thema', nafn); } catch (e) { /* skiptir ekki máli */ }
     document.querySelectorAll('.themaval button').forEach(function (b) {
       b.setAttribute('aria-pressed', String(b.dataset.thema === nafn));

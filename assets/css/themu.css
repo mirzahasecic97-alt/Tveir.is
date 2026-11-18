@@ -12,8 +12,8 @@
   display: flex; align-items: center; gap: 4px; padding: 5px;
   background: rgba(255, 255, 255, .82);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-  border: 1px solid rgba(28, 48, 80, .1); border-radius: 999px;
-  box-shadow: 0 10px 30px -14px rgba(28, 48, 80, .45);
+  border: 1px solid rgba(58, 22, 80, .1); border-radius: 999px;
+  box-shadow: 0 10px 30px -14px rgba(58, 22, 80, .45);
   font: 500 12.5px/1 var(--f-body);
 }
 .themaval__merki { padding: 0 6px 0 8px; color: var(--soft); }
@@ -97,11 +97,26 @@ html[data-thema="naeturborg"] .cta {
 }
 html[data-thema="naeturborg"] .langsw__btn.is-on { background: var(--acc); color: #fff; }
 
-/* Merkið: "Tveir" sem bleikt neonskilti á dökkum fleti */
+/* Merkið: "Tveir" sem bleikt neonskilti, gegnsætt, enginn kassi */
 html[data-thema="naeturborg"] .pillnav__logo img,
-html[data-thema="naeturborg"] .hr-opnun__merki img { display: none; }
+html[data-thema="naeturborg"] .hr-opnun__merki img,
+html[data-thema="naeturborg"] .simi__haus img { display: none; }
 html[data-thema="naeturborg"] .pillnav__logo { line-height: 1; }
 html[data-thema="naeturborg"] .pillnav__logo::after,
+html[data-thema="naeturborg"] .hr-opnun__merki::after,
+html[data-thema="naeturborg"] .simi__haus::before {
+  content: "Tveir";
+  position: static; inset: auto; animation: none; -webkit-mask: none; mask: none;
+  display: inline-block;
+  font: 400 46px/1 var(--nb-skrift);
+  color: #fff;
+  padding: 0 .12em .06em;
+  background: none; box-shadow: none; border-radius: 0;
+  -webkit-text-stroke: .1em #f0127f; paint-order: stroke fill;
+  text-shadow: 0 0 6px rgba(255, 61, 154, .9), 0 0 16px rgba(255, 61, 154, .75), 0 0 34px rgba(255, 61, 154, .5);
+  transform: rotate(-5deg);
+}
+html[data-thema="naeturborg"] .simi__haus::before { font-size: 24px; text-shadow: 0 0 6px rgba(255, 61, 154, .7); }
 html[data-thema="naeturborg"] .hr-opnun__merki::after {
   content: "Tveir";
   position: static; inset: auto; animation: none; -webkit-mask: none; mask: none;
@@ -118,9 +133,7 @@ html[data-thema="naeturborg"] .hr-opnun__merki::after {
 html[data-thema="naeturborg"] .hr-opnun__merki::after {
   font-size: clamp(110px, 18vw, 240px);
   padding: 0 .2em .12em;
-  background: none; box-shadow: none;
-  text-shadow:
-    0 0 3px #fff, 0 0 10px #ff5fb0, 0 0 26px #ff3d9a, 0 0 52px #ff3d9a, 0 0 100px rgba(255, 61, 154, .85);
+  text-shadow: 0 0 10px #ff5fb0, 0 0 26px #ff3d9a, 0 0 60px #ff3d9a, 0 0 110px rgba(255, 61, 154, .85);
   animation: nb-flokt 2.4s steps(1) 1;
 }
 html[data-thema="naeturborg"] .hr-opnun__merki { overflow: visible; padding: 20px; }
@@ -130,41 +143,27 @@ html[data-thema="naeturborg"] .hr-opnun__merki { overflow: visible; padding: 20p
   24% { opacity: .5; } 28% { opacity: 1; } 100% { opacity: 1; }
 }
 
-/* Opnunin: dimm nótt svo neonið njóti sín */
+/* Opnunin: myndin af okkur með neonskiltinu yfir */
 html[data-thema="naeturborg"] .hr-opnun {
-  background: radial-gradient(90% 70% at 50% 55%, #3b0f3f 0%, #170820 55%, #08030c 100%);
+  background:
+    radial-gradient(70% 55% at 50% 50%, rgba(23, 8, 32, .55) 0%, rgba(23, 8, 32, .2) 70%),
+    url('../img/themu/okkur-gta.jpg') 50% 24% / cover no-repeat,
+    #2c0f45;
 }
 html[data-thema="naeturborg"] .hr-opnun__lina { background: rgba(255, 61, 154, .2); }
 html[data-thema="naeturborg"] .hr-opnun__lina span { background: #ff3d9a; box-shadow: 0 0 12px #ff3d9a; }
 
-/* Hero: við í sólsetrinu með pálmatrjám og borginni */
+/* Hero: myndin af okkur í sólsetrinu */
 html[data-thema="naeturborg"] .hero {
-  background: linear-gradient(180deg, #a874d6 0%, #ef8fc0 45%, #ffbf8c 78%, #ffd9b0 100%);
+  background: #2c0f45;
   box-shadow: 0 30px 80px -34px rgba(58, 22, 80, .55);
 }
-html[data-thema="naeturborg"] .hero__bak {
-  filter: grayscale(1) contrast(1.15) brightness(1.05);
-  mix-blend-mode: multiply;
-  opacity: .92;
-}
-html[data-thema="naeturborg"] .hero::before {
-  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background:
-    url('../img/themu/naeturborg-palmi.svg') left -7% bottom 0 / auto 58% no-repeat,
-    url('../img/themu/naeturborg-palmi-h.svg') right -7% bottom 0 / auto 50% no-repeat,
-    url('../img/themu/naeturborg-umhverfi.svg') center bottom / 100% auto no-repeat;
-  opacity: .88;
-}
+html[data-thema="naeturborg"] .hero__bak { object-position: 50% 26%; }
 html[data-thema="naeturborg"] .hero::after {
   z-index: 1;
-  background: linear-gradient(to top, rgba(44, 15, 69, .92) 0%, rgba(90, 35, 120, .62) 30%, rgba(232, 68, 143, .12) 62%, rgba(255, 177, 92, 0) 100%);
+  background: linear-gradient(to top, rgba(44, 15, 69, .92) 0%, rgba(58, 18, 82, .7) 28%, rgba(58, 18, 82, .18) 56%, rgba(58, 18, 82, 0) 76%);
 }
 html[data-thema="naeturborg"] .hero__yfir { z-index: 3; }
-@media (max-width: 760px) {
-  html[data-thema="naeturborg"] .hero::before {
-    background: url('../img/themu/naeturborg-umhverfi.svg') center bottom / 100% auto no-repeat;
-  }
-}
 html[data-thema="naeturborg"] .hero__yfir h1 {
   font-size: calc(var(--fs-h1-hero) * 1.15); line-height: 1.02;
   color: #fff; -webkit-text-stroke: 3px var(--nb-djupt); paint-order: stroke fill;
@@ -191,3 +190,7 @@ html[data-thema="naeturborg"] .hero__actions .btn--aglas {
 }
 html[data-thema="naeturborg"] .hero__actions .btn--aglas:hover { background: #fff; color: var(--ink); }
 
+
+/* Táknin eru blá SVG myndir: snúum þeim yfir í bleikt */
+html[data-thema="naeturborg"] .leid__takn,
+html[data-thema="naeturborg"] .vinnulag__listi li::before { filter: hue-rotate(112deg) saturate(1.25) brightness(.95); }
