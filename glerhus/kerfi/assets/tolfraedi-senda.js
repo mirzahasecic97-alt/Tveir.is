@@ -84,7 +84,7 @@ export function sjalfgefinOrd(tolur, fyrriHeiti) {
 /* ------------------------------------------------------------------
    Pósturinn í Tveir útliti. Töflur og stílar í línu fyrir Gmail og Outlook.
    ------------------------------------------------------------------ */
-export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, tolur, ord }) {
+export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, tolur, ord, myndbond }) {
   const L = "font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
   const H = "font-family:'Inter Tight',Inter,-apple-system,'Segoe UI',Arial,sans-serif;letter-spacing:-.02em;";
   const t = tolur.samtals;
@@ -157,6 +157,24 @@ export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, 
       + (slod ? '<div style="padding-top:10px;">' + takki('Skoða færsluna', slod, false) + '</div>' : '')
       + '</td></tr></table></td></tr>';
   }).join('');
+  /* Myndböndin sem við gerðum: áhorf hvers og eins á tímabilinu */
+  const mbListi = (myndbond || []).filter((m) => erTala(m.ahorf));
+  const mbHaest = Math.max(1, ...mbListi.map((m) => Number(m.ahorf)));
+  const myndbondPosts = mbListi.length ? kafli('Myndböndin') + mbListi.map((m) => {
+    const slod = oruggSlod(m.slod);
+    const lysing = [MIDLAR_HEITI[m.midill] || (m.midill === 'youtube' ? 'YouTube' : ''), m.birt ? 'birt ' + dagsTexti(m.birt) : ''].filter(Boolean).join(' · ');
+    const aukatolur = [erTala(m.likes) ? tala(m.likes) + ' líkar' : '', erTala(m.heild) && Number(m.heild) !== Number(m.ahorf) ? tala(m.heild) + ' áhorf alls' : ''].filter(Boolean).join(' · ');
+    return '<tr><td style="padding:0 0 12px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;background:#f2f8fe;border-radius:14px;"><tr><td style="padding:14px 16px;">'
+      + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
+      + '<td valign="top" style="' + L + 'font-size:15px;line-height:1.4;font-weight:600;color:#1c3050;word-break:break-word;">' + esc(m.titill) + '</td>'
+      + '<td align="right" valign="top" style="' + H + 'font-size:18px;line-height:1.3;font-weight:700;color:#1c3050;white-space:nowrap;padding-left:10px;">' + esc(tala(m.ahorf)) + '</td>'
+      + '</tr><tr><td style="' + L + 'font-size:12.5px;line-height:1.4;color:#7189ac;padding-top:2px;">' + esc(lysing) + '</td>'
+      + '<td align="right" style="' + L + 'font-size:12.5px;color:#7189ac;padding-top:2px;white-space:nowrap;">áhorf</td></tr></table>'
+      + '<div style="padding-top:10px;">' + sula(m.ahorf, mbHaest, '#5b93f0') + '</div>'
+      + (aukatolur ? '<div style="' + L + 'font-size:13px;line-height:1.5;color:#4a5f80;padding-top:8px;">' + esc(aukatolur) + '</div>' : '')
+      + (slod ? '<div style="padding-top:10px;">' + takki('Horfa á myndbandið', slod, false) + '</div>' : '')
+      + '</td></tr></table></td></tr>';
+  }).join('') : '';
   const nofnin = (nofn || []).map((x) => String(x || '').trim().split(' ')[0]).filter(Boolean);
   const kvedja = !nofnin.length || nofnin.length > 3 ? 'Hæ,' : nofnin.length === 1 ? 'Hæ ' + nofnin[0] + ',' : 'Hæ ' + nofnin.slice(0, -1).join(', ') + ' og ' + nofnin[nofnin.length - 1] + ',';
   const ordin = ord ? '<tr><td style="padding:16px 0 4px 0;' + L + 'font-size:16px;line-height:1.6;color:#1c3050;word-break:break-word;">' + esc(ord).replace(/\r?\n/g, '<br>') + '</td></tr>' : '';
@@ -174,26 +192,28 @@ export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, 
     + '<tr><td style="padding:0 6px 14px 6px;' + L + 'font-size:16px;line-height:1.55;color:#4a5f80;">' + esc(kvedja) + '<br>' + esc('Hér eru tölurnar af samfélagsmiðlunum ykkar ' + inngangur + '.') + '</td></tr>'
     + '<tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' + reitir + '</table></td></tr>'
     + '<tr><td style="padding:0 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
-    + ordin + sulurit + midlar + (faerslur ? kafli('Bestu færslurnar') + faerslur : '')
+    + ordin + sulurit + myndbondPosts + midlar + (faerslur ? kafli('Bestu færslurnar') + faerslur : '')
     + '<tr><td align="center" style="padding:24px 0 6px 0;">' + takki('Sjá alla tölfræðina', TOLFRAEDI, true) + '</td></tr>'
     + '</table></td></tr></table></td></tr>'
     + '<tr><td align="center" style="padding:22px 12px 0 12px;' + L + 'font-size:13px;line-height:1.6;color:#7189ac;">Kveðja, Tveir<br><a href="https://tveir.is" target="_blank" style="color:#5b93f0;text-decoration:none;">tveir.is</a></td></tr>'
     + '</table></td></tr></table></body></html>';
 }
 
-export function postTexti({ fyrirtaeki, nofn, inngangur, fyrriHeiti, tolur, ord }) {
+export function postTexti({ fyrirtaeki, nofn, inngangur, fyrriHeiti, tolur, ord, myndbond }) {
   const t = tolur.samtals;
   const lina = (h, nu, fyrr) => { const b = breyting(nu, fyrr, fyrriHeiti); return h + ': ' + (tala(nu) || 'engin gögn') + (b ? ' (' + b.texti + ')' : ''); };
   const n = (nofn || []).filter(Boolean);
   return [n.length === 1 ? 'Hæ ' + n[0] + ',' : 'Hæ,', '', 'Tölfræði ' + fyrirtaeki + ' ' + inngangur + ':', '',
     lina('Áhorf', t.ahorf, t.ahorf_fyrri), lina('Náð', t.nadir, t.nadir_fyrri), lina('Samskipti', t.samskipti, t.samskipti_fyrri),
-    'Fylgjendur: ' + (tala(t.fylgjendur_lok) || 'engin gögn'), ord ? '\n' + ord : '', '', 'Sjá alla tölfræðina: ' + TOLFRAEDI, '', 'Kveðja,', 'Tveir'].join('\n');
+    'Fylgjendur: ' + (tala(t.fylgjendur_lok) || 'engin gögn'),
+    ...((myndbond || []).filter((m) => erTala(m.ahorf)).length ? ['', 'Myndböndin:'].concat((myndbond || []).filter((m) => erTala(m.ahorf)).map((m) => '- ' + m.titill + ': ' + tala(m.ahorf) + ' áhorf')) : []),
+    ord ? '\n' + ord : '', '', 'Sjá alla tölfræðina: ' + TOLFRAEDI, '', 'Kveðja,', 'Tveir'].join('\n');
 }
 
 /* ------------------------------------------------------------------
    Glugginn: velja viðtakendur, sjá póstinn og senda
    ------------------------------------------------------------------ */
-export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, tb, timabilHeiti, fyrriHeiti }) {
+export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, tb, timabilHeiti, fyrriHeiti, myndbond }) {
   fyrriHeiti = fyrriHeiti || 'tímabilið á undan';
   const merkiTexti = 'Tölfræði · ' + dagsTexti(tb.fra) + ' til ' + dagsTexti(tb.til);
   const inngangur = timabilHeiti;
@@ -213,6 +233,13 @@ export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, 
     return;
   }
   const tolur = reiknaTolur({ midlar, maelingar, tb, faerslur });
+  /* Myndböndin: áhorf mánaðanna sem tímabilið nær yfir, mest skoðuðu fyrst */
+  const mbFra = String(tb.fra).slice(0, 8) + '01', mbTil = String(tb.til).slice(0, 8) + '01';
+  const mbSumma = (m, fra, til, k) => (m.tolur || []).reduce((a, t) => (t.manudur >= fra && t.manudur <= til && erTala(t[k]) ? (a || 0) + Number(t[k]) : a), null);
+  const mbTilbuin = (myndbond || []).map((m) => ({ titill: m.titill, midill: m.midill, birt: m.birt, slod: m.slod,
+    ahorf: mbSumma(m, mbFra, mbTil, 'ahorf'), likes: mbSumma(m, mbFra, mbTil, 'likes'), heild: mbSumma(m, '0000-01-01', '9999-12-31', 'ahorf') }))
+    .filter((m) => erTala(m.ahorf)).sort((a, b) => Number(b.ahorf) - Number(a.ahorf)).slice(0, 8);
+  let medMyndbond = mbTilbuin.length > 0;
   const vidskiptavinir = (notendur || []).filter((n) => n.fyrirtaeki_id === fid && n.hlutverk === 'vidskiptavinur' && n.netfang);
   const valdir = new Set(vidskiptavinir.map((n) => n.netfang));
   let afrit = false;
@@ -225,7 +252,7 @@ export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, 
 
   const nofnValdra = () => vidskiptavinir.filter((n) => valdir.has(n.netfang)).map((n) => n.nafn || '');
   const efni = () => ('Tölfræðin ykkar ' + inngangur + ': ' + fyrirtaeki).replace(/[\r\n]+/g, ' ').slice(0, 200);
-  const gogn = () => ({ fyrirtaeki, nofn: nofnValdra(), merkiTexti, inngangur, fyrriHeiti, tolur, ord: ordReitur.value.trim() });
+  const gogn = () => ({ fyrirtaeki, nofn: nofnValdra(), merkiTexti, inngangur, fyrriHeiti, tolur, ord: ordReitur.value.trim(), myndbond: medMyndbond ? mbTilbuin : [] });
   let bid;
   const uppfaera = () => {
     clearTimeout(bid);
@@ -258,6 +285,10 @@ export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, 
             el('input', { type: 'checkbox', onchange: (e) => { afrit = e.target.checked; uppfaera(); } }),
             document.createTextNode('Senda afrit á mig (' + ek.netfang + ')')
           ]) : null]),
+        mbTilbuin.length ? el('label', { class: 'ts-afrit' }, [
+          el('input', { type: 'checkbox', checked: true, onchange: (e) => { medMyndbond = e.target.checked; uppfaera(); } }),
+          document.createTextNode('Hafa myndböndin með (' + mbTilbuin.length + ')')
+        ]) : null,
         el('label', { class: 'ts-hluti' }, [el('span', { class: 'ts-midi', texti: 'Orð frá ykkur' }), ordReitur]),
         villa,
         el('div', { class: 'ts-hnappar' }, [el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Hætta við', onclick: () => d.close() }), sendaHn])

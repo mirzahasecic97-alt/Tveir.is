@@ -8,6 +8,27 @@ import { stillingar } from './stillingar.js';
 /* ------------------------------------------------------------------
    Orðalag
    ------------------------------------------------------------------ */
+
+/* Myndband: hreinsað áður en það fer í gagnagrunninn */
+const MYNDBANDA_MIDLAR = ['instagram', 'facebook', 'tiktok', 'youtube', 'annad'];
+function hreintMyndband(m) {
+  const slod = String(m.slod || '').trim();
+  const birt = String(m.birt || '').slice(0, 10);
+  return {
+    titill: String(m.titill || '').trim().slice(0, 120) || 'Myndband',
+    midill: MYNDBANDA_MIDLAR.includes(m.midill) ? m.midill : 'annad',
+    slod: /^https:\/\/\S+$/.test(slod) ? slod.slice(0, 2000) : null,
+    birt: /^\d{4}-\d{2}-\d{2}$/.test(birt) ? birt : null,
+    faersla_id: m.faersla_id || null
+  };
+}
+function hreinMyndbandstala(r) {
+  if (!r || !r.myndband_id || !/^\d{4}-\d{2}-01$/.test(String(r.manudur || ''))) return null;
+  const t = (v) => (v === '' || v === null || v === undefined || !isFinite(Number(v)) || Number(v) < 0 ? null : Math.round(Number(v)));
+  return { myndband_id: r.myndband_id, manudur: r.manudur, ahorf: t(r.ahorf), likes: t(r.likes),
+           athugasemdir: t(r.athugasemdir), deilingar: t(r.deilingar), vistanir: t(r.vistanir), uppruni: 'handvirkt' };
+}
+
 export const STODUR_VERK = {
   tillaga:   { heiti: 'Bíður samþykkis', litur: 'bid' },
   samthykkt: { heiti: 'Samþykkt',        litur: 'ok'  },
@@ -759,6 +780,46 @@ async function supabaseBakendi() {
     async sendaTolfraedi(rod) {
       const svar = await sb.from('tolfraedi_sendingar').insert(rod).select('id, stada').single();
       kastaTf(svar); return svar.data;
+    },
+
+    /* ---------- Myndböndin (kafli 23) ----------
+       Hvert myndband með tölum á mánuði. Tengt færslu frá Meta fyllast
+       tölurnar sjálfkrafa í gagnagrunninum, annars skráðar í höndunum. */
+    async myndbond(fyrirtaeki_id) {
+      const svar = await sb.from('myndbond').select('*, tolur:myndband_tolur(*)')
+        .eq('fyrirtaeki_id', fyrirtaeki_id)
+        .order('birt', { ascending: false, nullsFirst: false }).order('stofnad', { ascending: false });
+      kastaTf(svar); return svar.data;
+    },
+
+    async nyttMyndband(m) {
+      const svar = await sb.from('myndbond').insert({ fyrirtaeki_id: m.fyrirtaeki_id, ...hreintMyndband(m) })
+        .select('*, tolur:myndband_tolur(*)').single();
+      kastaTf(svar); return svar.data;
+    },
+
+    async uppfaeraMyndband(id, m) {
+      const svar = await sb.from('myndbond').update(hreintMyndband(m)).eq('id', id)
+        .select('*, tolur:myndband_tolur(*)').single();
+      kastaTf(svar); return svar.data;
+    },
+
+    async eydaMyndbandi(id) {
+      const svar = await sb.from('myndbond').delete().eq('id', id);
+      kastaTf(svar);
+    },
+
+    /* Tölur á mánuði skráðar í höndunum. Handvirk lína stendur þótt Meta uppfærist. */
+    async vistaMyndbandstolur(rows) {
+      const linur = (rows || []).map(hreinMyndbandstala).filter(Boolean);
+      if (!linur.length) return 0;
+      const svar = await sb.from('myndband_tolur').upsert(linur, { onConflict: 'myndband_id,manudur' });
+      kastaTf(svar); return linur.length;
+    },
+
+    async eydaMyndbandstolu(myndband_id, manudur) {
+      const svar = await sb.from('myndband_tolur').delete().eq('myndband_id', myndband_id).eq('manudur', manudur);
+      kastaTf(svar);
     }
   };
 
@@ -1709,6 +1770,46 @@ function prufuBakendi() {
       vista(); return JSON.parse(JSON.stringify(s));
     },
 
+    /* ---------- Myndböndin í prufu: sýnidæmi fyrsta fyrirtækisins ---------- */
+    async myndbond(fyrirtaeki_id) {
+      if (!maSja(fyrirtaeki_id)) return [];
+      prufuMyndbond();
+      return JSON.parse(JSON.stringify(g.tf.myndbond.filter((m) => m.fyrirtaeki_id === fyrirtaeki_id)))
+        .sort((a, b) => String(b.birt || '').localeCompare(String(a.birt || '')));
+    },
+    async nyttMyndband(m) {
+      krefjastAdmin(); prufuMyndbond();
+      const nytt = { id: 'mb' + Date.now(), fyrirtaeki_id: m.fyrirtaeki_id, ...hreintMyndband(m), stofnad: new Date().toISOString(), tolur: [] };
+      g.tf.myndbond.push(nytt); vista(); return JSON.parse(JSON.stringify(nytt));
+    },
+    async uppfaeraMyndband(id, m) {
+      krefjastAdmin(); prufuMyndbond();
+      const x = finna(g.tf.myndbond, id);
+      if (!x) throw new Error('Myndbandið fannst ekki.');
+      Object.assign(x, hreintMyndband(m)); vista(); return JSON.parse(JSON.stringify(x));
+    },
+    async eydaMyndbandi(id) {
+      krefjastAdmin(); prufuMyndbond();
+      g.tf.myndbond = g.tf.myndbond.filter((m) => m.id !== id); vista();
+    },
+    async vistaMyndbandstolur(rows) {
+      krefjastAdmin(); prufuMyndbond();
+      let n = 0;
+      for (const r of rows || []) {
+        const lina = hreinMyndbandstala(r);
+        const m = lina && finna(g.tf.myndbond, lina.myndband_id);
+        if (!m) continue;
+        m.tolur = (m.tolur || []).filter((t) => t.manudur !== lina.manudur).concat([{ ...lina, fyrirtaeki_id: m.fyrirtaeki_id, uppfaert: new Date().toISOString() }]);
+        n++;
+      }
+      vista(); return n;
+    },
+    async eydaMyndbandstolu(myndband_id, manudur) {
+      krefjastAdmin(); prufuMyndbond();
+      const m = finna(g.tf.myndbond, myndband_id);
+      if (m) { m.tolur = (m.tolur || []).filter((t) => t.manudur !== manudur); vista(); }
+    },
+
     async sendaTolfraedi(rod) {
       if (!erAdminPrufa()) throw new Error('Bara stjórnendur senda tölfræði');
       if (!rod.netfong || !rod.netfong.length) throw new Error('Veldu 1 til 10 viðtakendur');
@@ -1721,6 +1822,29 @@ function prufuBakendi() {
   };
 
   function innskradurPrufa() { return g.innskradur ? finna(g.notendur, g.innskradur) : null; }
+  /* Fjögur sýnimyndbönd á hvert fyrirtæki sem á miðil, með tölum síðustu mánaða */
+  function prufuMyndbond() {
+    if (Array.isArray(g.tf.myndbond)) return;
+    const fyrirtaekin = [...new Set(g.tf.midlar.map((m) => m.fyrirtaeki_id))];
+    const nu = new Date();
+    const man = (k) => { const d = new Date(Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth() - k, 1)); return d.toISOString().slice(0, 10); };
+    const dagur = (k, d) => man(k).slice(0, 8) + String(d).padStart(2, '0');
+    const smida = (fid, i, titill, midill, birtK, tolur, tengt) => ({
+      id: 'mb-' + fid + '-' + i, fyrirtaeki_id: fid, titill, midill, slod: null, birt: dagur(birtK, 6 + i * 3), faersla_id: tengt ? 'sjalfvirkt' : null,
+      stofnad: new Date().toISOString(),
+      tolur: tolur.map((a, k) => ({ myndband_id: 'mb-' + fid + '-' + i, fyrirtaeki_id: fid, manudur: man(birtK - k), ahorf: a,
+        likes: Math.round(a * 0.06), athugasemdir: Math.round(a * 0.004), deilingar: Math.round(a * 0.011), vistanir: Math.round(a * 0.009),
+        uppruni: tengt ? 'sjalfvirkt' : 'handvirkt' })).filter((t) => t.manudur <= man(0))
+    });
+    g.tf.myndbond = fyrirtaekin.flatMap((fid, n) => [
+      smida(fid, 1, 'Nýja línan kynnt', 'instagram', 2, [8400, 3100, 1200].map((x) => Math.round(x * (1 - n * 0.2))), true),
+      smida(fid, 2, 'Dagur á bak við tjöldin', 'tiktok', 2, [14200, 5200, 2100].map((x) => Math.round(x * (1 - n * 0.2))), false),
+      smida(fid, 3, 'Viðtal við eigandann', 'facebook', 1, [3900, 1600].map((x) => Math.round(x * (1 - n * 0.2))), false),
+      smida(fid, 4, 'Jólatilboðin', 'instagram', 0, [2650].map((x) => Math.round(x * (1 - n * 0.2))), false)
+    ]);
+    vista();
+  }
+
   function erAdminPrufa() { const n = innskradurPrufa(); return !!n && n.hlutverk === 'admin'; }
   function maSja(fyrirtaeki_id) {
     const n = innskradurPrufa();

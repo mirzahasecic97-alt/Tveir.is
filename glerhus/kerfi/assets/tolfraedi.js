@@ -551,16 +551,18 @@ async function start() {
   let maelingar = [];
   let skyrslur = [];
   let skyrsluVilla = null;
+  let myndbond = [];
+  let myndbandaVilla = null;
   const faerslurMinni = new Map();
   let utgafa = 0;
   let vaktTimi = null;
   const skyrsluHnutar = new Map();
 
   const hlutar = {
-    haus: el('div'), tolur: el('div'), skyrslur: el('div'), midlar: el('div')
+    haus: el('div'), tolur: el('div'), myndbond: el('div'), skyrslur: el('div'), midlar: el('div')
   };
   fylla(innihald, [
-    hlutar.haus, hlutar.tolur, hlutar.skyrslur, hlutar.midlar,
+    hlutar.haus, hlutar.tolur, hlutar.myndbond, hlutar.skyrslur, hlutar.midlar,
     g.prufa ? el('div', { class: 'prufubanner', style: 'margin-top:18px' }, [
       el('strong', { texti: 'Prufustilling. ' }),
       document.createTextNode('Tölurnar eru sýnidæmi sem verða til í vafranum. Ekkert fer út á netið og enginn póstur er sendur.')
@@ -606,7 +608,7 @@ async function start() {
                 manudur: ['það sem af er ' + manNafn(tb.fra), 'sama tíma í ' + manNafn(tb.fyrriFra)],
                 fyrri: ['í ' + manNafn(tb.fra), 'í ' + manNafn(tb.fyrriFra)] }[timabil] || ['á tímabilinu', 'tímabilið á undan'];
               const valdir = sia === 'allir' ? midlar : midlar.filter((m) => m.midill === sia);
-              opnaSendingu({ g, ek, fid, fyrirtaeki: fyrNafn(), midlar: valdir, maelingar, tb, timabilHeiti: heiti[0], fyrriHeiti: heiti[1] });
+              opnaSendingu({ g, ek, fid, fyrirtaeki: fyrNafn(), midlar: valdir, maelingar, tb, timabilHeiti: heiti[0], fyrriHeiti: heiti[1], myndbond });
             } }, [el('span', { 'aria-hidden': 'true', texti: '✉ ' }), document.createTextNode('Senda á viðskiptavin')])
           : null,
         admin && fid && fyrirtaekin.length > 1
@@ -759,6 +761,7 @@ async function start() {
     fylla(hlutar.tolur, [el('div', { class: 'card pblokk' }, [el('p', { class: 'tomt', texti: 'Sæki tölurnar' })])]);
     fylla(hlutar.skyrslur, []);
     fylla(hlutar.midlar, []);
+    fylla(hlutar.myndbond, []);
     const nu = idag();
     try {
       const [m, ma] = await Promise.all([
@@ -779,6 +782,12 @@ async function start() {
     } catch (villa) {
       skyrslur = []; skyrsluVilla = villa;
     }
+    try {
+      myndbond = await g.myndbond(fid) || [];
+      myndbandaVilla = null;
+    } catch (villa) {
+      myndbond = []; myndbandaVilla = villa;
+    }
     if (min !== utgafa) return;
     if (sia !== 'allir' && !midlar.some((x) => x.midill === sia)) sia = 'allir';
     teiknaAllt();
@@ -792,6 +801,7 @@ async function start() {
 
   function teiknaAllt() {
     teiknaTolur();
+    teiknaMyndbond();
     teiknaSkyrslur();
     teiknaMidla();
   }
@@ -945,7 +955,7 @@ async function start() {
       el('div', { class: 'tf-siur' }, [
         el('div', { class: 'pflipar tf-flipar', role: 'group', 'aria-label': 'Tímabil' }, TIMABIL.map(([k, heiti]) =>
           el('button', { type: 'button', class: 'pflipi', 'aria-pressed': String(timabil === k), texti: heiti,
-            onclick: () => { timabil = k; geyma('tolfraedi-timabil', k); teiknaTolur(); } }))),
+            onclick: () => { timabil = k; geyma('tolfraedi-timabil', k); teiknaTolur(); teiknaMyndbond(); } }))),
         el('div', { class: 'pflipar tf-flipar', role: 'group', 'aria-label': 'Miðlar' }, [
           el('button', { type: 'button', class: 'pflipi', 'aria-pressed': String(sia === 'allir'), texti: 'Allir miðlar',
             onclick: () => { sia = 'allir'; teiknaTolur(); } })
@@ -1349,6 +1359,199 @@ async function start() {
   /* ------------------------------------------------------------------
      Miðlar: bara við
      ------------------------------------------------------------------ */
+
+  /* ------------------------------------------------------------------
+     Myndböndin: áhorf á mánuði fyrir hvert myndband sem við gerðum.
+     Tengt færslu frá Meta fyllist það sjálfkrafa, annars skráð í höndunum.
+     ------------------------------------------------------------------ */
+  function mbManHeiti(m) { return manNafn(m) + ' ' + String(m).slice(0, 4); }
+  function mbSumma(m, fra, til, k) {
+    let summa = null;
+    for (const t of m.tolur || []) {
+      if (t.manudur >= fra && t.manudur <= til && t[k] !== null && t[k] !== undefined) summa = (summa || 0) + Number(t[k]);
+    }
+    return summa;
+  }
+
+  function teiknaMyndbond() {
+    if (!fid) return;
+    if (!admin && !myndbond.length) { fylla(hlutar.myndbond, []); return; }
+    const tb = reiknaTimabil(timabil);
+    const fra = fyrstiIMan(tb.fra), til = fyrstiIMan(tb.til);
+    const bilTexti = fra === til ? mbManHeiti(fra) : mbManHeiti(fra) + ' til ' + mbManHeiti(til);
+    const rodud = myndbond.slice().sort((a, b) => (mbSumma(b, fra, til, 'ahorf') || 0) - (mbSumma(a, fra, til, 'ahorf') || 0));
+    const alls = rodud.reduce((a, m) => a + (mbSumma(m, fra, til, 'ahorf') || 0), 0);
+
+    fylla(hlutar.myndbond, [el('section', { class: 'card pblokk tf-blokk tf-mb' }, [
+      el('div', { class: 'pyfir' }, [
+        el('h2', { texti: 'Myndböndin' }),
+        admin ? el('button', { type: 'button', class: 'btn btn--sm', texti: 'Nýtt myndband', onclick: () => opnaMyndband({}) }) : null
+      ]),
+      el('p', { class: 'skyring', style: 'margin:-6px 0 12px',
+        texti: (admin
+          ? 'Hvert myndband sem við gerðum fyrir ' + fyrNafn() + ', með áhorfi á mánuði. Tengt færslu frá Instagram eða Facebook fyllist það sjálfkrafa. Annars skráirðu tölurnar í höndunum.'
+          : 'Myndböndin sem við gerðum fyrir ykkur og áhorfið á þau.')
+          + ' Tölurnar hér eru fyrir ' + bilTexti + '.' }),
+      myndbandaVilla ? el('p', { class: 'tomt', texti: myndbandaVilla.message || 'Náði ekki í myndböndin.' }) : null,
+      !myndbandaVilla && !rodud.length ? el('p', { class: 'tomt', texti: 'Ekkert myndband skráð ennþá. Ýttu á Nýtt myndband til að byrja.' }) : null,
+      rodud.length ? el('div', { class: 'tf-mb__samtals' }, [
+        el('span', { texti: rodud.length === 1 ? '1 myndband' : rodud.length + ' myndbönd' }),
+        el('strong', { texti: tala(alls) + ' áhorf' }),
+        el('span', { texti: bilTexti })
+      ]) : null,
+      rodud.length ? el('ul', { class: 'tf-mb__listi' }, rodud.map((m) => {
+        const a = mbSumma(m, fra, til, 'ahorf');
+        const heild = mbSumma(m, '0000-01-01', '9999-12-31', 'ahorf');
+        const likes = mbSumma(m, fra, til, 'likes');
+        const slod = oruggSlod(m.slod);
+        const stopp = alls > 0 && a ? Math.max(3, Math.round(a / alls * 100)) : 0;
+        return el('li', { class: 'tf-mb__lina' }, [
+          el('div', { class: 'tf-mb__mid' }, [
+            admin
+              ? el('button', { type: 'button', class: 'tf-mb__titill', texti: m.titill, onclick: () => opnaMyndband(m) })
+              : el('span', { class: 'tf-mb__titill', texti: m.titill }),
+            el('div', { class: 'tf-mb__undir' }, [
+              el('span', { texti: ({ instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', youtube: 'YouTube' })[m.midill] || 'Annað' }),
+              m.birt ? el('span', { texti: 'Birt ' + dagsStutt(m.birt) }) : null,
+              el('span', { class: 'tf-mb__uppruni' + (m.faersla_id ? ' er-sjalfvirkt' : ''), texti: m.faersla_id ? 'Sjálfvirkt' : 'Handvirkt' }),
+              slod ? el('a', { href: slod, target: '_blank', rel: 'noopener noreferrer', texti: 'Horfa' }) : null
+            ]),
+            el('span', { class: 'tf-mb__stika', 'aria-hidden': 'true' }, [el('i', { style: 'width:' + stopp + '%' })])
+          ]),
+          el('div', { class: 'tf-mb__tolur' }, [
+            el('strong', { texti: a === null ? 'Engar tölur' : tala(a) + ' áhorf' }),
+            el('span', { texti: [likes !== null ? tala(likes) + ' líkar' : '', heild !== null && heild !== a ? tala(heild) + ' alls' : ''].filter(Boolean).join(' · ') || ' ' }),
+            admin ? el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Skrá tölur', onclick: () => opnaMyndband(m, true) }) : null
+          ])
+        ]);
+      })) : null
+    ])]);
+  }
+
+  /* Spjaldið: upplýsingar um myndbandið og tölurnar mánuð fyrir mánuð */
+  async function opnaMyndband(m, beintITolur) {
+    const nytt = !m.id;
+    const kort = el('div', { style: 'margin-top:14px' });
+    const d = opnaSpjald(nytt ? 'Nýtt myndband' : m.titill, [kort]);
+    const stadan = el('div', { class: 'form-status', role: 'status', hidden: true });
+
+    /* Færslur frá Meta sem má tengja (myndbönd og reels síðustu 2 árin) */
+    let faerslur = [];
+    try { faerslur = (await g.midlaFaerslur(fid, plusDagar(idag(), -730), idag())) || []; } catch (villa) { faerslur = []; }
+    faerslur = faerslur.filter((f) => ['myndband', 'reel'].includes(f.tegund) || f.id === m.faersla_id)
+      .sort((a, b) => String(b.birt || '').localeCompare(String(a.birt || '')));
+
+    const titill = el('input', { type: 'text', required: true, maxlength: '120', value: m.titill || '', placeholder: 'Til dæmis Vetrarnámskeiðin kynnt' });
+    const midill = el('select', {}, [['instagram', 'Instagram'], ['facebook', 'Facebook'], ['tiktok', 'TikTok'], ['youtube', 'YouTube'], ['annad', 'Annað']]
+      .map(([k, h]) => el('option', { value: k, selected: (m.midill || 'instagram') === k, texti: h })));
+    const slod = el('input', { type: 'url', maxlength: '2000', value: m.slod || '', placeholder: 'https://', autocomplete: 'off' });
+    const birt = el('input', { type: 'date', value: m.birt || '' });
+    const tengja = el('select', {}, [el('option', { value: '', texti: 'Ekki tengt: ég skrái tölurnar sjálf(ur)' })].concat(
+      /* Tengd færsla sem er ekki í listanum (eldri en 2 ára) helst tengd */
+      m.faersla_id && !faerslur.some((f) => f.id === m.faersla_id)
+        ? [el('option', { value: m.faersla_id, selected: true, texti: 'Tengt færslu, tölurnar koma sjálfkrafa' })] : [],
+      faerslur.map((f) => el('option', { value: f.id, selected: f.id === m.faersla_id,
+        texti: [midilHeiti((midlar.find((x) => x.id === f.midill_id) || {}).midill), f.birt ? dagsStutt(f.birt) : '',
+                String(f.texti || '').trim().slice(0, 50) || TEGUNDIR[f.tegund] || 'Færsla', f.ahorf != null ? tala(f.ahorf) + ' áhorf' : '']
+          .filter(Boolean).join(' · ') }))));
+
+    let stadfest = false;
+    const eydaHn = nytt ? null : el('button', { type: 'button', class: 'spjald__eyda', texti: 'Eyða myndbandi',
+      onclick: async () => {
+        if (!stadfest) {
+          stadfest = true; eydaHn.textContent = 'Ýttu aftur: tölurnar hverfa líka'; eydaHn.classList.add('er-vis');
+          setTimeout(() => { stadfest = false; if (eydaHn.isConnected) { eydaHn.textContent = 'Eyða myndbandi'; eydaHn.classList.remove('er-vis'); } }, 5000);
+          return;
+        }
+        eydaHn.disabled = true;
+        try { await g.eydaMyndbandi(m.id); myndbond = myndbond.filter((x) => x.id !== m.id); d.close(); teiknaMyndbond(); }
+        catch (villa) { stadaBod(stadan, villa.message || 'Þetta gekk ekki.', 'err'); eydaHn.disabled = false; }
+      } });
+
+    /* Tölurnar: einn mánuður í línu, frá birtingu (mest 12) til þessa mánaðar */
+    const nuM = fyrstiIMan(idag());
+    const fyrsti = m.birt ? fyrstiIMan(m.birt) : manudFra(nuM, -2);
+    const manudir = [];
+    for (let x = nuM; x >= fyrsti && manudir.length < 12; x = manudFra(x, -1)) manudir.push(x);
+    const linur = manudir.map((man) => {
+      const t = (m.tolur || []).find((r) => r.manudur === man) || {};
+      const sjalf = t.uppruni === 'sjalfvirkt';
+      const inntok = {};
+      const reitir = [['ahorf', 'Áhorf'], ['likes', 'Líkar'], ['athugasemdir', 'Athugasemdir'], ['deilingar', 'Deilingar'], ['vistanir', 'Vistanir']].map(([k, h]) => {
+        inntok[k] = el('input', { type: 'text', inputmode: 'numeric', 'aria-label': h + ' í ' + mbManHeiti(man), placeholder: '0',
+          value: t[k] === null || t[k] === undefined ? '' : String(t[k]), disabled: sjalf ? true : null, class: 'tf-mb__reitur' });
+        return el('td', {}, [inntok[k]]);
+      });
+      const breytaHn = sjalf ? el('button', { type: 'button', class: 'tf-mb__breyta', texti: 'Breyta', title: 'Skrá þennan mánuð í höndunum',
+        onclick: (e) => { Object.values(inntok).forEach((i) => { i.disabled = false; }); lina.dataset.breytt = '1'; e.currentTarget.remove(); inntok.ahorf.focus(); } }) : null;
+      const lina = el('tr', { 'data-manudur': man }, [
+        el('th', { scope: 'row' }, [el('span', { texti: mbManHeiti(man) }), sjalf ? el('small', { class: 'tf-mb__sjalf', texti: 'Sjálfvirkt' }) : null, breytaHn])
+      ].concat(reitir));
+      lina._inntok = inntok; lina._var = t; lina._sjalf = sjalf;
+      return lina;
+    });
+    const tafla = el('div', { class: 'tf-mb__tafla-svid' }, [el('table', { class: 'tf-mb__tafla' }, [
+      el('thead', {}, [el('tr', {}, [el('th', { texti: 'Mánuður' })].concat(['Áhorf', 'Líkar', 'Athugas.', 'Deilingar', 'Vistanir'].map((h) => el('th', { texti: h }))))]),
+      el('tbody', {}, linur)
+    ])]);
+
+    const vistaHn = el('button', { type: 'submit', class: 'btn btn--sm', texti: nytt ? 'Vista myndband' : 'Vista' });
+    const form = el('form', { class: 'tf-form', novalidate: true, onsubmit: async (e) => {
+      e.preventDefault();
+      const t = titill.value.trim();
+      const sl = slod.value.trim();
+      if (!t) { stadaBod(stadan, 'Titilinn vantar.', 'err'); titill.focus(); return; }
+      if (sl && !oruggSlod(sl)) { stadaBod(stadan, 'Slóðin þarf að byrja á https:// og vera án bila.', 'err'); slod.focus(); return; }
+      /* Tölurnar: bara línur sem eru skráðar í höndunum og hafa breyst */
+      const rodir = [];
+      for (const lina of linur) {
+        if (lina._sjalf && !lina.dataset.breytt) continue;
+        const r = { manudur: lina.dataset.manudur };
+        let villa = null, eitthvad = false, breytt = false;
+        for (const [k, inp] of Object.entries(lina._inntok)) {
+          const v = inp.value.replace(/[.\s]/g, '').trim();
+          if (v && !/^\d{1,12}$/.test(v)) { villa = inp; break; }
+          r[k] = v === '' ? null : Number(v);
+          if (v !== '') eitthvad = true;
+          const fyrra = lina._var[k] === null || lina._var[k] === undefined ? null : Number(lina._var[k]);
+          if (r[k] !== fyrra) breytt = true;
+        }
+        if (villa) { stadaBod(stadan, 'Tölur mega bara vera heilar tölur, til dæmis 12400.', 'err'); villa.focus(); return; }
+        if (breytt && (eitthvad || lina._var.manudur)) rodir.push({ ...r, tomt: !eitthvad });
+      }
+      vistaHn.disabled = true;
+      try {
+        const upp = { titill: t, midill: midill.value, slod: sl || null, birt: birt.value || null, faersla_id: tengja.value || null };
+        const vistad = nytt ? await g.nyttMyndband({ ...upp, fyrirtaeki_id: fid }) : await g.uppfaeraMyndband(m.id, upp);
+        const id = vistad.id;
+        const skra = rodir.filter((r) => !r.tomt).map((r) => ({ ...r, myndband_id: id }));
+        if (skra.length) await g.vistaMyndbandstolur(skra);
+        for (const r of rodir.filter((r) => r.tomt)) await g.eydaMyndbandstolu(id, r.manudur);
+        myndbond = await g.myndbond(fid) || [];
+        d.close();
+        teiknaMyndbond();
+      } catch (villa) {
+        stadaBod(stadan, villa.message || 'Þetta gekk ekki.', 'err');
+        vistaHn.disabled = false;
+      }
+    } }, [
+      el('div', { class: 'field-row' }, [reitur('Titill', titill), reitur('Miðill', midill)]),
+      el('div', { class: 'field-row' }, [reitur('Slóð á myndbandið (valfrjálst)', slod), reitur('Birt', birt)]),
+      reitur('Sækja tölurnar sjálfkrafa úr færslu', tengja),
+      el('p', { class: 'skyring', style: 'margin-top:-8px', texti: faerslur.length
+        ? 'Veldu færsluna á Instagram eða Facebook og áhorfið fyllist á hverjum morgni. Mánuð sem þú skráir í höndunum lætur kerfið í friði.'
+        : 'Engar myndbandsfærslur hafa komið frá Meta ennþá. Skráðu tölurnar í höndunum hér fyrir neðan.' }),
+      el('div', { class: 'tf-mb__tolur-haus' }, [el('strong', { texti: 'Tölur á mánuði' }),
+        el('span', { class: 'skyring', texti: 'Áhorfið í hverjum mánuði fyrir sig, ekki samtals. Tómt þýðir engin tala.' })]),
+      tafla,
+      stadan,
+      el('div', { class: 'spjald__fot' }, [vistaHn, eydaHn])
+    ]);
+    fylla(kort, [form]);
+    if (beintITolur) setTimeout(() => { const fyrsta = linur.find((l) => !l._sjalf); if (fyrsta) fyrsta._inntok.ahorf.focus(); }, 60);
+    else setTimeout(() => titill.focus(), 60);
+  }
+
   function teiknaMidla() {
     if (!admin || !midlar.length) { fylla(hlutar.midlar, []); return; }
     const stadan = el('div', { class: 'form-status', role: 'status', hidden: true });
