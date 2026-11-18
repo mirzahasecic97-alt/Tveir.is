@@ -433,7 +433,11 @@ button { font: inherit; color: inherit; }
   gap: clamp(12px, 1.4vw, 16px);
   margin-top: clamp(26px, 3vw, 42px);
 }
-@media (min-width: 900px) { .leidir { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 900px) {
+  .leidir { grid-template-columns: repeat(3, 1fr); }
+  /* Fjögur spjöld: tvö og tvö svo ekkert standi eitt eftir */
+  .leidir:has(> .leid:nth-child(4):last-child) { grid-template-columns: repeat(2, 1fr); }
+}
 
 .leid {
   display: grid;
