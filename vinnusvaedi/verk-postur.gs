@@ -19,6 +19,7 @@
 
    Tölfræði og mánaðarskýrslur eru í tolfraedi.gs, annarri skrá í sama
    verkefni. tilkynna_ sendir líka samþykktar skýrslur.
+   Pósthólfið á vinnusvæðinu (Samskipti) er í postholf.gs.
 
    LYKILL hér að neðan er skilinn eftir auður í þessu afriti. Raunverulegi
    lykillinn liggur bara í skriftunni í Google og í töflunni stillingar_innri.
@@ -34,7 +35,7 @@ const NETFANG = 'verk@tveir.is';
    birt síðast, en 5 mínútna vaktin keyrir alltaf nýjasta kóðann. Passi
    útgáfurnar ekki saman sendir vefappið ekkert, vaktin tekur við og
    tveir@tveir.is fær einn póst um að birta nýja útgáfu. */
-const UTGAFA = '2026-11-19-1';
+const UTGAFA = '2026-11-19-2';
 
 /* Keyrt einu sinni með höndunum: setur upp 5 mínútna vaktina. Eyðir bara
    gömlum lesaVerk vöktum, svo daglega tölfræðisöfnunin (setjaTolfraedi í
@@ -87,6 +88,11 @@ function lesaVerk() {
   if (buid.length > 500) buid = buid.slice(-500);
   eiginlegir.setProperty('buid', JSON.stringify(buid));
 
+  /* Pósthólfið á vinnusvæðinu (postholf.gs). Villa þar stöðvar aldrei verkin. */
+  if (typeof samstillaPostholf_ === 'function') {
+    try { samstillaPostholf_(); } catch (villa) { console.log('Pósthólf: ' + villa); }
+  }
+
   tilkynna_();
 }
 
@@ -137,6 +143,8 @@ function tilkynna_() {
     if (typeof sendaSkyrslur_ === 'function') sendaSkyrslur_();
     /* Tölfræði send beint úr kerfinu */
     if (typeof sendaTolfraediSendingar_ === 'function') sendaTolfraediSendingar_();
+    /* Svör úr pósthólfinu á vinnusvæðinu (postholf.gs) */
+    if (typeof sendaPostholfSvor_ === 'function') sendaPostholfSvor_();
   } finally {
     las.releaseLock();
   }

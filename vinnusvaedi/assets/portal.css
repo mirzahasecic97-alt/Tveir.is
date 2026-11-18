@@ -1641,3 +1641,85 @@ button.tf-mb__titill:hover { text-decoration: underline; text-underline-offset: 
   .tf-mb__tolur { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; text-align: left; }
   .tf-mb__tolur .btn { margin-top: 0; }
 }
+
+/* --------------------------------------------------------------------------
+   Samskipti: fellivalmyndin í hausnum og pósthólfið
+   -------------------------------------------------------------------------- */
+.phead__hopur { position: relative; display: inline-flex; }
+.phead__hopur-hn::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 7px; border-right: 1.6px solid currentColor; border-bottom: 1.6px solid currentColor; transform: translateY(-2px) rotate(45deg); opacity: .55; }
+.phead__fellival {
+  position: absolute; top: calc(100% + 6px); left: 50%; z-index: 60; min-width: 210px; padding: 8px;
+  display: flex; flex-direction: column; gap: 2px; border-radius: 18px;
+  background: rgba(255, 255, 255, .97); border: 1px solid rgba(28, 48, 80, .1);
+  box-shadow: 0 18px 40px -16px rgba(28, 48, 80, .35);
+  opacity: 0; visibility: hidden; transform: translate(-50%, -4px); transition: opacity .16s ease, transform .16s ease, visibility 0s linear .16s;
+}
+.phead__fellival::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+.phead__hopur:hover .phead__fellival, .phead__hopur:focus-within .phead__fellival { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition-delay: 0s; }
+.phead__nav .phead__fellival a.phead__undir { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 14px; border-radius: 12px; color: var(--ink); font-size: 14.5px; white-space: nowrap; }
+.phead__nav .phead__fellival a.phead__undir:hover { background: var(--accs); }
+.phead__undir--kemur { padding: 8px 14px 6px; font-size: 12.5px; color: var(--soft); white-space: nowrap; }
+@media (max-width: 900px), (hover: none) { .phead__fellival { display: none !important; } .phead__hopur-hn::after { display: none; } }
+
+.sk-flipar { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 18px; }
+.sk-flipi { display: inline-flex; align-items: center; padding: 9px 16px; border-radius: 999px; font-size: 14.5px; font-weight: 500; color: var(--ink); text-decoration: none; background: rgba(255, 255, 255, .7); border: 1px solid rgba(28, 48, 80, .1); }
+.sk-flipi[aria-current="page"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.sk-flipi--kemur { color: var(--soft); background: transparent; border-style: dashed; cursor: default; }
+.sk-flipi--kemur::after { content: "kemur"; margin-left: 7px; font-size: 11px; padding: 2px 7px; border-radius: 999px; background: rgba(28, 48, 80, .06); }
+.sk-haus { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.sk-tol { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sk-leit { width: 230px; max-width: 100%; padding: 10px 16px !important; border-radius: 999px !important; }
+.sk-siur { display: flex; gap: 6px; flex-wrap: wrap; }
+.sk-siur__tala { margin-left: 6px; font-size: 12px; opacity: .75; }
+
+.sk-grind { display: grid; grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.sk-listi, .sk-thradur { border-radius: 24px; background: rgba(255, 255, 255, .78); border: 1px solid rgba(255, 255, 255, .95); box-shadow: 0 18px 40px -28px rgba(28, 48, 80, .35); }
+.sk-listi { display: flex; flex-direction: column; padding: 6px; max-height: calc(100vh - 230px); overflow-y: auto; position: sticky; top: 96px; }
+.sk-thradur { padding: 22px 24px 24px; min-height: 320px; }
+.sk-lina { display: flex; gap: 12px; width: 100%; padding: 12px 12px; border: 0; border-radius: 16px; background: none; text-align: left; cursor: pointer; font: inherit; color: var(--ink); }
+.sk-lina:hover { background: rgba(28, 48, 80, .04); }
+.sk-lina.er-opin { background: var(--accs); }
+.sk-lina__haus { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font: 600 13px/1 var(--f-body); color: #fff; background: linear-gradient(140deg, var(--acc), #1c3050); }
+.sk-lina__mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sk-lina__efst { display: flex; justify-content: space-between; gap: 8px; }
+.sk-lina__fra { font-size: 14.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sk-lina.er-olesin .sk-lina__fra, .sk-lina.er-olesin .sk-lina__efni { font-weight: 700; }
+.sk-lina__timi { flex: none; font-size: 12.5px; color: var(--soft); }
+.sk-lina__efni { display: flex; align-items: center; gap: 6px; font-size: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.sk-lina__fjoldi { font-size: 11.5px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: rgba(28, 48, 80, .07); color: var(--soft); }
+.sk-lina__snid { font-size: 13px; color: var(--soft); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sk-punktur { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--acc); }
+.sk-merki { align-self: flex-start; display: inline-block; margin-top: 4px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #1e6b34; background: #e6f4ea; text-decoration: none; }
+.sk-tomt { padding: 28px 18px; text-align: center; color: var(--soft); }
+.sk-tomt strong { display: block; color: var(--ink); font: 600 17px/1.3 var(--f-head); margin-bottom: 6px; }
+.sk-tomt--thradur { padding-top: 90px; }
+.sk-tilbaka { display: none; margin: 0 0 12px; padding: 6px 0; border: 0; background: none; cursor: pointer; font: 500 14px/1 var(--f-body); color: var(--soft); }
+.sk-thradur__haus h2 { font-size: clamp(20px, 18px + .6vw, 26px); overflow-wrap: anywhere; }
+.sk-thradur__undir { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px; font-size: 14px; color: var(--soft); }
+.sk-thradur__undir .sk-merki { margin-top: 0; }
+.sk-thradur__undir .btn { margin-left: auto; }
+.sk-skilabod { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.sk-sb { padding: 14px 16px; border-radius: 18px; background: #fff; border: 1px solid rgba(28, 48, 80, .08); max-width: 92%; }
+.sk-sb--okkar { align-self: flex-end; background: var(--accs); border-color: transparent; }
+.sk-sb__haus { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 13px; color: var(--soft); }
+.sk-sb__haus strong { color: var(--ink); font-size: 14px; }
+.sk-sb__texti { margin-top: 8px; font-size: 15px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
+.sk-sb__vidhengi { margin-top: 8px; font-size: 13px; color: var(--soft); }
+.sk-svarstada--bidur { color: #9a6700; }
+.sk-svarstada--send { color: #1e6b34; }
+.sk-svarstada--villa { color: #b3261e; }
+.sk-svar { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+.sk-svar__texti { width: 100%; min-height: 110px; resize: vertical; padding: 14px 16px !important; border-radius: 16px !important; font: inherit; line-height: 1.5; }
+.sk-svar__fot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.sk-svar__stada.er-villa { color: #b3261e; font-size: 14px; }
+@media (max-width: 860px) {
+  .sk-grind { grid-template-columns: minmax(0, 1fr); }
+  .sk-listi { position: static; max-height: none; }
+  .sk-grind.er-opid .sk-listi { display: none; }
+  .sk-grind:not(.er-opid) .sk-thradur { display: none; }
+  .sk-tilbaka { display: inline-block; }
+  .sk-thradur { padding: 18px 16px 20px; }
+  .sk-sb { max-width: 100%; }
+  .sk-leit { width: 100%; }
+  .sk-tol { width: 100%; }
+}

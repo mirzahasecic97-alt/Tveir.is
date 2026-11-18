@@ -7,7 +7,7 @@
 
 import {
   gogn, el, fylla, dags, sidan, kronur, lesaTolu, vardaHlid, teiknaHaus, uppfaeraMerki,
-  geymt, geyma
+  geymt, geyma, samskiptaFlipar
 } from './portal.js';
 import { STODUR_FYRIRSPURN, UPPRUNI } from './gogn.js';
 
@@ -72,6 +72,7 @@ async function start() {
                  : allar.filter((f) => f.stada === flipi);
 
     fylla(innihald, [
+      samskiptaFlipar('fyrirspurnir'),
       el('div', { class: 'page-head', style: 'padding-top:0' }, [
         el('h1', { style: 'font-size:clamp(28px,24px+1.3vw,40px)', texti: 'Fyrirspurnir' }),
         el('p', { class: 'lead', texti: nyjar.length
