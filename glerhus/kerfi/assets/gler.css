@@ -321,3 +321,14 @@ body::after {
 .gh-tk > i { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #39e75f; box-shadow: 0 0 10px #39e75f; }
 .gh-tk.er-farin { opacity: 0; transform: translateY(8px); }
 @keyframes gh-tk-inn { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }
+
+/* --------------------------------------------------------------------------
+   Síðuskipti (skipti.js): efnið rennur til hliðar, hausinn stendur kyrr
+   -------------------------------------------------------------------------- */
+html.gh-skipti-fram #main { opacity: 0; transform: translate3d(56px, 0, 0); }
+html.gh-skipti-aftur #main { opacity: 0; transform: translate3d(-56px, 0, 0); }
+html.gh-skipti-keyrir #main { transition: transform .5s cubic-bezier(.22, 1, .36, 1), opacity .4s ease; }
+html.gh-skipti-ut #main { transition: transform .17s cubic-bezier(.4, 0, 1, 1), opacity .17s ease-in; opacity: 0; }
+html.gh-skipti-ut-fram #main { transform: translate3d(-56px, 0, 0); }
+html.gh-skipti-ut-aftur #main { transform: translate3d(56px, 0, 0); }
+html.gh-skipti-fram body, html.gh-skipti-aftur body, html.gh-skipti-keyrir body, html.gh-skipti-ut body { overflow-x: hidden; }
