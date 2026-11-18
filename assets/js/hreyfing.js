@@ -67,8 +67,13 @@
     window.sessionStorage.setItem('hr-opnun', '1');
   } catch (e) { /* einkagluggi: sýnum opnunina */ }
   var h = fyrstaSinn ? 1 : 0.5;
+  /* Þyrlan flýgur bara yfir í fyrsta sinn í hverri heimsókn */
+  if (opnun && !fyrstaSinn) opnun.classList.add('hr-opnun--stutt');
 
   var inn = gsap.timeline({ defaults: { ease: 'power4.out' } });
+
+  /* Í GTA þemanu flýgur þyrlan yfir fyrst, svo opnunin bíður eftir henni */
+  var thyrla = !!(opnun && fyrstaSinn && document.documentElement.getAttribute('data-thema') === 'naeturborg');
 
   if (opnun) {
     var merki = opnun.querySelector('.hr-opnun__merki img');
@@ -76,66 +81,17 @@
     inn.set(opnun, { autoAlpha: 1 })
       .fromTo(merki, { yPercent: 115 }, { yPercent: 0, duration: 0.9 * h })
       .fromTo(lina, { scaleX: 0 }, { scaleX: 1, duration: 0.75 * h, ease: 'power2.inOut' }, '<0.1')
-      .to(merki, { yPercent: -115, duration: 0.55 * h, ease: 'power3.in' }, '+=0.05')
+      .to(merki, { yPercent: -115, duration: 0.55 * h, ease: 'power3.in' }, thyrla ? '+=1.3' : '+=0.05')
       .to(opnun, { yPercent: -100, duration: 0.95 * h, ease: 'expo.inOut' }, '-=0.3')
       .set(opnun, { display: 'none' });
   }
 
   /* Hægt tæki má aldrei sitja fast í opnuninni: eftir 3,5 sekúndur er
      stokkið beint á endann. Varnetið í CSS felur hana líka eftir 4. */
-  setTimeout(function () { if (inn.progress() < 1) inn.progress(1); }, 3500);
+  setTimeout(function () { if (inn.progress() < 1) inn.progress(1); }, thyrla ? 5000 : 3500);
 
-  if (hero && h1) {
-    heroKlofid = SplitText.create(h1, { type: 'lines,words', mask: 'lines', linesClass: 'hr-lina' });
-    var strik = setjaStrik(false);
-    var oll = [h1.parentNode.querySelector('.lead'), hero.querySelector('.hero__actions'), hero.querySelector('.hero__nofn')]
-      .filter(Boolean);
-
-    var stadur = opnun ? '-=0.75' : 0;
-    inn.fromTo(hero, { clipPath: 'inset(8% 6% 8% 6% round 48px)' },
-                     { clipPath: 'inset(0% 0% 0% 0% round 28px)', duration: 1.5, ease: 'expo.inOut' }, stadur)
-      .fromTo(bak, { scale: 1.32 }, { scale: 1, duration: 2, ease: 'expo.out' }, '<')
-      .from(heroKlofid.words, { yPercent: 120, rotation: 5, duration: 1.15, stagger: 0.075 }, '<0.5')
-      .from(oll, { y: 34, autoAlpha: 0, duration: 1, stagger: 0.12 }, '<0.45');
-    if (strik) inn.to(strik, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut' }, '<0.15');
-    inn.add(function () {
-      /* Línuskiptingin á bara við meðan textinn kemur inn. Svo fer hann
-         aftur í upprunalegt horf, svo hann brotni rétt á öllum breiddum. */
-      gsap.set(hero, { clearProps: 'clipPath' });
-      if (heroKlofid) { heroKlofid.revert(); heroKlofid = null; }
-      setjaStrik(true);
-      ScrollTrigger.refresh();
-    });
-
-    /* Dýpt: myndin fer hægar en textinn þegar skrunað er */
-    gsap.to(bak, { yPercent: 16, ease: 'none',
-      scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
-    gsap.to(yfir, { y: -70, autoAlpha: 0.15, ease: 'none',
-      scrollTrigger: { trigger: hero, start: 'center center', end: 'bottom top', scrub: true } });
-
-    /* Ljós sem fylgir músinni og myndin hallar örlítið á móti */
-    if (fin) {
-      var ljos = document.createElement('div');
-      ljos.className = 'hero__ljos';
-      ljos.setAttribute('aria-hidden', 'true');
-      hero.insertBefore(ljos, yfir);
-      /* Músarhreyfingin fer í CSS eiginleikann translate, ekki transform,
-         svo hún rekist aldrei á dýptina og innkomuna sem GSAP sér um */
-      var hm = { x: 0, y: 0 };
-      var hreyfaBak = function (x, y) {
-        gsap.to(hm, { x: x, y: y, duration: 1, ease: 'power3.out', overwrite: true,
-          onUpdate: function () { bak.style.translate = hm.x.toFixed(1) + 'px ' + hm.y.toFixed(1) + 'px'; } });
-      };
-      hero.addEventListener('pointermove', function (e) {
-        var r = hero.getBoundingClientRect();
-        var px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-        hero.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
-        hero.style.setProperty('--my', (py * 100).toFixed(1) + '%');
-        hreyfaBak((px - 0.5) * -22, (py - 0.5) * -14);
-      });
-      hero.addEventListener('pointerleave', function () { hreyfaBak(0, 0); });
-    }
-  }
+  /* Hero er kyrrt: engin innkoma, dýpt eða músarhreyfing */
+  if (hero && h1) setjaStrik(true);
 
   /* ------------------------------------------------------------------
      Haus sem felur sig þegar skrunað er niður og kemur þegar farið er upp
@@ -199,7 +155,7 @@
   }, true);
 
   /* ------------------------------------------------------------------
-     Þjónustuspjöldin: koma inn í þrívídd og halla að músinni
+     Þjónustuspjöldin: koma inn í þrívídd
      ------------------------------------------------------------------ */
   var leidir = gsap.utils.toArray('.leid');
   if (leidir.length) {
@@ -212,27 +168,6 @@
             onComplete: function () { hopur.forEach(function (k) { k.hrInni = true; }); } });
       }
     });
-    if (fin) {
-      leidir.forEach(function (k) {
-        /* Búið til fyrst eftir að kortið er komið inn: annars hætti
-           innkoman í miðjum klíðum */
-        var rx = null, ry = null;
-        k.addEventListener('pointermove', function (e) {
-          if (!k.hrInni) return;
-          if (!rx) {
-            rx = gsap.quickTo(k, 'rotationX', { duration: 0.6, ease: 'power3' });
-            ry = gsap.quickTo(k, 'rotationY', { duration: 0.6, ease: 'power3' });
-          }
-          var r = k.getBoundingClientRect();
-          var px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-          ry((px - 0.5) * 16);
-          rx((0.5 - py) * 16);
-          k.style.setProperty('--gx', (px * 100).toFixed(1) + '%');
-          k.style.setProperty('--gy', (py * 100).toFixed(1) + '%');
-        });
-        k.addEventListener('pointerleave', function () { if (rx) { rx(0); ry(0); } });
-      });
-    }
   }
 
   /* ------------------------------------------------------------------

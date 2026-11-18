@@ -761,3 +761,20 @@ h1 em, h2 em {
 @media (min-width: 900px) {
   .leidir--tvo { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* --------------------------------------------------------------------------
+   Ekkert hreyfist þegar músin fer yfir (ósk Mirza, 18. nóv 2026).
+   Litir mega breytast, en ekkert lyftist, stækkar, snýst eða rennur.
+   -------------------------------------------------------------------------- */
+.btn:hover, .btn--ghost:hover, .btn--aglas:hover,
+.leid:hover, .hr-js .leid:hover,
+.leid:hover .leid__takn, .hr-js .leid:hover .leid__takn,
+.leid:hover .leid__or, .hr-js .leid:hover .leid__or,
+.work-tile:hover, a.service:hover,
+.burger:not([aria-expanded="true"]):hover,
+.burger:not([aria-expanded="true"]):hover span,
+.mobilemenu a:hover { transform: none !important; }
+.burger[aria-expanded="true"]:hover { transform: rotate(90deg) !important; }
+.btn::after { display: none; }
+.pillnav__logo:hover::after { animation-duration: inherit; }
+.hero__ljos { display: none !important; }
