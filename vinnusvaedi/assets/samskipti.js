@@ -79,8 +79,6 @@ async function start() {
   };
   let undirskrift = { ...SJALFGEFIN };
   try { const u = await g.undirskrift(); if (u) undirskrift = { ...SJALFGEFIN, ...u }; } catch (e) { /* sjálfgefin dugar */ }
-  let stort = false;
-  try { stort = localStorage.getItem('sk-stort') === '1'; } catch (e) { /* ekkert */ }
 
   let thraedir = [];
   let villa = null;
@@ -92,7 +90,7 @@ async function start() {
 
   const listiSvid = el('div', { class: 'sk-listi', role: 'list' });
   const thradurSvid = el('section', { class: 'sk-thradur', 'aria-live': 'polite' });
-  const grind = el('div', { class: 'sk-grind' + (stort ? ' er-stort' : '') }, [listiSvid, thradurSvid]);
+  const grind = el('div', { class: 'sk-grind' }, [listiSvid, thradurSvid]);
   const lysing = el('p', { class: 'lead' });
   const siuHnappar = el('div', { class: 'sk-siur', role: 'group', 'aria-label': 'Sía' });
   const leitReitur = el('input', { type: 'search', class: 'sk-leit', placeholder: 'Leita í pósti', 'aria-label': 'Leita í pósti',
@@ -172,6 +170,7 @@ async function start() {
 
   function teiknaTomtThrad() {
     grind.classList.remove('er-opid');
+    document.body.classList.remove('sk-les');
     fylla(thradurSvid, [el('div', { class: 'sk-tomt sk-tomt--thradur' }, [
       el('strong', { texti: 'Veldu þráð' }),
       el('p', { texti: 'Svar sem þú skrifar hér fer ' + (g.prufa ? 'hvergi í prufu.' : 'frá tveir@tveir.is í sama þræði.') })
@@ -183,7 +182,10 @@ async function start() {
     if (!t) { opinn = null; teiknaTomtThrad(); return; }
     opinn = id;
     if (!hljodlaust) history.replaceState(null, '', '?t=' + encodeURIComponent(id));
+    const varOpid = grind.classList.contains('er-opid');
     grind.classList.add('er-opid');
+    document.body.classList.add('sk-les');
+    if (!hljodlaust && !varOpid) window.scrollTo({ top: 0 });
     teiknaLista();
     if (!opinnGogn || opinnGogn.id !== id) {
       fylla(thradurSvid, [el('p', { class: 'tomt', texti: 'Sæki þráðinn' })]);
@@ -215,17 +217,13 @@ async function start() {
 
     fylla(thradurSvid, [
       el('button', { type: 'button', class: 'sk-tilbaka', texti: '← Pósthólf', onclick: () => {
-        opinn = null; history.replaceState(null, '', location.pathname); teiknaLista(); teiknaTomtThrad(); } }),
+        opinn = null; history.replaceState(null, '', location.pathname); teiknaLista(); teiknaTomtThrad(); window.scrollTo({ top: 0 }); } }),
       el('header', { class: 'sk-thradur__haus' }, [
         el('h2', { texti: t.efni || '(ekkert efni)' }),
         el('div', { class: 'sk-thradur__undir' }, [
           el('span', { texti: (t.fra_nafn ? t.fra_nafn + ' · ' : '') + (t.fra_netfang || '') }),
           t.fyr && t.fyr.nafn ? el('a', { class: 'sk-merki', href: 'tolfraedi.html?f=' + encodeURIComponent(t.fyrirtaeki_id), texti: t.fyr.nafn }) : null,
           el('span', { class: 'sk-thradur__hn' }, [
-            el('button', { type: 'button', class: 'btn btn--sm btn--ghost sk-stort-hn', 'aria-pressed': String(stort),
-              texti: stort ? 'Sýna listann' : 'Stærra', title: stort ? 'Sýna listann aftur' : 'Fela listann og lesa póstinn stærri',
-              onclick: () => { stort = !stort; try { localStorage.setItem('sk-stort', stort ? '1' : '0'); } catch (e) { /* ekkert */ }
-                grind.classList.toggle('er-stort', stort); teiknaThrad(t); } }),
             gmail ? el('a', { class: 'btn btn--sm btn--ghost', href: gmail, target: '_blank', rel: 'noopener noreferrer', texti: 'Opna í Gmail' }) : null
           ])
         ])
