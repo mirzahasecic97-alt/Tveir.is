@@ -33,7 +33,7 @@
         html.classList.remove('gh-skipti-keyrir');
         /* Öryggisnet: ef hreyfingin stóð kyrr (t.d. falinn flipi) er hún kláruð svo efnið sjáist */
         if (main.getAnimations) main.getAnimations().forEach(function (h) { try { h.finish(); } catch (v) { /* ekkert */ } });
-      }, 600);
+      }, 800);
     }
     /* Bíðum eftir að kerfið teikni efnið, en aldrei lengur en 700 ms */
     var eftirlit = null;
@@ -62,7 +62,7 @@
     if (KYRRT) return;
     e.preventDefault();
     html.classList.add('gh-skipti-ut', 'gh-skipti-ut-' + stefna);
-    setTimeout(function () { location.href = a.href; }, 170);
+    setTimeout(function () { location.href = a.href; }, 380);
   });
 
   /* Til baka í vafranum úr flýtiminni: hreinsa útstöðuna */
