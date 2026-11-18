@@ -1766,3 +1766,34 @@ body.sk-sida .wrap.pwrap, body.sk-sida main.wrap { max-width: min(1560px, 100%);
 .pdialog.sk-us-gluggi { width: min(960px, calc(100vw - 32px)); max-width: none; }
 .sk-us-gluggi .pdialog__kort { max-width: none; width: 100%; }
 .sk-us__forsyn a { white-space: nowrap; }
+
+/* --------------------------------------------------------------------------
+   Pósthólfið, lokaútgáfa: listinn er síðan, opinn póstur tekur allan
+   skjáinn, enginn rammi og ekkert innra skrun. Síðan skrunar eins og venjulega.
+   -------------------------------------------------------------------------- */
+.sk-grind, .sk-grind.er-stort { display: block !important; height: auto !important; min-height: 0 !important; }
+.sk-listi { position: static !important; max-height: none !important; height: auto !important; overflow: visible !important; }
+.sk-grind .sk-thradur { display: none; }
+.sk-grind.er-opid .sk-listi { display: none !important; }
+.sk-grind.er-opid .sk-thradur {
+  display: block !important; height: auto !important; overflow: visible !important;
+  background: none !important; border: 0 !important; box-shadow: none !important; border-radius: 0 !important;
+  padding: 0 !important; max-width: 1040px; margin: 0 auto;
+}
+.sk-tilbaka { display: inline-flex !important; align-items: center; gap: 6px; margin: 0 0 18px; padding: 10px 16px; border-radius: 999px; background: rgba(255, 255, 255, .8); border: 1px solid rgba(28, 48, 80, .1); color: var(--ink); font-size: 14.5px; }
+.sk-tilbaka:hover { background: #fff; }
+.sk-thradur__haus h2 { font-size: clamp(26px, 21px + 1.4vw, 38px); line-height: 1.15; }
+.sk-skilabod { gap: 0; margin-top: 26px; }
+.sk-sb, .sk-sb--okkar { max-width: 100% !important; align-self: stretch; background: none !important; border: 0 !important; border-top: 1px solid var(--line) !important; border-radius: 0 !important; padding: 22px 0 !important; }
+.sk-sb:first-child { border-top: 0 !important; padding-top: 6px !important; }
+.sk-sb--okkar .sk-sb__haus strong::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--acc); vertical-align: 1px; }
+.sk-sb__texti { font-size: 17px; line-height: 1.7; margin-top: 10px; }
+.sk-svar { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 24px; }
+.sk-svar__texti { min-height: 170px; background: #fff !important; }
+body.sk-les .page-head.sk-haus .sk-tol { display: none; }
+body.sk-les .page-head.sk-haus h1 + .lead { display: none; }
+body.sk-les .page-head.sk-haus h1 { font-size: 20px !important; color: var(--soft) !important; font-weight: 500; }
+.sk-stort-hn { display: none !important; }
+.sk-listi { padding: 6px !important; }
+.sk-lina { padding: 14px 16px; }
+body.sk-les .page-head.sk-haus { display: none !important; }
