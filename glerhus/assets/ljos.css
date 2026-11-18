@@ -1,0 +1,210 @@
+/* ==========================================================================
+   Glerhúsið: ljósblátt gler, sömu litir og tveir.is.
+   Hlaðið síðast á öllum síðum (vefnum og kerfinu), ofan á dökka glerið.
+   Navy texti, hvítt matt gler, Tveir blátt sem áhersla.
+   ========================================================================== */
+:root {
+  color-scheme: light;
+  --ink: #1c3050;
+  --soft: #6b7f9e;
+  --acc: #5b93f0;
+  --acc-hover: #4a83e2;
+  --accs: #e7f0fd;
+  --acc-on-navy: #9dc0f7;
+  --ok: #2e9e5b;
+  --bg: #f2f8fe;
+  --sur: #fff;
+  --line: rgba(28, 48, 80, .1);
+  --gull: #5b93f0;            /* gamla gullið verður Tveir blátt */
+  --graent: #2fbf62;
+
+  --gler: linear-gradient(150deg, rgba(255, 255, 255, .78), rgba(255, 255, 255, .5));
+  --gler-brun: rgba(255, 255, 255, .95);
+  --gler-ljos: inset 0 1px 0 #fff;
+  --gler-fall: 0 24px 50px -28px rgba(28, 48, 80, .28);
+  --g-fyll: var(--gler);
+  --g-brun: var(--gler-brun);
+  --g-ljos: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(255, 255, 255, .4);
+  --g-fall: var(--gler-fall);
+  --gl-fill: var(--gler); --gl-brun: var(--gler-brun); --gl-inn: var(--g-ljos);
+  --gl-fall: var(--gler-fall); --gl-fall-h: var(--gler-fall), 0 0 0 1px rgba(91, 147, 240, .25);
+}
+
+/* ---------- Bakgrunnurinn: ljósblár himinn með mjúkum ljósum ---------- */
+html {
+  background:
+    radial-gradient(50% 45% at 80% 8%, rgba(157, 192, 247, .55), transparent 70%),
+    radial-gradient(45% 50% at 4% 30%, rgba(186, 220, 255, .7), transparent 72%),
+    radial-gradient(42% 40% at 62% 64%, rgba(214, 228, 255, .7), transparent 72%),
+    radial-gradient(48% 45% at 96% 92%, rgba(170, 214, 240, .55), transparent 72%),
+    linear-gradient(180deg, #f6faff 0%, #eaf3fe 50%, #e3eefc 100%) !important;
+  background-attachment: fixed !important; background-color: #f2f8fe !important;
+  color: var(--ink);
+}
+html::after { opacity: .05 !important; }
+body { color: var(--ink); }
+body::before {
+  background:
+    radial-gradient(28% 32% at 30% 30%, rgba(157, 192, 247, .4), transparent 70%),
+    radial-gradient(26% 30% at 72% 46%, rgba(120, 175, 245, .28), transparent 70%),
+    radial-gradient(30% 30% at 46% 82%, rgba(190, 215, 255, .45), transparent 70%) !important;
+}
+body::after { opacity: .9 !important; }
+
+/* Lifandi bakgrunnurinn (gler-bak.js) */
+.gb__ljos i:nth-child(1) { background: radial-gradient(circle, rgba(130, 178, 250, .55), rgba(130, 178, 250, 0) 70%) !important; }
+.gb__ljos i:nth-child(2) { background: radial-gradient(circle, rgba(170, 214, 255, .7), rgba(170, 214, 255, 0) 70%) !important; }
+.gb__ljos i:nth-child(3) { background: radial-gradient(circle, rgba(200, 212, 255, .6), rgba(200, 212, 255, 0) 70%) !important; }
+.gb__ljos i:nth-child(4) { background: radial-gradient(circle, rgba(150, 220, 235, .5), rgba(150, 220, 235, 0) 70%) !important; }
+.gb__ljos i:nth-child(5) { background: radial-gradient(circle, rgba(255, 255, 255, .8), rgba(255, 255, 255, 0) 70%) !important; }
+.gb__plata {
+  background: linear-gradient(135deg, rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, .22) 40%, rgba(255, 255, 255, .12) 62%, rgba(255, 255, 255, .4) 100%) !important;
+  border-color: rgba(255, 255, 255, .95) !important;
+  box-shadow: inset 0 1.5px 0 #fff, inset 1.5px 0 0 rgba(255, 255, 255, .6), 0 40px 80px -50px rgba(28, 48, 80, .3) !important;
+}
+.gb__plata::before { background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .7), rgba(255, 255, 255, 0)) !important; }
+.gb__plata::after { background-image: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, .5) 50%, transparent 60%) !important; }
+.gb__glampi { background: radial-gradient(70% 40% at 50% -10%, rgba(255, 255, 255, .6), transparent 70%) !important; }
+.gb::after { opacity: .05 !important; }
+
+/* ---------- Letur ---------- */
+h1, h2, h3, h4 { color: var(--ink) !important; }
+.midi, .gk__midi, .fh-midi { color: var(--soft) !important; }
+.hero2__ytri { -webkit-text-stroke-color: var(--ink) !important; }
+.hero p.hero__hopar, .hero2__stjorn, .hero2__stjorn button { color: var(--soft) !important; }
+.hero2__stjorn button:hover { color: var(--ink) !important; background: rgba(91, 147, 240, .1) !important; }
+
+/* Merkið: navy á ljósu */
+.haus__merki img, .fotur img, .phead__tveir, .inn__logo { filter: none !important; opacity: 1 !important; }
+
+/* ---------- Gler: hvítt og matt ---------- */
+.gler, .gk, .card, .pdialog__kort, .inn__kort, .pkort, .tf-kort, .skref li, .eig__kort, .teng__hopur {
+  background: var(--gler) !important;
+  border: 1.5px solid rgba(255, 255, 255, .95) !important;
+  box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(28, 48, 80, .04), var(--gler-fall) !important;
+  color: var(--ink) !important;
+}
+.gk:hover { background: linear-gradient(150deg, rgba(255, 255, 255, .9), rgba(255, 255, 255, .62)) !important; border-color: #fff !important; }
+.gler::before, .gk::before, .haus__inn::before { background: linear-gradient(115deg, rgba(255, 255, 255, .7) 0%, rgba(255, 255, 255, .1) 34%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, .25) 100%) !important; }
+.gk::after { opacity: .04 !important; }
+.card--navy { background: linear-gradient(150deg, #24406a, #1c3050) !important; color: #fff !important; }
+.card--navy h1, .card--navy h2, .card--navy h3, .card--navy dd { color: #fff !important; }
+
+.gk__tala, .tekjur dd { color: var(--ink) !important; }
+.gk__undir, .tekjur dt, .tf-kort dt { color: var(--soft) !important; }
+.tekjur .adal dt { color: #9dc0f7 !important; }
+.tekjur .adal dd { color: #fff !important; }
+.gk--vidvorun .gk__tala { color: #d0493a !important; }
+.gk__or { color: var(--acc) !important; }
+
+/* Súlurnar og stikur í Tveir bláu */
+.gk__sulur i, .fh-sulur i { background: linear-gradient(180deg, #5b93f0, rgba(157, 192, 247, .7)) !important; }
+.gk__sulur i.framtid, .fh-sulur i.f { background: linear-gradient(180deg, rgba(28, 48, 80, .16), rgba(28, 48, 80, .06)) !important; }
+.gk__stika { color: var(--ink) !important; border-color: rgba(28, 48, 80, .1) !important; background: rgba(255, 255, 255, .55) !important; }
+.gk__stika::before { background: linear-gradient(90deg, rgba(91, 147, 240, .55), rgba(157, 192, 247, .45) 85%, rgba(157, 192, 247, 0)) !important; }
+.gk__stika--hlytt::before { background: linear-gradient(90deg, rgba(240, 180, 90, .55), rgba(250, 210, 150, .4) 85%, rgba(250, 210, 150, 0)) !important; }
+.gk__pilla, .fh-pilla, .hero__byrja, .hero__hopar li, .teng__hopur li, .teng__rod li, .bg-merki {
+  color: var(--ink) !important; background: rgba(255, 255, 255, .7) !important; border: 1px solid rgba(28, 48, 80, .1) !important;
+}
+.gk__haus, .fh-haus { color: #fff !important; border-color: #fff !important; box-shadow: 0 6px 14px -6px rgba(28, 48, 80, .35) !important; }
+.gk__haus--0, .fh-haus--0 { background: linear-gradient(140deg, #5b93f0, #2f62c0) !important; }
+.gk__haus--1, .fh-haus--1 { background: linear-gradient(140deg, #7fb6e6, #3f78b0) !important; }
+.gk__haus--2, .fh-haus--2 { background: linear-gradient(140deg, #6fc3a8, #2f8a6c) !important; }
+.gk__haus--3 { background: linear-gradient(140deg, #9aa8e8, #5662b4) !important; }
+.gk__haus--4 { background: linear-gradient(140deg, #9aaac2, #5b6b86) !important; }
+.gk__haus--fleiri, .fh-haus--3 { background: #1c3050 !important; }
+
+/* ---------- Hnappar ---------- */
+.hnappur, .btn {
+  color: var(--ink) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .95), rgba(255, 255, 255, .7)) !important;
+  border: 1px solid rgba(28, 48, 80, .12) !important;
+  box-shadow: inset 0 1px 0 #fff, 0 10px 24px -16px rgba(28, 48, 80, .4) !important;
+}
+.hnappur:hover, .btn:hover { background: #fff !important; border-color: rgba(91, 147, 240, .5) !important; }
+.hnappur--gull, .btn[type="submit"], .fh--hnappur {
+  color: #fff !important; background: linear-gradient(180deg, #6aa0f5, #5b93f0) !important;
+  border-color: #5b93f0 !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 10px 24px -12px rgba(91, 147, 240, .7) !important;
+}
+.hnappur--gull:hover, .btn[type="submit"]:hover { background: linear-gradient(180deg, #5b93f0, #4a83e2) !important; }
+.btn--ghost, .btn--white { color: var(--ink) !important; background: rgba(255, 255, 255, .7) !important; }
+.btn--danger, .btn.btn--danger { color: #b3261e !important; }
+
+/* ---------- Haus og valmynd ---------- */
+.haus__inn, .phead {
+  background: rgba(255, 255, 255, .62) !important;
+  border: 1px solid rgba(255, 255, 255, .95) !important;
+  box-shadow: inset 0 1px 0 #fff, 0 14px 34px -24px rgba(28, 48, 80, .35) !important;
+}
+.phead { border-width: 0 0 1px !important; }
+.haus__tenglar a, .phead a, .phead button { color: var(--ink) !important; }
+.haus__tenglar a { color: var(--soft) !important; }
+.haus__tenglar a:hover, .haus__tenglar a[aria-current="page"] { color: var(--ink) !important; background: rgba(91, 147, 240, .12) !important; }
+.phead__nav a[aria-current="page"] { background: rgba(91, 147, 240, .14) !important; color: var(--ink) !important; }
+.hamborgari, .phead__hamborgari { background: rgba(255, 255, 255, .8) !important; border-color: rgba(28, 48, 80, .14) !important; box-shadow: none !important; }
+.hamborgari span, .phead__hamborgari span { background: var(--ink) !important; }
+.phead.er-opin .phead__nav { background: rgba(255, 255, 255, .8) !important; border-color: rgba(28, 48, 80, .08) !important; }
+@media (max-width: 880px) { .haus__tenglar a { color: var(--ink) !important; } }
+.fotur { border-top-color: rgba(28, 48, 80, .1) !important; color: var(--soft) !important; }
+
+/* ---------- Reitir ---------- */
+input, textarea, select, .bg-inntak {
+  background: rgba(255, 255, 255, .85) !important; color: var(--ink) !important;
+  border: 1px solid rgba(28, 48, 80, .14) !important;
+}
+input::placeholder, textarea::placeholder, .bg-inntak::placeholder { color: rgba(28, 48, 80, .4) !important; }
+input:focus, textarea:focus, select:focus, .bg-inntak:focus { border-color: #5b93f0 !important; box-shadow: 0 0 0 4px rgba(91, 147, 240, .16) !important; }
+select option { background: #fff !important; color: var(--ink) !important; }
+dialog::backdrop { background: rgba(28, 48, 80, .25) !important; }
+
+/* ---------- Detta-hlutirnir í hero ---------- */
+.fh {
+  color: var(--ink) !important;
+  background: linear-gradient(150deg, rgba(255, 255, 255, .96), rgba(238, 245, 255, .92)) !important;
+  border-color: #fff !important;
+  box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(28, 48, 80, .05), 0 18px 34px -20px rgba(28, 48, 80, .45) !important;
+}
+.fh--hnappur { color: #fff !important; }
+.fh-stika { background: rgba(28, 48, 80, .1) !important; }
+.fh-hn { border-color: #5b93f0 !important; color: #2c62c4 !important; }
+.fh--lina em { color: #c0453a !important; border-color: rgba(192, 69, 58, .35) !important; }
+.fh-hak { background: #5b93f0 !important; color: #fff !important; }
+.fh-takn { background: rgba(91, 147, 240, .14) !important; color: #2c62c4 !important; }
+.fh--leit { color: var(--soft) !important; }
+.fh-leit { border-color: rgba(28, 48, 80, .45) !important; }
+.fh-leit::after { background: rgba(28, 48, 80, .45) !important; }
+.fh--kringla { background: #1c3050 !important; border-color: #1c3050 !important; color: #fff !important; }
+
+/* ---------- Settu saman (byggja) ---------- */
+.bg-stika i, .ed-hringur__bak { background: rgba(28, 48, 80, .1); stroke: rgba(28, 48, 80, .1) !important; }
+.bg-teljari { color: var(--acc) !important; }
+.flis { color: var(--ink) !important; background: rgba(255, 255, 255, .6) !important; border-color: rgba(255, 255, 255, .95) !important; box-shadow: 0 10px 24px -18px rgba(28, 48, 80, .4); }
+.flis:hover { background: rgba(255, 255, 255, .85) !important; border-color: rgba(91, 147, 240, .4) !important; }
+.flis[aria-pressed="true"] {
+  background: linear-gradient(150deg, rgba(231, 240, 253, .95), rgba(255, 255, 255, .8)) !important;
+  border-color: #5b93f0 !important; box-shadow: 0 0 0 4px rgba(91, 147, 240, .14), 0 18px 40px -24px rgba(91, 147, 240, .6) !important;
+}
+.flis__takn { background: rgba(91, 147, 240, .1) !important; border-color: rgba(91, 147, 240, .2) !important; color: #2c62c4; }
+.flis[aria-pressed="true"] .flis__takn, .flis[aria-pressed="true"] .flis__hak { background: #5b93f0 !important; border-color: #5b93f0 !important; color: #fff !important; }
+.flis__hak { border-color: rgba(28, 48, 80, .2) !important; color: #fff !important; }
+.bg-merki__stafur { color: #fff !important; }
+.bg-litur { border-color: rgba(255, 255, 255, .9) !important; box-shadow: 0 4px 12px -4px rgba(28, 48, 80, .35); }
+.bg-litur[aria-pressed="true"] { border-color: #1c3050 !important; }
+.ed-hringur__fram { stroke: #5b93f0 !important; filter: drop-shadow(0 0 8px rgba(91, 147, 240, .45)) !important; }
+.ed-listi li.er-buid { color: var(--ink) !important; }
+.ed-merki { border-color: rgba(28, 48, 80, .18) !important; border-top-color: #5b93f0 !important; }
+.ed-listi li.er-buid .ed-merki { border-color: var(--graent) !important; }
+
+/* ---------- Borðar og tilkynningar ---------- */
+.gh-bordi, .gh-tk, .tk {
+  color: var(--ink) !important; background: rgba(255, 255, 255, .82) !important;
+  border: 1px solid rgba(255, 255, 255, .95) !important;
+  box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(28, 48, 80, .06), 0 18px 40px -20px rgba(28, 48, 80, .45) !important;
+}
+.gh-bordi__texti { color: var(--ink) !important; }
+.gh-bordi__hn, .tk__hn { color: var(--ink) !important; background: rgba(91, 147, 240, .1) !important; border-color: rgba(91, 147, 240, .3) !important; }
+.gh-bordi__hn--gull { color: #fff !important; background: #5b93f0 !important; border-color: #5b93f0 !important; }
+.gh-teng b, .gh-bok__haus strong { color: var(--ink) !important; }
+.gh-teng em, .gh-bok__stada { color: #1e8a49 !important; }
+.gh-bok__merki { color: #fff !important; }
+.fh.fh--hnappur { color: #fff !important; background: linear-gradient(180deg, #6aa0f5, #5b93f0) !important; border-color: #5b93f0 !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 14px 30px -14px rgba(91, 147, 240, .8) !important; }

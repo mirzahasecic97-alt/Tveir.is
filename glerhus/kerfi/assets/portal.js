@@ -272,7 +272,7 @@ export function teiknaHaus(ek, heiti) {
           ek.fyrirtaeki && ek.fyrirtaeki.merki_url
             ? el('img', { class: 'phead__kunnamerki', src: ek.fyrirtaeki.merki_url,
                           alt: ek.fyrirtaeki.nafn })
-            : el('img', { class: 'phead__tveir', src: '../assets/merki/glerhusid-logo-svart.svg', alt: 'Glerhúsið',
+            : el('img', { class: 'phead__tveir', src: '../assets/merki/glerhusid-logo-blatt.svg', alt: 'Glerhúsið',
                           width: '124', height: '29' })
         ]),
         el('span', { class: 'phead__skil', 'aria-hidden': 'true' }),

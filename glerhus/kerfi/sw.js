@@ -4,7 +4,7 @@
    svo enginn sitji uppi með gamla útgáfu af kóðanum.
    ========================================================================== */
 
-const GEYMSLA = 'glerhus-tveir-v1';
+const GEYMSLA = 'glerhus-tveir-v2';
 const EKKERT_SAMBAND = '/glerhus/kerfi/ekkert-samband.html';
 
 self.addEventListener('install', (e) => {
