@@ -62,13 +62,38 @@ export function tilkynna(texti) {
   svid.appendChild(t);
   setTimeout(() => { t.classList.add('er-farin'); setTimeout(() => t.remove(), 400); }, 3800);
 }
-if (sersnid && sersnid.litur) {
-  const r = document.documentElement.style;
-  r.setProperty('--acc', sersnid.litur);
-  r.setProperty('--acc-hover', sersnid.litur);
-  r.setProperty('--acc-on-navy', sersnid.litur);
-  r.setProperty('--accs', 'color-mix(in srgb, ' + sersnid.litur + ' 16%, transparent)');
+/* Litur stofunnar: áherslan, dekkri útgáfa fyrir texta á ljósu og
+   texti ofan á litnum sem sést (dökkur á gulu, hvítur á dökku) */
+if (sersnid && /^#[0-9a-f]{6}$/i.test(sersnid.litur || '')) {
+  const l = sersnid.litur;
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(l.slice(i, i + 2), 16) / 255)
+    .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  const birta = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const s = document.documentElement.style;
+  s.setProperty('--acc', l);
+  s.setProperty('--acc-hover', 'color-mix(in srgb, ' + l + ' 86%, #000)');
+  s.setProperty('--acc-on-navy', l);
+  s.setProperty('--accs', 'color-mix(in srgb, ' + l + ' 16%, #fff)');
+  s.setProperty('--acc-djupt', 'color-mix(in srgb, ' + l + (birta > 0.45 ? ' 42%' : ' 78%') + ', #1c3050)');
+  s.setProperty('--acc-texti', birta > 0.45 ? '#1c3050' : '#fff');
+  document.documentElement.classList.add('gh-eigin-litur');
 }
+/* Letur stofunnar af vefsíðunni hennar, sótt frá Google Fonts */
+if (sersnid && /^[A-Za-z0-9 ]{2,40}$/.test(sersnid.letur || '')) {
+  const f = sersnid.letur.trim();
+  const tengill = document.createElement('link');
+  tengill.rel = 'stylesheet';
+  tengill.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(f).replace(/%20/g, '+') + ':wght@400;500;600;700&display=swap';
+  document.head.appendChild(tengill);
+  const stafla = "'" + f + "', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  document.documentElement.style.setProperty('--f-head', stafla);
+  document.documentElement.style.setProperty('--f-body', stafla);
+}
+/* Merki stofunnar: slóð af vefnum hennar eða mynd sem var hlaðið upp */
+export const stofuMerki = () => {
+  const m = sersnid && sersnid.merki;
+  return typeof m === 'string' && (/^https:\/\//.test(m) || /^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,/.test(m)) ? m : null;
+};
 const stofuNafn = () => (sersnid && sersnid.nafn) || 'Tveir';
 
 export function el(tag, eigin, born) {
@@ -272,8 +297,15 @@ export function teiknaHaus(ek, heiti) {
           ek.fyrirtaeki && ek.fyrirtaeki.merki_url
             ? el('img', { class: 'phead__kunnamerki', src: ek.fyrirtaeki.merki_url,
                           alt: ek.fyrirtaeki.nafn })
-            : el('img', { class: 'phead__tveir', src: '../assets/merki/glerhusid-logo-blatt.svg', alt: 'Glerhúsið',
-                          width: '124', height: '29' })
+            : stofuMerki()
+              /* Stofan setti inn merki: hennar merki, og lítið Glerhúsið hús við hliðina */
+              ? el('span', { class: 'phead__logo' }, [
+                  el('img', { class: 'phead__glerhus', src: '../assets/merki/glerhusid-merki-blatt.svg', alt: 'Glerhúsið',
+                              width: '26', height: '26' }),
+                  el('img', { class: 'phead__stofumerki', src: stofuMerki(), alt: stofuNafn(), referrerpolicy: 'no-referrer' })
+                ])
+              : el('img', { class: 'phead__tveir', src: '../assets/merki/glerhusid-logo-blatt.svg', alt: 'Glerhúsið',
+                            width: '124', height: '29' })
         ]),
         el('span', { class: 'phead__skil', 'aria-hidden': 'true' }),
 
