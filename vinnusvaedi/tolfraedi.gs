@@ -690,6 +690,31 @@ function sendaSkyrslur_() {
   }
 }
 
+/* Tölfræði sem stjórnandi sendi beint úr kerfinu (Tölfræði, "Senda á
+   viðskiptavin"). Pósturinn var smíðaður í vafranum og er sendur eins og
+   hann er, frá tveir@tveir.is. Kallað úr tilkynna_ í verk-postur.gs. */
+function sendaTolfraediSendingar_() {
+  try {
+    const listi = kalla_('tolfraedi_sendingar_til', {});
+    if (!Array.isArray(listi) || !listi.length) return;
+    listi.forEach((s) => {
+      const netfong = (s.netfong || []).map((n) => String(n || '').trim())
+        .filter((n) => /^[^\s@,;<>"']+@[^\s@,;<>"']+\.[^\s@,;<>"']+$/.test(n));
+      if (!netfong.length) { kalla_('merkja_tolfraedi_sendingu', { p_id: s.id, p_villa: 'Ekkert gilt netfang' }); return; }
+      const efni = String(s.efni || 'Tölfræðin ykkar').replace(/[\r\n]+/g, ' ').slice(0, 200);
+      try {
+        GmailApp.sendEmail(netfong.join(','), efni, String(s.texti || ''), { name: 'Tveir', htmlBody: String(s.html || '') });
+        kalla_('merkja_tolfraedi_sendingu', { p_id: s.id });
+      } catch (villa) {
+        console.log('Tölfræði: sending ' + s.id + ' fór ekki: ' + villaTexti_(villa));
+        kalla_('merkja_tolfraedi_sendingu', { p_id: s.id, p_villa: villaTexti_(villa) });
+      }
+    });
+  } catch (villa) {
+    console.log('Tölfræði: sendingar stöðvuðust: ' + villaTexti_(villa));
+  }
+}
+
 function villaTexti_(villa) {
   return String((villa && villa.message) || villa).slice(0, 400);
 }

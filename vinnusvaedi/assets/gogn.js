@@ -754,6 +754,12 @@ async function supabaseBakendi() {
     async uppfaeraSkyrslu(id, breytingar) {
       const svar = await sb.from('skyrslur').update(breytingar).eq('id', id).select().single();
       kastaTf(svar); return svar.data;
+    },
+
+    /* Tölfræðipóstur á viðskiptavin. Apps Script sendir hann frá tveir@tveir.is. */
+    async sendaTolfraedi(rod) {
+      const svar = await sb.from('tolfraedi_sendingar').insert(rod).select('id, stada').single();
+      kastaTf(svar); return svar.data;
     }
   };
 
@@ -1693,6 +1699,13 @@ function prufuBakendi() {
         s.stada = 'samthykkt'; s.samthykkt_dags = new Date().toISOString();
       }
       vista(); return JSON.parse(JSON.stringify(s));
+    },
+
+    async sendaTolfraedi(rod) {
+      if (!erAdminPrufa()) throw new Error('Bara stjórnendur senda tölfræði');
+      if (!rod.netfong || !rod.netfong.length) throw new Error('Veldu 1 til 10 viðtakendur');
+      g.tf.sendingar = (g.tf.sendingar || []).concat([{ ...rod, id: 'ts' + Date.now(), stada: 'send', stofnad: new Date().toISOString() }]).slice(-20);
+      vista(); return { id: 'ts' + Date.now(), stada: 'send' };
     },
 
     /* Bara í prufu: byrja upp á nýtt */

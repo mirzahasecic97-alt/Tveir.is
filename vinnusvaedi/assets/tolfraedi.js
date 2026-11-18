@@ -10,6 +10,7 @@
    ========================================================================== */
 
 import { gogn, el, fylla, lesaTolu, vardaHlid, teiknaHaus, geymt, geyma } from './portal.js';
+import { opnaSendingu } from './tolfraedi-senda.js';
 
 const ek = await vardaHlid({ badir: true });
 if (ek) start();
@@ -597,6 +598,17 @@ async function start() {
               ? 'Fylgjendur, áhorf og færslur á samfélagsmiðlum, dag fyrir dag.'
               : 'Fylgjendur, áhorf og færslur á samfélagsmiðlunum ykkar, dag fyrir dag.' })
         ]),
+        admin && fid
+          ? el('button', { type: 'button', class: 'btn tf-senda', onclick: () => {
+              const tb = reiknaTimabil(timabil);
+              const heiti = { '30': ['síðustu 30 daga', '30 dagana á undan'], '90': ['síðustu 90 daga', '90 dagana á undan'],
+                '12': ['síðustu 12 mánuði', 'árið á undan'],
+                manudur: ['það sem af er ' + manNafn(tb.fra), 'sama tíma í ' + manNafn(tb.fyrriFra)],
+                fyrri: ['í ' + manNafn(tb.fra), 'í ' + manNafn(tb.fyrriFra)] }[timabil] || ['á tímabilinu', 'tímabilið á undan'];
+              const valdir = sia === 'allir' ? midlar : midlar.filter((m) => m.midill === sia);
+              opnaSendingu({ g, ek, fid, fyrirtaeki: fyrNafn(), midlar: valdir, maelingar, tb, timabilHeiti: heiti[0], fyrriHeiti: heiti[1] });
+            } }, [el('span', { 'aria-hidden': 'true', texti: '✉ ' }), document.createTextNode('Senda á viðskiptavin')])
+          : null,
         admin && fid && fyrirtaekin.length > 1
           ? el('label', { class: 'pyfir tf-velja', style: 'margin:0' }, [
               el('span', { class: 'sr-only', texti: 'Skipta um fyrirtæki' }),

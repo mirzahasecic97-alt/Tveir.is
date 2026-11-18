@@ -2019,3 +2019,43 @@ button.uv__titill:hover {
 .tf-kort__tolur dt {
   color: var(--soft);
 }
+.ts-midi {
+  color: var(--soft);
+}
+.ts-timabil {
+  color: var(--ink);
+}
+.ts-vidtakendur label,
+.ts-afrit {
+  border: 1px solid var(--line);
+}
+.ts-vidtakendur strong {
+  color: var(--ink);
+}
+.ts-vidtakendur small {
+  color: var(--soft);
+}
+.ts-vidtakendur input,
+.ts-afrit input {
+  accent-color: var(--acc);
+}
+.ts-afrit {
+  color: var(--soft);
+}
+.ts-ord {
+  border: 1px solid var(--line);
+}
+.ts-villa {
+  color: rgba(237, 162, 156, 1);
+}
+.ts-forsyn {
+  border: 1px solid var(--line);
+  background: rgba(122, 158, 184, 0.16);
+}
+.ts-sent__hak {
+  color: rgba(255, 255, 255, 1);
+  background: rgba(30, 158, 74, 1);
+}
+.ts-sent p {
+  color: var(--soft);
+}

@@ -34,7 +34,7 @@ const NETFANG = 'verk@tveir.is';
    birt síðast, en 5 mínútna vaktin keyrir alltaf nýjasta kóðann. Passi
    útgáfurnar ekki saman sendir vefappið ekkert, vaktin tekur við og
    tveir@tveir.is fær einn póst um að birta nýja útgáfu. */
-const UTGAFA = '2026-11-18-1';
+const UTGAFA = '2026-11-19-1';
 
 /* Keyrt einu sinni með höndunum: setur upp 5 mínútna vaktina. Eyðir bara
    gömlum lesaVerk vöktum, svo daglega tölfræðisöfnunin (setjaTolfraedi í
@@ -135,6 +135,8 @@ function tilkynna_() {
     tilkynnaUndirverk_();
     /* Samþykktar mánaðarskýrslur (tolfraedi.gs). Skráin er kannski ekki komin inn. */
     if (typeof sendaSkyrslur_ === 'function') sendaSkyrslur_();
+    /* Tölfræði send beint úr kerfinu */
+    if (typeof sendaTolfraediSendingar_ === 'function') sendaTolfraediSendingar_();
   } finally {
     las.releaseLock();
   }
