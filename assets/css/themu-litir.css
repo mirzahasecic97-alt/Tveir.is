@@ -1,7 +1,7 @@
 /* SJÁLFGERT af verkfaeri/gera-themalit.py. Ekki breyta hér, breyttu skriftunni. */
 
 /* úr assets/css/styles.css */
-html[data-thema="naeturborg"] {
+:root:where([data-thema="naeturborg"]) {
   --ink: #471458;
   --soft: #a771ac;
   --acc: #f05ba6;
@@ -9,23 +9,163 @@ html[data-thema="naeturborg"] {
   --accs: #fde7f2;
   --acc-on-navy: #f79dca;
   --bg: #fef2f8;
+  --sur: #fff;
   --line: rgba(71, 20, 88, .08);
   --sh-card: 0 2px 10px rgba(71, 20, 88, .06);
   --sh-drop: 0 12px 30px rgba(71, 20, 88, .16);
   --sh-navy: 0 8px 24px rgba(71, 20, 88, .18);
   --sh-btn: 0 4px 14px rgba(240, 91, 166, .35);
   --sh-nav: 0 6px 22px rgba(71, 20, 88, .08);
+  --r-card: 20px;
+  --r-block: 28px;
+  --r-input: 12px;
+  --r-pill: 999px;
+  --gut: clamp(16px, 2.8vw, 32px);
+  --sec: clamp(46px, 6.6vw, 96px);
+  --f-head: 'Fraunces', Georgia, serif;
+  --f-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
-html[data-thema="naeturborg"] .btn--white:hover {
+:root:where([data-thema="naeturborg"]) {
+  --fs-h1-hero: clamp(33px, 20.7px + 3.17vw, 58px);
+  --fs-h1-page: clamp(34px, 23.1px + 2.79vw, 56px);
+  --fs-h2: clamp(27px, 20.6px + 1.65vw, 40px);
+  --fs-h2-sm: clamp(25px, 20.6px + 1.14vw, 34px);
+  --fs-h3: clamp(16px, 14.5px + 0.38vw, 19px);
+  --fs-lead: clamp(16px, 14.5px + 0.38vw, 19px);
+}
+:where(html[data-thema="naeturborg"]) body {
+  background: var(--bg);
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) h1 em,
+:where(html[data-thema="naeturborg"]) h2 em {
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) a {
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) button {
+  color: inherit;
+}
+:where(html[data-thema="naeturborg"]) :focus-visible {
+  outline: 2px solid var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .sr-only {
+  border: 0;
+}
+:where(html[data-thema="naeturborg"]) .skip-link {
+  background: var(--ink);
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .lead {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .drag-hint {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .btn {
+  background: var(--acc);
+  color: #fff;
+  border: 1.5px solid transparent;
+  box-shadow: var(--sh-btn);
+}
+:where(html[data-thema="naeturborg"]) .btn:hover {
+  background: var(--acc-hover);
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .btn--ghost {
+  background: rgba(255, 255, 255, .55);
+  color: var(--ink);
+  border-color: var(--acc);
+  box-shadow: none;
+}
+:where(html[data-thema="naeturborg"]) .btn--ghost:hover {
+  background: var(--acc);
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .btn--white {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: none;
+}
+:where(html[data-thema="naeturborg"]) .btn--white:hover {
   background: #ffeef6;
+  color: var(--ink);
 }
-html[data-thema="naeturborg"] .slot::before {
+:where(html[data-thema="naeturborg"]) .badge {
+  background: var(--accs);
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .card {
+  background: var(--sur);
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-card);
+}
+:where(html[data-thema="naeturborg"]) .card--navy {
+  background: var(--ink);
+  border-color: transparent;
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .slot {
+  background: var(--accs);
+}
+:where(html[data-thema="naeturborg"]) .slot::before {
   color: rgba(71, 20, 88, .38);
 }
-html[data-thema="naeturborg"] .site-head {
+:where(html[data-thema="naeturborg"]) .site-head {
   background: linear-gradient(to bottom, var(--bg) 72%, rgba(254, 242, 248, 0));
 }
-html[data-thema="naeturborg"] .hero::after {
+:where(html[data-thema="naeturborg"]) .pillnav {
+  background: rgba(255, 255, 255, .9);
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-nav);
+}
+:where(html[data-thema="naeturborg"]) .pillnav__links a {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .pillnav__links a:hover,
+:where(html[data-thema="naeturborg"]) .pillnav__links a[aria-current="page"] {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .burger {
+  background: none;
+  border: 0;
+}
+:where(html[data-thema="naeturborg"]) .burger span {
+  background: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .mobilemenu {
+  background: var(--sur);
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-drop);
+}
+:where(html[data-thema="naeturborg"]) .mobilemenu a {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .mobilemenu a:hover {
+  background: var(--accs);
+}
+:where(html[data-thema="naeturborg"]) .dropdown__toggle[aria-expanded="true"] {
+  background: var(--acc-hover);
+}
+:where(html[data-thema="naeturborg"]) .dropdown__menu {
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-drop);
+}
+:where(html[data-thema="naeturborg"]) .dropdown__menu a {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .dropdown__menu a:hover {
+  background: var(--accs);
+}
+:where(html[data-thema="naeturborg"]) .dropdown__menu span {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .hero {
+  box-shadow: var(--sh-navy);
+}
+:where(html[data-thema="naeturborg"]) .hero::after {
   background: linear-gradient(to top,
     rgba(42, 11, 53, .94) 0%,
     rgba(42, 11, 53, .86) 26%,
@@ -33,197 +173,823 @@ html[data-thema="naeturborg"] .hero::after {
     rgba(42, 11, 53, .08) 78%,
     rgba(42, 11, 53, 0) 100%);
 }
-html[data-thema="naeturborg"] .logo-chip {
+:where(html[data-thema="naeturborg"]) .hero__yfir {
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .hero__yfir h1 {
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .hero__yfir h1 em {
+  color: var(--acc-on-navy);
+}
+:where(html[data-thema="naeturborg"]) .hero__yfir .lead {
+  color: rgba(255,255,255,.8);
+}
+:where(html[data-thema="naeturborg"]) .btn--aglas {
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  border-color: rgba(255,255,255,.55);
+  box-shadow: none;
+}
+:where(html[data-thema="naeturborg"]) .btn--aglas:hover {
+  background: #fff;
+  color: var(--ink);
+  border-color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .hero__nofn {
+  color: rgba(255,255,255,.66);
+}
+:where(html[data-thema="naeturborg"]) .leid {
+  color: inherit;
+}
+:where(html[data-thema="naeturborg"]) .leid__texti {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .leid__or {
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .leid:hover {
+  border-color: var(--acc);
+  box-shadow: var(--sh-nav);
+}
+:where(html[data-thema="naeturborg"]) .leid:focus-visible {
+  outline: 2px solid var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .logo-chip {
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-card);
   color: rgba(71, 20, 88, .45);
 }
-html[data-thema="naeturborg"] .hscroll::-webkit-scrollbar-thumb {
+:where(html[data-thema="naeturborg"]) .logo-chip:has(img:not(.is-missing)) {
+  color: transparent;
+}
+:where(html[data-thema="naeturborg"]) .hscroll::-webkit-scrollbar-thumb {
   background: rgba(71, 20, 88, .16);
 }
-html[data-thema="naeturborg"] .work-tile {
+:where(html[data-thema="naeturborg"]) .work-tile {
   box-shadow: 0 8px 24px rgba(71, 20, 88, .14);
+  background: var(--accs);
+  color: inherit;
 }
-html[data-thema="naeturborg"] .work-tile__meta {
+:where(html[data-thema="naeturborg"]) .work-tile__meta {
   background: linear-gradient(to top, rgba(71, 20, 88, .88), rgba(71, 20, 88, 0));
 }
-html[data-thema="naeturborg"] .services-rail::-webkit-scrollbar-thumb {
+:where(html[data-thema="naeturborg"]) .work-tile__cat {
+  color: rgba(255, 255, 255, .7);
+}
+:where(html[data-thema="naeturborg"]) .work-tile__name {
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .services-rail::-webkit-scrollbar-thumb {
   background: rgba(71, 20, 88, .16);
 }
-html[data-thema="naeturborg"] .service__icon {
-  box-shadow: 0 4px 16px rgba(71, 20, 88, .1);
+:where(html[data-thema="naeturborg"]) .service {
+  color: inherit;
 }
-html[data-thema="naeturborg"] .member__mono {
+:where(html[data-thema="naeturborg"]) a.service:hover .service__icon {
+  border-color: var(--acc);
+  box-shadow: var(--sh-nav);
+}
+:where(html[data-thema="naeturborg"]) a.service:hover h3 {
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) a.service:focus-visible {
+  outline: 2px solid var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .service__icon {
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 16px rgba(71, 20, 88, .1);
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .service p {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .member {
+  background: var(--ink);
+  box-shadow: var(--sh-navy);
+}
+:where(html[data-thema="naeturborg"]) .member__mono {
   color: rgba(240, 91, 166, .22);
 }
-html[data-thema="naeturborg"] .field input::placeholder,
-html[data-thema="naeturborg"] .field textarea::placeholder {
+:where(html[data-thema="naeturborg"]) .member__name {
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .member__role {
+  color: var(--acc-on-navy);
+}
+:where(html[data-thema="naeturborg"]) .member__desc {
+  color: rgba(255, 255, 255, .62);
+  border-top: 1px solid rgba(255, 255, 255, .12);
+}
+:where(html[data-thema="naeturborg"]) .cta {
+  background: var(--ink);
+  box-shadow: var(--sh-navy);
+}
+:where(html[data-thema="naeturborg"]) .cta h2 {
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .site-foot {
+  border-top: 1px solid var(--line);
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .site-foot a {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .site-foot a:hover {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .filter {
+  background: #fff;
+  color: var(--soft);
+  border: 1px solid var(--line);
+}
+:where(html[data-thema="naeturborg"]) .filter:hover {
+  border-color: var(--acc);
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .filter[aria-pressed="true"] {
+  background: var(--acc);
+  color: #fff;
+  border-color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .clientlist {
+  border-top: 1px solid var(--line);
+}
+:where(html[data-thema="naeturborg"]) .clientlist__row {
+  border-bottom: 1px solid var(--line);
+}
+:where(html[data-thema="naeturborg"]) .clientlist__row:hover {
+  background: rgba(255, 255, 255, .7);
+}
+:where(html[data-thema="naeturborg"]) .clientlist__logo {
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: var(--sh-card);
+}
+:where(html[data-thema="naeturborg"]) .clientlist__branch {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .clientlist__link {
+  color: inherit;
+}
+:where(html[data-thema="naeturborg"]) .clientlist__row:has(.clientlist__link):hover .clientlist__name {
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .clientlist__ext {
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .clientlist__cat {
+  color: var(--acc);
+  background: var(--accs);
+}
+:where(html[data-thema="naeturborg"]) .no-results {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .field > span,
+:where(html[data-thema="naeturborg"]) .fieldset > legend {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .field input,
+:where(html[data-thema="naeturborg"]) .field textarea {
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  outline: none;
+}
+:where(html[data-thema="naeturborg"]) .field input::placeholder,
+:where(html[data-thema="naeturborg"]) .field textarea::placeholder {
   color: rgba(167, 113, 172, .75);
 }
-html[data-thema="naeturborg"] .field input:focus,
-html[data-thema="naeturborg"] .field textarea:focus {
+:where(html[data-thema="naeturborg"]) .field input:focus,
+:where(html[data-thema="naeturborg"]) .field textarea:focus {
+  border-color: var(--acc);
   box-shadow: 0 0 0 3px rgba(240, 91, 166, .16);
 }
-html[data-thema="naeturborg"] .chip:hover {
+:where(html[data-thema="naeturborg"]) .field input:user-invalid,
+:where(html[data-thema="naeturborg"]) .field textarea:user-invalid {
+  border-color: #d4574f;
+}
+:where(html[data-thema="naeturborg"]) .fieldset {
+  border: 0;
+}
+:where(html[data-thema="naeturborg"]) .chip {
+  background: var(--accs);
+  color: var(--acc);
+  border: 1px solid transparent;
+}
+:where(html[data-thema="naeturborg"]) .chip:hover {
   background: #fdd8eb;
 }
-html[data-thema="naeturborg"] .langsw__btn.is-on {
+:where(html[data-thema="naeturborg"]) .chip[aria-pressed="true"] {
+  background: var(--acc);
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .form-status--ok {
+  background: #e6f4ea;
+  color: #1e6b34;
+}
+:where(html[data-thema="naeturborg"]) .form-status--err {
+  background: #fdeceb;
+  color: #a3312a;
+}
+:where(html[data-thema="naeturborg"]) .info-card__label {
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .info-card ul a {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .info-card ul a:hover {
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .info-card--navy h2 {
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .info-card--navy p {
+  color: rgba(255, 255, 255, .7);
+}
+:where(html[data-thema="naeturborg"]) .kit-card__num {
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .kit-card p {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .form-navy h2 {
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .form-navy > div > p {
+  color: rgba(255, 255, 255, .7);
+}
+:where(html[data-thema="naeturborg"]) .form-navy__inner {
+  background: #fff;
+}
+:where(html[data-thema="naeturborg"]) .stats {
+  background: var(--ink);
+  box-shadow: var(--sh-navy);
+}
+:where(html[data-thema="naeturborg"]) .stat__num {
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .stat__label {
+  color: rgba(255, 255, 255, .62);
+}
+:where(html[data-thema="naeturborg"]) .stat__label em {
+  color: var(--acc-on-navy);
+}
+:where(html[data-thema="naeturborg"]) .stats--sm .stat__label {
+  color: rgba(255,255,255,.7);
+}
+:where(html[data-thema="naeturborg"]) .case-figs li {
+  color: var(--soft);
+  border-top: 1px solid var(--line);
+}
+:where(html[data-thema="naeturborg"]) .case-figs li:first-child {
+  border-top: 0;
+}
+:where(html[data-thema="naeturborg"]) .case-figs b {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .case-note {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .daemi span {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .sec-intro {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .stat-cap {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .fit h3 {
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .fit__list li {
+  color: rgba(255,255,255,.78);
+}
+:where(html[data-thema="naeturborg"]) .fit__list--ja li::before {
+  color: var(--acc-on-navy);
+}
+:where(html[data-thema="naeturborg"]) .fit__list--nei li::before {
+  color: rgba(255,255,255,.38);
+}
+:where(html[data-thema="naeturborg"]) .step__n {
+  background: var(--accs);
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .step p {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .deliver li::before {
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .faq summary::after {
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .faq summary:focus-visible {
+  outline: 2px solid var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .faq p {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .langsw {
+  background: var(--accs);
+}
+:where(html[data-thema="naeturborg"]) .langsw__btn {
+  border: 0;
+  background: transparent;
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .langsw__btn:hover {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .langsw__btn.is-on {
+  background: #fff;
+  color: var(--ink);
   box-shadow: 0 1px 3px rgba(71, 20, 88, .12);
 }
-html[data-thema="naeturborg"] .fljot {
+:where(html[data-thema="naeturborg"]) .fljot {
+  background: var(--sur);
+  border: 1px solid var(--line);
   box-shadow: 0 16px 38px rgba(71, 20, 88, .18);
 }
-html[data-thema="naeturborg"] .m-hak {
+:where(html[data-thema="naeturborg"]) .fljot strong {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .fljot__undir {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .fljot__merki {
+  color: #a4681a;
+  background: #fff2e0;
+}
+:where(html[data-thema="naeturborg"]) .fljot__merki i {
+  background: currentColor;
+}
+:where(html[data-thema="naeturborg"]) .fljot__merki--blar {
+  color: var(--acc);
+  background: var(--accs);
+}
+:where(html[data-thema="naeturborg"]) .fljot__verd {
+  color: #1e6b34;
+  background: #e6f4ea;
+}
+:where(html[data-thema="naeturborg"]) .fljot__punktar i {
+  background: var(--accs);
+}
+:where(html[data-thema="naeturborg"]) .fljot__punktar i.er-lokid {
+  background: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .fljot__hak {
+  background: #e6f4ea;
+}
+:where(html[data-thema="naeturborg"]) .fljot__hak::after {
+  border: solid #1e6b34;
+}
+@media (min-width: 1040px) {
+:where(html[data-thema="naeturborg"]) .fljot--1 {
+  --fx: -26px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--2 {
+  --fx: -30px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--3 {
+  --fx: 30px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--4 {
+  --fx: 26px;
+}
+}
+@media (min-width: 820px) and (max-width: 1039px) {
+:where(html[data-thema="naeturborg"]) .fljot--1 {
+  --fx: -22px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--2 {
+  --fx: -22px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--3 {
+  --fx: 22px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--4 {
+  --fx: 22px;
+}
+}
+:where(html[data-thema="naeturborg"]) .simi {
+  background: var(--ink);
+  box-shadow: var(--sh-navy);
+}
+:where(html[data-thema="naeturborg"]) .simi__skjar {
+  background: var(--bg);
+}
+:where(html[data-thema="naeturborg"]) .simi__haus {
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+:where(html[data-thema="naeturborg"]) .simi__fyr {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .m-bidur {
+  background: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .m-bidur__heiti {
+  color: var(--acc-on-navy);
+}
+:where(html[data-thema="naeturborg"]) .m-bidur__tala {
+  color: #fff;
+}
+:where(html[data-thema="naeturborg"]) .m-verk {
+  background: #fff;
+  border: 1px solid var(--line);
+}
+:where(html[data-thema="naeturborg"]) .m-verk__titill {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .m-sla {
+  background: var(--accs);
+}
+:where(html[data-thema="naeturborg"]) .m-sla__fyll {
+  background: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .m-hlut {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .m-task {
+  background: #fff;
+  border: 1px solid var(--line);
+}
+:where(html[data-thema="naeturborg"]) .m-hak {
   border: 1.5px solid rgba(71, 20, 88, .22);
+  background: #fff;
 }
-html[data-thema="naeturborg"] .vinnulag[data-skref="2"] .m-verk {
+:where(html[data-thema="naeturborg"]) .m-hak::after {
+  border: solid #fff;
+}
+:where(html[data-thema="naeturborg"]) .m-task__titill {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .m-task__titill::after {
+  background: currentColor;
+}
+:where(html[data-thema="naeturborg"]) .m-task__merki {
+  color: var(--acc);
+  background: var(--accs);
+}
+:where(html[data-thema="naeturborg"]) .m-bubla {
+  background: var(--accs);
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .vinnulag[data-skref="2"] .m-verk {
   border-color: rgba(240, 91, 166, .5);
+  box-shadow: var(--sh-btn);
 }
-html[data-thema="naeturborg"] .vinnulag__listi li.er-virkt {
+:where(html[data-thema="naeturborg"]) .vinnulag[data-skref="3"] .m-hak {
+  background: var(--acc);
+  border-color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .vinnulag[data-skref="3"] .m-task__titill {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .vinnulag__listi li {
+  background: var(--sur);
+  border: 1px solid var(--line);
+}
+:where(html[data-thema="naeturborg"]) .vinnulag__listi li::before {
+  background: var(--accs);
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .vinnulag__listi b {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .vinnulag__listi span {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .vinnulag__listi li.er-virkt {
   border-color: rgba(240, 91, 166, .45);
+  box-shadow: var(--sh-card);
+}
+:where(html[data-thema="naeturborg"]) .vinnulag__listi li.er-virkt::before {
+  background: var(--acc);
+  color: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+:where(html[data-thema="naeturborg"]) .vinnulag .m-hak {
+  background: var(--acc);
+  border-color: var(--acc);
+}
 }
 
 /* úr assets/css/glans.css */
-html[data-thema="naeturborg"] {
+:root:where([data-thema="naeturborg"]) {
+  --gl-fill:   linear-gradient(145deg, rgba(255,255,255,.6), rgba(255,255,255,.3));
+  --gl-brun:   rgba(255,255,255,.6);
   --gl-inn:    inset 0 1px 0 rgba(255,255,255,.75), inset 0 -1px 0 rgba(71, 20, 88, .04);
   --gl-fall:   0 18px 40px -22px rgba(71, 20, 88, .34), 0 2px 8px rgba(71, 20, 88, .05);
   --gl-fall-h: 0 30px 60px -26px rgba(71, 20, 88, .42), 0 0 0 1px rgba(240, 91, 166, .26);
+  --gl-blur:   blur(26px) saturate(1.9);
   --soft: #8a528f;
   --lj-bla:    rgba(240, 91, 166, .5);
   --lj-ljos:   rgba(246, 137, 192, .45);
   --lj-himinn: rgba(240, 109, 175, .42);
   --lj-lilla:  rgba(246, 154, 200, .45);
 }
-html[data-thema="naeturborg"] {
+html:where([data-thema="naeturborg"]) {
   background:
     linear-gradient(158deg, #fee9f3 0%, #fcd9eb 34%, #fbe2ee 62%, #fad7e8 100%)
     fixed no-repeat;
+  background-color: var(--bg);
 }
-html[data-thema="naeturborg"] .card--navy {
+:where(html[data-thema="naeturborg"]) body {
+  background: transparent;
+}
+:where(html[data-thema="naeturborg"]) body::before {
+  background:
+    radial-gradient(54vmax 44vmax at 6% 2%,  var(--lj-bla),    transparent 62%),
+    radial-gradient(48vmax 42vmax at 94% 10%, var(--lj-lilla),  transparent 60%),
+    radial-gradient(52vmax 46vmax at 48% 52%, var(--lj-himinn), transparent 64%);
+}
+:where(html[data-thema="naeturborg"]) body::after {
+  background:
+    radial-gradient(56vmax 48vmax at 90% 90%, var(--lj-bla),  transparent 62%),
+    radial-gradient(46vmax 40vmax at 8% 94%,  var(--lj-ljos), transparent 60%);
+}
+:where(html[data-thema="naeturborg"]) .card {
+  background: var(--gl-fill);
+  border: 1px solid var(--gl-brun);
+  box-shadow: var(--gl-inn), var(--gl-fall);
+}
+:where(html[data-thema="naeturborg"]) .card--navy {
   background: linear-gradient(155deg, #5f1877, var(--ink) 58%);
   border-color: rgba(247, 157, 202, .22);
   box-shadow:
     inset 0 1px 0 rgba(247, 157, 202, .28),
     0 26px 56px -24px rgba(71, 20, 88, .6);
 }
-html[data-thema="naeturborg"] .btn {
+:where(html[data-thema="naeturborg"]) .btn {
   background: linear-gradient(180deg, #f574b5, var(--acc) 52%, #e44b98);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.5),
     0 10px 24px -8px rgba(240, 91, 166, .65),
     0 2px 6px rgba(71, 20, 88, .12);
 }
-html[data-thema="naeturborg"] .btn:hover {
+:where(html[data-thema="naeturborg"]) .btn::after {
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.42), transparent);
+}
+:where(html[data-thema="naeturborg"]) .btn:hover {
   background: linear-gradient(180deg, #f77fbb, var(--acc) 48%, #e24a96);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.55),
     0 18px 34px -10px rgba(240, 91, 166, .7),
     0 3px 8px rgba(71, 20, 88, .14);
 }
-html[data-thema="naeturborg"] .btn--ghost {
+:where(html[data-thema="naeturborg"]) .btn--ghost {
+  background: rgba(255,255,255,.55);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 8px 20px -12px rgba(71, 20, 88, .3);
 }
-html[data-thema="naeturborg"] .btn--ghost:hover {
+:where(html[data-thema="naeturborg"]) .btn--ghost:hover {
   background: linear-gradient(180deg, #f574b5, var(--acc) 52%, #e44b98);
+  color: #fff;
 }
-html[data-thema="naeturborg"] .btn--white {
+:where(html[data-thema="naeturborg"]) .btn--white {
   background: linear-gradient(180deg, #fff, #feeaf4);
   box-shadow: inset 0 1px 0 #fff, 0 10px 24px -12px rgba(71, 20, 88, .45);
 }
-html[data-thema="naeturborg"] .btn--white:hover {
+:where(html[data-thema="naeturborg"]) .btn--white:hover {
   background: linear-gradient(180deg, #fff, #fddfee);
 }
-html[data-thema="naeturborg"] .pillnav {
+:where(html[data-thema="naeturborg"]) .btn--aglas {
+  background: rgba(255,255,255,.14);
+  border-color: rgba(255,255,255,.55);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 10px 26px -14px rgba(0,0,0,.5);
+}
+:where(html[data-thema="naeturborg"]) .btn--aglas:hover {
+  background: #fff;
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .site-head {
+  background: none;
+}
+:where(html[data-thema="naeturborg"]) .pillnav {
+  background: linear-gradient(145deg, rgba(255,255,255,.58), rgba(255,255,255,.3));
+  border-color: rgba(255,255,255,.65);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.8),
     0 14px 34px -18px rgba(71, 20, 88, .4);
 }
-html[data-thema="naeturborg"] .dropdown__menu,
-html[data-thema="naeturborg"] .mobilemenu {
+:where(html[data-thema="naeturborg"]) .dropdown__menu,
+:where(html[data-thema="naeturborg"]) .mobilemenu {
+  background: linear-gradient(150deg, rgba(255,255,255,.8), rgba(255,255,255,.62));
+  border: 1px solid rgba(255,255,255,.8);
   box-shadow: var(--gl-inn), 0 24px 50px -22px rgba(71, 20, 88, .45);
 }
-html[data-thema="naeturborg"] .section-title em,
-html[data-thema="naeturborg"] h1 em,
-html[data-thema="naeturborg"] h2 em {
+:where(html[data-thema="naeturborg"]) .section-title em,
+:where(html[data-thema="naeturborg"]) h1 em,
+:where(html[data-thema="naeturborg"]) h2 em {
   background: linear-gradient(100deg, var(--acc), #f27fb9 55%, #f68fc3);
+  color: transparent;
 }
-html[data-thema="naeturborg"] .leid::before {
+:where(html[data-thema="naeturborg"]) .hero__yfir h1 em {
+  background: none;
+  color: var(--acc-on-navy);
+}
+:where(html[data-thema="naeturborg"]) .leid::before {
   background: radial-gradient(60% 90% at 0% 50%, rgba(240, 91, 166, .16), transparent 70%);
 }
-html[data-thema="naeturborg"] .leid:hover {
+:where(html[data-thema="naeturborg"]) .leid:hover {
+  border-color: rgba(255,255,255,.95);
   box-shadow:
     var(--gl-inn),
     0 34px 62px -26px rgba(71, 20, 88, .45),
     0 0 40px -12px rgba(240, 91, 166, .55);
 }
-html[data-thema="naeturborg"] .cta {
+:where(html[data-thema="naeturborg"]) .cta {
   background: linear-gradient(152deg, #671b80, var(--ink) 52%, #370f44);
   box-shadow:
     inset 0 1px 0 rgba(247, 157, 202, .3),
     0 34px 70px -30px rgba(71, 20, 88, .7);
 }
-html[data-thema="naeturborg"] .cta::before {
+:where(html[data-thema="naeturborg"]) .cta::before {
   background:
     radial-gradient(42% 70% at 12% 8%,  rgba(240, 91, 166, .38), transparent 68%),
     radial-gradient(38% 64% at 90% 92%, rgba(240, 124, 182, .26), transparent 68%);
 }
-html[data-thema="naeturborg"] .badge {
+:where(html[data-thema="naeturborg"]) .badge {
   background: linear-gradient(180deg, rgba(253, 231, 242, .95), rgba(252, 214, 233, .9));
   box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 12px -6px rgba(240, 91, 166, .5);
 }
-html[data-thema="naeturborg"] .pillnav__logo img {
-  filter: drop-shadow(0 2px 4px rgba(71, 20, 88, .18));
+@media (max-width: 760px) {
+:root:where([data-thema="naeturborg"]) {
+  --gl-fill: linear-gradient(145deg, rgba(255,255,255,.74), rgba(255,255,255,.52));
+  --gl-blur: blur(12px) saturate(1.5);
 }
-html[data-thema="naeturborg"] .fljot {
+}
+:where(html[data-thema="naeturborg"]) .pillnav__logo::after {
+  background: linear-gradient(104deg,
+    transparent 36%,
+    rgba(255,255,255,.35) 44%,
+    rgba(255,255,255,.95) 50%,
+    rgba(255,255,255,.35) 56%,
+    transparent 64%);
+}
+:where(html[data-thema="naeturborg"]) .fljot {
+  background: var(--gl-fill);
+  border: 1px solid var(--gl-brun);
   box-shadow: var(--gl-inn), 0 20px 44px -20px rgba(71, 20, 88, .4);
 }
-html[data-thema="naeturborg"] .simi {
+:where(html[data-thema="naeturborg"]) .simi {
   background: linear-gradient(155deg, #621b7a, var(--ink) 58%);
   box-shadow:
     inset 0 1px 0 rgba(247, 157, 202, .3),
     0 30px 64px -26px rgba(71, 20, 88, .65);
 }
-html[data-thema="naeturborg"] .vinnulag__listi li.er-virkt {
+:where(html[data-thema="naeturborg"]) .vinnulag__listi li {
+  background: var(--gl-fill);
+  border: 1px solid var(--gl-brun);
+  box-shadow: var(--gl-inn), var(--gl-fall);
+}
+:where(html[data-thema="naeturborg"]) .vinnulag__listi li::before {
+  background: center / contain no-repeat;
+}
+:where(html[data-thema="naeturborg"]) .vinnulag__listi li:nth-child(1)::before {
+  background-image: url('../img/takn/elding.svg');
+}
+:where(html[data-thema="naeturborg"]) .vinnulag__listi li:nth-child(2)::before {
+  background-image: url('../img/takn/listi.svg');
+}
+:where(html[data-thema="naeturborg"]) .vinnulag__listi li:nth-child(3)::before {
+  background-image: url('../img/takn/flugvel.svg');
+}
+:where(html[data-thema="naeturborg"]) .vinnulag__listi li.er-virkt {
+  border-color: rgba(255,255,255,.95);
   box-shadow:
     var(--gl-inn),
     0 34px 64px -26px rgba(71, 20, 88, .45),
     0 0 0 1px rgba(240, 91, 166, .3),
     0 0 42px -10px rgba(240, 91, 166, .5);
 }
-html[data-thema="naeturborg"] .burger {
+:where(html[data-thema="naeturborg"]) .vinnulag__listi li.er-virkt::before {
+  background-color: transparent;
+}
+:where(html[data-thema="naeturborg"]) .work-tile {
+  border: 1px solid rgba(255,255,255,.55);
+  box-shadow: var(--gl-fall);
+}
+:where(html[data-thema="naeturborg"]) .work-tile:hover {
+  box-shadow: var(--gl-fall-h);
+}
+@media (max-width: 759px) {
+:where(html[data-thema="naeturborg"]) .vinnulag__listi li {
+  background: linear-gradient(145deg, rgba(255,255,255,.93), rgba(255,255,255,.82));
+}
+}
+:where(html[data-thema="naeturborg"]) .burger {
+  background: linear-gradient(150deg, rgba(255,255,255,.72), rgba(255,255,255,.4));
+  border: 1px solid rgba(255,255,255,.78);
   box-shadow: inset 0 1px 0 rgba(255,255,255,.92), 0 6px 16px -9px rgba(71, 20, 88, .45);
 }
-html[data-thema="naeturborg"] .burger[aria-expanded="true"] {
+:where(html[data-thema="naeturborg"]) .burger span:not(.sr-only) {
+  background: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .burger[aria-expanded="true"] {
   background: linear-gradient(180deg, #f574b5, var(--acc) 52%, #e44b98);
+  border-color: transparent;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 10px 24px -9px rgba(240, 91, 166, .75);
 }
-html[data-thema="naeturborg"] .mobilemenu a:hover,
-html[data-thema="naeturborg"] .mobilemenu a:focus-visible {
+:where(html[data-thema="naeturborg"]) .burger[aria-expanded="true"] span:not(.sr-only) {
+  background: #fff;
+}
+:where(html[data-thema="naeturborg"]) .mobilemenu a:hover,
+:where(html[data-thema="naeturborg"]) .mobilemenu a:focus-visible {
   background: linear-gradient(100deg, rgba(240, 91, 166, .16), rgba(240, 124, 182, .1));
 }
-html[data-thema="naeturborg"] .simi {
+:where(html[data-thema="naeturborg"]) .simi {
   box-shadow:
     inset 0 1px 0 rgba(247, 157, 202, .3),
     0 48px 84px -30px rgba(71, 20, 88, .6);
 }
+@media (min-width: 1040px) {
+:where(html[data-thema="naeturborg"]) .fljot--1 {
+  --fx: -26px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--5 {
+  --fx: -30px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--2 {
+  --fx: -28px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--3 {
+  --fx: 30px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--6 {
+  --fx: 26px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--4 {
+  --fx: 28px;
+}
+}
+@media (min-width: 820px) and (max-width: 1039px) {
+:where(html[data-thema="naeturborg"]) .fljot--1 {
+  --fx: -22px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--5 {
+  --fx: -22px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--2 {
+  --fx: -22px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--3 {
+  --fx: 22px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--6 {
+  --fx: 22px;
+}
+:where(html[data-thema="naeturborg"]) .fljot--4 {
+  --fx: 22px;
+}
+}
 @media (hover: none) and (pointer: coarse) {
-html[data-thema="naeturborg"] .btn--aglas {
+:where(html[data-thema="naeturborg"]) .card {
+  background: linear-gradient(145deg, rgba(255,255,255,.86), rgba(255,255,255,.68));
+}
+:where(html[data-thema="naeturborg"]) .btn--ghost {
+  background: rgba(255,255,255,.82);
+}
+:where(html[data-thema="naeturborg"]) .btn--aglas {
   background: rgba(71, 20, 88, .42);
 }
-html[data-thema="naeturborg"] .pillnav {
+:where(html[data-thema="naeturborg"]) .pillnav {
   background: linear-gradient(145deg, rgba(255,255,255,.94), rgba(255, 244, 250, .88));
 }
-html[data-thema="naeturborg"] .site-head::before {
+:where(html[data-thema="naeturborg"]) .site-head::before {
   background: rgba(254, 233, 243, .9);
 }
-html[data-thema="naeturborg"] .dropdown__menu,
-html[data-thema="naeturborg"] .mobilemenu {
+:where(html[data-thema="naeturborg"]) .dropdown__menu,
+:where(html[data-thema="naeturborg"]) .mobilemenu {
   background: linear-gradient(150deg, rgba(255,255,255,.97), rgba(255, 246, 251, .95));
 }
 }
 
 /* úr assets/css/hreyfing.css */
-html[data-thema="naeturborg"] .hero__ljos {
+:where(html[data-thema="naeturborg"]).hr-js .hr-opnun {
+  background: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .hr-opnun__lina {
+  background: rgba(255, 255, 255, .14);
+}
+:where(html[data-thema="naeturborg"]) .hr-opnun__lina span {
+  background: var(--acc-on-navy);
+}
+:where(html[data-thema="naeturborg"]).hr-js .hero {
+  --mx: 50%;
+  --my: 40%;
+}
+:where(html[data-thema="naeturborg"]) .hero__ljos {
   background: radial-gradient(520px circle at var(--mx) var(--my), rgba(247, 157, 202, .28), transparent 62%);
 }
-html[data-thema="naeturborg"].hr-js .leid::after {
+:where(html[data-thema="naeturborg"]) .hr-strik path {
+  fill: none;
+  stroke: var(--acc);
+}
+:where(html[data-thema="naeturborg"]).hr-js .leid::after {
   background: radial-gradient(360px circle at var(--gx, 50%) var(--gy, 0%), rgba(240, 91, 166, .16), transparent 60%);
 }
