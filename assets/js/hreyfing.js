@@ -39,7 +39,7 @@
   }
 
   /* ------------------------------------------------------------------
-     Hero: hlutar og strikið undir "skemmtilegri"
+     Hero: hlutar
      ------------------------------------------------------------------ */
   var hero = document.querySelector('.hero');
   var bak = hero && hero.querySelector('.hero__bak');
@@ -47,16 +47,7 @@
   var h1 = hero && hero.querySelector('h1');
   var heroKlofid = null;
 
-  function setjaStrik(teiknad) {
-    var em = h1 && h1.querySelector('em');
-    if (!em || em.querySelector('.hr-strik')) return null;
-    em.insertAdjacentHTML('beforeend',
-      '<svg class="hr-strik" viewBox="0 0 300 24" preserveAspectRatio="none" aria-hidden="true" focusable="false">' +
-      '<path pathLength="1" d="M4 16 C 58 6, 116 4, 168 11 S 256 21, 296 7"/></svg>');
-    var p = em.querySelector('.hr-strik path');
-    gsap.set(p, { strokeDasharray: 1, strokeDashoffset: teiknad ? 0 : 1 });
-    return p;
-  }
+
 
   /* ------------------------------------------------------------------
      Opnun og innkoma hero
@@ -90,8 +81,7 @@
      stokkið beint á endann. Varnetið í CSS felur hana líka eftir 4. */
   setTimeout(function () { if (inn.progress() < 1) inn.progress(1); }, thyrla ? 5000 : 3500);
 
-  /* Hero er kyrrt: engin innkoma, dýpt eða músarhreyfing */
-  if (hero && h1) setjaStrik(true);
+  /* Hero er kyrrt: engin innkoma, dýpt, músarhreyfing eða strik */
 
   /* ------------------------------------------------------------------
      Haus sem felur sig þegar skrunað er niður og kemur þegar farið er upp
@@ -149,7 +139,6 @@
     if (heroKlofid) { heroKlofid.revert(); heroKlofid = null; }
     setTimeout(function () {
       textaSamhengi = gsap.context(byggjaTexta);
-      setjaStrik(true);
       ScrollTrigger.refresh();
     }, 0);
   }, true);

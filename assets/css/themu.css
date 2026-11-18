@@ -166,7 +166,6 @@ html[data-thema="naeturborg"] .hero__yfir h1 em {
     0 0 4px #fff,
     0 0 10px var(--nb-bleikt), 0 0 22px var(--nb-bleikt), 0 0 44px var(--nb-bleikt), 0 0 80px rgba(255, 61, 154, .7);
 }
-html[data-thema="naeturborg"] .hr-strik { display: none; }
 html[data-thema="naeturborg"] .hero__yfir .lead { color: rgba(255, 244, 250, .9); }
 html[data-thema="naeturborg"] .hero__nofn { color: rgba(255, 244, 250, .7); }
 html[data-thema="naeturborg"] .hero__ljos {

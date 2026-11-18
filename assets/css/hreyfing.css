@@ -51,17 +51,6 @@ html.lenis, .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .hr-js .hero__yfir { z-index: 2; }
 .hr-lina { padding-bottom: .06em; }
 
-/* Strikið sem teiknar sig undir "skemmtilegri" */
-.hero__yfir h1 em { position: relative; white-space: nowrap; }
-.hr-strik {
-  position: absolute; left: -3%; bottom: -.2em;
-  width: 106%; height: .34em; overflow: visible; pointer-events: none;
-}
-.hr-strik path {
-  fill: none; stroke: var(--acc); stroke-width: 5; stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-}
-
 /* ------------------------------------------------------------------
    Þjónustuspjöldin
    ------------------------------------------------------------------ */

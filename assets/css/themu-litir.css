@@ -986,10 +986,6 @@ html:where([data-thema="naeturborg"]) {
 :where(html[data-thema="naeturborg"]) .hero__ljos {
   background: radial-gradient(520px circle at var(--mx) var(--my), rgba(247, 157, 202, .28), transparent 62%);
 }
-:where(html[data-thema="naeturborg"]) .hr-strik path {
-  fill: none;
-  stroke: var(--acc);
-}
 :where(html[data-thema="naeturborg"]).hr-js .leid::after {
   background: radial-gradient(360px circle at var(--gx, 50%) var(--gy, 0%), rgba(240, 91, 166, .16), transparent 60%);
 }
