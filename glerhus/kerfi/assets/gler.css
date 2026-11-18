@@ -336,3 +336,44 @@ html.gh-skipti-fram, html.gh-skipti-aftur, html.gh-skipti-keyrir, html.gh-skipti
 html.gh-skipti-fram body, html.gh-skipti-aftur body, html.gh-skipti-keyrir body, html.gh-skipti-ut body { overflow-x: hidden; }
 #main { will-change: auto; }
 html.gh-skipti-keyrir #main, html.gh-skipti-ut #main { will-change: transform; }
+
+/* --------------------------------------------------------------------------
+   Stjórnborðið sem má breyta: röð, breidd, fela og bæta við spjöldum
+   -------------------------------------------------------------------------- */
+.sb-haus { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.sb-breyta-hn { margin-bottom: 6px; }
+.gk-reitur { position: relative; display: flex; min-width: 0; }
+.gk-reitur > .gk { flex: 1; min-width: 0; }
+.gk-reitur--breitt { grid-column: 1 / -1; }
+.gk-grind.er-breytt .gk-reitur { cursor: grab; border-radius: 40px; outline: 2px dashed rgba(91, 147, 240, .55); outline-offset: 5px; transition: transform .25s ease, opacity .2s ease; }
+.gk-grind.er-breytt .gk-reitur.er-dregid { opacity: .45; }
+.gk-grind.er-breytt .gk-reitur.er-yfir { outline-color: #5b93f0; outline-style: solid; transform: scale(.985); }
+.gk-grind.er-breytt .gk { cursor: grab; }
+.gk-grind.er-breytt .gk__or { display: none; }
+.gk-tol { position: absolute; top: 16px; right: 16px; z-index: 3; display: flex; gap: 6px; }
+.gk-tol__hn {
+  min-width: 36px; height: 36px; padding: 0 10px; border-radius: 999px; cursor: pointer;
+  font: 600 15px/1 var(--f-body); color: #1c3050;
+  background: rgba(255, 255, 255, .95); border: 1px solid rgba(28, 48, 80, .14);
+  box-shadow: 0 6px 16px -8px rgba(28, 48, 80, .45);
+}
+.gk-tol__hn--texti { font-size: 13px; font-weight: 500; }
+.gk-tol__hn:hover:not([disabled]) { border-color: #5b93f0; color: #2c62c4; }
+.gk-tol__hn[disabled] { opacity: .35; cursor: default; }
+.sb-breyta { display: flex; flex-direction: column; gap: 14px; margin: 0 0 20px; padding: 20px 22px !important; }
+.sb-breyta__lina { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.sb-breyta__lina > strong { font: 600 15px/1.2 var(--f-head); min-width: 120px; }
+.sb-breyta__lina--hn { justify-content: flex-end; }
+.sb-breyta__spjold { display: flex; flex-wrap: wrap; gap: 8px; }
+.sb-baeta {
+  padding: 9px 14px; border-radius: 999px; cursor: pointer; font: 500 14px/1 var(--f-body); color: #2c62c4;
+  background: #e7f0fd; border: 1px dashed rgba(91, 147, 240, .6);
+}
+.sb-baeta:hover { background: #d8e7fc; }
+.sb-rofi { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; font-size: 14px; background: rgba(255, 255, 255, .7); border: 1px solid rgba(28, 48, 80, .1); cursor: pointer; }
+.sb-rofi input { width: 16px; height: 16px; margin: 0; accent-color: #5b93f0; }
+@media (max-width: 560px) {
+  .gk-tol { top: 12px; right: 12px; gap: 4px; }
+  .gk-tol__hn { min-width: 32px; height: 32px; padding: 0 8px; }
+  .gk-tol__hn--texti { display: none; }   /* í síma er bara ein röð, breiddin skiptir ekki máli */
+}

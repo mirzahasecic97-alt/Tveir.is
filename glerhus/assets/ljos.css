@@ -70,7 +70,12 @@ body::after { opacity: .9 !important; }
 /* ---------- Letur ---------- */
 h1, h2, h3, h4 { color: var(--ink) !important; }
 .midi, .gk__midi, .fh-midi { color: var(--soft) !important; }
-.hero2__ytri { -webkit-text-stroke-color: var(--ink) !important; }
+/* Seinni hluti fyrirsagnarinnar: heill blár litur, ekki útlína (útlínan var mjó og letrið sýndi línur inni í stöfunum) */
+.hero2__ytri {
+  -webkit-text-stroke: 0 !important; color: #4a83e2 !important;
+  background: linear-gradient(100deg, #3f78e0 0%, #5b93f0 55%, #7fb0f7 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
 .hero p.hero__hopar, .hero2__stjorn, .hero2__stjorn button { color: var(--soft) !important; }
 .hero2__stjorn button:hover { color: var(--ink) !important; background: rgba(91, 147, 240, .1) !important; }
 
@@ -208,3 +213,5 @@ dialog::backdrop { background: rgba(28, 48, 80, .25) !important; }
 .gh-teng em, .gh-bok__stada { color: #1e8a49 !important; }
 .gh-bok__merki { color: #fff !important; }
 .fh.fh--hnappur { color: #fff !important; background: linear-gradient(180deg, #6aa0f5, #5b93f0) !important; border-color: #5b93f0 !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 14px 30px -14px rgba(91, 147, 240, .8) !important; }
+.fotur a.fotur__eigandi { margin-left: 0; color: var(--ink); font-weight: 500; text-decoration: underline; text-decoration-color: rgba(91, 147, 240, .5); text-underline-offset: 3px; }
+.fotur a.fotur__eigandi:hover { color: #2c62c4; }

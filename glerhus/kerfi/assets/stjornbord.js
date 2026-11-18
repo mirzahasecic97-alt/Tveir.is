@@ -20,6 +20,23 @@ async function start() {
   let flipi = 'opid';
   let fyrirtaekiSia = '';
 
+  /* Útlitið á stjórnborðinu: hver notandi ræður röð spjaldanna, breidd,
+     hvaða spjöld sjást og hvaða kaflar. Geymt í vafranum. */
+  const LYKILL_UTLIT = 'glerhusid-stjornbord-' + (ek.id || 'gestur');
+  const SJALFGEFID_UTLIT = { rod: ['greidist', 'opnir', 'fast', 'orukkad'], breidd: {}, kaflar: { tilkynningar: true, listar: true } };
+  let utlit = (() => {
+    try {
+      const u = JSON.parse(localStorage.getItem(LYKILL_UTLIT));
+      if (u && Array.isArray(u.rod)) return { rod: u.rod, breidd: u.breidd || {}, kaflar: Object.assign({}, SJALFGEFID_UTLIT.kaflar, u.kaflar) };
+    } catch (villa) { /* ekkert vistað */ }
+    return JSON.parse(JSON.stringify(SJALFGEFID_UTLIT));
+  })();
+  function vistaUtlit() {
+    try { localStorage.setItem(LYKILL_UTLIT, JSON.stringify(utlit)); } catch (villa) { /* lokaður gluggi */ }
+  }
+  let breyta = false;
+  let dregid = null;
+
   /* Gögnin eru sótt einu sinni. Flipar og síur teikna bara upp á nýtt
      úr því sem er komið, það er það sem gerði flipana hæga. */
   let hlad = null;
@@ -124,49 +141,159 @@ async function start() {
       ]);
     }
 
+    /* ---------- öll spjöldin sem hægt er að hafa á stjórnborðinu ---------- */
+    const fjoldiTaska = (n) => n + (n === 1 ? ' taskur' : ' taskar');
+    const SPJOLD = {
+      greidist: { heiti: 'Greiðist í næsta mánuði', tekjur: true, smida: () => glerkort({
+        midi: 'Greiðist í ' + manHeiti(NAESTI), tala: bokTala(greidslaNu), slod: 'bokhald.html',
+        mynd: sulur(), framvinda: framvinda(
+          pAn(greidslaNu) ? Math.round(pAn(fastNu) / pAn(greidslaNu) * 100) : 0,
+          'Fast ' + (pAn(greidslaNu) ? Math.round(pAn(fastNu) / pAn(greidslaNu) * 100) : 0) + '%',
+          bokTala(aukaI(NU_MAN)) + ' í aukaverkum', 'graent')
+      }) },
+      opnir: { heiti: 'Opnir taskar', smida: () => glerkort({
+        midi: 'Opnir taskar', tala: fjoldiTaska(opin.length), slod: '#taskar',
+        stada: seinir.length ? [seinir.length + ' komnir fram yfir', 'raudt']
+               : nyir.length ? [nyir.length + (nyir.length === 1 ? ' nýr' : ' nýir'), 'gult']
+               : ['Allt á áætlun', 'graent'],
+        folk: folkid()
+      }) },
+      fast: { heiti: 'Fast á mánuði', tekjur: true, smida: () => glerkort({
+        midi: 'Fast á mánuði', tala: bokTala(fastNu), slod: 'bokhald.html',
+        framvinda: framvinda(
+          Math.min(100, Math.round((virkir / Math.max(virkir, fyrirtaeki.length || 1)) * 100)),
+          virkir === 1 ? '1 samningur' : virkir + ' samningar', fyrirtaeki.length + ' fyrirtæki', 'hlytt')
+      }) },
+      orukkad: { heiti: 'Lokið en órukkað', tekjur: true, smida: () => glerkort({
+        midi: 'Lokið en órukkað', tala: kronur(oinnheimtAlls) || '0 kr.', slod: 'bokhald.html',
+        vidvorun: !!oinnheimtAlls,
+        stada: oinnheimt.length
+          ? [oinnheimt.length + (oinnheimt.length === 1 ? ' verk bíður reiknings' : ' verk bíða reiknings'), 'raudt']
+          : ['Allt rukkað', 'graent'],
+        undir: bokhaldskerfi() ? 'Fer í ' + bokhaldskerfi() + ' með einum smelli' : 'Í vinnslu ' + (kronur(ivinnslu) || '0 kr.')
+      }) },
+      seint: { heiti: 'Á eftir áætlun', smida: () => glerkort({
+        midi: 'Komið fram yfir skiladag', tala: fjoldiTaska(seinir.length), slod: '#taskar',
+        vidvorun: !!seinir.length,
+        stada: seinir.length ? ['Þarf að klára', 'raudt'] : ['Ekkert á eftir', 'graent'],
+        undir: seinir.slice(0, 3).map((t) => t.titill).join(', ') || null
+      }) },
+      tillogur: { heiti: 'Tillögur', skilyrdi: ervalid('tillogur'), smida: () => glerkort({
+        midi: 'Tillögur sem bíða', tala: tillogur.length + (tillogur.length === 1 ? ' tillaga' : ' tillögur'), slod: 'tillogur.html',
+        stada: tillogur.length ? ['Bíða samþykkis', 'gult'] : ['Engin bíður', 'graent'],
+        undir: tillogur.slice(0, 3).map((v) => v.titill).join(', ') || null
+      }) },
+      fyrirspurnir: { heiti: 'Fyrirspurnir', smida: () => glerkort({
+        midi: 'Nýjar fyrirspurnir', tala: String(nyjarFyrirspurnir.length), slod: 'fyrirspurnir.html',
+        stada: nyjarFyrirspurnir.length ? ['Af vefnum', 'gult'] : ['Ekkert nýtt', 'graent'],
+        undir: nyjarFyrirspurnir.slice(0, 3).map((f) => f.fyrirtaeki_nafn || f.nafn || f.netfang).join(', ') || null
+      }) },
+      vinnsla: { heiti: 'Í vinnslu', tekjur: true, smida: () => glerkort({
+        midi: 'Verkefni í vinnslu', tala: kronur(ivinnslu) || '0 kr.', slod: 'bokhald.html',
+        undir: lifandi.length + (lifandi.length === 1 ? ' verkefni í gangi' : ' verkefni í gangi')
+      }) }
+    };
+    const leyft = (id) => SPJOLD[id] && (!SPJOLD[id].tekjur || ervalid('tekjur')) && SPJOLD[id].skilyrdi !== false;
+    const synd = utlit.rod.filter(leyft);
+    const falin = Object.keys(SPJOLD).filter((id) => leyft(id) && !synd.includes(id));
+
+    function faera(id, skref) {
+      const r = utlit.rod.filter(leyft), i = r.indexOf(id), j = i + skref;
+      if (i < 0 || j < 0 || j >= r.length) return;
+      [r[i], r[j]] = [r[j], r[i]];
+      utlit.rod = r; vistaUtlit(); teikna(true);
+    }
+
+    function spjaldaGrind() {
+      const reitir = synd.map((id, i) => {
+        const kort = SPJOLD[id].smida();
+        const breitt = utlit.breidd[id] === 2;
+        if (breyta) kort.addEventListener('click', (e) => e.preventDefault());
+        return el('div', {
+          class: 'gk-reitur' + (breitt ? ' gk-reitur--breitt' : ''), 'data-id': id,
+          draggable: breyta ? 'true' : null,
+          ondragstart: breyta ? (e) => { dregid = id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', id); e.currentTarget.classList.add('er-dregid'); } : null,
+          ondragend: breyta ? (e) => { e.currentTarget.classList.remove('er-dregid'); } : null,
+          ondragover: breyta ? (e) => { e.preventDefault(); e.currentTarget.classList.add('er-yfir'); } : null,
+          ondragleave: breyta ? (e) => { e.currentTarget.classList.remove('er-yfir'); } : null,
+          ondrop: breyta ? (e) => {
+            e.preventDefault();
+            const fra = dregid || e.dataTransfer.getData('text/plain');
+            if (!fra || fra === id) return;
+            const r = utlit.rod.filter((x) => leyft(x) && x !== fra);
+            r.splice(r.indexOf(id) + (synd.indexOf(fra) < synd.indexOf(id) ? 1 : 0), 0, fra);
+            utlit.rod = r; dregid = null; vistaUtlit(); teikna(true);
+          } : null
+        }, [
+          kort,
+          breyta ? el('div', { class: 'gk-tol' }, [
+            el('button', { type: 'button', class: 'gk-tol__hn', 'aria-label': 'Færa framar', title: 'Færa framar',
+                           disabled: i === 0 ? true : null, texti: '←', onclick: () => faera(id, -1) }),
+            el('button', { type: 'button', class: 'gk-tol__hn', 'aria-label': 'Færa aftar', title: 'Færa aftar',
+                           disabled: i === synd.length - 1 ? true : null, texti: '→', onclick: () => faera(id, 1) }),
+            el('button', { type: 'button', class: 'gk-tol__hn gk-tol__hn--texti', texti: breitt ? 'Mjórra' : 'Breiðara',
+                           onclick: () => { if (breitt) delete utlit.breidd[id]; else utlit.breidd[id] = 2; vistaUtlit(); teikna(true); } }),
+            el('button', { type: 'button', class: 'gk-tol__hn', 'aria-label': 'Fela spjaldið', title: 'Fela', texti: '×',
+                           onclick: () => { utlit.rod = utlit.rod.filter((x) => x !== id); vistaUtlit(); teikna(true); } })
+          ]) : null
+        ]);
+      });
+      return el('div', { class: 'gk-grind' + (synd.length === 1 ? ' gk-grind--eitt' : '') + (breyta ? ' er-breytt' : '') }, reitir);
+    }
+
+    function breytiBordi() {
+      if (!breyta) return null;
+      const rofi = (lykill, heiti) => el('label', { class: 'sb-rofi' }, [
+        el('input', { type: 'checkbox', checked: utlit.kaflar[lykill] !== false ? true : null,
+                      onchange: (e) => { utlit.kaflar[lykill] = e.target.checked; vistaUtlit(); teikna(true); } }),
+        document.createTextNode(heiti)
+      ]);
+      return el('div', { class: 'card sb-breyta' }, [
+        el('div', { class: 'sb-breyta__lina' }, [
+          el('strong', { texti: 'Bæta við spjaldi' }),
+          falin.length
+            ? el('div', { class: 'sb-breyta__spjold' }, falin.map((id) => el('button', {
+                type: 'button', class: 'sb-baeta', texti: '+ ' + SPJOLD[id].heiti,
+                onclick: () => { utlit.rod = utlit.rod.filter(leyft).concat(id); vistaUtlit(); teikna(true); } })))
+            : el('span', { class: 'skyring', texti: 'Öll spjöldin eru á borðinu.' })
+        ]),
+        el('div', { class: 'sb-breyta__lina' }, [
+          el('strong', { texti: 'Kaflar' }),
+          el('div', { class: 'sb-breyta__spjold' }, [
+            rofi('tilkynningar', 'Ábendingar (tillögur, fyrirspurnir)'),
+            rofi('listar', 'Taskar og verkefni')
+          ])
+        ]),
+        el('p', { class: 'skyring', texti: 'Dragðu spjöldin til eða notaðu örvarnar. Útlitið vistast strax.' }),
+        el('div', { class: 'sb-breyta__lina sb-breyta__lina--hn' }, [
+          el('button', { type: 'button', class: 'btn btn--ghost btn--sm', texti: 'Upphafsstilla',
+                         onclick: () => { utlit = JSON.parse(JSON.stringify(SJALFGEFID_UTLIT)); vistaUtlit(); teikna(true); } }),
+          el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Klárt',
+                         onclick: () => { breyta = false; teikna(true); } })
+        ])
+      ]);
+    }
+
     fylla(innihald, [
-      el('div', { class: 'page-head', style: 'padding-top:0' }, [
-        el('h1', { style: 'font-size:clamp(28px,24px+1.3vw,40px)', texti: 'Stjórnborð' }),
-        el('p', { class: 'lead',
-          texti: nyir.length
-            ? nyir.length + (nyir.length === 1 ? ' nýr taskur bíður okkar.' : ' nýir taskar bíða okkar.')
-            : 'Ekkert nýtt hefur komið inn.' })
+      el('div', { class: 'page-head sb-haus', style: 'padding-top:0' }, [
+        el('div', {}, [
+          el('h1', { style: 'font-size:clamp(28px,24px+1.3vw,40px)', texti: 'Stjórnborð' }),
+          el('p', { class: 'lead',
+            texti: nyir.length
+              ? nyir.length + (nyir.length === 1 ? ' nýr taskur bíður okkar.' : ' nýir taskar bíða okkar.')
+              : 'Ekkert nýtt hefur komið inn.' })
+        ]),
+        breyta ? null : el('button', { type: 'button', class: 'btn btn--ghost btn--sm sb-breyta-hn', texti: 'Breyta útliti',
+                                       onclick: () => { breyta = true; teikna(true); } })
       ]),
 
-      /* ---------- peningarnir og verkin: fjögur glerspjöld ---------- */
-      el('div', { class: 'gk-grind' + (ervalid('tekjur') ? '' : ' gk-grind--eitt') }, [
-        ervalid('tekjur') && glerkort({
-          midi: 'Greiðist í ' + manHeiti(NAESTI), tala: bokTala(greidslaNu), slod: 'bokhald.html',
-          mynd: sulur(), framvinda: framvinda(
-            pAn(greidslaNu) ? Math.round(pAn(fastNu) / pAn(greidslaNu) * 100) : 0,
-            'Fast ' + (pAn(greidslaNu) ? Math.round(pAn(fastNu) / pAn(greidslaNu) * 100) : 0) + '%',
-            bokTala(aukaI(NU_MAN)) + ' í aukaverkum', 'graent')
-        }),
-        glerkort({
-          midi: 'Opnir taskar', tala: opin.length + (opin.length === 1 ? ' taskur' : ' taskar'), slod: '#taskar',
-          stada: seinir.length ? [seinir.length + ' komnir fram yfir', 'raudt']
-                 : nyir.length ? [nyir.length + (nyir.length === 1 ? ' nýr' : ' nýir'), 'gult']
-                 : ['Allt á áætlun', 'graent'],
-          folk: folkid()
-        }),
-        ervalid('tekjur') && glerkort({
-          midi: 'Fast á mánuði', tala: bokTala(fastNu), slod: 'bokhald.html',
-          framvinda: framvinda(
-            Math.min(100, Math.round((virkir / Math.max(virkir, fyrirtaeki.length || 1)) * 100)),
-            virkir === 1 ? '1 samningur' : virkir + ' samningar', fyrirtaeki.length + ' fyrirtæki', 'hlytt')
-        }),
-        ervalid('tekjur') && glerkort({
-          midi: 'Lokið en órukkað', tala: kronur(oinnheimtAlls) || '0 kr.', slod: 'bokhald.html',
-          vidvorun: !!oinnheimtAlls,
-          stada: oinnheimt.length
-            ? [oinnheimt.length + (oinnheimt.length === 1 ? ' verk bíður reiknings' : ' verk bíða reiknings'), 'raudt']
-            : ['Allt rukkað', 'graent'],
-          undir: bokhaldskerfi() ? 'Fer í ' + bokhaldskerfi() + ' með einum smelli' : 'Í vinnslu ' + (kronur(ivinnslu) || '0 kr.')
-        })
-      ]),
+      breytiBordi(),
+
+      /* ---------- glerspjöldin, í þeirri röð og breidd sem notandinn valdi ---------- */
+      synd.length ? spjaldaGrind() : null,
 
       /* ---------- tillögur eiga sína eigin síðu, hér er bara ábending ---------- */
-      tillogur.length && ervalid('tillogur') ? el('a', { class: 'tilkynning', href: 'tillogur.html',
+      utlit.kaflar.tilkynningar !== false && tillogur.length && ervalid('tillogur') ? el('a', { class: 'tilkynning', href: 'tillogur.html',
                                   style: 'margin-top:20px' }, [
         el('div', { class: 'tilkynning__inn' }, [
           el('strong', { texti: tillogur.length === 1
@@ -178,7 +305,7 @@ async function start() {
       ]) : null,
 
       /* ---------- nýjar fyrirspurnir af vefnum ---------- */
-      nyjarFyrirspurnir.length ? el('a', { class: 'tilkynning', href: 'fyrirspurnir.html',
+      utlit.kaflar.tilkynningar !== false && nyjarFyrirspurnir.length ? el('a', { class: 'tilkynning', href: 'fyrirspurnir.html',
                                            style: 'margin-top:20px' }, [
         el('div', { class: 'tilkynning__inn' }, [
           el('strong', { texti: nyjarFyrirspurnir.length === 1
@@ -191,7 +318,7 @@ async function start() {
       ]) : null,
 
       /* ---------- okkar eigin listi á sinni eigin síðu ---------- */
-      okkarAMig.length ? el('a', { class: 'tilkynning', href: 'okkar.html',
+      utlit.kaflar.tilkynningar !== false && okkarAMig.length ? el('a', { class: 'tilkynning', href: 'okkar.html',
                                    style: 'margin-top:14px' }, [
         el('div', { class: 'tilkynning__inn' }, [
           el('strong', { texti: okkarAMig.length === 1
@@ -202,7 +329,7 @@ async function start() {
         el('span', { class: 'tilkynning__or', 'aria-hidden': 'true', texti: '→' })
       ]) : null,
 
-      el('div', { class: 'pgrid', style: 'margin-top:clamp(18px,2.2vw,26px)' }, [
+      utlit.kaflar.listar !== false && el('div', { class: 'pgrid', style: 'margin-top:clamp(18px,2.2vw,26px)' }, [
 
         /* ---------- samantekt, efst í síma ---------- */
         el('div', { class: 'psum' }, [seintKort(seinir)]),
