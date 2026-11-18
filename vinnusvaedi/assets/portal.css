@@ -1310,3 +1310,219 @@ button.uv__titill:hover { color: var(--acc); }
   .uv__nytt { flex-wrap: wrap; }
   .uv__nytt input[type="text"] { flex-basis: 100%; }
 }
+
+/* --------------------------------------------------------------------------
+   28. Tölfræði: fylgjendur, áhorf, færslur og mánaðarskýrslur
+   Allt hér byrjar á tf- svo það rekist ekki á annað. Gröfin eru SVG úr
+   tolfraedi.js og teiknast í réttri breidd, svo letrið skalast ekki niður.
+   -------------------------------------------------------------------------- */
+.tf-haus {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap;
+}
+.tf-haus > div:first-child { min-width: 0; }
+.tf-velja select { max-width: 100%; }
+
+.tf-siur { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 16px; }
+.tf-flipar { margin: 0; }
+.tf-punktur {
+  display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex: none;
+}
+.tf-punktur--stor { width: 12px; height: 12px; margin-top: 5px; }
+
+/* KPI reitirnir nota .tekjur grindina */
+.tf-tolur > div { display: flex; flex-direction: column; min-width: 0; }
+.tf-tolur dd.tf-engin {
+  font: 400 15px/1.3 var(--f-body); color: var(--soft); margin-top: 10px;
+}
+.tf-breyting {
+  margin: 8px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--soft);
+}
+.tf-breyting--upp { color: #1e6b34; }
+.tf-breyting--nidur { color: #a3312a; }
+
+.tf-blokk { margin-top: clamp(16px, 2vw, 22px); }
+.tf-hnappar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* Gröfin */
+.tf-rit { min-width: 0; }
+.tf-rit__skyring {
+  display: flex; gap: 14px; flex-wrap: wrap; margin: -4px 0 10px;
+  font-size: 13px; color: var(--soft);
+}
+.tf-rit__skyring span, .tf-rit__abending span { display: inline-flex; align-items: center; gap: 6px; }
+.tf-rit__skyring i, .tf-rit__abending i {
+  display: inline-block; width: 10px; height: 10px; border-radius: 3px; flex: none;
+}
+.tf-rit__flotur { position: relative; }
+.tf-rit__svg { width: 100%; min-height: 210px; }
+.tf-rit__teikning { display: block; touch-action: pan-y; overflow: visible; }
+.tf-rit__texti { font: 400 11.5px/1 var(--f-body); fill: var(--soft); }
+.tf-rit__lina { stroke: rgba(28, 48, 80, .08); stroke-width: 1; }
+.tf-rit__grunnur { stroke: rgba(28, 48, 80, .2); stroke-width: 1; }
+.tf-rit__leidari { stroke: rgba(28, 48, 80, .35); stroke-width: 1; stroke-dasharray: 3 3; }
+.tf-rit__yfir { cursor: crosshair; }
+.tf-rit__abending {
+  position: absolute; top: 0; z-index: 2; pointer-events: none;
+  display: flex; flex-direction: column; gap: 5px;
+  min-width: 140px; max-width: 240px; padding: 10px 12px;
+  background: var(--ink); color: #fff; border-radius: var(--r-input);
+  box-shadow: var(--sh-drop); font-size: 12.5px; line-height: 1.3;
+}
+.tf-rit__abending[hidden] { display: none; }
+.tf-rit__abending strong { font-weight: 500; color: var(--acc-on-navy); }
+.tf-rit__samtals { font-weight: 500; }
+
+/* Bestu færslurnar */
+.tf-faerslur { list-style: none; margin: 0; padding: 0; }
+.tf-faersla {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 0; border-top: 1px solid var(--line);
+}
+.tf-faerslur li:first-child { border-top: 0; padding-top: 4px; }
+.tf-faersla__mynd {
+  flex: none; width: 60px; height: 60px; border-radius: 12px;
+  object-fit: cover; background: var(--accs);
+}
+.tf-faersla__mynd--tom {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font: 600 20px/1 var(--f-head); opacity: .9;
+}
+.tf-faersla__mid { flex: 1 1 auto; min-width: 0; }
+.tf-faersla__haus {
+  display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; color: var(--soft);
+}
+.tf-faersla__midill { color: var(--ink); font-weight: 500; }
+.tf-faersla__texti {
+  margin: 5px 0 0; font-size: 14.5px; line-height: 1.45; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; overflow-wrap: anywhere;
+}
+.tf-faersla__tolur {
+  display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 7px;
+  font-size: 13px; color: var(--soft);
+}
+.tf-faersla__tolur b { font-weight: 500; color: var(--ink); }
+.tf-faersla__opna {
+  flex: none; align-self: center;
+  font: 500 13px/1 var(--f-body); color: var(--acc); text-decoration: none;
+  background: var(--accs); border-radius: var(--r-pill);
+  padding: 10px 14px; min-height: 40px; display: inline-flex; align-items: center;
+}
+.tf-faersla__opna:hover { background: var(--acc); color: #fff; }
+
+/* Mánaðarskýrslur */
+.tf-skyrslur { display: flex; flex-direction: column; gap: 10px; }
+.tf-skyrsla {
+  border: 1px solid var(--line); border-radius: var(--r-card);
+  background: rgba(255, 255, 255, .55);
+}
+.tf-skyrsla > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 18px; min-height: 52px; cursor: pointer; list-style: none;
+}
+.tf-skyrsla > summary::-webkit-details-marker { display: none; }
+.tf-skyrsla > summary::after {
+  content: ''; flex: none; width: 8px; height: 8px; margin-left: 2px;
+  border: solid var(--soft); border-width: 0 1.6px 1.6px 0;
+  transform: rotate(45deg) translateY(-2px); transition: transform .15s ease;
+}
+.tf-skyrsla[open] > summary::after { transform: rotate(-135deg) translateY(-2px); }
+.tf-skyrsla__man {
+  flex: 1 1 auto; min-width: 0; font: 500 15.5px/1.3 var(--f-body); color: var(--ink);
+}
+.tf-skyrsla__man::first-letter { text-transform: uppercase; }
+.tf-skyrsla__inn { padding: 0 18px 18px; }
+
+.tf-ritill { margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
+.tf-ritill textarea { min-height: 130px; }
+.tf-ritill__undir {
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: -2px;
+}
+.tf-ritill__telja { flex: none; }
+
+.tf-netfong {
+  list-style: none; margin: 12px 0 0; padding: 0;
+  font-size: 14.5px; color: var(--ink);
+}
+.tf-netfong li { padding: 7px 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.tf-netfong li:first-child { border-top: 0; }
+
+/* Forskoðun: eins og pósturinn sem fer út */
+.tf-postur {
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r-card);
+  padding: clamp(16px, 2vw, 22px); display: flex; flex-direction: column; gap: 14px;
+}
+.tf-postur__haus { display: flex; flex-direction: column; gap: 3px; }
+.tf-postur__haus strong {
+  font: 600 clamp(19px, 17px + .6vw, 23px)/1.2 var(--f-head); color: var(--ink);
+}
+.tf-postur__haus strong::first-letter { text-transform: uppercase; }
+.tf-postur__haus > span:last-child { font-size: 14px; color: var(--soft); }
+.tf-postur__merki {
+  font: 500 11.5px/1.2 var(--f-body); letter-spacing: .06em; text-transform: uppercase;
+  color: var(--acc);
+}
+.tf-postur__tolur {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px;
+}
+.tf-postur__reitur {
+  display: flex; flex-direction: column; gap: 5px; min-width: 0;
+  background: var(--bg); border-radius: var(--r-input); padding: 12px 14px;
+}
+.tf-postur__reitur .tf-postur__merki { color: var(--soft); }
+.tf-postur__reitur strong { font: 600 19px/1.15 var(--f-head); color: var(--ink); }
+.tf-postur__reitur .tf-breyting { margin: 0; }
+.tf-postur__texti {
+  margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink);
+  white-space: pre-line; overflow-wrap: anywhere;
+}
+.tf-postur__texti[hidden] { display: none; }
+.tf-postur__tafla { font-size: 13.5px; }
+.tf-postur__tafla td, .tf-postur__tafla th { white-space: nowrap; }
+.tf-postur__bestu { display: flex; flex-direction: column; gap: 8px; }
+.tf-postur__bestu ol { margin: 0; padding-left: 20px; font-size: 14px; color: var(--ink); }
+.tf-postur__bestu li { padding: 4px 0; }
+.tf-postur__bestu li > * + * { margin-left: 8px; }
+.tf-postur__bestu a { color: var(--acc); }
+.tf-postur__ftexti { color: var(--soft); overflow-wrap: anywhere; }
+
+/* Miðlar og form */
+.tf-ovirkt .task__titill { color: var(--soft); }
+.tf-ovirkt .tf-punktur { opacity: .4; }
+.tf-rofi { border: 0; cursor: pointer; font-family: var(--f-body); }
+.tf-rofi:hover { filter: brightness(.96); }
+.tf-rofi:disabled { opacity: .6; cursor: wait; }
+.task__undir a { color: var(--acc); }
+
+.tf-form { display: flex; flex-direction: column; gap: 16px; }
+.tf-talnareitir { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (min-width: 620px) { .tf-talnareitir { grid-template-columns: repeat(3, 1fr); } }
+.tf-talnareitir .field > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.field textarea.tf-csv {
+  font: 400 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; min-height: 130px;
+}
+.tf-csv__forsyn:empty { display: none; }
+.tf-csv__tafla { font-size: 13px; }
+.tf-csv__tafla td, .tf-csv__tafla th { white-space: nowrap; }
+
+/* Viðskiptavinur fær litla valmynd: Verkefni og Tölfræði. Nafn
+   fyrirtækisins stendur áfram við merkið. */
+.phead__inn:has(.phead__nav--kunni) .phead__heiti { flex: 0 1 auto; max-width: 34ch; }
+@media (max-width: 1100px) {
+  .phead__inn:has(.phead__nav--kunni) { flex-wrap: wrap; }
+  .phead__inn:has(.phead__nav--kunni) .phead__heiti { flex: 1 1 auto; max-width: none; }
+}
+
+@media (max-width: 560px) {
+  .tf-skyrsla > summary { padding: 13px 14px; }
+  .tf-skyrsla__inn { padding: 0 12px 14px; }
+  .tf-postur { padding: 14px; }
+  .tf-faersla { gap: 12px; }
+  .tf-faersla__mynd { width: 52px; height: 52px; }
+  /* Opna hnappurinn fer undir textann svo hann þrengi ekki að honum */
+  .tf-faersla { flex-wrap: wrap; }
+  .tf-faersla__mid { flex-basis: calc(100% - 64px); }
+  .tf-faersla__opna { margin-left: 64px; align-self: flex-start; }
+}

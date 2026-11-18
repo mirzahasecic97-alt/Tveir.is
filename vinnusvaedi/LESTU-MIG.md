@@ -704,3 +704,232 @@ Uppsetning, einu sinni:
 
 Gleymist skref 2 sendir vefappið ekkert. 5 mínútna vaktin sendir þá póstinn með
 nýja kóðanum og tveir@tveir.is fær einn póst um að birta nýja útgáfu.
+
+---
+
+## Tölfræði
+
+Síðan **Tölfræði** (`tolfraedi.html`) sýnir fylgjendur, áhorf, náð, samskipti og
+færslur hvers viðskiptavinar dag frá degi. Þið sjáið öll fyrirtæki,
+viðskiptavinur sér bara sitt. Fyrsta hvers mánaðar verða til drög að
+mánaðarskýrslu sem þú lest yfir og samþykkir með einum smelli, og þá fær
+viðskiptavinurinn fallegan póst.
+
+### Hvaðan tölurnar koma
+
+| Miðill | Hvernig |
+| --- | --- |
+| Instagram | Sjálfvirkt á hverjum morgni um kl. 6, í gegnum Meta |
+| Facebook síða | Sjálfvirkt á hverjum morgni um kl. 6, í gegnum Meta |
+| TikTok | Slegið inn eða CSV skrá á síðunni, þar til TikTok samþykkir API aðgang |
+
+Skriftan `tolfraedi.gs` sækir síðustu þrjá daga í hvert sinn, því Meta lagar
+tölurnar sínar í allt að tvo sólarhringa eftir á. Tölur sem þið slóguð inn
+sjálf ganga alltaf fyrir, sjálfvirka söfnunin skrifar aldrei yfir þær.
+
+Hvað hver tala þýðir:
+
+| Á síðunni | Instagram | Facebook |
+| --- | --- | --- |
+| Áhorf | `views` | `page_media_view` |
+| Náð | `reach` | `page_total_media_view_unique` |
+| Samskipti | `total_interactions` | `page_post_engagements` |
+| Heimsóknir | `profile_views` ef Meta skilar því enn | `page_views_total` |
+| Fylgjendur | fjöldinn um morguninn, skráður á gærdaginn | sama |
+
+Gott að vita:
+
+- Meta hætti með `impressions` árið 2025. `views` kom í staðinn, svo tölur frá
+  því fyrir 2025 eru ekki sambærilegar.
+- Náð á dag lögð saman yfir mánuð er ekki fjöldi ólíkra manna, því sami maður
+  getur sést marga daga. Hún sýnir samt vel hvort gengur upp eða niður.
+- Dagur Facebook endar á miðnætti í Kaliforníu, um kl. 8 að morgni hjá okkur.
+- Sögur (stories) á Instagram eru ekki sóttar, Meta geymir tölur þeirra bara í
+  sólarhring.
+- Smámyndir af færslum koma frá Meta og hætta að virka eftir nokkra daga eða
+  vikur. Tölurnar haldast.
+
+### Að setja það upp (einu sinni)
+
+**1. Gagnagrunnurinn.** Í Supabase verkefninu **Tveir.is CRM**: **SQL Editor
+-> New query**, límdu inn allt úr `migrations/2026-11-18-tolfraedi.sql` og ýttu
+á **Run**. Það á að enda á `Success. No rows returned`. Það má keyra aftur án
+skaða. Sama efni er kafli 21 í `gagnagrunnur.sql`.
+
+**2. Vefurinn.** Nýju og breyttu skrárnar fara á Vercel eins og venjulega.
+
+**3. Viðskiptavinirnir gefa Tveir aðgang.** Hver viðskiptavinur þarf að hafa
+Facebook síðu, og Instagram reikninginn sem **fagreikning** (Business eða
+Creator) tengdan þeirri síðu. Svo:
+
+1. Farðu á **business.facebook.com**, skráð inn sem þú, og veldu **Tveir** efst
+   til vinstri.
+2. **Settings** (tannhjólið) -> **Accounts** -> **Pages** -> **Add** ->
+   **Request access to a Page**. Skrifaðu nafn síðunnar og veldu aðgang að
+   **Content** og **Insights**.
+3. **Accounts** -> **Instagram accounts** -> **Add** -> **Request access**, og
+   sama fyrir Instagram reikninginn.
+4. Viðskiptavinurinn fær tilkynningu í sínu Meta Business og samþykkir. Þar til
+   það er gert kemur engin tala.
+
+**4. Meta appið.** Þetta er bara gert einu sinni fyrir alla viðskiptavini.
+
+1. Farðu á **developers.facebook.com**, skráð inn sem þú. Ef þú ert ekki með
+   þróunaraðgang: **Get Started** og fylgdu skrefunum (staðfesta símanúmer).
+2. **My Apps** -> **Create App**.
+3. Nafn: `Tveir tölfræði`. Netfang: `tveir@tveir.is`. **Next**.
+4. Við spurninguna hvað appið á að gera: veldu **Other**, svo **Business** sem
+   tegund. **Next**.
+5. **Business portfolio**: veldu **Tveir**. **Create app** og staðfestu með
+   lykilorðinu þínu.
+6. Á yfirlitssíðu appsins: **Add product** við **Instagram** og veldu **API
+   setup with Facebook login**. Gerðu það sama við **Facebook Login for
+   Business**.
+7. **App settings** -> **Basic**: settu inn slóðina á persónuverndarstefnuna á
+   tveir.is í **Privacy policy URL**, veldu flokk og ýttu á **Save changes**.
+8. Efst á síðunni: skiptu **App Mode** úr **Development** í **Live**.
+9. Valkvætt en betra: í **App settings** -> **Basic** ýttu á **Show** við **App
+   secret** og afritaðu hann. Hann fer í skref 6 hér að neðan.
+
+**5. Kerfisnotandinn og lykillinn.** Kerfisnotandi (System User) er
+"starfsmaður" sem er ekki manneskja. Lykillinn hans rennur ekki út þótt þú
+skiptir um lykilorð.
+
+1. Aftur á **business.facebook.com** -> **Settings** -> **Users** -> **System
+   users** -> **Add**.
+2. Nafn: `Tveir tölfræði`. Hlutverk: **Employee**. **Create system user**.
+3. Veldu hann -> **Assign assets**.
+   - **Apps**: hakaðu í `Tveir tölfræði` og veldu **Manage app**.
+   - **Pages**: hakaðu í síður viðskiptavinanna, og veldu **Content** og
+     **Insights** (eða **Full control** ef færslurnar koma ekki).
+   - **Instagram accounts**: hakaðu í reikningana, sama aðgang.
+   - **Save changes**.
+   Gerðu þetta aftur fyrir hvern nýjan viðskiptavin. Að síða sé í Tveir dugar
+   ekki ein og sér, kerfisnotandinn þarf að fá hana líka.
+4. **Generate new token**. App: `Tveir tölfræði`. **Token expiration: Never**.
+5. Hakaðu í þessar heimildir og engar aðrar:
+   `pages_show_list`, `pages_read_engagement`, `read_insights`,
+   `instagram_basic`, `instagram_manage_insights`, `business_management`.
+6. **Generate token** og afritaðu lykilinn strax. Meta sýnir hann bara einu
+   sinni. Ekki senda hann í pósti eða á Slack, límdu hann beint í næsta skref.
+
+**6. Lykillinn inn í Google skriftuna.** Á script.google.com, skráð inn sem
+tveir@tveir.is, opnaðu verkefnið með `verk-postur.gs`:
+
+1. **Project Settings** (tannhjólið til vinstri) -> **Script Properties** ->
+   **Add script property**.
+2. Property: `META_TOKEN`, Value: lykillinn úr skrefi 5. **Save script
+   properties**.
+3. Valkvætt: önnur lína, `META_APP_SECRET` = app secret úr skrefi 4.9. Þá
+   fylgir hverju kalli undirskrift og stolinn lykill einn og sér gagnast minna.
+
+Lyklar fara aldrei í kóðann sjálfan og aldrei á vefinn.
+
+**7. Nýja skráin í skriftuna.**
+
+1. Í **Editor** (`< >` til vinstri): ýttu á **+** við **Files** -> **Script**.
+   Nefndu hana `tolfraedi` (Google bætir `.gs` við).
+2. Afritaðu **allt** úr `tolfraedi.gs` hér og límdu inn í nýju skrána.
+3. Opnaðu `verk-postur.gs` í sama verkefni, afritaðu **allt** úr nýju
+   `verk-postur.gs` og límdu yfir. Settu aftur inn `ANON` og `LYKILL` eins og
+   áður (sjá kaflann Undirverk).
+4. **Save** (diskurinn).
+5. Efst: veldu fallið `setjaTolfraedi` í fellilistanum og ýttu á **Run**. Google
+   biður um leyfi: **Review permissions** -> tveir@tveir.is -> **Allow**. Þetta
+   setur upp söfnunina kl. 6 á hverjum morgni og keyrir hana einu sinni strax.
+   5 mínútna vaktin helst óbreytt.
+6. **Deploy** -> **Manage deployments** -> blýanturinn -> **Version: New
+   version** -> **Deploy**. Útgáfan hækkaði, og annars sendir vefappið ekkert
+   (sjá Póstur strax).
+7. **Executions** til vinstri: línurnar sem byrja á `Tölfræði:` segja hvað
+   klikkaði. Engin slík lína þýðir að allt fór inn.
+
+`setja()` eyðir núna bara gömlum 5 mínútna vöktum, ekki tölfræðivaktinni. Ef
+einhver keyrir gamla útgáfu af `setja()` hverfur tölfræðivaktin: keyrðu þá
+`setjaTolfraedi` aftur.
+
+**8. Miðlarnir inn á vinnusvæðið.** Á **Tölfræði**: veldu fyrirtækið ->
+**Nýr miðill** (fyrsti miðillinn fer inn beint á síðunni, undir **Tengdu
+fyrsta miðilinn**) -> **Tengja miðil**. **Auðkenni hjá miðlinum** er númerið
+hér að neðan, ekki notandanafnið. Án þess safnast ekkert sjálfvirkt, en þið getið slegið tölur inn.
+
+*Facebook síðu ID:* á **business.facebook.com** -> **Settings** -> **Accounts**
+-> **Pages** -> smelltu á síðuna. Númerið stendur undir nafninu (til dæmis
+`104512345678901`). Líka á síðunni sjálfri: **About** -> **Page transparency**
+-> **Page ID**.
+
+*Instagram ID:* það er annað en notandanafnið og byrjar oftast á `17841`.
+
+1. Farðu á **developers.facebook.com/tools/explorer**.
+2. Til hægri: **Meta App** = `Tveir tölfræði`. Límdu lykil kerfisnotandans í
+   **Access Token** reitinn.
+3. Skrifaðu í línuna efst:
+   `me/accounts?fields=name,id,instagram_business_account{id,username}`
+   og ýttu á **Submit**.
+4. Hver síða birtist með `id` (Facebook síðu ID) og undir
+   `instagram_business_account` er `id` (Instagram ID) og `username`.
+5. Lokaðu flipanum á eftir, lykillinn á ekki að liggja þar.
+
+Sjáist síða ekki í listanum hefur kerfisnotandinn ekki fengið hana (skref 5.3).
+Vanti `instagram_business_account` er Instagram reikningurinn ekki fagreikningur
+eða ekki tengdur síðunni.
+
+### Þarf Meta App Review?
+
+Líklega ekki til að byrja með. Meta segir að **Standard Access** dugi fyrir
+reikninga sem fyrirtækið þitt á eða stýrir, og síðurnar eru í Tveir Business
+með samþykki viðskiptavinanna.
+
+Ef Executions sýnir villu með **kóða 10** eða **kóða 200** (heimild vantar)
+þótt kerfisnotandinn hafi síðuna, þarf **Advanced Access**:
+
+1. **Business Verification** fyrst: **business.facebook.com** -> **Settings**
+   -> **Security Centre** -> **Start verification**. Þarf kennitölu Tveir ehf.,
+   heimilisfang og síma eða lén. Tekur nokkra daga.
+2. Á developers.facebook.com -> appið -> **App Review** -> **Permissions and
+   features**: biðja um Advanced Access fyrir `instagram_basic`,
+   `instagram_manage_insights`, `pages_read_engagement` og `read_insights`.
+   Meta vill stutt myndband sem sýnir hvernig tölurnar eru notaðar (upptaka af
+   Tölfræði síðunni dugar) og lýsingu. Það getur tekið frá nokkrum dögum upp í
+   nokkrar vikur.
+
+TikTok þarf sitt eigið samþykki hjá TikTok for Developers. Þangað til eru
+tölurnar slegnar inn eða fluttar inn úr CSV á síðunni.
+
+### Mánaðarskýrslurnar
+
+1. Fyrsta hvers mánaðar um kl. 6 verða til drög fyrir hvert fyrirtæki með
+   miðla, og tveir@tveir.is fær póstinn **Mánaðarskýrslur <mánuður> bíða
+   yfirferðar**.
+2. Opnaðu **Tölfræði**, veldu fyrirtækið og lestu drögin. Lagaðu samantektina
+   ef þarf og ýttu á **Vista**.
+3. **Samþykkja og senda**. Pósturinn fer innan nokkurra sekúndna (í síðasta
+   lagi eftir 5 mínútur) á alla notendur fyrirtækisins á vinnusvæðinu.
+4. Ekkert fer á viðskiptavininn án þess að þú samþykkir.
+
+Samantektin kemur úr föstu sniðmáti sem segir bara það sem tölurnar segja, til
+dæmis "Í nóvember voru áhorf samtals 48.210. Það er 12% meira en í október."
+Hún giskar aldrei á ástæður.
+
+**Valkvætt: Claude skrifar samantektina.** Settu Script Property
+`ANTHROPIC_API_KEY` (lykill af console.anthropic.com). Claude fær bara tölurnar,
+hvorki nafn fyrirtækisins né texta færslna. Nefni Claude tölu sem það fékk ekki,
+eða klikki eitthvað, er sniðmátið notað í staðinn. Það kostar um 2 krónur á
+fyrirtæki á mánuði (Claude Opus 5.5). Án lykilsins kostar ekkert.
+
+Klikki skýrslugerðin fyrsta daginn reynir skriftan aftur annan og þriðja
+daginn. Hún býr aldrei til drög tvisvar fyrir sama mánuð (Script Property
+`skyrslur_manudur` heldur utan um það).
+
+### Hvað þetta kostar
+
+| | |
+| --- | --- |
+| Meta Graph API | 0 kr. |
+| Google skriftan | 0 kr., langt undir mörkum Google |
+| Claude samantekt | valkvætt, um 2 kr. á fyrirtæki á mánuði |
+
+Meta breytir útgáfum og mælingum reglulega. Skriftan notar `v26.0`
+(`META_GRAPH` efst í `tolfraedi.gs`). Þegar Meta sendir póst um að útgáfa eða
+mæling hætti: hækka útgáfuna þar, vista og birta nýja útgáfu. Hætti Meta með
+eina mælingu heldur söfnunin áfram með hinar, og Executions segir hver féll.

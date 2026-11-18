@@ -17,6 +17,9 @@
    Póstur um lokið fer strax: gagnagrunnurinn kallar á doPost um leið og
    hakað er. 5 mínútna vaktin sendir það sem kallið náði ekki.
 
+   Tölfræði og mánaðarskýrslur eru í tolfraedi.gs, annarri skrá í sama
+   verkefni. tilkynna_ sendir líka samþykktar skýrslur.
+
    LYKILL hér að neðan er skilinn eftir auður í þessu afriti. Raunverulegi
    lykillinn liggur bara í skriftunni í Google og í töflunni stillingar_innri.
    ========================================================================== */
@@ -31,11 +34,15 @@ const NETFANG = 'verk@tveir.is';
    birt síðast, en 5 mínútna vaktin keyrir alltaf nýjasta kóðann. Passi
    útgáfurnar ekki saman sendir vefappið ekkert, vaktin tekur við og
    tveir@tveir.is fær einn póst um að birta nýja útgáfu. */
-const UTGAFA = '2026-11-17-1';
+const UTGAFA = '2026-11-18-1';
 
-/* Keyrt einu sinni með höndunum: setur upp 5 mínútna vaktina */
+/* Keyrt einu sinni með höndunum: setur upp 5 mínútna vaktina. Eyðir bara
+   gömlum lesaVerk vöktum, svo daglega tölfræðisöfnunin (setjaTolfraedi í
+   tolfraedi.gs) lifir af. */
 function setja() {
-  ScriptApp.getProjectTriggers().forEach((t) => ScriptApp.deleteTrigger(t));
+  ScriptApp.getProjectTriggers()
+    .filter((t) => t.getHandlerFunction() === 'lesaVerk')
+    .forEach((t) => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('lesaVerk').timeBased().everyMinutes(5).create();
   lesaVerk();
 }
@@ -126,6 +133,8 @@ function tilkynna_() {
   try {
     tilkynnaLokid_();
     tilkynnaUndirverk_();
+    /* Samþykktar mánaðarskýrslur (tolfraedi.gs). Skráin er kannski ekki komin inn. */
+    if (typeof sendaSkyrslur_ === 'function') sendaSkyrslur_();
   } finally {
     las.releaseLock();
   }

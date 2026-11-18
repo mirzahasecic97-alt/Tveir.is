@@ -247,15 +247,28 @@ export function teiknaHaus(ek, heiti) {
               ]),
               el('a', { href: 'bokhald.html', texti: 'Bókhald',
                         'aria-current': nuna === 'bokhald.html' ? 'page' : null }),
+              el('a', { href: 'tolfraedi.html', texti: 'Tölfræði',
+                        'aria-current': nuna === 'tolfraedi.html' ? 'page' : null }),
               /* Harvey spjallið er ekki komið í loftið, fallið undir api/ þarf
                  API lykil. Kveikt í stillingar.js þegar það er tilbúið. */
               stillingar.harvey ? el('a', { href: 'harvey.html', texti: 'Harvey',
                         'aria-current': nuna === 'harvey.html' ? 'page' : null }) : null
             ])
           : el('div', { class: 'phead__heiti' }, [
-              document.createTextNode(heiti ? heiti + ' ' : ''),
+              /* Með valmyndinni segir hún hvar maður er, svo nafn
+                 fyrirtækisins dugar eitt og sér */
+              ek.fyrirtaeki_id && ek.fyrirtaeki ? null : document.createTextNode(heiti ? heiti + ' ' : ''),
               ek.fyrirtaeki ? el('strong', { texti: ek.fyrirtaeki.nafn }) : null
             ]),
+        /* Viðskiptavinur: verkefnin og tölfræðin */
+        !admin && ek.fyrirtaeki_id
+          ? el('nav', { class: 'phead__nav phead__nav--kunni', 'aria-label': 'Vinnusvæði' }, [
+              el('a', { href: 'yfirlit.html', texti: 'Verkefni',
+                        'aria-current': nuna === 'yfirlit.html' || nuna === 'verk.html' ? 'page' : null }),
+              el('a', { href: 'tolfraedi.html', texti: 'Tölfræði',
+                        'aria-current': nuna === 'tolfraedi.html' ? 'page' : null })
+            ])
+          : null,
         el('div', { class: 'phead__hnappar' }, [
           el('div', { class: 'phead__notandi' }, [
             el('strong', { texti: ek.nafn }),

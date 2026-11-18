@@ -129,6 +129,55 @@ function undirverkVilla(error) {
   return 'Þetta gekk ekki. Prófaðu aftur.';
 }
 
+/* Villur í tölfræðinni, sama hugsun og undirverkVilla */
+function tolfraediVilla(error) {
+  const bod = String((error && error.message) || '');
+  const kodi = String((error && error.code) || '');
+  if ((typeof navigator !== 'undefined' && navigator.onLine === false)
+      || /failed to fetch|networkerror|load failed|network request failed/i.test(bod)) {
+    return 'Náði ekki sambandi. Athugaðu netið og prófaðu aftur.';
+  }
+  if (/[þðæöáéíóúý]/i.test(bod)) return bod;
+  if (kodi === '42P01' || /relation .* does not exist|could not find the table|schema cache/i.test(bod)) {
+    return 'Tölfræðitöflurnar eru ekki komnar í gagnagrunninn. Keyrðu migrations/2026-11-18-tolfraedi.sql í Supabase.';
+  }
+  if (/jwt|session|token.*expired|not authenticated/i.test(bod)) {
+    return 'Innskráningin er runnin út. Skráðu þig inn aftur.';
+  }
+  if (kodi === '23505' || /duplicate|already exists/i.test(bod)) {
+    return 'Þessi miðill er þegar skráður hjá fyrirtækinu.';
+  }
+  if (kodi === '23514' || /check constraint/i.test(bod)) {
+    return 'Eitthvað stenst ekki: slóðir byrja á https://, nafn er 1 til 120 stafir og tölur mega ekki vera neikvæðar.';
+  }
+  if (/row-level security|permission denied|unauthorized|forbidden/i.test(bod)) {
+    return 'Þú hefur ekki aðgang að þessu.';
+  }
+  return 'Þetta gekk ekki. Prófaðu aftur.';
+}
+
+/* Tölurnar sem dagleg mæling getur haft */
+const MAELITOLUR = ['fylgjendur', 'ahorf', 'nadir', 'samskipti', 'heimsoknir', 'faerslur'];
+
+/* Ein mæling hreinsuð: tóm gildi detta út svo þau skrifi aldrei yfir
+   tölu sem er til fyrir. Skilar null ef línan er ónothæf. */
+function hreinMaeling(r) {
+  if (!r || !r.midill_id || !/^\d{4}-\d{2}-\d{2}$/.test(String(r.dags || ''))) return null;
+  const lina = {
+    midill_id: r.midill_id, dags: String(r.dags),
+    uppruni: r.uppruni === 'innflutt' ? 'innflutt' : 'handvirkt'
+  };
+  let tolur = 0;
+  for (const k of MAELITOLUR) {
+    const v = r[k];
+    if (v === null || v === undefined || v === '') continue;
+    const n = Number(v);
+    if (Number.isFinite(n) && n >= 0) { lina[k] = Math.round(n); tolur++; }
+  }
+  /* Lína án talna myndi bara breyta upprunanum og læsa deginum */
+  return tolur ? lina : null;
+}
+
 async function supabaseBakendi() {
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm');
   /* Lotan er geymd í vafranum og endurnýjast sjálf, svo fólk helst inni á
@@ -618,8 +667,109 @@ async function supabaseBakendi() {
         minn.fyrirtaeki.merki_url = null;
       }
       return svar.data;
+    },
+
+    /* ---------- Tölfræði ----------
+       Bara við skrifum (RLS). Viðskiptavinur les sitt fyrirtæki og sér
+       bara sendar skýrslur. fyrirtaeki_id á mælingum og færslum er sett í
+       gagnagrunninum úr miðlinum, sama hvað við sendum. */
+
+    async midlar(fyrirtaeki_id) {
+      const svar = await sb.from('midlar').select('*')
+        .eq('fyrirtaeki_id', fyrirtaeki_id).order('midill').order('nafn');
+      kastaTf(svar); return svar.data;
+    },
+
+    async nyrMidill(m) {
+      const svar = await sb.from('midlar').insert({
+        fyrirtaeki_id: m.fyrirtaeki_id, midill: m.midill,
+        nafn: String(m.nafn || '').trim().slice(0, 120),
+        ytra_id: m.ytra_id ? String(m.ytra_id).trim().slice(0, 100) : null,
+        slod: m.slod ? String(m.slod).trim().slice(0, 500) : null,
+        virkt: m.virkt !== false
+      }).select().single();
+      kastaTf(svar); return svar.data;
+    },
+
+    async uppfaeraMidil(id, breytingar) {
+      const svar = await sb.from('midlar').update(breytingar).eq('id', id).select().single();
+      kastaTf(svar); return svar.data;
+    },
+
+    async eydaMidli(id) {
+      const svar = await sb.from('midlar').delete().eq('id', id);
+      kastaTf(svar);
+    },
+
+    /* Allar mælingar fyrirtækisins á bilinu [fra, til]. Supabase skilar
+       mest 1000 línum í einu, svo sótt er í skömmtum. */
+    async maelingar(fyrirtaeki_id, fra, til) {
+      return allarLinur(() => sb.from('maelingar').select('*')
+        .eq('fyrirtaeki_id', fyrirtaeki_id).gte('dags', fra).lte('dags', til)
+        .order('dags').order('midill_id'));
+    },
+
+    /* Skrifar mælingar, ný lína eða uppfærð. Línur eru flokkaðar eftir
+       hvaða tölur þær hafa, svo tómur reitur skrifi aldrei yfir gamla tölu. */
+    async vistaMaelingar(rows) {
+      const hopar = new Map();
+      for (const r of rows || []) {
+        const lina = hreinMaeling(r);
+        if (!lina) continue;
+        lina.uppfaert = new Date().toISOString();
+        const lykill = Object.keys(lina).sort().join(',');
+        if (!hopar.has(lykill)) hopar.set(lykill, []);
+        hopar.get(lykill).push(lina);
+      }
+      let skrifad = 0;
+      for (const hopur of hopar.values()) {
+        for (let i = 0; i < hopur.length; i += 500) {
+          const skammtur = hopur.slice(i, i + 500);
+          const svar = await sb.from('maelingar').upsert(skammtur, { onConflict: 'midill_id,dags' });
+          kastaTf(svar);
+          skrifad += skammtur.length;
+        }
+      }
+      return skrifad;
+    },
+
+    /* Færslur birtar á bilinu, mest skoðuðu fyrst */
+    async midlaFaerslur(fyrirtaeki_id, fra, til) {
+      const eftir = new Date(til + 'T00:00:00Z');
+      eftir.setUTCDate(eftir.getUTCDate() + 1);
+      const svar = await sb.from('midla_faerslur').select('*')
+        .eq('fyrirtaeki_id', fyrirtaeki_id)
+        .gte('birt', fra + 'T00:00:00Z').lt('birt', eftir.toISOString())
+        .order('ahorf', { ascending: false, nullsFirst: false })
+        .limit(300);
+      kastaTf(svar); return svar.data;
+    },
+
+    async skyrslur(fyrirtaeki_id) {
+      const svar = await sb.from('skyrslur').select('*')
+        .eq('fyrirtaeki_id', fyrirtaeki_id).order('manudur', { ascending: false });
+      kastaTf(svar); return svar.data;
+    },
+
+    async uppfaeraSkyrslu(id, breytingar) {
+      const svar = await sb.from('skyrslur').update(breytingar).eq('id', id).select().single();
+      kastaTf(svar); return svar.data;
     }
   };
+
+  function kastaTf({ error }) { if (error) throw new Error(tolfraediVilla(error)); }
+
+  async function allarLinur(smidur) {
+    const SKAMMTUR = 1000;
+    const ut = [];
+    for (let fra = 0; fra < 50000; fra += SKAMMTUR) {
+      const svar = await smidur().range(fra, fra + SKAMMTUR - 1);
+      kastaTf(svar);
+      ut.push(...(svar.data || []));
+      if (!svar.data || svar.data.length < SKAMMTUR) break;
+    }
+    return ut;
+  }
 }
 
 /* ==========================================================================
@@ -908,9 +1058,14 @@ function prufuBakendi() {
         upphaed: 180000, vsklaust: false }
     ];
 
+    /* Tölfræði: miðlar, skýrslur og það sem er skráð í höndunum. Daglegu
+       tölurnar sjálfar eru reiknaðar í prufuRodir og ekki geymdar. */
+    const tfMidlar = prufuMidlar();
+    const tf = { midlar: tfMidlar, handvirkt: {}, skyrslur: prufuSkyrslur(fyr, tfMidlar) };
+
     return { fyrirtaeki: fyr, notendur, verkefni, taskar, athugasemdir,
              innri, timaskraning, snid, vidhengi: [], innri_taskar, undirverk,
-             fyrirspurnir, samningar, aukaverkefni, taxtar, innskradur: null };
+             fyrirspurnir, samningar, aukaverkefni, taxtar, tf, innskradur: null };
   };
 
   function les() {
@@ -1416,18 +1571,396 @@ function prufuBakendi() {
       return f;
     },
 
+    /* ---------- Tölfræði ----------
+       Sömu reglur og RLS: viðskiptavinur les bara sitt fyrirtæki og sér
+       bara sendar skýrslur, bara við skrifum. */
+
+    async midlar(fyrirtaeki_id) {
+      if (!maSja(fyrirtaeki_id)) return [];
+      return g.tf.midlar.filter((m) => m.fyrirtaeki_id === fyrirtaeki_id)
+        .map((m) => ({ ...m }))
+        .sort((a, b) => a.midill.localeCompare(b.midill) || a.nafn.localeCompare(b.nafn, 'is'));
+    },
+
+    async nyrMidill(m) {
+      krefjastAdmin();
+      const midill = String(m.midill || '');
+      const nafn = String(m.nafn || '').trim();
+      const slod = m.slod ? String(m.slod).trim() : null;
+      if (!['instagram', 'facebook', 'tiktok'].includes(midill)) throw new Error('Veldu miðil.');
+      if (!nafn || nafn.length > 120) throw new Error('Nafnið þarf að vera 1 til 120 stafir.');
+      if (slod && (!/^https:\/\/\S+$/.test(slod) || slod.length > 500)) throw new Error('Slóðin þarf að byrja á https:// og vera án bila.');
+      if (g.tf.midlar.some((x) => x.fyrirtaeki_id === m.fyrirtaeki_id && x.midill === midill && x.nafn === nafn)) {
+        throw new Error('Þessi miðill er þegar skráður hjá fyrirtækinu.');
+      }
+      const nyr = {
+        id: nyttId(), fyrirtaeki_id: m.fyrirtaeki_id, midill, nafn,
+        ytra_id: m.ytra_id ? String(m.ytra_id).trim().slice(0, 100) : null,
+        slod, virkt: m.virkt !== false, stofnad: new Date().toISOString()
+      };
+      g.tf.midlar.push(nyr); vista(); return { ...nyr };
+    },
+
+    async uppfaeraMidil(id, breytingar) {
+      krefjastAdmin();
+      const m = finna(g.tf.midlar, id);
+      if (!m) throw new Error('Miðillinn fannst ekki.');
+      const leyft = ['midill', 'nafn', 'ytra_id', 'slod', 'virkt'];
+      for (const k of leyft) if (breytingar[k] !== undefined) m[k] = breytingar[k];
+      vista(); return { ...m };
+    },
+
+    async eydaMidli(id) {
+      krefjastAdmin();
+      g.tf.midlar = g.tf.midlar.filter((m) => m.id !== id);
+      for (const k of Object.keys(g.tf.handvirkt)) if (k.split('|')[0] === id) delete g.tf.handvirkt[k];
+      vista();
+    },
+
+    async maelingar(fyrirtaeki_id, fra, til) {
+      if (!maSja(fyrirtaeki_id)) return [];
+      const ut = [];
+      for (const m of g.tf.midlar.filter((x) => x.fyrirtaeki_id === fyrirtaeki_id)) {
+        const kort = new Map(prufuRodir(m.id).maelingar
+          .filter((r) => r.dags >= fra && r.dags <= til)
+          .map((r) => [r.dags, { ...r }]));
+        for (const [k, h] of Object.entries(g.tf.handvirkt)) {
+          const [mid, d] = k.split('|');
+          if (mid !== m.id || d < fra || d > til) continue;
+          const lina = kort.get(d) || { midill_id: m.id, fyrirtaeki_id, dags: d };
+          for (const t of MAELITOLUR) if (h[t] !== undefined && h[t] !== null) lina[t] = h[t];
+          lina.uppruni = h.uppruni; lina.uppfaert = h.uppfaert;
+          kort.set(d, lina);
+        }
+        ut.push(...kort.values());
+      }
+      return ut.sort((a, b) => a.dags.localeCompare(b.dags));
+    },
+
+    async vistaMaelingar(rows) {
+      krefjastAdmin();
+      let skrifad = 0;
+      for (const r of rows || []) {
+        const lina = hreinMaeling(r);
+        if (!lina || !finna(g.tf.midlar, lina.midill_id)) continue;
+        const k = lina.midill_id + '|' + lina.dags;
+        g.tf.handvirkt[k] = { ...(g.tf.handvirkt[k] || {}), ...lina, uppfaert: new Date().toISOString() };
+        skrifad++;
+      }
+      vista(); return skrifad;
+    },
+
+    async midlaFaerslur(fyrirtaeki_id, fra, til) {
+      if (!maSja(fyrirtaeki_id)) return [];
+      const ut = [];
+      for (const m of g.tf.midlar.filter((x) => x.fyrirtaeki_id === fyrirtaeki_id)) {
+        ut.push(...prufuRodir(m.id).faerslur.filter((p) => {
+          const d = p.birt.slice(0, 10);
+          return d >= fra && d <= til;
+        }).map((p) => ({ ...p })));
+      }
+      return ut.sort((a, b) => (b.ahorf || 0) - (a.ahorf || 0)).slice(0, 300);
+    },
+
+    async skyrslur(fyrirtaeki_id) {
+      if (!maSja(fyrirtaeki_id)) return [];
+      /* Pósturinn í Apps Script sendir samþykkta skýrslu innan fárra
+         sekúndna. Hér er það leikið eftir. */
+      let breytt = false;
+      for (const s of g.tf.skyrslur) {
+        if (s.stada === 'samthykkt' && !s.sent_dags
+            && Date.now() - new Date(s.samthykkt_dags).getTime() > 4000) {
+          s.stada = 'send'; s.sent_dags = new Date().toISOString(); breytt = true;
+        }
+      }
+      if (breytt) vista();
+      const admin = erAdminPrufa();
+      return g.tf.skyrslur
+        .filter((s) => s.fyrirtaeki_id === fyrirtaeki_id && (admin || s.stada === 'send'))
+        .map((s) => JSON.parse(JSON.stringify(s)))
+        .sort((a, b) => b.manudur.localeCompare(a.manudur));
+    },
+
+    async uppfaeraSkyrslu(id, breytingar) {
+      krefjastAdmin();
+      const s = finna(g.tf.skyrslur, id);
+      if (!s) throw new Error('Skýrslan fannst ekki.');
+      if (s.stada === 'send') throw new Error('Skýrslan er þegar send og breytist ekki.');
+      if (breytingar.samantekt !== undefined) {
+        s.samantekt = String(breytingar.samantekt || '').slice(0, 4000) || null;
+      }
+      if (breytingar.stada === 'samthykkt' && s.stada === 'drog') {
+        s.stada = 'samthykkt'; s.samthykkt_dags = new Date().toISOString();
+      }
+      vista(); return JSON.parse(JSON.stringify(s));
+    },
+
     /* Bara í prufu: byrja upp á nýtt */
     hreinsa() { g = sjalfgefid(); BLOB.clear(); vista(); }
   };
+
+  function innskradurPrufa() { return g.innskradur ? finna(g.notendur, g.innskradur) : null; }
+  function erAdminPrufa() { const n = innskradurPrufa(); return !!n && n.hlutverk === 'admin'; }
+  function maSja(fyrirtaeki_id) {
+    const n = innskradurPrufa();
+    return !!n && (n.hlutverk === 'admin' || n.fyrirtaeki_id === fyrirtaeki_id);
+  }
+  function krefjastAdmin() { if (!erAdminPrufa()) throw new Error('Þú hefur ekki aðgang að þessu.'); }
+}
+
+/* ==========================================================================
+   Tölfræði í prufu
+   Daglegu tölurnar eru reiknaðar út frá föstu fræi í hvert sinn, svo
+   localStorage fyllist ekki og sömu dagar gefa alltaf sömu tölur.
+   ========================================================================== */
+
+function ymdStadur(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-'
+    + String(d.getDate()).padStart(2, '0');
+}
+
+function prufuMidlar() {
+  const t = new Date(Date.now() - 400 * 86400000).toISOString();
+  return [
+    { id: 'm1', fyrirtaeki_id: 'f1', midill: 'instagram', nafn: 'hlidarkaup', ytra_id: '17841400000000001',
+      slod: null, virkt: true, stofnad: t },
+    { id: 'm2', fyrirtaeki_id: 'f1', midill: 'facebook', nafn: 'Hlíðarkaup', ytra_id: '100000000000001',
+      slod: null, virkt: true, stofnad: t },
+    { id: 'm3', fyrirtaeki_id: 'f2', midill: 'instagram', nafn: 'steinvik', ytra_id: '17841400000000002',
+      slod: null, virkt: true, stofnad: t },
+    { id: 'm4', fyrirtaeki_id: 'f2', midill: 'tiktok', nafn: 'steinvik.ehf', ytra_id: null,
+      slod: null, virkt: true, stofnad: t }
+  ];
+}
+
+const TEXTAR_HLIDARKAUP = [
+  'Ný sending af ávöxtum komin í hús', 'Tilboð helgarinnar: grillkjöt á góðu verði',
+  'Opið til 21 öll kvöld vikunnar', 'Á bak við tjöldin í bakaríinu',
+  'Starfsfólk vikunnar kynnir sig', 'Uppskrift vikunnar: fiskréttur fyrir fjóra',
+  'Nýtt í kælinum', 'Takk fyrir frábæra viku'
+];
+const TEXTAR_STEINVIK = [
+  'Nýtt verkefni að klárast', 'Fyrir og eftir: pallur í Garðabæ', 'Hópurinn á verkstað í morgun',
+  'Svona leggjum við hellur', 'Við erum að ráða smið', 'Vika í vinnu á 30 sekúndum',
+  'Spurt og svarað: hvað tekur pallur langan tíma'
+];
+
+function prufuSnid(id) {
+  return ({
+    m1: { f: 'f1', fylg: 4200, voxtur: 3.2, ahorf: 2600, faerslur: 3.2, fraeid: 11,
+          tegundir: ['reel', 'karusell', 'mynd', 'reel'], textar: TEXTAR_HLIDARKAUP },
+    m2: { f: 'f1', fylg: 6800, voxtur: 1.1, ahorf: 1500, faerslur: 2.4, fraeid: 23, eydur: 0.012,
+          tegundir: ['mynd', 'myndband', 'annad'], textar: TEXTAR_HLIDARKAUP },
+    m3: { f: 'f2', fylg: 1850, voxtur: 2.0, ahorf: 900, faerslur: 2.6, fraeid: 37,
+          tegundir: ['reel', 'mynd', 'karusell'], textar: TEXTAR_STEINVIK },
+    m4: { f: 'f2', fylg: 950, voxtur: 6.0, ahorf: 3200, faerslur: 3.0, fraeid: 41, toppar: 0.03,
+          tegundir: ['myndband'], textar: TEXTAR_STEINVIK }
+  })[id] || null;
+}
+
+/* Lítill slembigjafi með fræi (mulberry32) */
+function slembir(fraeid) {
+  let a = fraeid >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const PRUFA_MINNI = new Map();
+
+/* Daglegar tölur og færslur eins miðils, frá 1. júní 2025 (eða 400
+   dögum aftur) til gærdagsins. Hægur vöxtur, vikutaktur og nokkrir toppar. */
+function prufuRodir(id) {
+  const snid = prufuSnid(id);
+  if (!snid) return { maelingar: [], faerslur: [] };
+  const igaer = new Date(); igaer.setHours(12, 0, 0, 0); igaer.setDate(igaer.getDate() - 1);
+  const lykill = id + '|' + ymdStadur(igaer);
+  if (PRUFA_MINNI.has(lykill)) return PRUFA_MINNI.get(lykill);
+
+  const r = slembir(snid.fraeid);
+  const d = new Date(2025, 5, 1, 12);
+  const fyrst = new Date(igaer); fyrst.setDate(fyrst.getDate() - 400);
+  if (fyrst < d) d.setTime(fyrst.getTime());
+  const VIKA = [0.86, 1.04, 1.08, 1.0, 1.06, 1.18, 0.92];
+  const maelingar = [];
+  const faerslur = [];
+  let fylg = snid.fylg;
+  let i = 0;
+  while (d <= igaer) {
+    const dags = ymdStadur(d);
+    const vidgangur = 1 + i / 900;
+    const fjoldi = r() < snid.faerslur / 7 ? (r() < 0.12 ? 2 : 1) : 0;
+    const toppur = r() < (snid.toppar || 0.012) ? 2.6 + r() * 2.4 : 1;
+    const ahorf = Math.round(snid.ahorf * vidgangur * VIKA[d.getDay()] * (0.82 + r() * 0.36)
+      * (fjoldi ? 1.35 : 1) * toppur);
+    fylg += snid.voxtur * (0.4 + r() * 1.2) + (toppur > 1 ? snid.voxtur * 6 * toppur : 0)
+      - (r() < 0.05 ? snid.voxtur * 2 : 0);
+    const vantar = snid.eydur ? r() < snid.eydur : false;
+    if (!vantar) {
+      maelingar.push({
+        midill_id: id, fyrirtaeki_id: snid.f, dags, fylgjendur: Math.round(fylg), ahorf,
+        nadir: Math.round(ahorf * (0.55 + r() * 0.15)),
+        samskipti: Math.round(ahorf * (0.03 + r() * 0.03)),
+        heimsoknir: Math.round(ahorf * (0.015 + r() * 0.015)),
+        faerslur: fjoldi, uppruni: 'sjalfvirkt', uppfaert: dags + 'T06:00:00Z'
+      });
+    }
+    for (let k = 0; k < fjoldi; k++) {
+      const tegund = snid.tegundir[Math.floor(r() * snid.tegundir.length)];
+      const pa = Math.round(snid.ahorf * vidgangur * (0.6 + r() * 1.6) * toppur
+        * (tegund === 'reel' || tegund === 'myndband' ? 1.5 : 1));
+      const ytra = id + '-' + i + '-' + k;
+      faerslur.push({
+        id: 'p-' + ytra, midill_id: id, fyrirtaeki_id: snid.f, ytra_id: ytra,
+        birt: dags + 'T' + String(9 + Math.floor(r() * 11)).padStart(2, '0') + ':'
+          + String(Math.floor(r() * 60)).padStart(2, '0') + ':00Z',
+        tegund, texti: snid.textar[Math.floor(r() * snid.textar.length)],
+        slod: 'https://example.com/faersla/' + ytra, mynd_slod: null,
+        ahorf: pa, nadir: Math.round(pa * (0.6 + r() * 0.2)),
+        likes: Math.round(pa * (0.02 + r() * 0.04)),
+        athugasemdir: Math.round(pa * (0.002 + r() * 0.004)),
+        deilingar: Math.round(pa * (0.001 + r() * 0.004)),
+        vistanir: Math.round(pa * (0.001 + r() * 0.006)),
+        uppfaert: dags + 'T06:00:00Z'
+      });
+    }
+    d.setDate(d.getDate() + 1);
+    i++;
+  }
+  const ut = { maelingar, faerslur };
+  PRUFA_MINNI.set(lykill, ut);
+  return ut;
+}
+
+/* Sama lögun og manadar_tolur skilar úr gagnagrunninum, fyrir eitt fyrirtæki */
+function prufuManadarTolur(fyr, midlar, manudur) {
+  const [ar, man] = manudur.split('-').map(Number);
+  const lok = ymdStadur(new Date(ar, man, 0, 12));
+  const fyrriFra = ymdStadur(new Date(ar, man - 2, 1, 12));
+  const fyrriLok = ymdStadur(new Date(ar, man - 1, 0, 12));
+  const summa = (radir, k) => {
+    const med = radir.filter((x) => x[k] !== null && x[k] !== undefined);
+    return med.length ? med.reduce((a, x) => a + x[k], 0) : null;
+  };
+  const midlarUt = midlar.map((md) => {
+    const { maelingar, faerslur } = prufuRodir(md.id);
+    const iMan = maelingar.filter((x) => x.dags >= manudur && x.dags <= lok);
+    const iFyrri = maelingar.filter((x) => x.dags >= fyrriFra && x.dags <= fyrriLok);
+    const fyrir = maelingar.filter((x) => x.dags < manudur && x.fylgjendur !== null);
+    const iManF = iMan.filter((x) => x.fylgjendur !== null);
+    const upphaf = fyrir.length ? fyrir[fyrir.length - 1].fylgjendur : (iManF.length ? iManF[0].fylgjendur : null);
+    const lokF = iManF.length ? iManF[iManF.length - 1].fylgjendur : null;
+    return {
+      midill_id: md.id, midill: md.midill, nafn: md.nafn,
+      fylgjendur_upphaf: upphaf, fylgjendur_lok: lokF,
+      fylgjendur_breyting: upphaf !== null && lokF !== null ? lokF - upphaf : null,
+      ahorf: summa(iMan, 'ahorf'), ahorf_fyrri: summa(iFyrri, 'ahorf'),
+      nadir: summa(iMan, 'nadir'), nadir_fyrri: summa(iFyrri, 'nadir'),
+      samskipti: summa(iMan, 'samskipti'), samskipti_fyrri: summa(iFyrri, 'samskipti'),
+      faerslur: summa(iMan, 'faerslur'),
+      dagar_med_gognum: new Set(iMan.map((x) => x.dags)).size,
+      bestu_faerslur: faerslur
+        .filter((p) => p.birt.slice(0, 10) >= manudur && p.birt.slice(0, 10) <= lok)
+        .sort((a, b) => (b.ahorf || 0) - (a.ahorf || 0)).slice(0, 3)
+        .map((p) => ({ texti: p.texti, slod: p.slod, mynd_slod: p.mynd_slod, tegund: p.tegund,
+                       birt: p.birt, ahorf: p.ahorf, nadir: p.nadir, likes: p.likes,
+                       athugasemdir: p.athugasemdir }))
+    };
+  });
+  const s = (k) => summa(midlarUt, k);
+  return {
+    fyrirtaeki_id: fyr.id, fyrirtaeki: fyr.nafn, manudur, midlar: midlarUt,
+    samtals: {
+      fylgjendur_lok: s('fylgjendur_lok'), fylgjendur_breyting: s('fylgjendur_breyting'),
+      ahorf: s('ahorf'), ahorf_fyrri: s('ahorf_fyrri'), nadir: s('nadir'), nadir_fyrri: s('nadir_fyrri'),
+      samskipti: s('samskipti'), samskipti_fyrri: s('samskipti_fyrri'), faerslur: s('faerslur')
+    }
+  };
+}
+
+const MAN_NOFN = ['janúar', 'febrúar', 'mars', 'apríl', 'maí', 'júní', 'júlí',
+                  'ágúst', 'september', 'október', 'nóvember', 'desember'];
+
+/* Einfaldur texti eins og sniðmátið í Apps Script býr til */
+function prufuSamantekt(t) {
+  const s = t.samtals || {};
+  const [ar, man] = t.manudur.split('-').map(Number);
+  const nu = MAN_NOFN[man - 1];
+  const fyrri = MAN_NOFN[(man + 10) % 12];
+  const tala = (n) => String(Math.round(Math.abs(n))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const setn = [];
+  if (s.fylgjendur_breyting !== null && s.fylgjendur_lok !== null) {
+    if (s.fylgjendur_breyting > 0) {
+      setn.push('Fylgjendum fjölgaði um ' + tala(s.fylgjendur_breyting) + ' í ' + nu + ' og eru nú ' + tala(s.fylgjendur_lok) + '.');
+    } else if (s.fylgjendur_breyting < 0) {
+      setn.push('Fylgjendum fækkaði um ' + tala(s.fylgjendur_breyting) + ' í ' + nu + ' og eru nú ' + tala(s.fylgjendur_lok) + '.');
+    } else {
+      setn.push('Fjöldi fylgjenda stóð í stað í ' + nu + ', ' + tala(s.fylgjendur_lok) + ' talsins.');
+    }
+  }
+  if (s.ahorf !== null && s.ahorf_fyrri) {
+    const p = Math.round((s.ahorf - s.ahorf_fyrri) / s.ahorf_fyrri * 100);
+    setn.push('Áhorf voru ' + tala(s.ahorf) + ', '
+      + (p > 0 ? p + '% fleiri en' : p < 0 ? (-p) + '% færri en' : 'jafn mörg og') + ' í ' + fyrri + '.');
+  }
+  if (s.faerslur !== null) {
+    const ein = s.faerslur % 10 === 1 && s.faerslur % 100 !== 11;
+    setn.push(s.faerslur + (ein ? ' færsla fór út.' : ' færslur fóru út.'));
+  }
+  return setn.join(' ') || null;
+}
+
+/* Ein drög fyrir síðasta mánuð og sendar skýrslur fyrir mánuðina á undan */
+function prufuSkyrslur(fyr, midlar) {
+  const ut = [];
+  const nu = new Date(); nu.setDate(1); nu.setHours(12, 0, 0, 0);
+  for (const f of fyr.filter((x) => midlar.some((m) => m.fyrirtaeki_id === x.id))) {
+    const hans = midlar.filter((m) => m.fyrirtaeki_id === f.id);
+    for (let k = 1; k <= 4; k++) {
+      const manudur = ymdStadur(new Date(nu.getFullYear(), nu.getMonth() - k, 1, 12));
+      const naesti = ymdStadur(new Date(nu.getFullYear(), nu.getMonth() - k + 1, 1, 12));
+      const tolur = prufuManadarTolur(f, hans, manudur);
+      const sent = k > 1;
+      ut.push({
+        id: 's-' + f.id + '-' + manudur, fyrirtaeki_id: f.id, manudur, tolur,
+        samantekt: prufuSamantekt(tolur), stada: sent ? 'send' : 'drog',
+        samthykkt_dags: sent ? naesti + 'T09:12:00Z' : null,
+        sent_dags: sent ? naesti + 'T09:14:00Z' : null,
+        stofnad: naesti + 'T06:05:00Z'
+      });
+    }
+  }
+  return ut;
 }
 
 /* ========================================================================== */
 
 let bakendi = null;
 
+/* ?prufa=1 keyrir sýnidæmin, en BARA á localhost svo enginn geti kveikt á
+   því á tveir.is. Það helst í flipanum svo hægt sé að skrá sig inn og
+   smella sig um. ?prufa=0 slekkur aftur. */
+function prufaUmSlod() {
+  try {
+    if (typeof location === 'undefined') return false;
+    if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return false;
+    const leit = new URLSearchParams(location.search).get('prufa');
+    try {
+      if (leit === '1') sessionStorage.setItem('tveir-prufa', 'ja');
+      if (leit === '0') sessionStorage.removeItem('tveir-prufa');
+      if (sessionStorage.getItem('tveir-prufa') === 'ja') return true;
+    } catch (e) { /* lokað sessionStorage, þá gildir slóðin ein */ }
+    return leit === '1';
+  } catch (e) { return false; }
+}
+
 export async function gogn() {
   if (!bakendi) {
-    bakendi = stillingar.prufa || !stillingar.supabaseUrl
+    bakendi = stillingar.prufa || !stillingar.supabaseUrl || prufaUmSlod()
       ? prufuBakendi()
       : await supabaseBakendi();
   }
