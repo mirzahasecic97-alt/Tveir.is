@@ -1,0 +1,91 @@
+/* ==========================================================================
+   Tveir.is: hreyfing á forsíðunni (prufa). Parast við assets/js/hreyfing.js.
+   Allt hér á bara við þegar html hefur flokkinn hr-js, sem er settur strax
+   í <head> ef notandinn hefur ekki beðið um minni hreyfingu.
+   ========================================================================== */
+
+/* Breiðir hlutir mega aldrei búa til lárétt skrun */
+html, body { overflow-x: clip; }
+
+/* Lenis sér um mjúka skrunið, svo vafrinn má ekki gera það líka */
+html.lenis, html.lenis body { height: auto; }
+html.lenis, .lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* ------------------------------------------------------------------
+   Opnun
+   ------------------------------------------------------------------ */
+.hr-opnun { display: none; }
+.hr-js .hr-opnun {
+  position: fixed; inset: 0; z-index: 300;
+  display: grid; place-items: center;
+  background: var(--ink);
+  /* Varnet: komi forritin aldrei hverfur opnunin samt eftir 4 sekúndur */
+  animation: hr-opnun-burt .5s ease 4s forwards;
+}
+@keyframes hr-opnun-burt { to { opacity: 0; visibility: hidden; } }
+.hr-opnun__merki { overflow: hidden; padding: .2em .1em; }
+.hr-opnun__merki img { display: block; width: clamp(150px, 24vw, 280px); height: auto; }
+.hr-opnun__lina {
+  position: absolute; left: 50%; bottom: 16%; transform: translateX(-50%);
+  width: min(220px, 50vw); height: 2px; border-radius: 2px;
+  background: rgba(255, 255, 255, .14); overflow: hidden;
+}
+.hr-opnun__lina span {
+  display: block; width: 100%; height: 100%;
+  background: var(--acc-on-navy); transform-origin: left center; transform: scaleX(0);
+}
+
+/* ------------------------------------------------------------------
+   Hero
+   ------------------------------------------------------------------ */
+.hr-js .hero { --mx: 50%; --my: 40%; }
+.hr-js .hero__bak { will-change: transform; }
+.hero__ljos {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(520px circle at var(--mx) var(--my), rgba(157, 192, 247, .28), transparent 62%);
+  mix-blend-mode: screen;
+  opacity: 0; transition: opacity .5s ease;
+}
+.hero:hover .hero__ljos { opacity: 1; }
+.hr-js .hero__yfir { z-index: 2; }
+.hr-lina { padding-bottom: .06em; }
+
+/* Strikið sem teiknar sig undir "skemmtilegri" */
+.hero__yfir h1 em { position: relative; white-space: nowrap; }
+.hr-strik {
+  position: absolute; left: -3%; bottom: -.2em;
+  width: 106%; height: .34em; overflow: visible; pointer-events: none;
+}
+.hr-strik path {
+  fill: none; stroke: var(--acc); stroke-width: 5; stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ------------------------------------------------------------------
+   Þjónustuspjöldin
+   ------------------------------------------------------------------ */
+.hr-js .leid { transform-style: preserve-3d; will-change: transform; position: relative; }
+.hr-js .leid::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(360px circle at var(--gx, 50%) var(--gy, 0%), rgba(91, 147, 240, .16), transparent 60%);
+  opacity: 0; transition: opacity .35s ease;
+}
+.hr-js .leid:hover::after { opacity: 1; }
+.leid__takn { transition: transform .5s cubic-bezier(.2, 1.5, .4, 1); }
+.hr-js .leid:hover .leid__takn { transform: translateZ(40px) scale(1.14) rotate(-7deg); }
+.leid__or { transition: transform .35s cubic-bezier(.2, 1.4, .4, 1); }
+.hr-js .leid:hover .leid__or { transform: translateX(6px); }
+
+/* ------------------------------------------------------------------
+   Tökum spjallið
+   ------------------------------------------------------------------ */
+.hr-js .cta { will-change: transform; transform-origin: 50% 100%; }
+
+/* ------------------------------------------------------------------
+   Minni hreyfing: ekkert af þessu
+   ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .hr-opnun, .hero__ljos { display: none !important; }
+  .leid__takn, .leid__or { transition: none; }
+}

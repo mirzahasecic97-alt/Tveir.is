@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
+  <!-- Næturborg: pálmatré, borg við vatn og fuglar. Teiknað fyrir Tveir. -->
+  <defs>
+    <linearGradient id="borg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6b9d6" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#c58ad6" stop-opacity=".75"/>
+    </linearGradient>
+    <linearGradient id="vatn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b98ad8" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#7b4aa6" stop-opacity=".85"/>
+    </linearGradient>
+    <g id="palmi" fill="#5a2c78">
+      <path d="M0 0 C -8 -150, -14 -300, -36 -440" fill="none" stroke="#5a2c78" stroke-width="20" stroke-linecap="round"/>
+      <path d="M-36 -440 C -110 -480, -190 -470, -260 -400 C -190 -440, -110 -440, -40 -425Z"/>
+      <path d="M-36 -440 C -100 -520, -170 -560, -250 -560 C -170 -530, -105 -500, -42 -432Z"/>
+      <path d="M-36 -440 C -40 -540, -10 -600, 40 -640 C 0 -590, -20 -530, -30 -440Z"/>
+      <path d="M-36 -440 C 30 -510, 110 -530, 190 -500 C 110 -505, 40 -480, -30 -435Z"/>
+      <path d="M-36 -440 C 40 -450, 120 -420, 180 -350 C 110 -400, 40 -420, -32 -430Z"/>
+      <path d="M-36 -440 C -60 -380, -120 -320, -190 -300 C -120 -340, -70 -390, -42 -436Z"/>
+      <path d="M-36 -440 C 10 -390, 40 -320, 40 -250 C 20 -320, -10 -380, -38 -436Z"/>
+    </g>
+  </defs>
+
+  <!-- Borgin við sjóndeildarhringinn -->
+  <path fill="url(#borg)" d="M560 690V610h26v-46h18v-40h22v86h20v-60h30v-70h16v-30h14v100h24v-48h28v68h22v-120h14v-22h18v142h26v-80h34v80h20v-56h26v-36h18v92h24v-64h30v64h20v-100h16v100h28v-44h36v44h22v-70h24v70h30V690Z"/>
+  <!-- Vatnið -->
+  <rect x="0" y="690" width="1600" height="210" fill="url(#vatn)"/>
+  <g stroke="#f6c7e2" stroke-opacity=".35" stroke-width="3" stroke-linecap="round">
+    <path d="M620 712h120M820 720h160M1080 714h90M700 740h70M930 748h120M1180 744h60"/>
+  </g>
+</svg>

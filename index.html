@@ -20,12 +20,15 @@
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" href="/assets/img/takn-512.png" type="image/png" sizes="512x512">
 <link rel="apple-touch-icon" href="/assets/img/takn-180.png">
+<script src="assets/js/themu.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,600&family=Inter:wght@400;500;600&family=Anton&family=Mr+Dafoe&family=Neonderthaw&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/styles.css">
 <link rel="stylesheet" href="assets/css/glans.css">
-<script src="assets/js/glans.js"></script>
+<link rel="stylesheet" href="assets/css/hreyfing.css">
+<link rel="stylesheet" href="assets/css/themu.css">
+<script>if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.className+=" hr-js";</script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -78,6 +81,9 @@
 }
 </script>
 
+</head>
+<body>
+<a class="skip-link" href="#main" data-en="Skip to content">Fara í efni</a>
 <!-- Google Analytics (GA4) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-KDX9FQ7G7W"></script>
 <script>
@@ -86,9 +92,11 @@
   gtag('js', new Date());
   gtag('config', 'G-KDX9FQ7G7W');
 </script>
-</head>
-<body>
-<a class="skip-link" href="#main" data-en="Skip to content">Fara í efni</a>
+<!-- Opnun: merkið birtist og tjaldið lyftist af forsíðunni (bara með JS og hreyfingu leyfða) -->
+<div class="hr-opnun" aria-hidden="true">
+  <div class="hr-opnun__merki"><img src="assets/img/tveir-logo-3d.png" alt="" width="600" height="164"></div>
+  <div class="hr-opnun__lina"><span></span></div>
+</div>
 
 <!-- ===================== HAUS ===================== -->
 <header class="site-head">
@@ -452,8 +460,13 @@
   </div>
 </main>
 
-<script src="assets/js/rakning.js" defer></script>
 <script src="assets/js/main.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
+<script src="assets/js/hreyfing.js" defer></script>
+<script src="assets/js/rakning.js" defer></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

@@ -1,0 +1,193 @@
+/* ==========================================================================
+   Tveir.is: þemu. Parast við assets/js/themu.js.
+   Hvert þema er allt undir html[data-thema="nafn"], svo venjulega síðan
+   breytist ekkert þegar þemað er ekki valið.
+   ========================================================================== */
+
+/* ------------------------------------------------------------------
+   Þemavalið neðst í horninu
+   ------------------------------------------------------------------ */
+.themaval {
+  position: fixed; left: 14px; bottom: 14px; z-index: 120;
+  display: flex; align-items: center; gap: 4px; padding: 5px;
+  background: rgba(255, 255, 255, .82);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border: 1px solid rgba(28, 48, 80, .1); border-radius: 999px;
+  box-shadow: 0 10px 30px -14px rgba(28, 48, 80, .45);
+  font: 500 12.5px/1 var(--f-body);
+}
+.themaval__merki { padding: 0 6px 0 8px; color: var(--soft); }
+.themaval button {
+  border: 0; border-radius: 999px; padding: 8px 12px; cursor: pointer;
+  background: transparent; color: var(--ink); font: inherit;
+}
+.themaval button[aria-pressed="true"] { background: var(--acc); color: #fff; }
+.themaval button:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+
+/* ==================================================================
+   NÆTURBORG: sólsetur, pálmatré og neon. Okkar eigið útlit.
+   Engin merki, myndir eða nöfn frá öðrum. Sliderarnir eru óbreyttir.
+
+   Letrið er Anton. Neonskriftin er Mr Dafoe.
+   ================================================================== */
+html[data-thema="naeturborg"] {
+  --nb-letur: 'Anton', 'Impact', sans-serif;
+  --nb-skrift: 'Mr Dafoe', 'Brush Script MT', cursive;
+  --nb-bleikt: #ff3d9a;
+  --nb-lilla: #7b3fb3;
+  --nb-djupt: #2c0f45;
+  --nb-gult: #ffb15c;
+
+  /* Litirnir á allri síðunni: ekkert blátt */
+  --ink: #3a1650;
+  --soft: #8a5f9e;
+  --acc: #e8448f;
+  --acc-hover: #d93680;
+  --accs: #fde3ef;
+  --acc-on-navy: #ffc2dc;
+  --bg: #f9e6f0;
+  --line: rgba(58, 22, 80, .1);
+  --sh-btn: 0 4px 14px rgba(232, 68, 143, .35);
+  --lj-bla: rgba(255, 120, 180, .45);
+  --lj-ljos: rgba(255, 178, 110, .45);
+  --lj-himinn: rgba(255, 196, 150, .4);
+  --lj-lilla: rgba(170, 110, 220, .45);
+  --gl-fall: 0 18px 40px -22px rgba(58, 22, 80, .34), 0 2px 8px rgba(58, 22, 80, .05);
+
+  background:
+    url('../img/themu/naeturborg-palmi-ljos.svg') left -60px bottom -10px / auto 78vh no-repeat fixed,
+    url('../img/themu/naeturborg-palmi-h-ljos.svg') right -50px bottom -10px / auto 64vh no-repeat fixed,
+    url('../img/themu/naeturborg-palmi-ljos.svg') left 14vw bottom -10px / auto 44vh no-repeat fixed,
+    url('../img/themu/naeturborg-palmi-h-ljos.svg') right 16vw bottom -10px / auto 36vh no-repeat fixed,
+    linear-gradient(180deg, #c9a2e2 0%, #f1a9cf 38%, #ffc6a3 72%, #ffe1c2 100%) fixed;
+  background-color: #f9e6f0;
+}
+
+/* Fyrirsagnir */
+html[data-thema="naeturborg"] h1,
+html[data-thema="naeturborg"] h2,
+html[data-thema="naeturborg"] .section-title,
+html[data-thema="naeturborg"] .leid__titill {
+  font-family: var(--nb-letur);
+  font-weight: 400;
+  letter-spacing: .01em;
+}
+html[data-thema="naeturborg"] h1 em,
+html[data-thema="naeturborg"] h2 em,
+html[data-thema="naeturborg"] .section-title em {
+  background: linear-gradient(100deg, var(--nb-bleikt), #ff7a59 55%, var(--nb-gult));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* Hnappar í sólsetri í stað bláa gljáans */
+html[data-thema="naeturborg"] .btn {
+  background: linear-gradient(180deg, #ff6fae, var(--acc) 52%, #c92f78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 10px 24px -8px rgba(232, 68, 143, .6), 0 2px 6px rgba(58, 22, 80, .12);
+}
+html[data-thema="naeturborg"] .btn:hover {
+  background: linear-gradient(180deg, #ff82b9, var(--acc) 48%, #c22a71);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 18px 34px -10px rgba(232, 68, 143, .7), 0 3px 8px rgba(58, 22, 80, .14);
+}
+html[data-thema="naeturborg"] .btn--ghost:hover { background: linear-gradient(180deg, #ff6fae, var(--acc) 52%, #c92f78); }
+html[data-thema="naeturborg"] .btn--white { background: linear-gradient(180deg, #fff, #fde7f1); color: var(--ink); }
+html[data-thema="naeturborg"] .card--navy,
+html[data-thema="naeturborg"] .cta {
+  background: linear-gradient(155deg, #5a2378, var(--nb-djupt) 60%);
+  border-color: rgba(255, 194, 220, .2);
+}
+html[data-thema="naeturborg"] .langsw__btn.is-on { background: var(--acc); color: #fff; }
+
+/* Merkið: "Tveir" sem bleikt neonskilti á dökkum fleti */
+html[data-thema="naeturborg"] .pillnav__logo img,
+html[data-thema="naeturborg"] .hr-opnun__merki img { display: none; }
+html[data-thema="naeturborg"] .pillnav__logo { line-height: 1; }
+html[data-thema="naeturborg"] .pillnav__logo::after,
+html[data-thema="naeturborg"] .hr-opnun__merki::after {
+  content: "Tveir";
+  position: static; inset: auto; animation: none; -webkit-mask: none; mask: none;
+  display: inline-block;
+  font: 400 40px/1 'Neonderthaw', 'Mr Dafoe', cursive;
+  color: #fff3fa;
+  padding: 2px 14px 6px;
+  border-radius: 12px;
+  background: radial-gradient(120% 140% at 50% 50%, #2a0c36, #120617);
+  text-shadow:
+    0 0 2px #fff, 0 0 6px #ff5fb0, 0 0 14px #ff3d9a, 0 0 28px #ff3d9a, 0 0 48px rgba(255, 61, 154, .8);
+  box-shadow: inset 0 0 0 1px rgba(255, 61, 154, .35), 0 0 18px -4px rgba(255, 61, 154, .6);
+}
+html[data-thema="naeturborg"] .hr-opnun__merki::after {
+  font-size: clamp(110px, 18vw, 240px);
+  padding: 0 .2em .12em;
+  background: none; box-shadow: none;
+  text-shadow:
+    0 0 3px #fff, 0 0 10px #ff5fb0, 0 0 26px #ff3d9a, 0 0 52px #ff3d9a, 0 0 100px rgba(255, 61, 154, .85);
+  animation: nb-flokt 2.4s steps(1) 1;
+}
+html[data-thema="naeturborg"] .hr-opnun__merki { overflow: visible; padding: 20px; }
+/* Neonið kviknar með smá flökti eins og alvöru skilti */
+@keyframes nb-flokt {
+  0% { opacity: .15; } 8% { opacity: 1; } 12% { opacity: .3; } 18% { opacity: 1; }
+  24% { opacity: .5; } 28% { opacity: 1; } 100% { opacity: 1; }
+}
+
+/* Opnunin: dimm nótt svo neonið njóti sín */
+html[data-thema="naeturborg"] .hr-opnun {
+  background: radial-gradient(90% 70% at 50% 55%, #3b0f3f 0%, #170820 55%, #08030c 100%);
+}
+html[data-thema="naeturborg"] .hr-opnun__lina { background: rgba(255, 61, 154, .2); }
+html[data-thema="naeturborg"] .hr-opnun__lina span { background: #ff3d9a; box-shadow: 0 0 12px #ff3d9a; }
+
+/* Hero: við í sólsetrinu með pálmatrjám og borginni */
+html[data-thema="naeturborg"] .hero {
+  background: linear-gradient(180deg, #a874d6 0%, #ef8fc0 45%, #ffbf8c 78%, #ffd9b0 100%);
+  box-shadow: 0 30px 80px -34px rgba(58, 22, 80, .55);
+}
+html[data-thema="naeturborg"] .hero__bak {
+  filter: grayscale(1) contrast(1.15) brightness(1.05);
+  mix-blend-mode: multiply;
+  opacity: .92;
+}
+html[data-thema="naeturborg"] .hero::before {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    url('../img/themu/naeturborg-palmi.svg') left -7% bottom 0 / auto 58% no-repeat,
+    url('../img/themu/naeturborg-palmi-h.svg') right -7% bottom 0 / auto 50% no-repeat,
+    url('../img/themu/naeturborg-umhverfi.svg') center bottom / 100% auto no-repeat;
+  opacity: .88;
+}
+html[data-thema="naeturborg"] .hero::after {
+  z-index: 1;
+  background: linear-gradient(to top, rgba(44, 15, 69, .92) 0%, rgba(90, 35, 120, .62) 30%, rgba(232, 68, 143, .12) 62%, rgba(255, 177, 92, 0) 100%);
+}
+html[data-thema="naeturborg"] .hero__yfir { z-index: 3; }
+@media (max-width: 760px) {
+  html[data-thema="naeturborg"] .hero::before {
+    background: url('../img/themu/naeturborg-umhverfi.svg') center bottom / 100% auto no-repeat;
+  }
+}
+html[data-thema="naeturborg"] .hero__yfir h1 {
+  font-size: calc(var(--fs-h1-hero) * 1.15); line-height: 1.02;
+  color: #fff; -webkit-text-stroke: 3px var(--nb-djupt); paint-order: stroke fill;
+  text-shadow: 3px 4px 0 var(--nb-djupt);
+}
+/* "skemmtilegri" sem bleikt neonskilti */
+html[data-thema="naeturborg"] .hero__yfir h1 em {
+  font: 400 1.28em/1 var(--nb-skrift);
+  letter-spacing: 0;
+  background: none; color: #fff;
+  -webkit-text-stroke: 0; padding-right: .12em;
+  text-shadow:
+    0 0 4px #fff,
+    0 0 10px var(--nb-bleikt), 0 0 22px var(--nb-bleikt), 0 0 44px var(--nb-bleikt), 0 0 80px rgba(255, 61, 154, .7);
+}
+html[data-thema="naeturborg"] .hr-strik { display: none; }
+html[data-thema="naeturborg"] .hero__yfir .lead { color: rgba(255, 244, 250, .9); }
+html[data-thema="naeturborg"] .hero__nofn { color: rgba(255, 244, 250, .7); }
+html[data-thema="naeturborg"] .hero__ljos {
+  background: radial-gradient(520px circle at var(--mx) var(--my), rgba(255, 200, 150, .35), transparent 62%);
+}
+html[data-thema="naeturborg"] .hero__actions .btn--aglas {
+  background: rgba(255, 255, 255, .14); color: #fff; border-color: rgba(255, 255, 255, .7);
+}
+html[data-thema="naeturborg"] .hero__actions .btn--aglas:hover { background: #fff; color: var(--ink); }
+
