@@ -167,3 +167,34 @@ h2 { font-size: clamp(40px, 26px + 4vw, 84px); }
   .samstorf { grid-template-columns: 1fr; }
   .samstorf__form { grid-template-columns: 1fr; }
 }
+
+/* Hero: samfélagsmiðlarnir stórir og sýnilegir */
+.hetja__midlar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+.hetja__fylgdu { width: 100%; font: 600 12px/1 var(--letur); letter-spacing: .2em; text-transform: uppercase; color: var(--dauft); margin-bottom: 2px; }
+.midill-stor {
+  display: inline-flex; align-items: center; gap: 12px; padding: 8px 20px 8px 8px; border-radius: 999px; text-decoration: none;
+  background: rgba(7, 9, 13, .45); border: 1px solid rgba(255, 255, 255, .22); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+.midill-stor:hover { transform: translateY(-2px); border-color: rgba(143, 211, 255, .6); background: rgba(7, 9, 13, .6); }
+.midill-stor__takn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; }
+.midill-stor__takn img { width: 22px; height: 22px; filter: brightness(0) invert(1); }
+.midill-stor__takn--ig { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
+.midill-stor__takn--tt { background: #000; box-shadow: inset 2px 0 0 #25F4EE, inset -2px 0 0 #FE2C55; }
+.midill-stor b { display: block; font: 600 15px/1.1 var(--letur); }
+.midill-stor small { display: block; font-size: 12.5px; color: var(--dauft); margin-top: 3px; }
+
+/* Efnið: þrjú myndbönd með titli */
+.efni__listi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 36px; }
+.efni { margin: 0; }
+.efni__skjar { position: relative; border-radius: 24px; overflow: hidden; background: var(--flotur); border: 1px solid var(--lina); }
+.efni__skjar video { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; }
+.efni__merki { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; transition: opacity .4s ease; opacity: .9; }
+.efni__skjar.er-ad-spila .efni__merki { opacity: 0; }
+.efni figcaption { display: flex; flex-direction: column; gap: 6px; padding: 14px 4px 0; }
+.efni figcaption span { font: 600 12px/1 var(--letur); letter-spacing: .16em; text-transform: uppercase; color: var(--is); }
+.efni figcaption strong { font: 400 24px/1.05 var(--letur-h); text-transform: uppercase; letter-spacing: .02em; }
+@media (max-width: 820px) {
+  .efni__listi { grid-template-columns: 1fr; max-width: 420px; }
+  .midill-stor { padding-right: 16px; }
+}

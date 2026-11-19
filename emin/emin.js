@@ -41,3 +41,18 @@
   /* Samfélagsmiðlar sem eru ekki komnir með slóð sjást ekki */
   document.querySelectorAll('.smidill[href="#"]').forEach(function (a) { a.setAttribute('aria-disabled', 'true'); a.addEventListener('click', function (ev) { ev.preventDefault(); }); });
 })();
+
+/* Hero myndbandið: 1080p á tölvu, 720p í síma */
+(function () {
+  var v = document.querySelector('.hetja__vid');
+  if (!v) return;
+  var litid = window.matchMedia('(max-width: 820px)').matches || (navigator.connection && navigator.connection.saveData);
+  v.src = litid ? v.dataset.litid : v.dataset.stor;
+  var p = v.play(); if (p && p.catch) p.catch(function () {});
+})();
+
+/* Merkið á Inside Training hverfur þegar spilað er */
+document.querySelectorAll('.efni__skjar video').forEach(function (v) {
+  v.addEventListener('play', function () { v.parentNode.classList.add('er-ad-spila'); });
+  v.addEventListener('pause', function () { v.parentNode.classList.remove('er-ad-spila'); });
+});

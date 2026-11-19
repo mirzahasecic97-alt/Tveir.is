@@ -8,7 +8,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Emin Kadri | The Iceman">
 <meta property="og:description" content="Atvinnuboxari frá Íslandi. Ferillinn, myndböndin og verslunin.">
-<meta property="og:image" content="media/emin-hringur.jpg">
+<meta property="og:image" content="media/hetja-plakat.jpg">
 <meta name="theme-color" content="#07090d">
 <link rel="icon" href="media/emin-profill.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,7 +36,7 @@
 
   <!-- Hero: myndband í bakgrunni -->
   <section class="hetja" aria-labelledby="nafn">
-    <video class="hetja__vid" src="media/emin-1.mp4" poster="media/emin-hringur.jpg" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+    <video class="hetja__vid" data-stor="media/hetja-1080.mp4" data-litid="media/hetja-720.mp4" poster="media/hetja-plakat.jpg" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
     <div class="hetja__texti">
       <span class="hetja__undir">Atvinnuboxari frá Íslandi</span>
       <h1 id="nafn">Emin<br>Kadri</h1>
@@ -45,6 +45,11 @@
         <a class="hnappur" href="#samstorf">Samstarf</a>
         <a class="hnappur hnappur--gler" href="#efni">Horfa á efnið</a>
       </div>
+      <div class="hetja__midlar">
+        <span class="hetja__fylgdu">Fylgdu Emin</span>
+        <a class="midill-stor" href="#" data-midill="instagram" target="_blank" rel="noopener"><span class="midill-stor__takn midill-stor__takn--ig"><img src="media/instagram.svg" alt="" width="22" height="22"></span><span><b>Instagram</b><small data-handfang="instagram">Kemur fljótlega</small></span></a>
+        <a class="midill-stor" href="#" data-midill="tiktok" target="_blank" rel="noopener"><span class="midill-stor__takn midill-stor__takn--tt"><img src="media/tiktok.svg" alt="" width="22" height="22"></span><span><b>TikTok</b><small data-handfang="tiktok">Kemur fljótlega</small></span></a>
+      </div>
     </div>
     <a class="hetja__skruna" href="#um" aria-label="Skruna niður"><i></i></a>
   </section>
@@ -52,13 +57,13 @@
   <!-- Um -->
   <section class="kafli um" id="um" aria-labelledby="um-h">
     <div class="um__mynd">
-      <img src="media/emin-hringur.jpg" alt="Emin Kadri í hringnum" width="675" height="1200" loading="lazy">
+      <img src="media/emin-um.jpg" alt="Emin Kadri á æfingu" width="720" height="1280" loading="lazy">
       <img class="um__profill" src="media/emin-profill.jpg" alt="" width="200" height="200" loading="lazy">
     </div>
     <div class="um__texti">
       <span class="midi">Um Emin</span>
       <h2 id="um-h">Ísmaðurinn í hringnum.</h2>
-      <p>Emin Kadri Eminsson er atvinnuboxari frá Íslandi. Hann barðist á fyrsta atvinnumannakvöldinu í boxi sem haldið hefur verið á Íslandi.</p>
+      <p>Emin Kadri Eminsson er atvinnuboxari frá Íslandi. Hann ólst upp í hnefaleikum hjá HFK, barðist á fyrsta atvinnumannakvöldinu í boxi sem haldið hefur verið á Íslandi og hefur unnið alla sína bardaga sem atvinnumaður.</p>
       <p>Hér fylgist þú með ferlinum, horfir á bardagana og verslar vörurnar hans.</p>
     </div>
   </section>
@@ -68,17 +73,22 @@
     <span class="midi">Bardagaferillinn</span>
     <h2 id="ferill-h">Ósigraður sem atvinnumaður.</h2>
     <div class="ferill__tolur">
-      <div class="tala"><strong>3</strong><span>Bardagar sem atvinnumaður</span></div>
-      <div class="tala"><strong>3</strong><span>Sigrar</span></div>
+      <div class="tala"><strong>6</strong><span>Bardagar sem atvinnumaður</span></div>
+      <div class="tala"><strong>6</strong><span>Sigrar</span></div>
       <div class="tala"><strong>0</strong><span>Töp</span></div>
     </div>
     <ol class="bardagar">
+      <li class="bardagi bardagi--saga">
+        <span class="bardagi__dags">24. október 2026</span>
+        <span class="bardagi__stadur"><strong>Sueca, Valencia, Spáni</strong>Gegn Dinars Skripkins frá Lettlandi · superwelter</span>
+        <span class="bardagi__nidurstada"><b>Sigur</b>Rothögg í 2. lotu</span>
+      </li>
       <li class="bardagi">
         <span class="bardagi__dags">7. mars 2026</span>
         <span class="bardagi__stadur"><strong>Helsinki, Finnlandi</strong>EBF</span>
         <span class="bardagi__nidurstada"><b>Sigur</b>Á stigum, 4 lotur</span>
       </li>
-      <li class="bardagi bardagi--saga">
+      <li class="bardagi">
         <span class="bardagi__dags">10. apríl 2025</span>
         <span class="bardagi__stadur"><strong>Gamla Bíó, Reykjavík</strong>Fyrsta atvinnumannakvöldið í boxi á Íslandi</span>
         <span class="bardagi__nidurstada"><b>Sigur</b></span>
@@ -96,9 +106,21 @@
     <span class="midi">Efnið</span>
     <h2 id="myndbond-h">Það sem við gerðum saman.</h2>
     <p>Myndböndin sem Tveir hefur tekið upp og klippt fyrir Emin.</p>
-    <div class="myndbond__listi">
-      <video src="media/emin-1.mp4" poster="media/emin-hringur.jpg" controls playsinline preload="metadata"></video>
-      <video src="media/emin-2.mp4" controls playsinline preload="metadata"></video>
+    <div class="efni__listi">
+      <figure class="efni">
+        <div class="efni__skjar">
+          <video src="media/inside-training-1.mp4" poster="media/inside-training-1.jpg" controls playsinline preload="none"></video>
+        </div>
+        <figcaption><span>Þáttaröð</span><strong>Inside Training · 1. þáttur</strong></figcaption>
+      </figure>
+      <figure class="efni">
+        <div class="efni__skjar"><video src="media/af-hverju-box.mp4" poster="media/af-hverju-box.jpg" controls playsinline preload="none"></video></div>
+        <figcaption><span>Viðtal</span><strong>Af hverju byrjaðirðu í boxi?</strong></figcaption>
+      </figure>
+      <figure class="efni">
+        <div class="efni__skjar"><video src="media/kolski.mp4" poster="media/kolski.jpg" controls playsinline preload="none"></video></div>
+        <figcaption><span>Samstarf</span><strong>Kölski · fimm tilefni</strong></figcaption>
+      </figure>
     </div>
   </section>
 
