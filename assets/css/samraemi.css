@@ -515,3 +515,5 @@ html[data-thema="naeturborg"] .profill__spurn { color: rgba(44, 15, 69, .55); }
   .profill__texti { max-width: calc(100% - 84px); }
 }
 @media (max-width: 760px) { .profill__nafn { font-size: 20px !important; } .profill__texti { max-width: calc(100% - 64px) !important; } }
+/* Ert þú næst/ur?: bara maðurinn, heil skuggamynd sem stendur á botni kortsins */
+.profill__skuggi { top: auto !important; bottom: 0; width: 82% !important; height: 78%; filter: none !important; }
