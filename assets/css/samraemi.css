@@ -74,11 +74,6 @@ html.er-ad-skruna .gb__plata, html.er-ad-skruna .gb__plata::after { animation-pl
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-/* Logostrimillinn: lítill yfirtitill í stað stórrar fyrirsagnar */
-.trust > h2 {
-  text-transform: uppercase; letter-spacing: .08em; text-align: center;
-  font: 500 13px/1.2 var(--f-body) !important; color: var(--soft) !important;
-}
 
 /* ---------- Hvítt matt gler ---------- */
 .card, .leid, .trust, .pillnav {
@@ -174,7 +169,7 @@ html[data-thema="naeturborg"] .site-foot { border-top-color: rgba(58, 22, 80, .1
    nær litahallinn ekki inn í stafina. Heill litur í staðinn. */
 .cta h2 em, .cta h2 em div { background: none !important; color: var(--acc) !important; -webkit-text-fill-color: currentColor; }
 html[data-thema="naeturborg"] .cta h2 em, html[data-thema="naeturborg"] .cta h2 em div { color: var(--nb-bleikt) !important; }
-html[data-thema="naeturborg"] .midi, html[data-thema="naeturborg"] .trust > h2 { color: rgba(58, 22, 80, .72) !important; }
+html[data-thema="naeturborg"] .midi { color: rgba(58, 22, 80, .72) !important; }
 
 /* Síminn í "Svona vinnum við með þér": vinnusvæðið er Glerhúsið */
 .simi__haus img[src*="glerhusid"] { width: 64px; height: auto; }
@@ -242,3 +237,11 @@ html[data-thema="naeturborg"] .synis--lina .synis__vid { border-color: #fff4fa; 
 .hero, html[data-thema="naeturborg"] .hero { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6) !important; }
 /* Skuggarnir undir hverju myndbandi runnu saman í gráa rönd: burt */
 .synis .synis__vid, html[data-thema="naeturborg"] .synis .synis__vid { box-shadow: none !important; }
+
+/* Logostrimillinn: enginn kassi, rennur inn í bakgrunninn. Fyrirsögnin eins og hinar. */
+html .card.trust, html[data-thema="naeturborg"] .card.trust {
+  background: none !important; border: 0 !important; box-shadow: none !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  padding-left: 0 !important; padding-right: 0 !important;
+}
+html .card.trust::before, html .card.trust::after { display: none !important; }
