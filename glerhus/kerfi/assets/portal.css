@@ -1874,3 +1874,67 @@ body.sk-les .page-head.sk-haus { display: none !important; }
 .st-t__tharf p { font-size: 15px; line-height: 1.55; color: var(--ink); }
 .st-t__haus { flex: 1; min-width: 0; }
 .st-t__haus h2 { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   Dagatal: mánuður og listi, fundir og skiladagar í litum
+   -------------------------------------------------------------------------- */
+.page-head.dg-haus { display: flex; flex-direction: column; align-items: stretch; gap: 14px; margin-bottom: 20px; }
+.dg-haus__efst { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.dg-syn { display: flex; gap: 6px; }
+.dg-tol { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.dg-fletta { display: flex; align-items: center; gap: 8px; }
+.dg-fletta .btn { min-width: 40px; }
+.dg-titill { font: 600 20px/1.2 var(--f-head); color: var(--ink); text-transform: capitalize; min-width: 150px; text-align: center; }
+.dg-flokkar { display: flex; flex-wrap: wrap; gap: 6px; }
+.dg-flokkur { display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px; border-radius: 999px; cursor: pointer; font: 500 13.5px/1 var(--f-body); color: var(--ink); background: rgba(255, 255, 255, .8); border: 1px solid rgba(28, 48, 80, .1); }
+.dg-flokkur i { width: 10px; height: 10px; border-radius: 3px; background: var(--l); }
+.dg-flokkur[aria-pressed="false"] { opacity: .45; }
+.dg-flokkur[aria-pressed="false"] i { background: transparent; border: 1.5px solid var(--l); }
+.dg-athugid { padding: 10px 14px; border-radius: 12px; background: #fff3d6; color: #8a5a00; font-size: 14px; }
+.dg-manudur { padding: 0 !important; overflow: hidden; }
+.dg-vikudagar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+.dg-vikudagar span { padding: 12px 10px; font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--soft); }
+.dg-grind { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: minmax(118px, auto); }
+.dg-dagur { display: flex; flex-direction: column; gap: 3px; padding: 8px 8px 10px; min-width: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.dg-dagur:nth-child(7n) { border-right: 0; }
+.dg-dagur.er-helgi { background: rgba(28, 48, 80, .02); }
+.dg-dagur.er-utan { background: rgba(28, 48, 80, .035); }
+.dg-dagur.er-utan .dg-dagur__nr { opacity: .4; }
+.dg-dagur__nr { align-self: flex-start; min-width: 28px; height: 28px; padding: 0 6px; border-radius: 999px; display: grid; place-items: center; font: 600 14px/1 var(--f-body); color: var(--ink); }
+.dg-dagur.er-i-dag .dg-dagur__nr { background: var(--acc); color: var(--acc-texti, #fff); }
+.dg-atr { display: flex; align-items: center; gap: 5px; width: 100%; min-width: 0; padding: 4px 7px; border: 0; border-radius: 7px; cursor: pointer; text-align: left; font: 500 12.5px/1.3 var(--f-body); color: var(--ink);
+  background: color-mix(in srgb, var(--l) 14%, #fff); border-left: 3px solid var(--l); }
+.dg-atr:hover { background: color-mix(in srgb, var(--l) 24%, #fff); }
+.dg-atr__kl { flex: none; font-variant-numeric: tabular-nums; color: var(--soft); font-size: 11.5px; }
+.dg-atr__titill { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dg-fleiri { align-self: flex-start; padding: 2px 6px; border: 0; background: none; cursor: pointer; font: 500 12px/1.2 var(--f-body); color: var(--soft); text-decoration: underline; text-underline-offset: 2px; }
+.dg-listi { padding: 8px 22px 14px !important; }
+.dg-listi + .dg-listi { margin-top: 16px; }
+.dg-listi h2 { font-size: 17px; padding: 14px 0 6px; color: #a3261e; }
+.dg-listi ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.dg-listi li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.dg-listi li .dg-atr { width: auto; max-width: 100%; padding: 8px 12px; font-size: 14.5px; }
+.dg-listi li .dg-atr__kl { font-size: 13px; }
+.dg-listi__undir { font-size: 13px; color: var(--soft); }
+.dg-listi__dagur { padding: 14px 0; border-top: 1px solid var(--line); }
+.dg-listi__dagur:first-child { border-top: 0; }
+.dg-listi__dagur h3 { font: 400 15px/1.2 var(--f-body); color: var(--soft); margin: 0 0 10px; }
+.dg-listi__dagur h3 strong { color: var(--ink); font-weight: 600; }
+.dg-listi__dagur.er-i-dag h3 strong { color: var(--acc-djupt, #2c62c4); }
+.dg-dagspjald { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.dg-dagspjald .dg-atr { padding: 9px 12px; font-size: 14.5px; }
+.dg-spjald__flokkur { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13.5px; font-weight: 600; color: var(--soft); }
+.dg-spjald__flokkur i { width: 10px; height: 10px; border-radius: 3px; background: var(--l); }
+.dg-spjald__upp { margin: 14px 0 6px; display: flex; flex-direction: column; gap: 10px; }
+.dg-spjald__upp dt { font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--soft); }
+.dg-spjald__upp dd { margin: 3px 0 0; font-size: 15.5px; color: var(--ink); overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .dg-grind { grid-auto-rows: minmax(74px, auto); }
+  .dg-dagur { padding: 4px 3px 6px; }
+  .dg-atr.er-stutt { padding: 0; height: 6px; border-left: 0; border-radius: 3px; background: var(--l); }
+  .dg-atr.er-stutt > * { display: none; }
+  .dg-vikudagar span { padding: 10px 4px; text-align: center; font-size: 11px; }
+  .dg-dagur__nr { font-size: 13px; }
+  .dg-titill { min-width: 0; }
+}
+.dg-titill { text-transform: none; }

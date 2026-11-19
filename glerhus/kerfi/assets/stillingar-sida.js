@@ -80,6 +80,13 @@ async function start() {
       s.gmail = thraedir.length ? ['tengt', thraedir.length + ' þræðir, nýjasti ' + hvenaer(nyjast)] : ['bidur', 'Engir þræðir hafa komið inn ennþá'];
     } catch (e) { s.gmail = ['ekki', 'Pósthólfið er ekki komið upp']; }
 
+    /* Google Calendar: fundir hafa komið inn */
+    try {
+      const atb = (g.dagatal ? await g.dagatal() : null);
+      s.dagatal = atb === null ? ['ekki', 'Dagatalið er ekki komið upp']
+        : atb.length ? ['tengt', atb.length + (atb.length === 1 ? ' fundur' : ' fundir') + ' á næstu vikum'] : ['bidur', 'Bíður eftir fyrstu samstillingu'];
+    } catch (e) { s.dagatal = ['ekki', 'Dagatalið er ekki komið upp']; }
+
     /* Meta: miðlar með auðkenni og hvort sjálfvirkar tölur hafa komið síðustu 3 daga */
     try {
       const fyrirtaeki = (await g.fyrirtaeki()) || [];
@@ -116,59 +123,33 @@ async function start() {
     const bok = bokhaldsKerfi();
     /* merki: skrá í assets/tengingar. litur: bakgrunnur flísarinnar. ljos: merkið er í lit á hvítu, annars hvítt á lit */
     const HOPAR = [
-      ['Póstur og fundir', [
+      ['Póstur og dagatal', [
         { heiti: 'Gmail', merki: 'gmail.svg', litur: '#EA4335', hvad: 'Pósthólfið á Samskiptum og póstar úr kerfinu', stada: s.gmail, slod: 'samskipti.html',
           tharf: 'Tengt í gegnum Apps Script á ' + POSTUR + '. Uppfærist á 5 mínútna fresti.' },
         { heiti: 'Verk-netfangið', stafur: '@', litur: '#1c3050', hvad: 'Póstur á ' + VERK + ' verður að verkum', stada: g.prufa ? ['handvirkt', 'Sýnidæmi'] : ['tengt', VERK],
           tharf: 'Viðskiptavinur sendir póst á ' + VERK + ' og verkið birtist á Stjórnborðinu innan 5 mínútna.' },
-        { heiti: 'Google Calendar', merki: 'googlecalendar.svg', litur: '#4285F4', hvad: 'Fundir og skiladagar í dagatalinu', stada: KEMUR,
-          tharf: 'Má tengja í gegnum sömu Apps Script skrift og Gmail. Google biður þig einu sinni um leyfi fyrir dagatalinu.' },
-        { heiti: 'Google Meet', merki: 'googlemeet.svg', litur: '#00897B', hvad: 'Fundarhlekkur á hvern bókaðan fund', stada: KEMUR, tharf: 'Kemur með Google Calendar tengingunni.' },
-        { heiti: 'Calendly', merki: 'calendly.svg', litur: '#006BFF', hvad: 'Bókaðir fundir verða að verkum og fyrirspurnum', stada: EKKI, tharf: 'Þarf aðgangslykil úr Calendly (Integrations > API).' },
-        { heiti: 'Zoom', merki: 'zoom.svg', litur: '#0B5CFF', hvad: 'Zoom fundir á dagatalinu', stada: EKKI, tharf: 'Þarf app hjá Zoom (Zoom Marketplace) og samþykki þitt í Zoom.' }
+        { heiti: 'Google Calendar', merki: 'googlecalendar.svg', litur: '#4285F4', hvad: 'Fundirnir þínir á Dagatalinu, við hlið skiladaga', stada: s.dagatal, slod: 'dagatal.html',
+          tharf: 'Tengt í gegnum sömu Apps Script skrift og Gmail. Dagatalið uppfærist á 5 mínútna fresti.' }
       ]],
       ['Samfélagsmiðlar', [
         { heiti: 'Instagram', merki: 'instagram.svg', litur: '#E4405F', hvad: 'Fylgjendur, áhorf og færslur á Tölfræði', stada: s.meta, slod: 'tolfraedi.html',
           tharf: 'Þarf Meta app og System User token (META_TOKEN) í Apps Script, og auðkenni reikningsins á Tölfræði.' },
         { heiti: 'Facebook', merki: 'facebook.svg', litur: '#0866FF', hvad: 'Áhorf og fylgjendur síðunnar á Tölfræði', stada: s.meta, slod: 'tolfraedi.html',
           tharf: 'Sama Meta app og Instagram. Page ID síðunnar fer á Tölfræði.' },
-        { heiti: 'Messenger', merki: 'messenger.svg', litur: '#00B2FF', hvad: 'Skilaboð inn í Samskipti', stada: KEMUR, tharf: 'Sama Meta app, auk leyfis Meta fyrir skilaboðum (App Review, nokkrar vikur).' },
-        { heiti: 'Instagram skilaboð', merki: 'instagram.svg', litur: '#C13584', hvad: 'DM inn í Samskipti', stada: KEMUR, tharf: 'Sama Meta app og leyfi og Messenger.' },
-        { heiti: 'WhatsApp Business', merki: 'whatsapp.svg', litur: '#25D366', hvad: 'WhatsApp skilaboð inn í Samskipti', stada: KEMUR, tharf: 'Þarf WhatsApp Business reikning og sama Meta app.' },
         { heiti: 'TikTok', merki: 'tiktok.svg', litur: '#000000', hvad: 'Tölur á Tölfræði', stada: s.tiktok, slod: 'tolfraedi.html',
           tharf: 'TikTok leyfir ekki sjálfvirka söfnun fyrir okkur ennþá. Tölurnar eru skráðar í höndunum eða úr CSV.' },
-        { heiti: 'LinkedIn', merki: 'linkedin.svg', litur: '#0A66C2', hvad: 'Tölur fyrirtækjasíðna á Tölfræði', stada: EKKI, tharf: 'Þarf app hjá LinkedIn og samþykki þeirra fyrir Community Management API.' },
-        { heiti: 'YouTube', merki: 'youtube.svg', litur: '#FF0000', hvad: 'Áhorf myndbanda á Tölfræði og Myndböndunum', stada: KEMUR, tharf: 'Má tengja í gegnum Google, sama leið og Gmail.' }
+        { heiti: 'Messenger', merki: 'messenger.svg', litur: '#00B2FF', hvad: 'Skilaboð inn í Samskipti', stada: KEMUR, tharf: 'Sama Meta app, auk leyfis Meta fyrir skilaboðum (App Review, nokkrar vikur).' },
+        { heiti: 'Instagram skilaboð', merki: 'instagram.svg', litur: '#C13584', hvad: 'DM inn í Samskipti', stada: KEMUR, tharf: 'Sama Meta app og leyfi og Messenger.' }
       ]],
-      ['Bókhald og greiðslur', [
+      ['Bókhald', [
         { heiti: 'Payday', merki: 'payday.svg', litur: '#ffffff', ljos: true, hvad: 'Lokin verk og samningar verða að reikningum',
           stada: g.prufa && bok === 'Payday' ? ['tengt', 'Sýnidæmi'] : EKKI, tharf: 'Þarf API lykil úr Payday (Stillingar > API). Þá fara reikningar beint úr Bókhaldi.' },
         { heiti: 'DK', merki: 'dk.png', litur: '#4743f7', hvad: 'Lokin verk og samningar verða að reikningum',
-          stada: g.prufa && bok === 'DK' ? ['tengt', 'Sýnidæmi'] : EKKI, tharf: 'Þarf aðgang að vefþjónustu DK frá dk hugbúnaði.' },
-        { heiti: 'Regla', merki: 'regla.svg', litur: '#ffffff', ljos: true, hvad: 'Reikningar og bókhald', stada: EKKI, tharf: 'Þarf API aðgang frá Reglu.' },
-        { heiti: 'Stripe', merki: 'stripe.svg', litur: '#635BFF', hvad: 'Greiðsluhlekkir á reikninga og tilboð', stada: EKKI, tharf: 'Þarf leynilykil úr Stripe (Developers > API keys).' }
+          stada: g.prufa && bok === 'DK' ? ['tengt', 'Sýnidæmi'] : EKKI, tharf: 'Þarf aðgang að vefþjónustu DK frá dk hugbúnaði.' }
       ]],
-      ['Vefur og auglýsingar', [
+      ['Vefur og skrár', [
         { heiti: 'Google Analytics', merki: 'googleanalytics.svg', litur: '#E37400', hvad: 'Heimsóknir á vef viðskiptavinarins á Tölfræði', stada: KEMUR, tharf: 'Má tengja í gegnum Google. Viðskiptavinurinn gefur okkur lesaðgang að sínu Analytics.' },
-        { heiti: 'Google Ads', merki: 'googleads.svg', litur: '#4285F4', hvad: 'Kostnaður og árangur auglýsinga', stada: KEMUR, tharf: 'Þarf Google Ads developer token frá Google (umsókn).' },
-        { heiti: 'Shopify', merki: 'shopify.svg', litur: '#7AB55C', hvad: 'Sala og pantanir í vefverslunum viðskiptavina', stada: EKKI, tharf: 'Þarf aðgangslykil úr Shopify versluninni (Apps > Develop apps).' },
-        { heiti: 'WordPress', merki: 'wordpress.svg', litur: '#21759B', hvad: 'Fyrirspurnir af vefnum beint í Fyrirspurnir', stada: EKKI, tharf: 'Þarf lítið viðbót eða vefkrók á WordPress síðunni.' },
-        { heiti: 'Webflow', merki: 'webflow.svg', litur: '#146EF5', hvad: 'Fyrirspurnir af vefnum beint í Fyrirspurnir', stada: EKKI, tharf: 'Þarf aðgangslykil úr Webflow (Site settings > Apps & integrations).' },
-        { heiti: 'Mailchimp', merki: 'mailchimp.svg', litur: '#FFE01B', ljos: true, hvad: 'Fréttabréf og listar', stada: EKKI, tharf: 'Þarf API lykil úr Mailchimp (Account > Extras > API keys).' },
-        { heiti: 'HubSpot', merki: 'hubspot.svg', litur: '#FF7A59', hvad: 'Tengiliðir og sölutækifæri', stada: EKKI, tharf: 'Þarf Private App token úr HubSpot.' }
-      ]],
-      ['Skrár og hönnun', [
-        { heiti: 'Google Drive', merki: 'googledrive.svg', litur: '#1FA463', hvad: 'Skrár verkefna beint úr Drive', stada: KEMUR, tharf: 'Má tengja í gegnum Google, sama leið og Gmail.' },
-        { heiti: 'Dropbox', merki: 'dropbox.svg', litur: '#0061FF', hvad: 'Skrár verkefna beint úr Dropbox', stada: EKKI, tharf: 'Þarf app hjá Dropbox og samþykki þitt.' },
-        { heiti: 'WeTransfer', merki: 'wetransfer.svg', litur: '#409FFF', hvad: 'Hlekkir á undirverkum', stada: ['tengt', 'Hlekkir virka beint á undirverkum'], tharf: 'Engin tenging þarf: límdu WeTransfer hlekkinn á undirverkið og viðskiptavinurinn fær hann í pósti.' },
-        { heiti: 'Canva', merki: 'canva.svg', litur: '#00C4CC', hvad: 'Hönnun beint inn á verkin', stada: EKKI, tharf: 'Þarf app hjá Canva (Canva Connect) og samþykki þitt.' },
-        { heiti: 'Figma', merki: 'figma.svg', litur: '#1E1E1E', hvad: 'Hönnun beint inn á verkin', stada: EKKI, tharf: 'Þarf persónulegan aðgangslykil úr Figma.' },
-        { heiti: 'Notion', merki: 'notion.svg', litur: '#000000', hvad: 'Skjöl og glósur verkefna', stada: EKKI, tharf: 'Þarf Internal Integration lykil úr Notion.' }
-      ]],
-      ['Spjall og sjálfvirkni', [
-        { heiti: 'Slack', merki: 'slack.svg', litur: '#4A154B', hvad: 'Tilkynningar um ný verk og fyrirspurnir í Slack', stada: EKKI, tharf: 'Þarf Incoming Webhook slóð úr Slack.' },
-        { heiti: 'Make', merki: 'make.svg', litur: '#6D00CC', hvad: 'Tengdu hvaða app sem er með Make', stada: EKKI, tharf: 'Kerfið sendir atburði á vefkrók í Make, og Make tengir áfram.' },
-        { heiti: 'Zapier', merki: 'zapier.svg', litur: '#FF4F00', hvad: 'Tengdu hvaða app sem er með Zapier', stada: EKKI, tharf: 'Kerfið sendir atburði á vefkrók í Zapier, og Zapier tengir áfram.' }
+        { heiti: 'WeTransfer', merki: 'wetransfer.svg', litur: '#409FFF', hvad: 'Hlekkir á undirverkum', stada: ['tengt', 'Hlekkir virka beint á undirverkum'], tharf: 'Engin tenging þarf: límdu WeTransfer hlekkinn á undirverkið og viðskiptavinurinn fær hann í pósti.' }
       ]]
     ];
 
