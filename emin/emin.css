@@ -334,3 +334,4 @@ html, body { background: linear-gradient(165deg, #3b4558 0%, #283041 42%, #1b1f2
     linear-gradient(to top, rgba(31, 36, 48, 0) 0%, rgba(31, 36, 48, .55) 12%, rgba(35, 42, 56, .5) 30%, rgba(35, 42, 56, .12) 58%, rgba(35, 42, 56, .45) 100%),
     radial-gradient(60% 50% at 12% 80%, rgba(96, 150, 255, .2), transparent 70%) !important;
 }
+.hetja::after { -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%); mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%); }
