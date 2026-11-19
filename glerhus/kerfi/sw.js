@@ -5,7 +5,7 @@
    ========================================================================== */
 
 const GEYMSLA = 'glerhus-tveir-v2';
-const EKKERT_SAMBAND = '/glerhus/kerfi/ekkert-samband.html';
+const EKKERT_SAMBAND = new URL('ekkert-samband.html', self.location).href;
 
 self.addEventListener('install', (e) => {
   e.waitUntil(

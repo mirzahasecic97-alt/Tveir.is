@@ -243,3 +243,100 @@ html.gh-eigin-litur body::before { background: radial-gradient(28% 32% at 30% 30
 .skref--nuna .skref__hak { color: var(--acc-djupt) !important; }
 a:not([class]) { color: var(--acc-djupt); }
 .hero2__stjorn { justify-content: flex-end; }
+
+/* Tengingamerkin: litaður reitur með hvítu merki, eins og í kerfinu */
+.teng-merki { flex: none; width: 28px; height: 28px; border-radius: 9px; display: inline-grid; place-items: center; overflow: hidden; background: var(--l); border: 1px solid rgba(28, 48, 80, .08); }
+.teng-merki img { width: 16px; height: 16px; object-fit: contain; filter: brightness(0) invert(1); }
+.teng-merki--fyllt img { width: 100%; height: 100%; object-fit: cover; filter: none; }
+.teng__rod li { display: inline-flex; align-items: center; gap: 10px; padding: 7px 15px 7px 7px !important; }
+.teng__titill { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.teng__titill .teng-merki { width: 36px; height: 36px; border-radius: 11px; }
+.teng__titill .teng-merki img { width: 20px; height: 20px; }
+.teng__titill .teng-merki--fyllt img { width: 100%; height: 100%; }
+.teng--einfalt .teng__hopur h3 { color: var(--ink) !important; }
+.teng__smidi { font: 500 12px/1 var(--f-body); color: var(--soft); background: rgba(28, 48, 80, .06); border-radius: 999px; padding: 6px 10px; }
+.teng__rod li.teng__fleiri-pilla { padding: 0 !important; }
+.teng__fleiri-pilla a { display: inline-flex; align-items: center; padding: 11px 16px; color: var(--acc-djupt); font-weight: 500; text-decoration: none; }
+.teng__fleiri-pilla a:hover { color: var(--ink); }
+/* Yfirtitlarnir teknir: fyrirsögnin byrjar efst í kaflanum */
+.kafli > h2:first-child, .kafli > h1:first-child, .gler > div > h2:first-child { margin-top: 0; }
+
+/* ---------- Forsíðan: eiginleikarnir stuttir, allt á virkni.html ---------- */
+.eig2 { list-style: none; padding: 0; margin: 30px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.eig2__kort { display: flex; align-items: center; gap: 14px; padding: 14px 18px 14px 14px; border-radius: 22px !important; text-decoration: none; font: 500 16px/1.25 var(--f-head); color: var(--ink) !important; transition: transform .25s ease, background .25s ease; }
+.eig2__kort:hover { transform: translateY(-2px); background: linear-gradient(150deg, rgba(255, 255, 255, .92), rgba(255, 255, 255, .66)) !important; }
+.eig2__takn { flex: 0 0 auto; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px; color: var(--acc-djupt); background: color-mix(in srgb, var(--acc) 13%, #fff); box-shadow: inset 0 1px 0 #fff, 0 0 0 1px color-mix(in srgb, var(--acc) 16%, transparent); }
+.eig2__meira { margin-top: 24px; }
+@media (max-width: 900px) { .eig2 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) {
+  .eig2 { gap: 8px; margin-top: 22px; }
+  .eig2__kort { flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px 12px 14px; font-size: 14px; border-radius: 18px !important; }
+  .eig2__takn { width: 34px; height: 34px; border-radius: 11px; }
+  .eig2__takn svg { width: 17px; height: 17px; }
+}
+
+/* ---------- Fyrir stofur ---------- */
+.fs { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding: clamp(26px, 4vw, 44px); border-radius: 32px !important;
+  background: radial-gradient(60% 120% at 100% 0%, color-mix(in srgb, var(--acc) 18%, transparent), transparent 60%), var(--gler) !important; }
+.fs h2 { margin-top: 0 !important; font-size: clamp(26px, 18px + 1.6vw, 38px) !important; }
+.fs__texti { max-width: 40em; }
+.fs__texti p { margin-top: 12px; color: var(--soft); font-size: 17px; }
+.sa-kort { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 34px; }
+.sa-kort .gler { padding: 24px 24px 26px; border-radius: 26px !important; }
+.sa-kort h3 { font-size: 19px; color: var(--ink); }
+.sa-kort p { margin-top: 8px; color: var(--soft); font-size: 15.5px; }
+.sa-kort .sa-kort__adal { grid-column: 1 / -1; background: radial-gradient(70% 120% at 100% 0%, color-mix(in srgb, var(--acc) 22%, transparent), transparent 60%), var(--gler) !important; }
+.sa-kort__tala { display: block; font: 600 clamp(48px, 30px + 3vw, 76px)/1 var(--f-head); letter-spacing: -.04em; color: var(--acc-djupt); }
+.sa-skref { list-style: none; padding: 0; margin: 30px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; counter-reset: sk; }
+.sa-skref li { counter-increment: sk; padding: 20px; border-radius: 22px; }
+.sa-skref li::before { content: counter(sk); display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; margin-bottom: 12px; font: 600 14px/1 var(--f-head); color: #fff; background: var(--acc); }
+.sa-skref b { display: block; font: 600 16px/1.25 var(--f-head); color: var(--ink); }
+.sa-skref span { display: block; margin-top: 6px; color: var(--soft); font-size: 14.5px; }
+.sa-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 26px; padding: clamp(22px, 3vw, 34px); border-radius: 28px !important; }
+.sa-form label { display: grid; gap: 6px; font-size: 14px; font-weight: 500; color: var(--ink); }
+.sa-form input, .sa-form select, .sa-form textarea { font: inherit; font-size: 16px; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(28, 48, 80, .14); background: rgba(255, 255, 255, .8); color: var(--ink); }
+.sa-form input:focus, .sa-form select:focus, .sa-form textarea:focus { outline: none; border-color: var(--acc); box-shadow: 0 0 0 4px color-mix(in srgb, var(--acc) 18%, transparent); }
+.sa-form__breitt { grid-column: 1 / -1; }
+.sa-form .hp { position: absolute; left: -9999px; }
+.sa-form__stada { color: var(--ok); font-weight: 500; }
+.sa-form__stada.er-villa { color: #c0392b; }
+@media (max-width: 860px) { .sa-skref { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .sa-kort, .sa-form { grid-template-columns: minmax(0, 1fr); }
+  .sa-skref { grid-template-columns: minmax(0, 1fr); }
+  .fs { border-radius: 26px !important; }
+}
+/* Hvað lýsir þér best: jafnháar pillur sem raðast í línur */
+.fh-val { list-style: none; padding: 0; margin: 28px 0 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.fh-val__k {
+  display: inline-flex; align-items: center; gap: 10px; height: 54px; padding: 0 20px 0 8px; border-radius: 999px; white-space: nowrap;
+  text-decoration: none; font: 500 16px/1 var(--f-head); color: var(--ink);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .92), rgba(255, 255, 255, .66));
+  border: 1px solid rgba(255, 255, 255, .95); box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(28, 48, 80, .05), 0 12px 26px -18px rgba(28, 48, 80, .35);
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.fh-val__k:hover { transform: translateY(-2px); background: #fff; box-shadow: inset 0 1px 0 #fff, 0 0 0 1px color-mix(in srgb, var(--acc) 30%, transparent), 0 16px 30px -18px rgba(28, 48, 80, .45); }
+.fh-val__k:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+.fh-val__takn { flex: 0 0 auto; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: var(--acc-djupt); background: color-mix(in srgb, var(--acc) 13%, #fff); }
+.fh-val__takn svg { width: 18px; height: 18px; }
+.fh-verd { margin-top: 18px; color: var(--soft); font-size: 15px; }
+.fh-verd b { color: var(--ink); font-weight: 600; }
+@media (max-width: 560px) {
+  .fh-val { gap: 8px; }
+  .fh-val__k { height: 46px; padding: 0 16px 0 6px; font-size: 14.5px; gap: 8px; }
+  .fh-val__takn { width: 34px; height: 34px; }
+  .fh-val__takn svg { width: 16px; height: 16px; }
+}
+
+/* Yfirferð: jafnháar flísar, læsilegri daufur texti, stofukaflinn */
+.eig2 > li { display: flex; }
+.eig2__kort { flex: 1 1 auto; min-width: 0; }
+:root { --soft: #5c7091; }
+.sa-form__stada { color: #1f7a45; }
+.sa-form__stada:empty { display: none; }
+.fs__takkar { display: flex; flex-wrap: wrap; gap: 10px; }
+.sa-smidi { margin-top: 14px; color: var(--soft); font-size: 14.5px; }
+.haus__tenglar a { white-space: nowrap; }
+@media (min-width: 881px) and (max-width: 1040px) {
+  .haus__tenglar a { padding: 9px 9px !important; font-size: 14px !important; }
+}

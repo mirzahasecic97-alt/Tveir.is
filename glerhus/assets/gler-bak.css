@@ -76,3 +76,9 @@ html::after { display: none; }
 
 /* Meðan skrunað er stendur bakgrunnurinn kyrr, svo skrunið fái allan kraftinn */
 html.er-ad-skruna .gb__ljos i, html.er-ad-skruna .gb__plata, html.er-ad-skruna .gb__plata::after { animation-play-state: paused; }
+
+/* Yfirferð: í síma stendur bakgrunnurinn kyrr og kornið er tekið (léttara fyrir símann) */
+@media (max-width: 760px) {
+  .gb::after { display: none; }
+  .gb__plata::after { animation: none; }
+}
