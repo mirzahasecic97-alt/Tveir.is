@@ -12,6 +12,11 @@
       "permanent": true
     },
     {
+      "source": "/glerhusid",
+      "destination": "/glerhusid/",
+      "permanent": false
+    },
+    {
       "source": "/vignir-vatnar.html",
       "destination": "/vignir/",
       "permanent": false
@@ -29,16 +34,6 @@
     {
       "source": "/kerfi",
       "destination": "/thjonusta.html",
-      "permanent": false
-    },
-    {
-      "source": "/glerhusid",
-      "destination": "https://glerhusid.vercel.app/",
-      "permanent": false
-    },
-    {
-      "source": "/glerhusid/:slod*",
-      "destination": "https://glerhusid.vercel.app/:slod*",
       "permanent": false
     },
     {
@@ -69,6 +64,14 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/glerhusid/",
+      "destination": "https://glerhusid.vercel.app/"
+    },
+    {
+      "source": "/glerhusid/:slod*",
+      "destination": "https://glerhusid.vercel.app/:slod*"
+    },
     {
       "source": "/:slod*",
       "has": [
