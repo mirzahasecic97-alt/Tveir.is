@@ -512,3 +512,27 @@ html, body { background: linear-gradient(165deg, #3d3326 0%, #2a2219 42%, #17130
 .haus__merki img.haus__vv { display: block; width: 34px; height: 34px; filter: none !important; }
 .haus__nafn { font: inherit; }
 @media (max-width: 820px) { .haus__merki img.haus__vv { width: 30px; height: 30px; } }
+
+/* Bara merkið í horninu, ekkert nafn */
+.haus__merki img.haus__vv { width: 40px; height: 40px; }
+@media (max-width: 820px) { .haus__merki img.haus__vv { width: 34px; height: 34px; } }
+
+/* Nafnið í hástöfum í hero */
+.hetja h1 { text-transform: uppercase; letter-spacing: -.035em; }
+
+/* Samstarfsaðilar */
+.samstarfsadilar > p { margin-top: 10px; color: var(--dauft); }
+.sa__listi { list-style: none; padding: 0; margin: 30px 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.sa__kort {
+  display: grid; place-items: center; height: 200px; padding: 30px 40px; border-radius: 26px;
+  background: radial-gradient(70% 90% at 100% 0%, rgba(232, 182, 96, .14), transparent 60%), var(--gler);
+  border: 1px solid rgba(255, 255, 255, .2); box-shadow: var(--gler-skuggi);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+}
+.sa__kort img { width: min(100%, 300px); height: auto; opacity: .92; }
+.sa__kort img.sa__ha { width: auto; height: 100%; max-height: 140px; }
+@media (max-width: 820px) {
+  .sa__listi { gap: 8px; margin-top: 22px; }
+  .sa__kort { height: 130px; padding: 18px; border-radius: 20px; }
+  .sa__kort img.sa__ha { max-height: 96px; }
+}
