@@ -377,3 +377,6 @@ html.gh-skipti-keyrir #main, html.gh-skipti-ut #main { will-change: transform; }
   .gk-tol__hn { min-width: 32px; height: 32px; padding: 0 8px; }
   .gk-tol__hn--texti { display: none; }   /* í síma er bara ein röð, breiddin skiptir ekki máli */
 }
+
+/* Síðuskipti: pláss fyrir skrunstikuna alltaf frátekið, svo hausinn hliðrast aldrei á milli síðna */
+html { scrollbar-gutter: stable; }
