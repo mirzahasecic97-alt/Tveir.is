@@ -251,3 +251,8 @@ html .card.trust::before, html .card.trust::after { display: none !important; }
 /* Skuggar sem strimlarnir klipptu í beinar línur: burt */
 .logo-chip, .work-tile, .work-tile .slot,
 html[data-thema="naeturborg"] .logo-chip, html[data-thema="naeturborg"] .work-tile, html[data-thema="naeturborg"] .work-tile .slot { box-shadow: none !important; }
+
+/* Tölva: myndin, hnapparnir og sýnishornin sjást öll strax án þess að skruna */
+@media (min-width: 761px) {
+  .hero { min-height: max(440px, calc(100svh - 96px - var(--synis-h) / 2 - 22px)) !important; }
+}
