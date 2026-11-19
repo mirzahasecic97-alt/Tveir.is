@@ -418,3 +418,71 @@ html, body { background: linear-gradient(165deg, #3d3326 0%, #2a2219 42%, #17130
 @media (max-width: 820px) { .tala strong { font-size: 34px !important; } }
 /* Andlitið sést líka á tölvu */
 .hetja__vid { object-position: 50% 22%; }
+
+/* ==========================================================================
+   Skákstigin (FIDE)
+   ========================================================================== */
+.stig__haus { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.stig__fide { color: var(--gull); text-decoration: none; font-weight: 600; font-size: 15px; padding: 10px 16px; border-radius: 999px; border: 1px solid rgba(255, 230, 190, .3); background: rgba(255, 236, 200, .06); }
+.stig__fide:hover { background: rgba(255, 236, 200, .14); }
+.stig > p { margin-top: 10px; color: var(--dauft); }
+.stig__listi { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 14px; margin-top: 32px; }
+.stig__kort {
+  position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 6px; padding: 26px 26px 24px; border-radius: 26px;
+  background: var(--gler); border: 1px solid rgba(255, 255, 255, .2); box-shadow: var(--gler-skuggi);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+}
+.stig__kort::after {   /* skákborðsmynstur í horninu */
+  content: ''; position: absolute; right: -30px; top: -30px; width: 150px; height: 150px; opacity: .1; transform: rotate(12deg);
+  background: repeating-conic-gradient(var(--gull) 0 25%, transparent 0 50%) 0 0 / 50px 50px;
+  -webkit-mask: radial-gradient(circle at 70% 30%, #000 20%, transparent 70%); mask: radial-gradient(circle at 70% 30%, #000 20%, transparent 70%);
+}
+.stig__kort--adal { border-color: rgba(255, 230, 190, .42); background: radial-gradient(80% 90% at 100% 0%, rgba(232, 182, 96, .22), transparent 60%), var(--gler); }
+.stig__teg { font: 600 13px/1 var(--letur); letter-spacing: .16em; text-transform: uppercase; color: var(--gull); }
+.stig__kort strong { font: 700 clamp(54px, 30px + 3.6vw, 92px)/1 var(--letur-h); letter-spacing: -.04em; font-variant-numeric: tabular-nums; background: linear-gradient(160deg, #fff6e3 10%, var(--gull) 90%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stig__lysing { color: var(--dauft); font-size: 14.5px; }
+.stig__fleira { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.stig__fleira li { display: inline-flex; align-items: baseline; gap: 9px; padding: 11px 16px; border-radius: 999px; font-size: 14.5px; color: var(--dauft); background: rgba(255, 236, 200, .06); border: 1px solid rgba(255, 230, 190, .18); }
+.stig__fleira b { font: 700 17px/1 var(--letur-h); color: #fff; letter-spacing: -.02em; }
+
+/* ==========================================================================
+   Í beinni: útsendingin
+   ========================================================================== */
+.beint > p { margin-top: 10px; color: var(--dauft); }
+.beint__skjar {
+  position: relative; margin-top: 30px; aspect-ratio: 16 / 9; border-radius: 26px; overflow: hidden;
+  background: radial-gradient(70% 90% at 100% 0%, rgba(232, 182, 96, .16), transparent 60%), var(--gler);
+  border: 1px solid rgba(255, 255, 255, .2); box-shadow: var(--gler-skuggi);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+}
+.beint__skjar iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.beint__tomt { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; }
+.beint__tomt::before {   /* dauft skákborð í bakgrunni */
+  content: ''; position: absolute; inset: 0; opacity: .06; z-index: -1;
+  background: repeating-conic-gradient(var(--gull) 0 25%, transparent 0 50%) 50% 50% / 80px 80px;
+  -webkit-mask: radial-gradient(60% 70% at 50% 50%, #000, transparent); mask: radial-gradient(60% 70% at 50% 50%, #000, transparent);
+}
+.beint__merki { display: inline-flex; align-items: center; gap: 9px; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--dauft); background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .16); }
+.beint__merki i { width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, .4); }
+.beint__skjar.er-i-beinni .beint__merki { color: #fff; }
+.beint__tomt strong { font: 700 clamp(26px, 18px + 2vw, 44px)/1.05 var(--letur-h); letter-spacing: -.03em; color: #fff; }
+.beint__tomt p { color: var(--dauft); max-width: 28em; }
+.beint__takkar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 6px; }
+.beint__lifandi { position: absolute; left: 16px; top: 16px; z-index: 2; display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; letter-spacing: .08em; color: #fff; background: #e5484d; pointer-events: none; }
+.beint__lifandi i { width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: beint-puls 1.4s ease-in-out infinite; }
+@keyframes beint-puls { 50% { opacity: .3; } }
+
+@media (max-width: 820px) {
+  .stig__listi { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 22px; }
+  .stig__kort { padding: 16px 12px 14px; border-radius: 20px; gap: 4px; }
+  .stig__kort::after { width: 90px; height: 90px; background-size: 30px 30px; }
+  .stig__teg { font-size: 10.5px; letter-spacing: .1em; }
+  .stig__kort strong { font-size: 34px; }
+  .stig__lysing { font-size: 12px; }
+  .stig__fleira li { padding: 9px 13px; font-size: 13px; }
+  .beint__skjar { aspect-ratio: 4 / 5; border-radius: 22px; }
+  .beint__skjar.er-i-beinni { aspect-ratio: 16 / 9; }
+}
+@media (prefers-reduced-motion: reduce) { .beint__lifandi i { animation: none; } }
+/* Biðspjaldið þarf ekki fulla 16:9 hæð í tölvu */
+@media (min-width: 821px) { .beint__skjar:not(.er-i-beinni) { aspect-ratio: 21 / 8; } }

@@ -56,3 +56,34 @@ document.querySelectorAll('.efni__skjar video').forEach(function (v) {
   v.addEventListener('play', function () { v.parentNode.classList.add('er-ad-spila'); });
   v.addEventListener('pause', function () { v.parentNode.classList.remove('er-ad-spila'); });
 });
+
+/* Í beinni: slóðin í data-straumur verður að spilara (Twitch, YouTube eða Kick) */
+(function () {
+  'use strict';
+  var skjar = document.querySelector('.beint__skjar');
+  if (!skjar) return;
+  var slod = (skjar.getAttribute('data-straumur') || '').trim();
+  if (!slod) return;
+  var u; try { u = new URL(slod); } catch (e) { return; }
+  var h = u.hostname.replace(/^www\.|^m\./, ''), inn = null;
+  if (h === 'twitch.tv') {
+    var nafn = u.pathname.split('/').filter(Boolean)[0];
+    if (nafn) inn = 'https://player.twitch.tv/?channel=' + encodeURIComponent(nafn) + '&parent=' + encodeURIComponent(location.hostname) + '&muted=true';
+  } else if (h === 'youtube.com' || h === 'youtu.be') {
+    var p = u.pathname.split('/').filter(Boolean), id = u.searchParams.get('v');
+    if (!id && h === 'youtu.be') id = p[0];
+    if (!id && (p[0] === 'live' || p[0] === 'embed' || p[0] === 'shorts')) id = p[1];
+    if (id) inn = 'https://www.youtube.com/embed/' + encodeURIComponent(id) + '?autoplay=1&mute=1&rel=0';
+    else if (u.searchParams.get('channel')) inn = 'https://www.youtube.com/embed/live_stream?channel=' + encodeURIComponent(u.searchParams.get('channel')) + '&autoplay=1&mute=1';
+  } else if (h === 'kick.com') {
+    var k = u.pathname.split('/').filter(Boolean)[0];
+    if (k) inn = 'https://player.kick.com/' + encodeURIComponent(k) + '?muted=true&autoplay=true';
+  }
+  if (!inn) return;
+  var f = document.createElement('iframe');
+  f.src = inn; f.title = 'Útsending Vignis Vatnar'; f.loading = 'lazy';
+  f.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+  f.allowFullscreen = true;
+  var tomt = skjar.querySelector('.beint__tomt'); if (tomt) tomt.remove();
+  skjar.classList.add('er-i-beinni'); skjar.appendChild(f);
+})();
