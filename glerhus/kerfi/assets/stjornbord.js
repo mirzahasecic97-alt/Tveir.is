@@ -97,7 +97,7 @@ async function start() {
     /* Glerspjöld eins og í fyrirmyndinni: miði, stór tala, gullör, og eitt af
        súluriti, framvindustiku, stöðupillu eða fólki fyrir neðan */
     function glerkort(k) {
-      return el('a', { class: 'gk' + (k.vidvorun ? ' gk--vidvorun' : ''), href: k.slod }, [
+      return el('a', { class: 'gk' + (k.vidvorun ? ' gk--vidvorun' : '') + (k.dokkt ? ' gk--dokkt' : ''), href: k.slod }, [
         el('span', { class: 'gk__or', 'aria-hidden': 'true', texti: '↗' }),
         el('span', { class: 'gk__midi', texti: k.midi }),
         el('strong', { class: 'gk__tala', texti: k.tala }),
@@ -116,6 +116,8 @@ async function start() {
       ]);
     }
     /* Greiðslur síðustu 12 mánaða og næstu 6, ein súla á mánuð */
+    /* 755.000 kr. -> "755 þ." í bólunni yfir súlu mánaðarins */
+    const stutt = (v) => (v >= 1e6 ? (Math.round(v / 1e5) / 10).toString().replace('.', ',') + ' m.' : Math.round(v / 1000) + ' þ.');
     function sulur() {
       const manudir = [];
       for (let i = -11; i <= 6; i++) manudir.push(naestiMan(NU_MAN, i));
@@ -123,7 +125,8 @@ async function start() {
       const mest = Math.max(1, ...gildi);
       return el('span', { class: 'gk__sulur', 'aria-hidden': 'true' },
         gildi.map((v, i) => el('i', {
-          class: i > 11 ? 'framtid' : '',
+          class: i > 11 ? 'framtid' : i === 11 ? 'nu' : '',
+          'data-v': i === 11 ? stutt(v) : null,
           style: 'height:' + Math.max(10, Math.round(v / mest * 100)) + '%',
           title: MAN[Number(manudir[i].slice(5, 7)) - 1] + ': ' + (kronur(Math.round(v)) || '0 kr.')
         })));
@@ -151,7 +154,7 @@ async function start() {
           'Fast ' + (pAn(greidslaNu) ? Math.round(pAn(fastNu) / pAn(greidslaNu) * 100) : 0) + '%',
           bokTala(aukaI(NU_MAN)) + ' í aukaverkum', 'graent')
       }) },
-      opnir: { heiti: 'Opnir taskar', smida: () => glerkort({
+      opnir: { heiti: 'Opnir taskar', smida: () => glerkort({ dokkt: true,
         midi: 'Opnir taskar', tala: fjoldiTaska(opin.length), slod: '#taskar',
         stada: seinir.length ? [seinir.length + ' komnir fram yfir', 'raudt']
                : nyir.length ? [nyir.length + (nyir.length === 1 ? ' nýr' : ' nýir'), 'gult']
@@ -283,8 +286,14 @@ async function start() {
               ? nyir.length + (nyir.length === 1 ? ' nýr taskur bíður okkar.' : ' nýir taskar bíða okkar.')
               : 'Ekkert nýtt hefur komið inn.' })
         ]),
-        breyta ? null : el('button', { type: 'button', class: 'btn btn--ghost btn--sm sb-breyta-hn', texti: 'Breyta útliti',
-                                       onclick: () => { breyta = true; teikna(true); } })
+        /* Smátölur við hlið fyrirsagnarinnar, eins og í fyrirmyndinni */
+        el('div', { class: 'sb-kpi' }, [
+          el('span', { class: 'sb-kpi__lidur' }, [el('i', { 'aria-hidden': 'true', texti: '✓' }), el('b', { texti: String(opin.length) }), el('small', { texti: 'opnir taskar' })]),
+          el('span', { class: 'sb-kpi__lidur' }, [el('i', { 'aria-hidden': 'true', texti: '+' }), el('b', { texti: String(nyir.length) }), el('small', { texti: nyir.length === 1 ? 'nýr' : 'nýir' })]),
+          el('span', { class: 'sb-kpi__lidur' + (seinir.length ? ' er-rautt' : '') }, [el('i', { 'aria-hidden': 'true', texti: '!' }), el('b', { texti: String(seinir.length) }), el('small', { texti: 'á eftir' })]),
+          breyta ? null : el('button', { type: 'button', class: 'btn btn--ghost btn--sm sb-breyta-hn', texti: 'Breyta útliti',
+                                         onclick: () => { breyta = true; teikna(true); } })
+        ])
       ]),
 
       breytiBordi(),

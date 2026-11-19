@@ -1,0 +1,159 @@
+/* ==========================================================================
+   Glerhúsið: litgler. Allur flöturinn í djúpum lit kerfisins (blátt, eða
+   litur stofunnar), hvít mött glerspjöld ofan á, pillumatseðill í miðju.
+   Fyrirmynd: stjórnborð í einum sterkum lit með frostuðu gleri.
+   Hlaðið síðast á öllum síðum kerfisins.
+   ========================================================================== */
+:root {
+  --lg-djup: color-mix(in srgb, var(--acc) 52%, #000);
+  --lg-mid: color-mix(in srgb, var(--acc) 86%, #000);
+  --lg-ljos: color-mix(in srgb, var(--acc) 62%, #fff);
+  --lg-gler: rgba(255, 255, 255, .8);
+  --lg-gler-brun: rgba(255, 255, 255, .65);
+  --lg-skuggi: 0 24px 60px -32px rgba(4, 10, 30, .55);
+  --lg-a-lit: rgba(255, 255, 255, .14);        /* gler ofan á litnum */
+  --lg-a-lit-brun: rgba(255, 255, 255, .26);
+}
+
+/* ---------- Flöturinn ---------- */
+html, html.gh-eigin-litur {
+  background:
+    radial-gradient(50% 45% at 10% -8%, color-mix(in srgb, var(--acc) 92%, #fff 8%), transparent 72%),
+    radial-gradient(45% 40% at 96% 0%, color-mix(in srgb, var(--acc) 100%, transparent), transparent 70%),
+    radial-gradient(70% 60% at 60% 115%, color-mix(in srgb, var(--acc) 75%, #000 25%), transparent 70%),
+    linear-gradient(165deg, var(--lg-mid) 0%, var(--lg-djup) 80%) !important;
+  background-attachment: fixed !important;
+  background-color: var(--lg-djup) !important;
+}
+html.gh-eigin-litur body::before, body::before { background: none !important; }
+.gb__ljos { display: none !important; }
+.gb__plata { background: linear-gradient(135deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .01) 60%, rgba(255, 255, 255, .03)) !important;
+  border-color: rgba(255, 255, 255, .16) !important; box-shadow: none !important; }
+.gb__plata::before, .gb__plata::after, .gb__glampi { opacity: .35; }
+
+/* ---------- Hausinn: glerrönd, pillumatseðill í miðju ---------- */
+.phead { background: transparent !important; border: 0 !important; box-shadow: none !important; padding-top: 12px;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.phead::before, .phead::after { display: none !important; }
+.phead .phead__inn {
+  background: var(--lg-a-lit); border: 1px solid var(--lg-a-lit-brun); border-radius: 24px;
+  padding: 8px 10px 8px 18px; min-height: 0;
+  -webkit-backdrop-filter: blur(20px) saturate(1.3); backdrop-filter: blur(20px) saturate(1.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 18px 40px -26px rgba(4, 10, 30, .6);
+}
+.phead__tveir, .phead__glerhus { filter: brightness(0) invert(1) !important; }
+.phead__skil { background: rgba(255, 255, 255, .25) !important; }
+.phead__nav { background: rgba(4, 10, 30, .18); border: 1px solid rgba(255, 255, 255, .14); border-radius: 999px; padding: 4px; gap: 2px; margin-inline: auto; }
+.phead .phead__nav a, .phead .phead__nav a:visited { color: rgba(255, 255, 255, .82) !important; background: transparent !important; min-height: 38px; padding: 9px 15px; }
+.phead .phead__nav a:hover { color: #fff !important; background: rgba(255, 255, 255, .1) !important; }
+.phead .phead__nav a[aria-current="page"] {
+  color: #fff !important; background: color-mix(in srgb, var(--acc) 78%, #fff 22%) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 0 0 1px rgba(255, 255, 255, .25), 0 8px 22px -8px color-mix(in srgb, var(--acc) 70%, #000) !important;
+}
+.phead .phead__fellival a.phead__undir { color: var(--ink) !important; }
+.phead .phead__fellival a.phead__undir:hover { background: var(--accs) !important; }
+.phead__notandi, .phead__notandi strong { color: #fff !important; }
+.phead__notandi { color: rgba(255, 255, 255, .7) !important; }
+.phead .btn, .phead .phead__stillingar {
+  color: #fff !important; background: rgba(255, 255, 255, .14) !important; border: 1px solid rgba(255, 255, 255, .28) !important;
+  box-shadow: none !important; border-radius: 999px !important;
+}
+.phead .btn:hover, .phead .phead__stillingar:hover { background: rgba(255, 255, 255, .24) !important; }
+.phead .phead__stillingar[aria-current="page"] { background: #fff !important; color: var(--lg-djup) !important; }
+.phead__hamborgari { background: rgba(255, 255, 255, .14) !important; border-color: rgba(255, 255, 255, .28) !important; }
+.phead__hamborgari span { background: #fff !important; }
+.phead.er-opin .phead__nav { background: rgba(4, 10, 30, .3) !important; border-color: rgba(255, 255, 255, .16) !important; border-radius: 20px; }
+
+/* ---------- Fyrirsögn síðunnar á litnum ---------- */
+.page-head h1, #innihald > h1 { color: #fff !important; font-weight: 500 !important; letter-spacing: -.035em; }
+.page-head .lead, .page-head p.skyring, .page-head > div > p { color: rgba(255, 255, 255, .78) !important; }
+.tf-tilbaka, .tf-tilbaka:visited { color: rgba(255, 255, 255, .85) !important; }
+.prufubanner { background: rgba(255, 255, 255, .85) !important; }
+
+/* Hnappar og síur sem standa beint á litnum */
+.page-head .btn, .page-head .filter, .dg-tol .btn, .dg-flokkur, .sk-flipi, .sk-tol .filter, .dg-syn .filter, .tf-haus ~ * .filter {
+  color: #fff !important; background: var(--lg-a-lit) !important; border: 1px solid var(--lg-a-lit-brun) !important; box-shadow: none !important;
+}
+.page-head .btn[type="submit"], .page-head .filter[aria-pressed="true"], .sk-flipi[aria-current="page"], .sk-tol .filter[aria-pressed="true"], .dg-syn .filter[aria-pressed="true"] {
+  color: var(--lg-djup) !important; background: #fff !important; border-color: #fff !important;
+}
+.dg-titill, .dg-fletta strong { color: #fff !important; }
+.dg-flokkur[aria-pressed="false"] { opacity: .5; }
+.sk-flipi--kemur { color: rgba(255, 255, 255, .6) !important; background: transparent !important; border-style: dashed !important; }
+.sk-flipi--kemur::after { background: rgba(255, 255, 255, .14) !important; }
+.sk-leit { background: rgba(255, 255, 255, .92) !important; }
+
+/* ---------- Glerspjöldin: hvítt matt gler ---------- */
+.card, .gk, .pkort, .tf-kort, .pdialog__kort, .inn__kort, .sk-listi, .st-teng, .tilkynning {
+  background: var(--lg-gler) !important; border: 1px solid var(--lg-gler-brun) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), var(--lg-skuggi) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4);
+  color: var(--ink) !important; border-radius: 24px;
+}
+.gk { border-radius: 26px !important; }
+.gk:hover { background: rgba(255, 255, 255, .9) !important; }
+.st-teng { background: rgba(255, 255, 255, .92) !important; }
+
+/* Dökka spjaldið: djúpur litur, hvítur texti (eins og "Your Reports") */
+.gk.gk--dokkt {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--acc) 50%, #0a1024), color-mix(in srgb, var(--acc) 28%, #050a18)) !important;
+  border-color: rgba(255, 255, 255, .14) !important; color: #fff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), var(--lg-skuggi) !important;
+}
+.gk.gk--dokkt .gk__midi { color: rgba(255, 255, 255, .7) !important; }
+.gk.gk--dokkt .gk__tala { color: #fff !important; }
+.gk.gk--dokkt .gk__or { color: var(--lg-ljos) !important; }
+.gk.gk--dokkt .gk__pilla { color: #fff !important; background: rgba(255, 255, 255, .12) !important; border-color: rgba(255, 255, 255, .2) !important; }
+.gk.gk--dokkt .gk__haus { border-color: color-mix(in srgb, var(--acc) 40%, #0a1024) !important; }
+
+/* Súlurnar: breiðar pillur, mánuðurinn í lit með tölu í bólu */
+.gk__sulur { gap: 5px; height: 92px !important; align-items: flex-end; margin-top: 18px !important; }
+.gk__sulur i { flex: 1 1 0; width: auto !important; min-width: 4px; border-radius: 999px !important;
+  background: rgba(28, 48, 80, .09) !important; }
+.gk__sulur i.framtid { background: transparent !important; box-shadow: inset 0 0 0 1px rgba(28, 48, 80, .14); }
+.gk__sulur i.nu { position: relative; background: linear-gradient(180deg, var(--lg-ljos), var(--acc)) !important;
+  box-shadow: 0 10px 20px -8px var(--acc); }
+.gk__sulur i.nu::after { content: attr(data-v); position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%);
+  padding: 3px 8px; border-radius: 999px; font: 600 11px/1.2 var(--f-body); white-space: nowrap; color: #fff; background: var(--ink); }
+.gk__stika { background: rgba(28, 48, 80, .05) !important; border: 0 !important; }
+
+/* Smátölurnar við hlið fyrirsagnarinnar */
+.sb-haus { align-items: center !important; }
+.sb-kpi { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sb-kpi__lidur { display: inline-flex; align-items: center; gap: 9px; padding: 6px 16px 6px 6px; border-radius: 999px; color: #fff;
+  background: var(--lg-a-lit); border: 1px solid var(--lg-a-lit-brun); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.sb-kpi__lidur i { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font: 700 14px/1 var(--f-body); font-style: normal;
+  color: var(--lg-djup); background: #fff; }
+.sb-kpi__lidur.er-rautt i { background: #ff7a6b; color: #fff; }
+.sb-kpi__lidur b { font: 600 18px/1 var(--f-head); }
+.sb-kpi__lidur small { font-size: 12.5px; color: rgba(255, 255, 255, .75); }
+.sb-breyta-hn { margin: 0 !important; }
+
+/* ---------- Pósthólfið: opinn póstur á glerspjaldi ---------- */
+.sk-grind.er-opid .sk-thradur {
+  background: var(--lg-gler) !important; border: 1px solid var(--lg-gler-brun) !important; border-radius: 28px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), var(--lg-skuggi) !important;
+  padding: clamp(20px, 3vw, 40px) clamp(18px, 4vw, 56px) !important;
+}
+.sk-tilbaka { background: rgba(255, 255, 255, .9) !important; }
+
+/* ---------- Dagatalið ---------- */
+.dg-manudur { background: var(--lg-gler) !important; }
+.dg-athugid { background: rgba(255, 255, 255, .9) !important; }
+
+/* ---------- Tölfræði: hausinn á litnum ---------- */
+.tf-haus .lead { color: rgba(255, 255, 255, .78) !important; }
+.tf-velja select { background: rgba(255, 255, 255, .92) !important; }
+
+@media (max-width: 900px) {
+  .phead .phead__inn { border-radius: 20px; padding: 8px 8px 8px 14px;
+    background: color-mix(in srgb, var(--lg-djup) 55%, transparent); border-color: rgba(255, 255, 255, .18); }
+  .phead__nav { background: transparent; border: 0; padding: 0; }
+  .sb-kpi { width: 100%; }
+  .sb-kpi__lidur { padding-right: 12px; }
+}
+
+/* Smáskýringar sem standa beint á litnum (ekki í spjaldi) */
+#innihald .skyring:not(.card .skyring, .gk .skyring, .pkort .skyring, .tf-kort .skyring, dialog .skyring, .st-teng .skyring, .sk-thradur .skyring, .sk-listi .skyring, .tilkynning .skyring, .dg-manudur .skyring, .pdialog__kort .skyring) {
+  color: rgba(255, 255, 255, .72) !important;
+}
