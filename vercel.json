@@ -30,6 +30,16 @@
       "source": "/glerhusid/:slod*",
       "destination": "https://glerhusid.vercel.app/:slod*",
       "permanent": false
+    },
+    {
+      "source": "/vinnusvaedi",
+      "destination": "/glerhus/kerfi/",
+      "permanent": false
+    },
+    {
+      "source": "/vinnusvaedi/:slod*",
+      "destination": "/glerhus/kerfi/:slod*",
+      "permanent": false
     }
   ],
   "headers": [
