@@ -219,3 +219,23 @@ html[data-thema="naeturborg"] .hero::after {
 @keyframes synis-renna { from { transform: translate3d(-50%, 0, 0); } to { transform: translate3d(0, 0, 0); } }
 @media (prefers-reduced-motion: reduce) { .synis__braut { animation: none; } }
 html[data-thema="naeturborg"] .synis__vid { background: linear-gradient(160deg, #5a2378, #2c0f45); box-shadow: 0 14px 30px -18px rgba(58, 22, 80, .55); }
+
+/* Sýnishornin inni í hero, neðst, frá brún að brún. Nöfnin undir fyrirsögninni. */
+.hero .synis {
+  --hero-pad: clamp(28px, 4vw, 60px);
+  align-self: stretch; margin: clamp(16px, 2.2vw, 26px) calc(-1 * var(--hero-pad)) calc(-1 * var(--hero-pad) + 16px);
+}
+.hero .synis__vid { border-color: rgba(255, 255, 255, .35); box-shadow: 0 14px 30px -14px rgba(0, 0, 0, .6); }
+.hero .hero__nofn { align-self: flex-start; text-align: left; margin-top: 2px; }
+
+/* Sýnishornin á línunni: hálf yfir myndinni, hálf fyrir neðan. Heil, ekki gegnsæ. */
+:root { --synis-b: clamp(92px, 7.6vw, 124px); --synis-h: calc(var(--synis-b) * 16 / 9); }
+.synis__vid { width: var(--synis-b); }
+.synis.synis--lina {
+  position: relative; z-index: 4; margin: calc(var(--synis-h) / -2) 0 0;
+  -webkit-mask-image: none; mask-image: none; padding: 0 0 18px;
+}
+.synis--lina .synis__vid { border: 2px solid #fff; box-shadow: 0 18px 34px -16px rgba(28, 48, 80, .55); background: #1c3050; }
+html[data-thema="naeturborg"] .synis--lina .synis__vid { border-color: #fff4fa; background: #2c0f45; }
+/* Hnapparnir ofar svo sýnishornin hylji þá ekki */
+.hero__yfir { padding-bottom: calc(var(--synis-h) / 2 + clamp(22px, 3vw, 40px)) !important; }
