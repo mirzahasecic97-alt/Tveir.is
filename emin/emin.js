@@ -56,3 +56,26 @@ document.querySelectorAll('.efni__skjar video').forEach(function (v) {
   v.addEventListener('play', function () { v.parentNode.classList.add('er-ad-spila'); });
   v.addEventListener('pause', function () { v.parentNode.classList.remove('er-ad-spila'); });
 });
+
+/* Sleðinn: örvarnar færa um nokkur myndbönd í einu */
+(function () {
+  var listi = document.querySelector('.efni__listi');
+  var orvar = document.querySelectorAll('.efni__or');
+  if (!listi || !orvar.length) return;
+  function stada() {
+    var max = listi.scrollWidth - listi.clientWidth - 2;
+    orvar[0].disabled = listi.scrollLeft <= 2;
+    orvar[1].disabled = listi.scrollLeft >= max;
+  }
+  orvar.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var kort = listi.querySelector('.efni');
+      var skref = kort ? kort.getBoundingClientRect().width + 16 : 280;
+      var fjoldi = Math.max(1, Math.floor(listi.clientWidth / skref) - 1);
+      listi.scrollBy({ left: +b.getAttribute('data-att') * skref * fjoldi, behavior: 'smooth' });
+    });
+  });
+  listi.addEventListener('scroll', stada, { passive: true });
+  window.addEventListener('resize', stada);
+  stada();
+})();
