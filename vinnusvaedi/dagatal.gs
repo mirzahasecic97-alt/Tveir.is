@@ -4,7 +4,8 @@
    verk-postur.gs.
 
    samstillaDagatal_  keyrir með lesaVerk á 5 mínútna fresti. Sendir fundina
-                      í aðaldagatalinu, frá 14 dögum aftur til 90 daga fram.
+                      í öllum dagatölum sem tveir@tveir.is sér (eigin og deild,
+                      ekki frídagar né afmæli), frá 14 dögum aftur til 90 fram.
    samstillaDagatal   sama, til að keyra einu sinni í ritlinum. Þá biður
                       Google um leyfi fyrir dagatalinu.
    ========================================================================== */
@@ -21,10 +22,23 @@ function samstillaDagatal_() {
   const nu = Date.now();
   const fra = new Date(nu - DAGATAL_AFTUR * 864e5);
   const til = new Date(nu + DAGATAL_FRAM * 864e5);
-  const dagatal = CalendarApp.getDefaultCalendar();
-  const dagatalId = dagatal.getId();
+  /* Öll dagatöl sem sjást, nema frídagar, afmæli og falin */
+  const dagatol = CalendarApp.getAllCalendars().filter((c) => {
+    const id = String(c.getId());
+    return !c.isHidden() && !/#holiday@|#contacts@|addressbook#|#weeknum@/.test(id);
+  });
+  const sed = new Set();
+  const allir = [];
+  dagatol.forEach((c) => {
+    c.getEvents(fra, til).forEach((e) => {
+      const k = e.getId() + '|' + e.getStartTime().getTime();
+      if (sed.has(k)) return;
+      sed.add(k);
+      allir.push({ e: e, dagatalId: c.getId() });
+    });
+  });
 
-  const atburdir = dagatal.getEvents(fra, til).slice(0, 1000).map((e) => {
+  const atburdir = allir.slice(0, 1000).map(({ e, dagatalId }) => {
     const allan = e.isAllDayEvent();
     const byrjar = allan ? e.getAllDayStartDate() : e.getStartTime();
     const endar = allan ? e.getAllDayEndDate() : e.getEndTime();
@@ -55,6 +69,6 @@ function samstillaDagatal_() {
   });
 
   const svar = kalla_('dagatal_skra', { p_gogn: atburdir, p_fra: fra.toISOString(), p_til: til.toISOString() });
-  console.log('Dagatal: ' + atburdir.length + ' fundir, svar ' + svar);
+  console.log('Dagatal: ' + dagatol.length + ' dagatöl, ' + atburdir.length + ' fundir, svar ' + svar);
   return svar;
 }
