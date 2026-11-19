@@ -499,3 +499,19 @@ html[data-thema="naeturborg"] .profill-sida__texti h1 { font-family: var(--nb-le
   .profill__or { width: 34px !important; height: 34px !important; font-size: 15px !important; }
   .profill__texti { max-width: calc(100% - 60px); }
 }
+
+/* Þriðja kortið: Ert þú næst/ur? */
+.profilar__listi { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; max-width: none !important; }
+.profill--naest {
+  background: radial-gradient(80% 60% at 50% 30%, color-mix(in srgb, var(--acc) 55%, #fff) 0%, transparent 70%), linear-gradient(160deg, color-mix(in srgb, var(--acc) 80%, #000), #1c3050);
+}
+.profill__skuggi { position: absolute; left: 50%; top: 16%; width: 62%; transform: translateX(-50%); filter: blur(1.5px); }
+.profill__spurn { position: absolute; left: 50%; top: 19%; transform: translateX(-50%); font: 700 clamp(48px, 5vw, 72px)/1 var(--f-head); color: rgba(28, 48, 80, .55); }
+.profill--naest:hover .profill__skuggi { filter: blur(0); }
+html[data-thema="naeturborg"] .profill--naest { background: radial-gradient(80% 60% at 50% 30%, #ff8fc4 0%, transparent 70%), linear-gradient(160deg, #a2397a, #2c0f45); }
+html[data-thema="naeturborg"] .profill__spurn { color: rgba(44, 15, 69, .55); }
+@media (min-width: 761px) {
+  .profill__nafn { font-size: clamp(22px, 12px + 1.2vw, 32px) !important; }
+  .profill__texti { max-width: calc(100% - 84px); }
+}
+@media (max-width: 760px) { .profill__nafn { font-size: 20px !important; } .profill__texti { max-width: calc(100% - 64px) !important; } }
