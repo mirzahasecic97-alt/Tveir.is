@@ -506,3 +506,9 @@ html, body { background: linear-gradient(165deg, #3d3326 0%, #2a2219 42%, #17130
 
 /* Tíu myndbönd: fimm í röð í tölvu */
 @media (min-width: 1101px) { .efni__listi { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; } .efni figcaption strong { font-size: 19px; } }
+
+/* Merkið í horninu: tígullinn með kónginum, við hlið nafnsins */
+.haus__merki { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+.haus__merki img.haus__vv { display: block; width: 34px; height: 34px; filter: none !important; }
+.haus__nafn { font: inherit; }
+@media (max-width: 820px) { .haus__merki img.haus__vv { width: 30px; height: 30px; } }
