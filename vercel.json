@@ -37,6 +37,11 @@
       "permanent": false
     },
     {
+      "source": "/vinnusvaedi/",
+      "destination": "/glerhus/kerfi/",
+      "permanent": false
+    },
+    {
       "source": "/vinnusvaedi/:slod*",
       "destination": "/glerhus/kerfi/:slod*",
       "permanent": false
