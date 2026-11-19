@@ -59,6 +59,8 @@
   } catch (e) { /* einkagluggi: sýnum opnunina */ }
   /* Í GTA þemanu flýgur þyrlan yfir í hvert sinn sem forsíðan opnast */
   var gta = document.documentElement.getAttribute('data-thema') === 'naeturborg';
+  /* Venjulega þemað: engin opnun með Tveir merkinu, síðan birtist strax */
+  if (!gta && opnun) { opnun.remove(); opnun = null; }
   var h = (fyrstaSinn || gta) ? 1 : 0.5;
 
   var inn = gsap.timeline({ defaults: { ease: 'power4.out' } });

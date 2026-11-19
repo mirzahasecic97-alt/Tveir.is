@@ -421,3 +421,5 @@ html[data-thema="naeturborg"] .vl-teng__texti { color: rgba(58, 22, 80, .72); }
    leggirnir á g, j, y og þ skárust af. Smá rými neðst, tekið til baka. */
 .section-title > div, h1 > div, h2 > div { padding-bottom: .16em !important; margin-bottom: -.16em !important; }
 .section-title em, h2 em { padding-bottom: .1em; }
+/* Venjulega þemað: engin opnun með merkinu (líka ekki augnablik áður en JS keyrir) */
+html:not([data-thema="naeturborg"]) .hr-opnun { display: none !important; }
