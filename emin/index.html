@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Emin Kadri | The Iceman</title>
+<meta name="description" content="Emin Kadri Eminsson, atvinnuboxari frá Íslandi. Ferillinn, myndböndin og verslunin.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Emin Kadri | The Iceman">
+<meta property="og:description" content="Atvinnuboxari frá Íslandi. Ferillinn, myndböndin og verslunin.">
+<meta property="og:image" content="media/emin-hringur.jpg">
+<meta name="theme-color" content="#07090d">
+<link rel="icon" href="media/emin-profill.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="emin.css">
+<script src="emin.js" defer></script>
+</head>
+<body>
+
+<header class="haus" id="haus">
+  <a class="haus__merki" href="#efst" aria-label="Emin Kadri, efst">EMIN <span>KADRI</span></a>
+  <nav class="haus__tenglar" aria-label="Valmynd">
+    <a href="#um">Um</a>
+    <a href="#ferill">Ferill</a>
+    <a href="#myndbond">Myndbönd</a>
+    <a href="#verslun">Verslun</a>
+  </nav>
+  <a class="hnappur hnappur--litill" href="#samband">Hafa samband</a>
+  <button class="haus__hamborgari" type="button" aria-expanded="false" aria-controls="haus" aria-label="Valmynd"><span></span><span></span></button>
+</header>
+
+<main id="efst">
+
+  <!-- Hero: myndband í bakgrunni -->
+  <section class="hetja" aria-labelledby="nafn">
+    <video class="hetja__vid" src="media/emin-1.mp4" poster="media/emin-hringur.jpg" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+    <div class="hetja__texti">
+      <span class="hetja__undir">Atvinnuboxari frá Íslandi</span>
+      <h1 id="nafn">Emin<br>Kadri</h1>
+      <span class="hetja__gaelu">The Iceman</span>
+      <div class="hetja__hnappar">
+        <a class="hnappur" href="#verslun">Verslun</a>
+        <a class="hnappur hnappur--gler" href="#myndbond">Horfa á bardagana</a>
+      </div>
+    </div>
+    <a class="hetja__skruna" href="#um" aria-label="Skruna niður"><i></i></a>
+  </section>
+
+  <!-- Um -->
+  <section class="kafli um" id="um" aria-labelledby="um-h">
+    <div class="um__mynd">
+      <img src="media/emin-hringur.jpg" alt="Emin Kadri í hringnum" width="675" height="1200" loading="lazy">
+      <img class="um__profill" src="media/emin-profill.jpg" alt="" width="200" height="200" loading="lazy">
+    </div>
+    <div class="um__texti">
+      <span class="midi">Um Emin</span>
+      <h2 id="um-h">Ísmaðurinn í hringnum.</h2>
+      <p>Emin Kadri Eminsson er atvinnuboxari frá Íslandi. Hann barðist á fyrsta atvinnumannakvöldinu í boxi sem haldið hefur verið á Íslandi.</p>
+      <p>Hér fylgist þú með ferlinum, horfir á bardagana og verslar vörurnar hans.</p>
+    </div>
+  </section>
+
+  <!-- Ferill -->
+  <section class="kafli ferill" id="ferill" aria-labelledby="ferill-h">
+    <span class="midi">Ferillinn</span>
+    <h2 id="ferill-h">Ósigraður sem atvinnumaður.</h2>
+    <div class="ferill__tolur">
+      <div class="tala"><strong>3-0</strong><span>Sigrar og töp sem atvinnumaður</span></div>
+      <div class="tala"><strong>1.</strong><span>Atvinnumannakvöldið í boxi á Íslandi</span></div>
+      <div class="tala"><strong>ISL</strong><span>Berst fyrir Ísland</span></div>
+    </div>
+  </section>
+
+  <!-- Myndbönd -->
+  <section class="kafli myndbond" id="myndbond" aria-labelledby="myndbond-h">
+    <span class="midi">Myndbönd</span>
+    <h2 id="myndbond-h">Úr hringnum.</h2>
+    <div class="myndbond__listi">
+      <video src="media/emin-1.mp4" poster="media/emin-hringur.jpg" controls playsinline preload="metadata"></video>
+      <video src="media/emin-2.mp4" controls playsinline preload="metadata"></video>
+    </div>
+  </section>
+
+  <!-- Verslun -->
+  <section class="kafli verslun" id="verslun" aria-labelledby="verslun-h">
+    <div class="verslun__kassi">
+      <span class="midi">Verslun</span>
+      <h2 id="verslun-h">Vörurnar koma bráðum.</h2>
+      <p>Fyrsta línan af Iceman vörunum er á leiðinni. Skráðu þig og þú færð að vita fyrst.</p>
+      <a class="hnappur" href="mailto:tveir@tveir.is?subject=Emin%20Kadri%20v%C3%B6rur%3A%20l%C3%A1ta%20mig%20vita">Láta mig vita</a>
+    </div>
+  </section>
+
+  <!-- Samband -->
+  <section class="kafli samband" id="samband" aria-labelledby="samband-h">
+    <span class="midi">Samstarf og styrktaraðilar</span>
+    <h2 id="samband-h">Viltu vinna með Emin?</h2>
+    <p>Styrktarsamningar, viðburðir og samstarf. Sendu línu og við svörum fljótt.</p>
+    <a class="hnappur" href="mailto:tveir@tveir.is?subject=Samstarf%20vi%C3%B0%20Emin%20Kadri">tveir@tveir.is</a>
+  </section>
+
+</main>
+
+<footer class="fotur">
+  <span>© <span data-ar>2026</span> Emin Kadri</span>
+  <a href="https://tveir.is" target="_blank" rel="noopener">Vefsíða: Tveir</a>
+</footer>
+
+</body>
+</html>

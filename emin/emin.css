@@ -1,0 +1,121 @@
+/* ==========================================================================
+   Emin Kadri: The Iceman. Sér vefur, hannaður af Tveir.
+   Dökkt og þungt, ísblár áherslulitur. Anton í fyrirsögnum, Inter í texta.
+   ========================================================================== */
+:root {
+  --svart: #07090d;
+  --djup: #0d1118;
+  --flotur: #121822;
+  --lina: rgba(255, 255, 255, .1);
+  --hvitt: #f4f7fb;
+  --dauft: rgba(244, 247, 251, .62);
+  --is: #8fd3ff;
+  --is-djupt: #3aa6e6;
+  --letur-h: 'Anton', 'Impact', sans-serif;
+  --letur: 'Inter', system-ui, sans-serif;
+  --gut: clamp(16px, 4vw, 48px);
+  --breidd: 1180px;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--svart); }
+body { margin: 0; background: var(--svart); color: var(--hvitt); font: 400 17px/1.6 var(--letur); -webkit-font-smoothing: antialiased; }
+img, video { display: block; max-width: 100%; }
+a { color: inherit; }
+h1, h2 { font-family: var(--letur-h); font-weight: 400; text-transform: uppercase; letter-spacing: .01em; line-height: .95; margin: 0; }
+h2 { font-size: clamp(40px, 26px + 4vw, 84px); }
+.midi { display: inline-block; font: 600 13px/1 var(--letur); letter-spacing: .18em; text-transform: uppercase; color: var(--is); margin-bottom: 18px; }
+
+/* Hnappar */
+.hnappur {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 26px;
+  border-radius: 999px; text-decoration: none; font: 600 15px/1 var(--letur); letter-spacing: .02em;
+  color: #04121c; background: linear-gradient(180deg, #c3e9ff, var(--is)); border: 1px solid #c3e9ff;
+  box-shadow: 0 12px 30px -14px rgba(143, 211, 255, .8); transition: transform .2s ease, box-shadow .2s ease;
+}
+.hnappur:hover { transform: translateY(-2px); box-shadow: 0 18px 38px -14px rgba(143, 211, 255, .9); }
+.hnappur--gler { color: var(--hvitt); background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .35); box-shadow: none; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.hnappur--litill { min-height: 42px; padding: 0 18px; font-size: 14px; }
+
+/* Haus */
+.haus {
+  position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 50;
+  width: min(var(--breidd), calc(100% - 2 * var(--gut))); display: flex; align-items: center; gap: 18px;
+  padding: 8px 8px 8px 22px; border-radius: 999px;
+  background: rgba(7, 9, 13, .55); border: 1px solid var(--lina); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+}
+.haus__merki { font: 400 22px/1 var(--letur-h); letter-spacing: .04em; text-decoration: none; }
+.haus__merki span { color: var(--is); }
+.haus__tenglar { display: flex; gap: 4px; margin-left: auto; }
+.haus__tenglar a { text-decoration: none; color: var(--dauft); padding: 10px 14px; border-radius: 999px; font-size: 15px; }
+.haus__tenglar a:hover { color: var(--hvitt); background: rgba(255, 255, 255, .06); }
+.haus__hamborgari { display: none; }
+
+/* Hero */
+.hetja { position: relative; min-height: 100svh; display: grid; align-items: end; overflow: hidden; isolation: isolate; }
+.hetja__vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+.hetja::after {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background:
+    linear-gradient(to top, var(--svart) 0%, rgba(7, 9, 13, .7) 28%, rgba(7, 9, 13, .15) 60%, rgba(7, 9, 13, .55) 100%),
+    radial-gradient(60% 50% at 15% 80%, rgba(58, 166, 230, .25), transparent 70%);
+}
+.hetja__texti { width: min(var(--breidd), calc(100% - 2 * var(--gut))); margin: 0 auto; padding-bottom: clamp(70px, 12vh, 130px); }
+.hetja__undir { display: inline-block; font: 600 13px/1 var(--letur); letter-spacing: .2em; text-transform: uppercase; color: var(--dauft); }
+.hetja h1 { font-size: clamp(84px, 40px + 12vw, 220px); line-height: .86; margin-top: 14px; }
+.hetja__gaelu {
+  display: inline-block; margin-top: 14px; font: 400 clamp(26px, 16px + 2.4vw, 46px)/1 var(--letur-h); letter-spacing: .08em; text-transform: uppercase;
+  background: linear-gradient(100deg, #e8f7ff, var(--is) 45%, var(--is-djupt)); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hetja__hnappar { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+.hetja__skruna { position: absolute; left: 50%; bottom: 22px; width: 26px; height: 42px; margin-left: -13px; border: 2px solid rgba(255, 255, 255, .4); border-radius: 14px; }
+.hetja__skruna i { position: absolute; left: 50%; top: 8px; width: 4px; height: 8px; margin-left: -2px; border-radius: 2px; background: #fff; animation: skruna 1.6s ease-in-out infinite; }
+@keyframes skruna { 0% { opacity: 0; transform: translateY(0); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(12px); } }
+
+/* Kaflar */
+.kafli { width: min(var(--breidd), calc(100% - 2 * var(--gut))); margin: 0 auto; padding: clamp(80px, 12vw, 150px) 0 0; }
+.kafli p { color: var(--dauft); max-width: 36em; margin: 18px 0 0; font-size: clamp(17px, 15.5px + .4vw, 20px); }
+
+.um { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 5vw, 80px); align-items: center; }
+.um__mynd { position: relative; }
+.um__mynd > img:first-child { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 28px; border: 1px solid var(--lina); }
+.um__profill { position: absolute; right: -18px; bottom: -18px; width: 104px; height: 104px; border-radius: 50%; object-fit: cover; border: 4px solid var(--svart); box-shadow: 0 0 0 2px var(--is); }
+
+.ferill__tolur { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 40px; }
+.tala { padding: 28px 26px; border-radius: 24px; background: linear-gradient(160deg, var(--flotur), var(--djup)); border: 1px solid var(--lina); }
+.tala strong { display: block; font: 400 clamp(56px, 30px + 4vw, 96px)/.9 var(--letur-h); color: var(--is); }
+.tala span { display: block; margin-top: 12px; color: var(--dauft); font-size: 15px; }
+
+.myndbond__listi { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-top: 36px; }
+.myndbond__listi video { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 22px; background: var(--flotur); border: 1px solid var(--lina); }
+
+.verslun__kassi {
+  position: relative; overflow: hidden; padding: clamp(36px, 6vw, 80px); border-radius: 34px;
+  background: radial-gradient(70% 90% at 100% 0%, rgba(143, 211, 255, .22), transparent 60%), linear-gradient(160deg, #101722, #0a0e14);
+  border: 1px solid rgba(143, 211, 255, .22);
+}
+.verslun__kassi .hnappur { margin-top: 28px; }
+
+.samband { padding-bottom: clamp(60px, 9vw, 110px); }
+.samband .hnappur { margin-top: 26px; }
+
+.fotur { width: min(var(--breidd), calc(100% - 2 * var(--gut))); margin: 0 auto; padding: 28px 0 40px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--dauft); font-size: 14px; }
+.fotur a { text-decoration: none; }
+.fotur a:hover { color: var(--hvitt); }
+
+/* Sími */
+@media (max-width: 820px) {
+  .haus { padding-left: 18px; gap: 10px; }
+  .haus__tenglar { display: none; position: absolute; top: calc(100% + 8px); left: 0; right: 0; flex-direction: column; padding: 8px; border-radius: 22px; background: rgba(7, 9, 13, .92); border: 1px solid var(--lina); }
+  .haus.er-opin .haus__tenglar { display: flex; }
+  .haus__tenglar a { padding: 14px 16px; font-size: 16px; color: var(--hvitt); }
+  .haus > .hnappur { margin-left: auto; }
+  .haus__hamborgari { display: grid; place-content: center; gap: 6px; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--lina); background: rgba(255, 255, 255, .06); cursor: pointer; }
+  .haus__hamborgari span { display: block; width: 16px; height: 2px; border-radius: 2px; background: #fff; }
+  .um { grid-template-columns: 1fr; }
+  .um__mynd { max-width: 420px; }
+  .um__profill { right: 10px; width: 84px; height: 84px; }
+  .ferill__tolur { grid-template-columns: 1fr; }
+  .myndbond__listi { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+}
+@media (max-width: 420px) { .haus > .hnappur { display: none; } .haus__hamborgari { margin-left: auto; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .hetja__skruna i { animation: none; } .hnappur { transition: none; } }

@@ -57,5 +57,17 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/:slod*",
+      "has": [
+        {
+          "type": "host",
+          "value": "eminkadri.tveir.is"
+        }
+      ],
+      "destination": "/emin/:slod*"
+    }
   ]
 }
