@@ -1,0 +1,177 @@
+/* ==========================================================================
+   Tveir.is: sama útlit og Glerhúsið
+   Hlaðið síðast, á eftir themu.css. Glerplötur í bakgrunninum (gler-bak.js),
+   hvítt matt gler á kortunum, fyrirsagnir til vinstri með litlum yfirtitli
+   og bláu áhersluorði, lokakallið sem glerspjald.
+   Venjulegt fyrst, GTA (naeturborg) neðst í skránni.
+   Takirðu <link> á þessa skrá út verður síðan eins og hún var.
+   ========================================================================== */
+
+:root {
+  --sr-gler: linear-gradient(150deg, rgba(255, 255, 255, .8), rgba(255, 255, 255, .52));
+  --sr-brun: rgba(255, 255, 255, .95);
+  --sr-fall: 0 24px 50px -28px rgba(28, 48, 80, .3);
+  --sr-radius: 30px;
+}
+
+/* ---------- Glerplöturnar ---------- */
+.gb { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.gb__plata {
+  position: absolute; border-radius: 64px; will-change: transform; overflow: hidden;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .55) 0%, rgba(255, 255, 255, .22) 40%, rgba(255, 255, 255, .12) 62%, rgba(255, 255, 255, .4) 100%);
+  border: 1px solid rgba(255, 255, 255, .95);
+  box-shadow: inset 0 1.5px 0 #fff, inset 1.5px 0 0 rgba(255, 255, 255, .6), 0 40px 80px -50px rgba(28, 48, 80, .3);
+}
+.gb__plata::before {
+  content: ''; position: absolute; inset: -40% auto -40% 12%; width: 22%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .7), rgba(255, 255, 255, 0));
+  transform: rotate(24deg); filter: blur(6px);
+}
+.gb__plata::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, .5) 50%, transparent 60%) -160% 0 / 260% 100% no-repeat;
+  animation: sr-gljai 11s ease-in-out infinite;
+}
+.gb__plata--2::after { animation-delay: 3s; } .gb__plata--3::after { animation-delay: 6s; } .gb__plata--4::after { animation-delay: 8s; }
+@keyframes sr-gljai { 0%, 60% { background-position: -160% 0; } 100% { background-position: 260% 0; } }
+.gb__plata--1 { width: 40vw; height: 34vw; min-width: 340px; min-height: 290px; right: -6vw; top: -6vw; transform: rotate(-14deg); animation: sr-svif1 24s ease-in-out infinite alternate; }
+.gb__plata--2 { width: 32vw; height: 26vw; min-width: 280px; min-height: 230px; left: -8vw; top: 38vh; transform: rotate(11deg); animation: sr-svif2 28s ease-in-out infinite alternate; }
+.gb__plata--3 { width: 22vw; height: 16vw; min-width: 200px; min-height: 150px; left: 44vw; bottom: -4vw; transform: rotate(-7deg); border-radius: 48px; animation: sr-svif3 22s ease-in-out infinite alternate; }
+.gb__plata--4 { width: 14vw; height: 12vw; min-width: 140px; min-height: 120px; left: 18vw; top: 4vh; transform: rotate(22deg); border-radius: 40px; animation: sr-svif4 30s ease-in-out infinite alternate; }
+@keyframes sr-svif1 { to { transform: translate3d(-2vw, 3vh, 0) rotate(-10deg); } }
+@keyframes sr-svif2 { to { transform: translate3d(2.5vw, -3vh, 0) rotate(15deg); } }
+@keyframes sr-svif3 { to { transform: translate3d(-3vw, -2vh, 0) rotate(-3deg); } }
+@keyframes sr-svif4 { to { transform: translate3d(2vw, 4vh, 0) rotate(28deg); } }
+.gb__glampi { position: absolute; inset: 0; background: radial-gradient(70% 40% at 50% -10%, rgba(255, 255, 255, .6), transparent 70%); }
+@media (max-width: 760px) {
+  .gb__plata--3, .gb__plata--4 { display: none; }
+  .gb__plata { border-radius: 44px; }
+  .gb__plata--1 { width: 78vw; height: 60vw; right: -24vw; top: -10vw; }
+  .gb__plata--2 { width: 70vw; height: 54vw; left: -30vw; top: 50vh; }
+}
+@media (prefers-reduced-motion: reduce) { .gb__plata, .gb__plata::after { animation: none !important; } }
+html.er-ad-skruna .gb__plata, html.er-ad-skruna .gb__plata::after { animation-play-state: paused; }
+
+/* ---------- Yfirtitill og fyrirsagnir eins og á Glerhúsinu ---------- */
+.midi {
+  display: inline-block; text-transform: uppercase; letter-spacing: .08em;
+  font: 500 13px/1.2 var(--f-body); color: var(--soft);
+}
+.kafla-haus { margin: 0 0 clamp(24px, 3vw, 38px); }
+.kafla-haus .section-title {
+  text-align: left; margin: 14px 0 0; max-width: 18em;
+  font-size: clamp(30px, 22px + 2vw, 48px); font-weight: 600;
+  letter-spacing: -.025em; line-height: 1.06;
+}
+.kafla-haus .lead { margin-top: 14px; max-width: 40em; }
+.section-title em, h1 em, h2 em {
+  font-style: normal;
+  background: linear-gradient(100deg, var(--acc-hover, #4a83e2) 0%, var(--acc) 55%, color-mix(in srgb, var(--acc) 62%, #fff) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero__yfir h1 em {
+  background: linear-gradient(100deg, #b9d4fb 0%, #8fb6f7 60%, #d6e6fd 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* Logostrimillinn: lítill yfirtitill í stað stórrar fyrirsagnar */
+.trust > h2 {
+  text-transform: uppercase; letter-spacing: .08em; text-align: center;
+  font: 500 13px/1.2 var(--f-body) !important; color: var(--soft) !important;
+}
+
+/* ---------- Hvítt matt gler ---------- */
+.card, .leid, .trust, .pillnav {
+  background: var(--sr-gler) !important;
+  border: 1.5px solid var(--sr-brun) !important;
+  box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(28, 48, 80, .04), var(--sr-fall) !important;
+}
+.card, .leid, .trust { border-radius: var(--sr-radius) !important; }
+.leid:hover { background: linear-gradient(150deg, rgba(255, 255, 255, .94), rgba(255, 255, 255, .66)) !important; }
+.hero { border: 1.5px solid var(--sr-brun); box-shadow: inset 0 1px 0 #fff, var(--sr-fall), 0 40px 80px -40px rgba(28, 48, 80, .45) !important; }
+.work-tile .slot { border-radius: 26px; }
+
+/* Hnappar: blátt pilla með gljáa, hvítt gler fyrir aukahnappa */
+.btn {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 85%, #fff), var(--acc)) !important;
+  border: 1px solid var(--acc) !important; color: #fff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 10px 24px -12px color-mix(in srgb, var(--acc) 70%, transparent) !important;
+}
+.btn:hover { background: linear-gradient(180deg, var(--acc), var(--acc-hover, #4a83e2)) !important; }
+.btn--ghost, .btn--white {
+  color: var(--ink) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .95), rgba(255, 255, 255, .7)) !important;
+  border: 1px solid rgba(28, 48, 80, .12) !important;
+  box-shadow: inset 0 1px 0 #fff, 0 10px 24px -16px rgba(28, 48, 80, .4) !important;
+}
+.btn--ghost:hover, .btn--white:hover { background: #fff !important; color: var(--ink) !important; border-color: color-mix(in srgb, var(--acc) 50%, transparent) !important; }
+.btn--aglas {
+  color: #fff !important; background: rgba(255, 255, 255, .12) !important;
+  border: 1px solid rgba(255, 255, 255, .55) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3) !important;
+}
+.btn--aglas:hover { background: #fff !important; color: var(--ink) !important; }
+
+/* ---------- Lokakallið: glerspjald, fyrirsögn til vinstri, hnappur til hægri ---------- */
+.cta {
+  display: flex !important; align-items: center; justify-content: space-between; gap: 28px; flex-wrap: wrap;
+  text-align: left !important; padding: clamp(30px, 4.4vw, 56px) !important;
+  background: var(--sr-gler) !important; border: 1.5px solid var(--sr-brun) !important;
+  border-radius: 36px !important; color: var(--ink) !important;
+  box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(28, 48, 80, .04), var(--sr-fall) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+}
+.cta::before { display: none !important; }
+.cta__texti { max-width: 34em; }
+.cta h2 {
+  color: var(--ink) !important; margin: 12px 0 0 !important;
+  font-size: clamp(30px, 22px + 2vw, 48px); letter-spacing: -.025em; line-height: 1.06;
+}
+.cta p { color: var(--soft); margin: 14px 0 0; font-size: 17px; }
+@media (max-width: 640px) { .cta .btn { width: 100%; } }
+
+/* ---------- Fótur eins og á Glerhúsinu ---------- */
+.site-foot { border-top: 1px solid rgba(28, 48, 80, .1); color: var(--soft); }
+.site-foot a { color: var(--soft); text-decoration: none; }
+.site-foot a:hover { color: var(--ink); }
+
+/* ==================================================================
+   GTA (naeturborg): sama uppbygging, bleikt og sólsetur
+   ================================================================== */
+html[data-thema="naeturborg"] {
+  --sr-gler: linear-gradient(150deg, rgba(255, 246, 251, .78), rgba(255, 236, 246, .5));
+  --sr-brun: rgba(255, 240, 248, .95);
+  --sr-fall: 0 24px 50px -26px rgba(58, 22, 80, .38);
+}
+html[data-thema="naeturborg"] .gb__plata {
+  background: linear-gradient(135deg, rgba(255, 236, 246, .5) 0%, rgba(255, 200, 225, .2) 40%, rgba(255, 190, 160, .12) 62%, rgba(255, 228, 240, .38) 100%);
+  border-color: rgba(255, 236, 246, .9);
+  box-shadow: inset 0 1.5px 0 rgba(255, 246, 251, .95), inset 1.5px 0 0 rgba(255, 236, 246, .5), 0 40px 80px -50px rgba(58, 22, 80, .4);
+}
+html[data-thema="naeturborg"] .gb__glampi { background: radial-gradient(70% 40% at 50% -10%, rgba(255, 220, 238, .5), transparent 70%); }
+html[data-thema="naeturborg"] .section-title em,
+html[data-thema="naeturborg"] h1 em,
+html[data-thema="naeturborg"] h2 em {
+  background: linear-gradient(100deg, var(--nb-bleikt), #ff7a59 55%, var(--nb-gult));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+html[data-thema="naeturborg"] .kafla-haus .section-title,
+html[data-thema="naeturborg"] .cta h2 { font-weight: 400; letter-spacing: .01em; line-height: 1.04; }
+html[data-thema="naeturborg"] .btn {
+  background: linear-gradient(180deg, #ff6fae, var(--acc) 52%, #c92f78) !important; border-color: #d93680 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 10px 24px -8px rgba(232, 68, 143, .6) !important;
+}
+html[data-thema="naeturborg"] .btn:hover { background: linear-gradient(180deg, #ff82b9, var(--acc) 48%, #c22a71) !important; }
+html[data-thema="naeturborg"] .btn--ghost,
+html[data-thema="naeturborg"] .btn--white {
+  color: var(--ink) !important; background: linear-gradient(180deg, #fff, #fde7f1) !important;
+  border-color: rgba(58, 22, 80, .12) !important; box-shadow: inset 0 1px 0 #fff, 0 10px 24px -16px rgba(58, 22, 80, .45) !important;
+}
+html[data-thema="naeturborg"] .btn--aglas { background: rgba(255, 255, 255, .12) !important; border-color: rgba(255, 220, 238, .6) !important; box-shadow: none !important; }
+html[data-thema="naeturborg"] .cta { background: var(--sr-gler) !important; border-color: var(--sr-brun) !important; }
+html[data-thema="naeturborg"] .site-foot { border-top-color: rgba(58, 22, 80, .12); }
+
+/* Lokakallið: fyrirsögnin hreyfist staf fyrir staf (hreyfing.js), þá
+   nær litahallinn ekki inn í stafina. Heill litur í staðinn. */
+.cta h2 em, .cta h2 em div { background: none !important; color: var(--acc) !important; -webkit-text-fill-color: currentColor; }
+html[data-thema="naeturborg"] .cta h2 em, html[data-thema="naeturborg"] .cta h2 em div { color: var(--nb-bleikt) !important; }
+html[data-thema="naeturborg"] .midi, html[data-thema="naeturborg"] .trust > h2 { color: rgba(58, 22, 80, .72) !important; }

@@ -29,6 +29,8 @@
 <link rel="stylesheet" href="assets/css/hreyfing.css">
 <link rel="stylesheet" href="assets/css/themu-litir.css">
 <link rel="stylesheet" href="assets/css/themu.css">
+<link rel="stylesheet" href="assets/css/samraemi.css">
+<script src="assets/js/gler-bak.js" defer></script>
 <script>if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.className+=" hr-js";</script>
 <script type="application/ld+json">
 {
@@ -319,7 +321,10 @@
 
     <!-- ===================== LEIÐIR INN ===================== -->
     <section class="section" aria-labelledby="thjonusta">
-    <h2 class="section-title" id="thjonusta" data-en="Services">Þjónusta</h2>
+    <div class="kafla-haus">
+      <span class="midi" data-en="Services">Þjónusta</span>
+      <h2 class="section-title" id="thjonusta" data-en-html="What we <em>do for you.</em>">Það sem við <em>gerum fyrir þig.</em></h2>
+    </div>
     <nav class="leidir" aria-label="Þjónustuleiðir">
       <a class="card leid" href="solutaekifaeri.html">
         <img class="leid__takn" src="assets/img/takn/segull.svg" alt="Segull" width="48" height="48" loading="lazy" decoding="async">
@@ -353,7 +358,10 @@
 
     <!-- ===================== SAMSTÖRF OG VERKEFNI ===================== -->
     <section class="section" aria-labelledby="samstorf">
-      <h2 class="section-title" id="samstorf" data-en="Partnerships and work.">Samstörf og verkefni.</h2>
+      <div class="kafla-haus">
+        <span class="midi" data-en="Our work">Verkefni</span>
+        <h2 class="section-title" id="samstorf" data-en-html="Partnerships and <em>work.</em>">Samstörf og <em>verkefni.</em></h2>
+      </div>
       <div class="hscroll">
         <a class="work-tile" href="verkefni.html">
           <div class="slot" data-label="Vignir Vatnar">
@@ -473,8 +481,12 @@
 
     <!-- ===================== CTA ===================== -->
     <section class="cta" aria-labelledby="spjall">
-      <h2 id="spjall" data-en="Let's talk!">Tökum spjallið!</h2>
-      <a class="btn btn--white btn--lg" href="hafa-samband.html" data-en="Get in touch">Hafa samband</a>
+      <div class="cta__texti">
+        <span class="midi" data-en="Get in touch">Hafa samband</span>
+        <h2 id="spjall" data-en-html="Let's <em>talk!</em>">Tökum <em>spjallið!</em></h2>
+        <p data-en="Tell us what you have in mind and we will get back to you.">Segðu okkur hvað þú ert að hugsa og við heyrum í þér.</p>
+      </div>
+      <a class="btn btn--lg" href="hafa-samband.html" data-en="Get in touch">Hafa samband</a>
     </section>
 
     <!-- ===================== FÓTUR ===================== -->
