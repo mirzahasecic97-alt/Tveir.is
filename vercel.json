@@ -12,6 +12,16 @@
       "permanent": true
     },
     {
+      "source": "/emin",
+      "destination": "/emin/",
+      "permanent": true
+    },
+    {
+      "source": "/vignir",
+      "destination": "/vignir/",
+      "permanent": true
+    },
+    {
       "source": "/glerhusid",
       "destination": "/glerhusid/",
       "permanent": false

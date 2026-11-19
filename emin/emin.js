@@ -51,10 +51,9 @@
   var p = v.play(); if (p && p.catch) p.catch(function () {});
 })();
 
-/* Merkið á Inside Training hverfur þegar spilað er */
-document.querySelectorAll('.efni__skjar video').forEach(function (v) {
-  v.addEventListener('play', function () { v.parentNode.classList.add('er-ad-spila'); });
-  v.addEventListener('pause', function () { v.parentNode.classList.remove('er-ad-spila'); });
+/* Bara eitt myndband spilar í einu */
+document.querySelectorAll('.efni__skjar video').forEach(function (v, i, allt) {
+  v.addEventListener('play', function () { allt.forEach(function (o) { if (o !== v) o.pause(); }); });
 });
 
 /* Sleðinn: örvarnar færa um nokkur myndbönd í einu */

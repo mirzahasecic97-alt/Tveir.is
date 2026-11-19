@@ -1,4 +1,4 @@
-/* Emin Kadri: hamborgarinn í síma og ártalið í fætinum */
+/* Vignir Vatnar: hamborgarinn í síma og ártalið í fætinum */
 (function () {
   'use strict';
   var h = document.getElementById('haus');
@@ -51,10 +51,9 @@
   var p = v.play(); if (p && p.catch) p.catch(function () {});
 })();
 
-/* Merkið á Inside Training hverfur þegar spilað er */
-document.querySelectorAll('.efni__skjar video').forEach(function (v) {
-  v.addEventListener('play', function () { v.parentNode.classList.add('er-ad-spila'); });
-  v.addEventListener('pause', function () { v.parentNode.classList.remove('er-ad-spila'); });
+/* Bara eitt myndband spilar í einu */
+document.querySelectorAll('.efni__skjar video').forEach(function (v, i, allt) {
+  v.addEventListener('play', function () { allt.forEach(function (o) { if (o !== v) o.pause(); }); });
 });
 
 /* Í beinni: slóðin í data-straumur verður að spilara (Twitch, YouTube eða Kick) */
