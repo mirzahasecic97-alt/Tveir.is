@@ -298,3 +298,22 @@ h2 { font-size: clamp(36px, 24px + 3vw, 66px); }
 .hetja__vid { filter: saturate(.85); }
 .efni figcaption span { color: #c9d1dc; }
 .samstorf__stada { color: #fff; }
+
+/* Smá litur svo þetta sé ekki allt grátt: stálblár blær, blá og hlý ljós
+   bak við glerið (rautt úr boxbúningnum) og ísblár á tölum og gælunafni */
+html, body { background: linear-gradient(165deg, #3b4558 0%, #283041 42%, #1b1f2a 100%) fixed; background-color: #222837; }
+.gb__ljos i:nth-child(1) { background: radial-gradient(circle, rgba(96, 150, 255, .34), transparent 70%); }
+.gb__ljos i:nth-child(2) { background: radial-gradient(circle, rgba(235, 72, 88, .2), transparent 70%); }
+.gb__ljos i:nth-child(3) { background: radial-gradient(circle, rgba(120, 220, 230, .16), transparent 70%); }
+.hetja__gaelu { background: linear-gradient(100deg, #ffffff 0%, #a9d6ff 55%, #6ea8ff 100%); -webkit-background-clip: text; background-clip: text; }
+.tala strong { background: linear-gradient(160deg, #ffffff 10%, #9fcfff 90%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.haus__merki span { color: #9fcfff; }
+.efni figcaption span { color: #9fcfff; }
+.bardagi--saga { border-color: rgba(159, 207, 255, .45); background: radial-gradient(80% 140% at 0% 0%, rgba(110, 168, 255, .18), transparent 60%), linear-gradient(150deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .05)); }
+.verslun__kassi { background: radial-gradient(70% 90% at 100% 0%, rgba(110, 168, 255, .22), transparent 60%), radial-gradient(60% 80% at 0% 100%, rgba(235, 72, 88, .12), transparent 60%), linear-gradient(150deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .04)); }
+.hetja::after {
+  background:
+    linear-gradient(to top, #232a38 0%, rgba(35, 42, 56, .72) 26%, rgba(35, 42, 56, .15) 58%, rgba(35, 42, 56, .45) 100%),
+    radial-gradient(60% 50% at 12% 85%, rgba(96, 150, 255, .22), transparent 70%);
+}
+.hetja__vid { filter: none; }
