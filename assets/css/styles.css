@@ -1595,3 +1595,6 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
   .ghk-flaedi__pakki, .ghk-hub__linur line, .ghk-hub__mid, .ghk-hub__app, .ghk-flaedi__nr { animation: none !important; }
   .ghk-eig li, .ghk-afhverju li { opacity: 1 !important; transform: none !important; }
 }
+/* Merki sem eru heilt app tákn (t.d. Payday) fylla flísina */
+.ghk-hub__app.er-fyllt, .gh-logo.er-fyllt { overflow: hidden; }
+.ghk-hub__app.er-fyllt img, .gh-logo.er-fyllt img { width: 100%; height: 100%; object-fit: cover; }

@@ -142,7 +142,7 @@ async function start() {
         { heiti: 'Instagram skilaboð', merki: 'instagram.svg', litur: '#C13584', hvad: 'DM inn í Samskipti', stada: KEMUR, tharf: 'Sama Meta app og leyfi og Messenger.' }
       ]],
       ['Bókhald', [
-        { heiti: 'Payday', merki: 'payday.svg', litur: '#ffffff', ljos: true, hvad: 'Lokin verk og samningar verða að reikningum',
+        { heiti: 'Payday', merki: 'payday.png', litur: '#52bb62', fyllt: true, hvad: 'Lokin verk og samningar verða að reikningum',
           stada: g.prufa && bok === 'Payday' ? ['tengt', 'Sýnidæmi'] : EKKI, tharf: 'Þarf API lykil úr Payday (Stillingar > API). Þá fara reikningar beint úr Bókhaldi.' },
         { heiti: 'DK', merki: 'dk.png', litur: '#4743f7', hvad: 'Lokin verk og samningar verða að reikningum',
           stada: g.prufa && bok === 'DK' ? ['tengt', 'Sýnidæmi'] : EKKI, tharf: 'Þarf aðgang að vefþjónustu DK frá dk hugbúnaði.' }
@@ -153,7 +153,7 @@ async function start() {
       ]]
     ];
 
-    const takn = (t) => el('span', { class: 'st-teng__takn' + (t.ljos ? ' er-ljos' : ''), style: 'background:' + t.litur, 'aria-hidden': 'true' },
+    const takn = (t) => el('span', { class: 'st-teng__takn' + (t.ljos ? ' er-ljos' : '') + (t.fyllt ? ' er-fyllt' : ''), style: 'background:' + t.litur, 'aria-hidden': 'true' },
       [t.merki ? el('img', { src: 'assets/tengingar/' + t.merki, alt: '', loading: 'lazy' }) : document.createTextNode(t.stafur || t.heiti[0])]);
 
     const fjoldi = HOPAR.reduce((a, [, l]) => a + l.length, 0);
