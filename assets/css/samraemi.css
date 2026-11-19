@@ -416,3 +416,8 @@ html[data-thema="naeturborg"] .vl-teng__texti { color: rgba(58, 22, 80, .72); }
 /* Yfirtitlarnir teknir: fyrirsögnin byrjar efst */
 .kafla-haus .section-title { margin-top: 0 !important; }
 .cta h2 { margin-top: 0 !important; }
+
+/* Fyrirsagnir: hreyfingin klippir hverja línu við grunnlínuna og
+   leggirnir á g, j, y og þ skárust af. Smá rými neðst, tekið til baka. */
+.section-title > div, h1 > div, h2 > div { padding-bottom: .16em !important; margin-bottom: -.16em !important; }
+.section-title em, h2 em { padding-bottom: .1em; }
