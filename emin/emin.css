@@ -198,3 +198,10 @@ h2 { font-size: clamp(40px, 26px + 4vw, 84px); }
   .efni__listi { grid-template-columns: 1fr; max-width: 420px; }
   .midill-stor { padding-right: 16px; }
 }
+
+/* Venjulegur texti í stað dreifðra hástafa */
+.hetja__undir { text-transform: none; letter-spacing: 0; font: 500 clamp(17px, 15px + .5vw, 21px)/1.3 var(--letur); color: rgba(244, 247, 251, .8); }
+.hetja__fylgdu { text-transform: none; letter-spacing: 0; font: 500 15px/1.2 var(--letur); }
+.efni figcaption span { text-transform: none; letter-spacing: 0; font: 500 14px/1.2 var(--letur); }
+.bardagi__dags { letter-spacing: 0; }
+h2 { margin-top: 0; }
