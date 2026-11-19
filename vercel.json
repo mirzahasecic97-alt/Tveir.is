@@ -69,6 +69,10 @@
       "destination": "https://glerhusid.vercel.app/"
     },
     {
+      "source": "/glerhusid/:mappa/",
+      "destination": "https://glerhusid.vercel.app/:mappa/"
+    },
+    {
       "source": "/glerhusid/:slod*",
       "destination": "https://glerhusid.vercel.app/:slod*"
     },
