@@ -68,6 +68,16 @@
         }
       ],
       "destination": "/emin/:slod*"
+    },
+    {
+      "source": "/:slod*",
+      "has": [
+        {
+          "type": "host",
+          "value": "vignirvatnar.tveir.is"
+        }
+      ],
+      "destination": "/vignir/:slod*"
     }
   ]
 }
