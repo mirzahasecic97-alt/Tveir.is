@@ -200,3 +200,22 @@ html[data-thema="naeturborg"] .hero::after {
 /* Hnapparnir og nöfnin fyrir miðju neðst */
 .hero__actions { align-self: center; justify-content: center; }
 .hero__nofn { align-self: center; text-align: center; }
+
+/* ---------- Sýnishornin: lítil myndbönd sem renna til hægri ---------- */
+.synis {
+  position: relative; overflow: hidden; margin: clamp(18px, 2.4vw, 30px) calc(-1 * var(--gut, 16px)) 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.synis__braut { display: flex; width: max-content; animation: synis-renna 90s linear infinite; }
+.synis:hover .synis__braut { animation-play-state: paused; }
+.synis__hopur { display: flex; gap: 12px; padding-right: 12px; }
+.synis__vid {
+  display: block; width: clamp(92px, 7.6vw, 124px); aspect-ratio: 9 / 16; height: auto; object-fit: cover;
+  border-radius: 18px; background: linear-gradient(160deg, #24406a, #1c3050);
+  border: 1.5px solid var(--sr-brun); box-shadow: 0 14px 30px -18px rgba(28, 48, 80, .5);
+}
+/* Til hægri: brautin byrjar hálfa leið til vinstri og rennur að núlli */
+@keyframes synis-renna { from { transform: translate3d(-50%, 0, 0); } to { transform: translate3d(0, 0, 0); } }
+@media (prefers-reduced-motion: reduce) { .synis__braut { animation: none; } }
+html[data-thema="naeturborg"] .synis__vid { background: linear-gradient(160deg, #5a2378, #2c0f45); box-shadow: 0 14px 30px -18px rgba(58, 22, 80, .55); }
