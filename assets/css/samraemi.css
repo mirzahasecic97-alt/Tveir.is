@@ -482,3 +482,20 @@ html[data-thema="naeturborg"] .profill-sida__texti h1 { font-family: var(--nb-le
 .profill__texti { max-width: calc(100% - 90px); }
 .profill__mynd[src*="emin-jakkafot"] { object-position: 50% 18%; }
 .profill__mynd[src*="vignir-profill"] { object-position: 50% 30%; }
+
+/* Prófílarnir minni: á tölvu ekki yfir alla breiddina, í síma í sleða */
+.profilar__listi { max-width: 820px; }
+.profill { aspect-ratio: 4 / 4.8; }
+@media (max-width: 760px) {
+  .profilar__listi {
+    display: flex !important; gap: 12px; max-width: none; overflow-x: auto; scroll-snap-type: x mandatory;
+    margin: 0 calc(-1 * var(--gut, 16px)); padding: 0 var(--gut, 16px) 6px; scroll-padding-inline: var(--gut, 16px);
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .profilar__listi::-webkit-scrollbar { display: none; }
+  .profill { flex: 0 0 62%; aspect-ratio: 3 / 4 !important; scroll-snap-align: start; border-radius: 22px; }
+  .profill__nafn { font-size: 22px !important; }
+  .profill__flokkur { font-size: 11px; padding: 6px 9px; }
+  .profill__or { width: 34px !important; height: 34px !important; font-size: 15px !important; }
+  .profill__texti { max-width: calc(100% - 60px); }
+}
