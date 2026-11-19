@@ -279,6 +279,8 @@ export function teiknaHaus(ek, heiti) {
                   el('span', { class: 'phead__undir phead__undir--kemur', texti: 'Messenger og Instagram koma' })
                 ])
               ]),
+              el('a', { href: 'dagatal.html', texti: 'Dagatal',
+                        'aria-current': nuna === 'dagatal.html' ? 'page' : null }),
               el('a', { href: 'bokhald.html', texti: 'Bókhald',
                         'aria-current': nuna === 'bokhald.html' ? 'page' : null }),
               el('a', { href: 'tolfraedi.html', texti: 'Tölfræði',

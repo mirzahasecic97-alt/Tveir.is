@@ -862,6 +862,14 @@ async function supabaseBakendi() {
       kastaPost(svar); return svar.data;
     },
 
+    /* Google Calendar fundirnir (kafli 27), frá 45 dögum aftur */
+    async dagatal() {
+      const fra = new Date(Date.now() - 45 * 864e5).toISOString();
+      const svar = await sb.from('dagatal_atburdir').select('*').gte('byrjar', fra).order('byrjar').limit(1500);
+      if (svar.error && /does not exist|schema cache/i.test(String(svar.error.message))) return null;
+      kastaPost(svar); return svar.data;
+    },
+
     /* Undirskrift stjórnandans, fylgir á milli tækja (kafli 25) */
     async undirskrift() {
       const svar = await sb.from('undirskriftir').select('gogn').maybeSingle();
@@ -1884,6 +1892,22 @@ function prufuBakendi() {
       const t = finna(g.postholf.thraedir, id); if (t) { t.lesid_kerfi = new Date().toISOString(); vista(); }
     },
     async undirskrift() { krefjastAdmin(); return g.undirskrift || null; },
+    /* Sýnifundir í prufu, reiknaðir út frá deginum í dag */
+    async dagatal() {
+      krefjastAdmin();
+      const d = (dagar, kl, min = 0) => { const x = new Date(); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() + dagar); x.setHours(kl, min); return x; };
+      const fyr = (g.fyrirtaeki || []).map((f) => f.nafn);
+      const listi = [
+        [0, 10, 60, 'Vikufundur', 'https://meet.google.com/abc-defg-hij'], [1, 13, 45, 'Tökudagur: ' + (fyr[0] || 'viðskiptavinur'), null, 'Reykjavík'],
+        [2, 9, 30, 'Símtal við ' + (fyr[1] || 'nýjan viðskiptavin'), 'https://meet.google.com/xyz-abcd-efg'], [3, 15, 60, 'Kynning á Glerhúsinu', null],
+        [6, 11, 90, 'Mánaðarskýrslur yfirfarnar', null], [8, 14, 60, 'Fundur: jólaherferð ' + (fyr[2] || ''), 'https://meet.google.com/jol-herf-erd'],
+        [-2, 10, 60, 'Upptaka hlaðvarps', null], [12, 10, 120, 'Vinnustofa með ' + (fyr[0] || 'viðskiptavini'), null], [15, 9, 30, 'Vikufundur', 'https://meet.google.com/abc-defg-hij']
+      ];
+      return listi.map(([dagar, kl, lengd, titill, hlekkur, stadur], i) => {
+        const b = d(dagar, kl); const e = new Date(b.getTime() + lengd * 60000);
+        return { id: 'pd' + i, titill, byrjar: b.toISOString(), endar: e.toISOString(), allan_daginn: false, fundarhlekkur: hlekkur, stadur: stadur || null, tengill: null, gestir: i % 3 };
+      }).concat([{ id: 'pd-allan', titill: 'Frídagur', byrjar: d(20, 0).toISOString(), endar: d(21, 0).toISOString(), allan_daginn: true, gestir: 0 }]);
+    },
     async nyrPostur({ til, efni, texti }) {
       krefjastAdmin(); prufuPostholf();
       const netfong = String(til || '').split(',').map((x) => x.trim()).filter(Boolean);
