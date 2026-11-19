@@ -313,6 +313,14 @@ export function teiknaHaus(ek, heiti) {
 
   const nuna = location.pathname.split('/').pop() || 'stjornbord.html';
 
+  /* Tölurnar í merkjunum haldast á meðan nýju tölurnar eru sóttar, svo
+     þær blikki ekki þegar skipt er um síðu (skipti.js) */
+  const fyrriMerki = {};
+  haus.querySelectorAll('.phead__merki').forEach((m) => {
+    const a = m.closest('a');
+    if (a) fyrriMerki[a.getAttribute('href') + '|' + a.className] = [m.textContent, m.hidden];
+  });
+
   fylla(haus, [
     el('div', { class: 'wrap' }, [
       el('div', { class: 'phead__inn' }, [
@@ -414,6 +422,11 @@ export function teiknaHaus(ek, heiti) {
       ])
     ])
   ]);
+  haus.querySelectorAll('.phead__merki').forEach((m) => {
+    const a = m.closest('a');
+    const f = a && fyrriMerki[a.getAttribute('href') + '|' + a.className];
+    if (f && f[0]) { m.textContent = f[0]; m.hidden = f[1]; }
+  });
 
   bjodaLykilord(ek);
   synaBorda();

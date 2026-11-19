@@ -1,14 +1,15 @@
 /* ==========================================================================
-   Glerhúsið: síðuskipti í kerfinu. Smellt á flipa í valmyndinni og efnið
-   rennur til hliðar: flipi til hægri kemur inn frá hægri, flipi til
-   vinstri frá vinstri. Hausinn stendur alveg kyrr.
+   Glerhúsið: síðuskipti í kerfinu án þess að endurhlaða síðuna.
 
-   Hausinn er teiknaður með JavaScript á hverri síðu og var því tómur í
-   smástund eftir skipti. Því er hann geymdur við smellinn og settur strax
-   inn á nýju síðunni um leið og vafrinn les hann, áður en neitt sést.
-   Síðan teiknar kerfið hann sjálft ofan í, eins.
+   Smellt á flipa: næsta síða er sótt í bakgrunni á meðan efnið rennur út,
+   svo er bara efninu (#main) skipt út og síðueining hennar keyrð. Hausinn,
+   bakgrunnurinn og innskráningin standa kyrr allan tímann. Flipi til
+   hægri kemur inn frá hægri, flipi til vinstri frá vinstri.
 
-   Hlaðið í <head> (ekki defer) svo þetta gerist fyrir fyrstu teikningu.
+   Til baka í vafranum hleður síðunni venjulega. Klikki eitthvað er farið
+   á síðuna á venjulegan hátt, svo kerfið virkar alltaf.
+
+   Hlaðið í <head> (ekki defer).
    ========================================================================== */
 (function () {
   'use strict';
@@ -16,9 +17,18 @@
   var KYRRT = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var LYKILL = 'glerhusid-skipti';
   var HAUS = 'glerhusid-skipti-haus';
-  var nuna = location.pathname.split('/').pop() || 'stjornbord.html';
+  var STUDD = !!(window.fetch && window.DOMParser && history.pushState);
+  var umferd = 0;
 
-  /* 1. Ný síða: kom hún úr flipaskiptum? Þá byrjar efnið úti á hlið */
+  /* Tímar sem síðurnar setja af stað (t.d. pósthólfið sem les aftur á
+     mínútu fresti) eru stöðvaðir þegar skipt er um síðu */
+  var timar = new Set();
+  var upprSetInterval = window.setInterval.bind(window);
+  var upprClearInterval = window.clearInterval.bind(window);
+  window.setInterval = function () { var id = upprSetInterval.apply(null, arguments); timar.add(id); return id; };
+  window.clearInterval = function (id) { timar.delete(id); return upprClearInterval(id); };
+
+  /* ---------- Hausinn þegar síðan er hlaðin venjulega (t.d. fyrst) ---------- */
   var att = null, geymdurHaus = null;
   try {
     att = sessionStorage.getItem(LYKILL); sessionStorage.removeItem(LYKILL);
@@ -27,97 +37,133 @@
   if (att !== 'fram' && att !== 'aftur') att = null;
   if (att && !KYRRT) html.classList.add('gh-skipti-' + att);
 
-  /* Hausinn inn um leið og vafrinn les <header id="phead">, með rétta
-     flipann merktan. Hnapparnir virka ekki fyrr en kerfið teiknar hann
-     sjálft, en það gerist innan sekúndubrots. */
-  function setjaHaus(haus) {
-    if (!geymdurHaus || haus.firstChild) return;
-    haus.innerHTML = geymdurHaus;
-    haus.querySelectorAll('[aria-current]').forEach(function (x) { x.removeAttribute('aria-current'); });
+  function merkjaFlipa(haus) {
+    var nuna = location.pathname.split('/').pop() || 'stjornbord.html';
     var samskipti = nuna === 'samskipti.html' || nuna === 'fyrirspurnir.html';
-    haus.querySelectorAll('.phead__nav a[href]').forEach(function (a) {
-      var h = a.getAttribute('href');
+    haus.querySelectorAll('[aria-current]').forEach(function (x) { x.removeAttribute('aria-current'); });
+    haus.querySelectorAll('.phead__nav a[href], a.phead__stillingar').forEach(function (a) {
       if (a.classList.contains('phead__undir')) return;
+      var h = a.getAttribute('href');
       if (h === nuna || (samskipti && a.classList.contains('phead__hopur-hn'))) a.setAttribute('aria-current', 'page');
     });
-    var st = haus.querySelector('a[href="stillingar.html"]');
-    if (st && nuna === 'stillingar.html') st.setAttribute('aria-current', 'page');
   }
   if (geymdurHaus && window.MutationObserver) {
+    var setja = function (h) { if (!h.firstChild) { h.innerHTML = geymdurHaus; merkjaFlipa(h); } };
     var fyrri = document.getElementById('phead');
-    if (fyrri) setjaHaus(fyrri);
+    if (fyrri) setja(fyrri);
     else {
-      var vakt = new MutationObserver(function () {
-        var h = document.getElementById('phead');
-        if (h) { vakt.disconnect(); setjaHaus(h); }
-      });
+      var vakt = new MutationObserver(function () { var h = document.getElementById('phead'); if (h) { vakt.disconnect(); setja(h); } });
       vakt.observe(html, { childList: true, subtree: true });
       document.addEventListener('DOMContentLoaded', function () { vakt.disconnect(); });
     }
   }
 
-  function renna() {
-    if (!att || KYRRT) return;
+  /* ---------- Innrennslið: bíður eftir að síðan teikni efnið ---------- */
+  function rennaInn(stefna) {
     var main = document.getElementById('main');
+    if (!stefna || KYRRT || !main) { html.classList.remove('gh-skipti-fram', 'gh-skipti-aftur'); return; }
     var innihald = document.getElementById('innihald') || main;
-    var buid = false;
+    var buid = false, eftirlit = null;
     function inn() {
       if (buid) return; buid = true;
       if (eftirlit) eftirlit.disconnect();
-      /* Upphafsstaðan reiknuð fyrst (offsetWidth), svo rennur efnið inn.
-         Ekki requestAnimationFrame: í falnum flipa kæmi hann aldrei og efnið sæist ekki. */
       void main.offsetWidth;
       html.classList.add('gh-skipti-keyrir');
-      html.classList.remove('gh-skipti-' + att);
+      html.classList.remove('gh-skipti-' + stefna);
       setTimeout(function () {
         html.classList.remove('gh-skipti-keyrir');
-        /* Öryggisnet: ef hreyfingin stóð kyrr (t.d. falinn flipi) er hún kláruð svo efnið sjáist */
         if (main.getAnimations) main.getAnimations().forEach(function (h) { try { h.finish(); } catch (v) { /* ekkert */ } });
       }, 700);
     }
-    /* Bíðum eftir að kerfið teikni efnið, en aldrei lengur en 450 ms */
-    var eftirlit = null;
     if (innihald && !innihald.children.length && window.MutationObserver) {
       eftirlit = new MutationObserver(function () { if (innihald.children.length) inn(); });
       eftirlit.observe(innihald, { childList: true });
       setTimeout(inn, 450);
-    } else {
-      inn();
-    }
+    } else inn();
   }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { rennaInn(att); });
+  else rennaInn(att);
 
-  /* 2. Smellt á flipa: hausinn geymdur, gamla efnið byrjar að renna út og
-     nýja síðan er sótt strax, á meðan. Vafrinn sýnir gömlu síðuna þar til
-     sú nýja er tilbúin, svo það verður aldrei autt á milli. */
-  document.addEventListener('click', function (e) {
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    var a = e.target.closest && e.target.closest('.phead__nav a[href], a.phead__stillingar');
-    if (!a || a.target === '_blank') return;
-    var url;
-    try { url = new URL(a.href, location.href); } catch (villa) { return; }
-    if (url.origin !== location.origin || (url.pathname === location.pathname && !url.hash)) return;
-    var flipar = Array.prototype.slice.call(document.querySelectorAll('.phead__nav a[href]:not(.phead__undir), a.phead__stillingar'));
-    var undir = a.classList.contains('phead__undir') ? a.closest('.phead__hopur').querySelector('.phead__hopur-hn') : a;
-    var nu = flipar.findIndex(function (x) { return x.getAttribute('aria-current') === 'page'; });
-    var nyr = flipar.indexOf(undir);
-    var stefna = nu === -1 || nyr >= nu ? 'fram' : 'aftur';
+  /* ---------- Skiptin sjálf ---------- */
+  var bida = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+
+  function venjulega(slod, stefna) {
     try {
       sessionStorage.setItem(LYKILL, stefna);
       var haus = document.getElementById('phead');
       if (haus && haus.innerHTML.length < 60000) sessionStorage.setItem(HAUS, haus.innerHTML);
     } catch (villa) { /* skiptir ekki máli */ }
-    if (KYRRT) return;
+    location.href = slod;
+  }
+
+  async function skipta(slod, stefna) {
+    var min = ++umferd;
+    var main = document.getElementById('main');
+    if (!KYRRT) html.classList.add('gh-skipti-ut', 'gh-skipti-ut-' + stefna);
+    var svar;
+    try {
+      var [texti] = await Promise.all([
+        fetch(slod, { credentials: 'same-origin' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); }),
+        bida(KYRRT ? 0 : 260)
+      ]);
+      svar = new DOMParser().parseFromString(texti, 'text/html');
+    } catch (villa) { venjulega(slod, stefna); return; }
+    if (min !== umferd) return;
+    var nyrMain = svar.getElementById('main');
+    var eining = svar.querySelector('script[type="module"][src]');
+    if (!nyrMain || !main) { venjulega(slod, stefna); return; }
+
+    /* Gamla síðan hreinsuð: tímar, opnir gluggar */
+    timar.forEach(function (id) { upprClearInterval(id); }); timar.clear();
+    document.querySelectorAll('dialog').forEach(function (d) { try { d.close(); } catch (v) { /* ekkert */ } d.remove(); });
+
+    /* Nýja síðan inn: slóð fyrst, svo síðan lesi rétta slóð (t.d. ?f=) */
+    history.pushState({ glerhus: 1 }, '', slod);
+    sidastaSlod = location.pathname + location.search;
+    document.title = svar.title;
+    document.body.className = svar.body.className;
+    main.className = nyrMain.className;
+    html.classList.remove('gh-skipti-ut', 'gh-skipti-ut-fram', 'gh-skipti-ut-aftur');
+    if (!KYRRT) html.classList.add('gh-skipti-' + stefna);
+    main.innerHTML = nyrMain.innerHTML;
+    window.scrollTo(0, 0);
+    var haus = document.getElementById('phead');
+    if (haus) merkjaFlipa(haus);
+    rennaInn(stefna);
+
+    if (eining) {
+      var src = new URL(eining.getAttribute('src'), new URL(slod, location.href)).href;
+      try { await import(src + (src.indexOf('?') === -1 ? '?' : '&') + 'skipti=' + min); }
+      catch (villa) { venjulega(slod, stefna); }
+    }
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target.closest && e.target.closest('.phead__nav a[href], a.phead__stillingar, a.phead__logo');
+    if (!a || a.target === '_blank') return;
+    var url;
+    try { url = new URL(a.href, location.href); } catch (villa) { return; }
+    if (url.origin !== location.origin || (url.pathname === location.pathname && url.search === location.search)) { e.preventDefault(); return; }
+    var flipar = Array.prototype.slice.call(document.querySelectorAll('.phead__nav a[href]:not(.phead__undir), a.phead__stillingar'));
+    var flipi = a.classList.contains('phead__undir') ? a.closest('.phead__hopur').querySelector('.phead__hopur-hn') : a;
+    var nu = flipar.findIndex(function (x) { return x.getAttribute('aria-current') === 'page'; });
+    var nyr = flipar.indexOf(flipi);
+    var stefna = nu === -1 || nyr === -1 || nyr >= nu ? 'fram' : 'aftur';
     e.preventDefault();
-    html.classList.add('gh-skipti-ut', 'gh-skipti-ut-' + stefna);
-    /* Ein mynd af útrennslinu, svo af stað: hleðslan og hreyfingin gerast samtímis */
-    setTimeout(function () { location.href = a.href; }, 90);
+    /* Hamborgaravalmyndin í síma lokast */
+    var ph = document.getElementById('phead'); if (ph) ph.classList.remove('er-opin');
+    if (STUDD) skipta(url.href, stefna); else venjulega(url.href, stefna);
   });
 
-  /* Til baka í vafranum úr flýtiminni: hreinsa útstöðuna */
+  /* Til baka og áfram: síðan hlaðin venjulega, alltaf rétt. Hopp innan
+     síðunnar (t.d. #taskar) breytir bara slóðarenda og er látið í friði. */
+  var sidastaSlod = location.pathname + location.search;
+  window.addEventListener('popstate', function () {
+    if (location.pathname + location.search === sidastaSlod) return;
+    location.reload();
+  });
   window.addEventListener('pageshow', function (e) {
     if (e.persisted) html.classList.remove('gh-skipti-ut', 'gh-skipti-ut-fram', 'gh-skipti-ut-aftur');
   });
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renna);
-  else renna();
 })();
