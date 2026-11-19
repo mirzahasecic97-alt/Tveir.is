@@ -371,3 +371,45 @@ html[data-thema="naeturborg"] .vl-teng__texti { color: rgba(58, 22, 80, .72); }
   html .vinnulag .fljot { background: rgba(255, 255, 255, .95) !important; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 16px 34px -16px rgba(28, 48, 80, .55) !important; }
   html[data-thema="naeturborg"] .vinnulag .fljot { background: rgba(255, 244, 250, .95) !important; }
 }
+
+/* ---------- Öppin skjótast út úr símanum, nokkur í hverju skrefi ---------- */
+.vl-oppin { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.vl-app {
+  position: absolute; top: var(--y); width: 38px; height: 38px; margin-top: -19px;
+  border-radius: 12px; display: grid; place-items: center; overflow: hidden;
+  background: var(--l); border: 2px solid #fff;
+  box-shadow: 0 10px 22px -10px rgba(28, 48, 80, .55);
+  opacity: 0; transform: translateX(var(--inn)) scale(.3);
+  transition: opacity .3s ease, transform .6s cubic-bezier(.18, 1.6, .4, 1);
+  transition-delay: var(--d, 0ms);
+}
+.vl-app--v { left: -19px; --inn: 30px; --ut: -34px; }
+.vl-app--h { right: -19px; --inn: -30px; --ut: 34px; }
+.vl-app img { width: 20px; height: 20px; object-fit: contain; filter: brightness(0) invert(1); }
+.vl-app--fyllt img { width: 100%; height: 100%; object-fit: cover; filter: none; }
+.vinnulag[data-skref="1"] .vl-app--s1,
+.vinnulag[data-skref="2"] .vl-app--s1, .vinnulag[data-skref="2"] .vl-app--s2,
+.vinnulag[data-skref="3"] .vl-app {
+  opacity: 1; transform: translateX(var(--ut)) scale(1) rotate(var(--r, 0deg));
+}
+@media (max-width: 759px) {
+  .vl-app { width: 30px; height: 30px; margin-top: -15px; border-radius: 10px; }
+  .vl-app--v { left: -15px; --ut: -18px; }
+  .vl-app--h { right: -15px; --ut: 18px; }
+  .vl-app img { width: 16px; height: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .vl-app { transition: opacity .2s ease; } }
+/* Röðin með merkjunum er farin af toppnum, síminn fær plássið aftur */
+@media (min-width: 760px) { .simi__skjar { height: min(calc(100svh - 360px), 520px) !important; min-height: 300px; } }
+
+/* GTA, tölva: öll myndin sést hægra megin (hún er á hæðina), dofnar inn í
+   fjólubláa litinn vinstra megin þar sem textinn er */
+@media (min-width: 761px) {
+  html[data-thema="naeturborg"] .hero { background: linear-gradient(170deg, #5a2378 0%, #3a1356 55%, #2c0f45 100%) !important; }
+  html[data-thema="naeturborg"] .hero__bak {
+    left: auto !important; right: 0; width: auto !important; max-width: none; height: 100% !important;
+    aspect-ratio: 1193 / 1319; object-fit: cover; object-position: 50% 0 !important;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 26%, #000 100%);
+            mask-image: linear-gradient(90deg, transparent 0, #000 26%, #000 100%);
+  }
+}
