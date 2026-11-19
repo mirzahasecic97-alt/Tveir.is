@@ -477,3 +477,4 @@ html[data-thema="naeturborg"] .profill-sida__texti h1 { font-family: var(--nb-le
 .profill-sida__avatar { width: clamp(64px, 6vw, 92px); height: clamp(64px, 6vw, 92px); border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 12px 26px -14px rgba(28, 48, 80, .5); flex: none; }
 @media (max-width: 560px) { .profill__avatar { width: 40px; height: 40px; } }
 .profill__mynd[src*="emin-jakkafot"] { object-position: 50% 18%; }
+.profill__mynd[src*="vignir-profill"] { object-position: 50% 30%; }
