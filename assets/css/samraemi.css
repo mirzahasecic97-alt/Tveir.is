@@ -180,3 +180,23 @@ html[data-thema="naeturborg"] .midi, html[data-thema="naeturborg"] .trust > h2 {
 .simi__haus img[src*="glerhusid"] { width: 64px; height: auto; }
 html[data-thema="naeturborg"] .simi__haus img[src*="glerhusid"] { display: block; filter: hue-rotate(112deg) saturate(1.6) brightness(1.02); }
 html[data-thema="naeturborg"] .simi__haus:has(img[src*="glerhusid"])::before { content: none; display: none; }
+
+/* Hero: fyrirsögnin uppi til vinstri, hnapparnir og nöfnin niðri,
+   andlitin frjáls í miðjunni. Skuggi efst og neðst svo textinn sjáist. */
+.hero { align-items: stretch !important; }
+.hero__yfir { justify-content: flex-start; height: 100%; box-sizing: border-box; max-width: none !important; }
+.hero__yfir h1 { max-width: 13em; }
+.hero__actions { margin-top: auto !important; }
+.hero::after {
+  background:
+    linear-gradient(to bottom, rgba(16, 28, 48, .9) 0%, rgba(16, 28, 48, .6) 24%, rgba(16, 28, 48, 0) 50%),
+    linear-gradient(to top, rgba(16, 28, 48, .82) 0%, rgba(16, 28, 48, .35) 22%, rgba(16, 28, 48, 0) 42%) !important;
+}
+html[data-thema="naeturborg"] .hero::after {
+  background:
+    linear-gradient(to bottom, rgba(44, 15, 69, .9) 0%, rgba(58, 18, 82, .6) 24%, rgba(58, 18, 82, 0) 50%),
+    linear-gradient(to top, rgba(44, 15, 69, .85) 0%, rgba(58, 18, 82, .35) 22%, rgba(58, 18, 82, 0) 42%) !important;
+}
+/* Hnapparnir og nöfnin fyrir miðju neðst */
+.hero__actions { align-self: center; justify-content: center; }
+.hero__nofn { align-self: center; text-align: center; }
