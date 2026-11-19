@@ -289,3 +289,85 @@ html[data-thema="naeturborg"] .logo-chip, html[data-thema="naeturborg"] .work-ti
   .gb__plata, html[data-thema="naeturborg"] .gb__plata { border-color: transparent !important; box-shadow: none !important; opacity: .6; }
   .gb__plata::after { display: none; }
 }
+
+/* ==========================================================================
+   Svona vinnum við með þér: Glerhúsið
+   Síminn sýnir nýja útlitið (litgler): bakgrunnur í lit merkisins,
+   glerhaus, frostuð spjöld. Liturinn kemur úr --acc, svo GTA verður bleikt.
+   ========================================================================== */
+.simi__skjar {
+  background:
+    radial-gradient(90% 45% at 85% 0%, color-mix(in srgb, var(--acc) 55%, #fff) 0%, transparent 60%),
+    radial-gradient(70% 40% at 0% 70%, color-mix(in srgb, var(--acc) 70%, #fff) 0%, transparent 65%),
+    linear-gradient(170deg, color-mix(in srgb, var(--acc) 92%, #000) 0%, color-mix(in srgb, var(--acc) 50%, #000) 100%) !important;
+}
+.simi__haus {
+  margin: 8px 8px 0; border-radius: 14px; padding: 10px 11px !important;
+  background: rgba(255, 255, 255, .16) !important; border: 1px solid rgba(255, 255, 255, .3) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35);
+}
+.simi__haus img, html[data-thema="naeturborg"] .simi__haus img[src*="glerhusid"] { filter: brightness(0) invert(1) !important; width: 62px !important; }
+.simi__fyr { color: rgba(255, 255, 255, .85) !important; margin-left: auto; font-weight: 500 !important; }
+.m-bidur {
+  background: rgba(6, 14, 36, .34) !important; border: 1px solid rgba(255, 255, 255, .18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15);
+}
+.m-bidur__heiti { color: rgba(255, 255, 255, .8) !important; }
+.m-verk, .m-task {
+  background: linear-gradient(150deg, rgba(255, 255, 255, .92), rgba(255, 255, 255, .74)) !important;
+  border: 1px solid rgba(255, 255, 255, .95) !important; border-radius: 16px !important;
+  box-shadow: 0 10px 22px -16px rgba(0, 0, 0, .5);
+}
+.m-sla { background: rgba(28, 48, 80, .1) !important; height: 6px !important; }
+.m-sla__fyll { background: linear-gradient(90deg, color-mix(in srgb, var(--acc) 80%, #fff), var(--acc)) !important; box-shadow: 0 0 10px color-mix(in srgb, var(--acc) 60%, transparent); }
+.m-task__merki { background: color-mix(in srgb, var(--acc) 14%, #fff) !important; color: color-mix(in srgb, var(--acc) 75%, #000) !important; }
+.m-bubla {
+  background: rgba(255, 255, 255, .94) !important; color: color-mix(in srgb, var(--acc) 70%, #000) !important;
+  box-shadow: 0 10px 22px -16px rgba(0, 0, 0, .5);
+}
+.vinnulag[data-skref="3"] .m-hak { background: var(--acc); border-color: var(--acc); }
+/* GTA: neonskiltið kemur ekki í stað Glerhúsið merkisins */
+html[data-thema="naeturborg"] .simi__haus img[src*="glerhusid"] { display: block !important; }
+html[data-thema="naeturborg"] .simi__haus:has(img[src*="glerhusid"])::before { content: none !important; display: none !important; }
+
+/* ---------- Tengingarnar: merkin undir fyrirsögninni ---------- */
+.vl-teng { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 0 0 clamp(14px, 2.4vh, 26px); }
+.vl-teng__texti { font: 500 13px/1.2 var(--f-body); color: var(--soft); text-transform: uppercase; letter-spacing: .08em; }
+.vl-teng__listi { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 640px; }
+.vl-teng__listi li {
+  width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; overflow: hidden;
+  background: var(--l); border: 1.5px solid rgba(255, 255, 255, .9);
+  box-shadow: 0 8px 18px -12px rgba(28, 48, 80, .55);
+  animation: vl-svif 4.2s ease-in-out infinite; animation-delay: calc(var(--i) * -.33s);
+}
+.vl-teng__listi img { width: 18px; height: 18px; object-fit: contain; filter: brightness(0) invert(1); }
+.vl-teng__listi li.vl-teng__fyllt img { width: 100%; height: 100%; object-fit: cover; filter: none; }
+@keyframes vl-svif { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .vl-teng__listi li { animation: none; } }
+html[data-thema="naeturborg"] .vl-teng__texti { color: rgba(58, 22, 80, .72); }
+@media (max-width: 759px) {
+  .vl-teng { gap: 8px; margin-bottom: 12px; }
+  .vl-teng__texti { font-size: 11.5px; }
+  .vl-teng__listi { gap: 6px; }
+  .vl-teng__listi li { width: 28px; height: 28px; border-radius: 9px; box-shadow: none; }
+  .vl-teng__listi img { width: 15px; height: 15px; }
+}
+
+/* ---------- Sími: spjald skrefsins poppar upp yfir neðri hluta símans ---------- */
+@media (max-width: 819px) {
+  html .vinnulag .fljot { display: block; left: 50%; right: auto; top: auto; bottom: 6%; width: min(240px, 78vw);
+    margin-left: calc(min(240px, 78vw) / -2); opacity: 0; transform: translateY(18px) scale(.96);
+    transition: opacity .35s ease, transform .45s cubic-bezier(.22, 1, .36, 1); z-index: 3; }
+  html .vinnulag[data-skref="1"] .fljot--1,
+  html .vinnulag[data-skref="2"] .fljot--5,
+  html .vinnulag[data-skref="3"] .fljot--4 { opacity: 1; transform: translateY(0) scale(1) rotate(-1.5deg); }
+  html .vinnulag[data-skref="2"] .fljot--1, html .vinnulag[data-skref="3"] .fljot--1,
+  html .vinnulag[data-skref="3"] .fljot--2, html .vinnulag[data-skref="3"] .fljot--3,
+  html .vinnulag[data-skref="2"] .fljot--2, html .vinnulag[data-skref="2"] .fljot--3,
+  html .vinnulag[data-skref="1"] .fljot--3, html .vinnulag[data-skref="3"] .fljot--5, html .vinnulag[data-skref="3"] .fljot--6 { opacity: 0; transform: translateY(18px) scale(.96); }
+}
+@media (min-width: 760px) { .simi__skjar { height: min(calc(100svh - 425px), 520px) !important; min-height: 290px; } }
+@media (max-width: 819px) {
+  html .vinnulag .fljot { background: rgba(255, 255, 255, .95) !important; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 16px 34px -16px rgba(28, 48, 80, .55) !important; }
+  html[data-thema="naeturborg"] .vinnulag .fljot { background: rgba(255, 244, 250, .95) !important; }
+}
