@@ -1797,3 +1797,22 @@ body.sk-les .page-head.sk-haus h1 { font-size: 20px !important; color: var(--sof
 .sk-listi { padding: 6px !important; }
 .sk-lina { padding: 14px 16px; }
 body.sk-les .page-head.sk-haus { display: none !important; }
+
+/* Haus pósthólfsins: titill og hnappar efst, leit og flokkar fyrir neðan, gott bil niður í listann */
+.page-head.sk-haus { display: flex; flex-direction: column; align-items: stretch; gap: 16px; margin-bottom: 22px; }
+.sk-haus__efst { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.sk-haus__hn { display: flex; flex-wrap: wrap; gap: 8px; }
+.sk-tol { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; width: 100%; }
+.sk-leit { width: 260px; }
+.sk-siur { flex: 1 1 auto; }
+.sk-merki--reikningar { color: #8a5a00; background: #fff3d6; }
+.sk-merki--tilkynningar { color: #4a5f80; background: rgba(28, 48, 80, .07); }
+/* Nýr póstur */
+.sk-np { display: flex; flex-direction: column; gap: 14px; }
+.sk-np__reitir { display: flex; flex-direction: column; border-radius: 16px; background: #fff; border: 1px solid rgba(28, 48, 80, .1); overflow: hidden; }
+.sk-np__lina { display: flex; align-items: center; gap: 12px; padding: 0 16px; }
+.sk-np__lina + .sk-np__lina { border-top: 1px solid rgba(28, 48, 80, .08); }
+.sk-np__lina > span { flex: none; width: 44px; font-size: 14px; color: var(--soft); }
+.sk-np__lina input { flex: 1; min-width: 0; border: 0 !important; background: transparent !important; box-shadow: none !important; padding: 14px 0 !important; font-size: 16px; }
+.sk-np__texti { width: 100%; min-height: 260px; resize: vertical; padding: 16px 18px !important; border-radius: 16px !important; font: inherit; font-size: 16px; line-height: 1.6; background: #fff !important; }
+@media (max-width: 860px) { .sk-leit { width: 100%; } .sk-haus__hn { width: 100%; } .sk-haus__hn .btn { flex: 1; } }
