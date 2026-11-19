@@ -1938,3 +1938,4 @@ body.sk-les .page-head.sk-haus { display: none !important; }
   .dg-titill { min-width: 0; }
 }
 .dg-titill { text-transform: none; }
+.st-teng__takn.er-fyllt img { width: 100%; height: 100%; object-fit: cover; filter: none; }

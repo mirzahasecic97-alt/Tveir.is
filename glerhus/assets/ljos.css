@@ -242,3 +242,4 @@ html.gh-eigin-litur body::before { background: radial-gradient(28% 32% at 30% 30
 .skref--lokid .skref__hak::after { border-color: var(--acc-texti) !important; }
 .skref--nuna .skref__hak { color: var(--acc-djupt) !important; }
 a:not([class]) { color: var(--acc-djupt); }
+.hero2__stjorn { justify-content: flex-end; }
