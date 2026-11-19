@@ -245,3 +245,6 @@ html .card.trust, html[data-thema="naeturborg"] .card.trust {
   padding-left: 0 !important; padding-right: 0 !important;
 }
 html .card.trust::before, html .card.trust::after { display: none !important; }
+/* Logostrimillinn stoppar ekki heldur undir músinni */
+.marquee:hover .marquee__track, .marquee:focus-within .marquee__track { animation-play-state: running !important; }
+.marquee__track { animation-duration: 32s !important; }
