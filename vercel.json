@@ -12,6 +12,16 @@
       "permanent": true
     },
     {
+      "source": "/vignir-vatnar.html",
+      "destination": "/vignir/",
+      "permanent": false
+    },
+    {
+      "source": "/vignir-vatnar",
+      "destination": "/vignir/",
+      "permanent": false
+    },
+    {
       "source": "/kerfi.html",
       "destination": "/thjonusta.html",
       "permanent": false
