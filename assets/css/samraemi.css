@@ -272,3 +272,8 @@ html[data-thema="naeturborg"] .logo-chip, html[data-thema="naeturborg"] .work-ti
   .vinnulag__listi b { font-size: 15px; }
   .vinnulag__listi span { margin-top: 2px; font-size: 13.5px; line-height: 1.4; }
 }
+/* Sýnishornin dofna út til hliðanna */
+.synis.synis--lina {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%) !important;
+          mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%) !important;
+}
