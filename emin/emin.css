@@ -388,3 +388,5 @@ html, body { background: linear-gradient(165deg, #3b4558 0%, #283041 42%, #1b1f2
 /* EK merkið í hausnum, hvítt */
 .haus__merki img { display: block; height: 26px; width: auto; filter: brightness(0) invert(1); }
 @media (max-width: 820px) { .haus__merki img { height: 22px; } }
+/* EK merkið er hvítt á gegnsæju: engin sía */
+.haus__merki img { filter: none !important; }
