@@ -277,3 +277,15 @@ html[data-thema="naeturborg"] .logo-chip, html[data-thema="naeturborg"] .work-ti
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%) !important;
           mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%) !important;
 }
+
+/* Sími: engar línur, bakgrunnurinn flæðir. Skuggar skrefakassanna klipptust
+   af við brún kaflans og línan yfir fætinum er tekin. */
+@media (max-width: 759px) {
+  .vinnulag__listi li, html[data-thema="naeturborg"] .vinnulag__listi li { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7) !important; }
+}
+.site-foot, html[data-thema="naeturborg"] .site-foot { border-top: 0 !important; }
+/* Sími: glerplöturnar án brúna, bara mjúkur ljómi */
+@media (max-width: 759px) {
+  .gb__plata, html[data-thema="naeturborg"] .gb__plata { border-color: transparent !important; box-shadow: none !important; opacity: .6; }
+  .gb__plata::after { display: none; }
+}
