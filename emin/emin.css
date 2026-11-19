@@ -324,3 +324,13 @@ html, body { background: linear-gradient(165deg, #3b4558 0%, #283041 42%, #1b1f2
 .hetja { background: #232a38; }
 .hetja__vid { -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 72%, transparent 97%); mask-image: linear-gradient(to bottom, #000 0%, #000 72%, transparent 97%); }
 .hetja::after { inset: -2px 0 -3px 0; }
+
+/* Hero rennur inn í síðuna: enginn heill litur neðst, bara gegnsætt,
+   svo bakgrunnur síðunnar heldur áfram óslitinn */
+.hetja { background: transparent !important; }
+.hetja__vid { -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 60%, transparent 100%); mask-image: linear-gradient(to bottom, #000 0%, #000 60%, transparent 100%); }
+.hetja::after {
+  background:
+    linear-gradient(to top, rgba(31, 36, 48, 0) 0%, rgba(31, 36, 48, .55) 12%, rgba(35, 42, 56, .5) 30%, rgba(35, 42, 56, .12) 58%, rgba(35, 42, 56, .45) 100%),
+    radial-gradient(60% 50% at 12% 80%, rgba(96, 150, 255, .2), transparent 70%) !important;
+}
