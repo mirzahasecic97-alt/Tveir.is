@@ -205,3 +205,14 @@ h2 { font-size: clamp(40px, 26px + 4vw, 84px); }
 .efni figcaption span { text-transform: none; letter-spacing: 0; font: 500 14px/1.2 var(--letur); }
 .bardagi__dags { letter-spacing: 0; }
 h2 { margin-top: 0; }
+
+/* Um: myndin minni, sérstaklega í síma */
+.um { grid-template-columns: minmax(0, 360px) minmax(0, 1fr); }
+.um__mynd { max-width: 360px; }
+.um__mynd > img:first-child { aspect-ratio: 4 / 5; object-position: 50% 30%; }
+@media (max-width: 820px) {
+  .um { grid-template-columns: 1fr; gap: 26px; }
+  .um__mynd { max-width: 230px; }
+  .um__mynd > img:first-child { border-radius: 22px; }
+  .um__profill { width: 64px; height: 64px; right: -12px; bottom: -12px; border-width: 3px; }
+}
