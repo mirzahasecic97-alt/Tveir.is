@@ -175,3 +175,8 @@ html[data-thema="naeturborg"] .site-foot { border-top-color: rgba(58, 22, 80, .1
 .cta h2 em, .cta h2 em div { background: none !important; color: var(--acc) !important; -webkit-text-fill-color: currentColor; }
 html[data-thema="naeturborg"] .cta h2 em, html[data-thema="naeturborg"] .cta h2 em div { color: var(--nb-bleikt) !important; }
 html[data-thema="naeturborg"] .midi, html[data-thema="naeturborg"] .trust > h2 { color: rgba(58, 22, 80, .72) !important; }
+
+/* Síminn í "Svona vinnum við með þér": vinnusvæðið er Glerhúsið */
+.simi__haus img[src*="glerhusid"] { width: 64px; height: auto; }
+html[data-thema="naeturborg"] .simi__haus img[src*="glerhusid"] { display: block; filter: hue-rotate(112deg) saturate(1.6) brightness(1.02); }
+html[data-thema="naeturborg"] .simi__haus:has(img[src*="glerhusid"])::before { content: none; display: none; }
