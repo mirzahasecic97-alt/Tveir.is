@@ -207,7 +207,7 @@ html[data-thema="naeturborg"] .hero::after {
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
           mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
 }
-.synis__braut { display: flex; width: max-content; animation: synis-renna 90s linear infinite; }
+.synis__braut { display: flex; width: max-content; animation: synis-renna 40s linear infinite; }
 .synis:hover .synis__braut { animation-play-state: paused; }
 .synis__hopur { display: flex; gap: 12px; padding-right: 12px; }
 .synis__vid {
