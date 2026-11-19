@@ -318,3 +318,9 @@ html, body { background: linear-gradient(165deg, #3b4558 0%, #283041 42%, #1b1f2
 }
 .hetja__vid { filter: none; }
 .midill-stor__takn--yt { background: #FF0000; }
+
+/* Engin ljós lína neðst á hero: myndbandið dofnar út áður en það endar og
+   slæðan nær aðeins út fyrir brúnina */
+.hetja { background: #232a38; }
+.hetja__vid { -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 72%, transparent 97%); mask-image: linear-gradient(to bottom, #000 0%, #000 72%, transparent 97%); }
+.hetja::after { inset: -2px 0 -3px 0; }
