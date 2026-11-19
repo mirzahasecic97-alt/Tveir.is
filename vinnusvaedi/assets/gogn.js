@@ -854,6 +854,14 @@ async function supabaseBakendi() {
       kastaPost(svar); return svar.data;
     },
 
+    /* Nýr póstur frá tveir@tveir.is (kafli 26). Netföngin eru athuguð í gagnagrunninum. */
+    async nyrPostur({ til, efni, texti, html }) {
+      const svar = await sb.from('postholf_svor').insert({ til: String(til || '').slice(0, 2000), efni: String(efni || '').slice(0, 200),
+        texti: String(texti || '').slice(0, 10000), html: html ? String(html).slice(0, 60000) : null })
+        .select('id, stada').single();
+      kastaPost(svar); return svar.data;
+    },
+
     /* Undirskrift stjórnandans, fylgir á milli tækja (kafli 25) */
     async undirskrift() {
       const svar = await sb.from('undirskriftir').select('gogn').maybeSingle();
@@ -1876,6 +1884,17 @@ function prufuBakendi() {
       const t = finna(g.postholf.thraedir, id); if (t) { t.lesid_kerfi = new Date().toISOString(); vista(); }
     },
     async undirskrift() { krefjastAdmin(); return g.undirskrift || null; },
+    async nyrPostur({ til, efni, texti }) {
+      krefjastAdmin(); prufuPostholf();
+      const netfong = String(til || '').split(',').map((x) => x.trim()).filter(Boolean);
+      if (!netfong.length || netfong.length > 10) throw new Error('Settu inn 1 til 10 viðtakendur');
+      const rangt = netfong.find((n) => !/^[^@\s<>",;]+@[^@\s<>",;]+\.[a-z]{2,}$/i.test(n));
+      if (rangt) throw new Error('Netfangið ' + rangt + ' er ekki rétt');
+      if (!String(efni || '').trim()) throw new Error('Efnið vantar');
+      if (!String(texti || '').trim()) throw new Error('Skrifaðu eitthvað fyrst.');
+      g.postholf.svor.push({ id: 'np' + Date.now(), thradur_id: null, til: netfong.join(','), efni, texti, stada: 'bidur', stofnad: new Date().toISOString() });
+      vista(); return { id: 'np' + Date.now(), stada: 'bidur' };
+    },
     async vistaUndirskrift(gogn) { krefjastAdmin(); g.undirskrift = gogn; vista(); },
     async svaraPosti(thradur_id, texti) {
       krefjastAdmin(); prufuPostholf();

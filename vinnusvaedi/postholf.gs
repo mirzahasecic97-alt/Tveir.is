@@ -9,7 +9,8 @@
                        auglýsingar, samfélagsmiðlar né spjallþræðir) sem
                        venjulegan texta. Bara þræðir sem breyttust eru sendir.
    sendaPostholfSvor_  keyrir í tilkynna_: sendir svör sem voru skrifuð á
-                       vinnusvæðinu, í sama póstþræði, frá tveir@tveir.is.
+                       vinnusvæðinu, í sama póstþræði, frá tveir@tveir.is,
+                       og nýjan póst (Nýr póstur) á þá sem voru valdir.
    ========================================================================== */
 
 const POSTHOLF_LEIT = 'in:inbox newer_than:14d -category:promotions -category:social -category:forums';
@@ -96,14 +97,20 @@ function sendaPostholfSvor_() {
 
   listi.forEach((s) => {
     try {
+      const valkostir = { name: 'Tveir' };
+      if (s.html && String(s.html).length <= 60000) valkostir.htmlBody = String(s.html);
+      /* Nýr póstur (enginn þráður): til og efni koma af vinnusvæðinu, athuguð í gagnagrunninum */
+      if (!s.thradur_id) {
+        GmailApp.sendEmail(String(s.til), String(s.efni).replace(/[\r\n]+/g, ' ').slice(0, 200), String(s.texti), valkostir);
+        kalla_('merkja_postholf_svar', { p_id: s.id });
+        return;
+      }
       const th = GmailApp.getThreadById(s.thradur_id);
       if (!th) { kalla_('merkja_postholf_svar', { p_id: s.id, p_villa: 'Þráðurinn fannst ekki í Gmail' }); return; }
       const skilabod = th.getMessages();
       const theirra = skilabod.filter((m) => !/@tveir\.is$/.test(netfangUr_(m.getFrom())));
       const svaraTil = theirra.length ? theirra[theirra.length - 1] : skilabod[skilabod.length - 1];
       /* HTML útgáfan (texti og undirskrift með merki) var smíðuð á vinnusvæðinu */
-      const valkostir = { name: 'Tveir' };
-      if (s.html && String(s.html).length <= 60000) valkostir.htmlBody = String(s.html);
       svaraTil.reply(String(s.texti), valkostir);
       kalla_('merkja_postholf_svar', { p_id: s.id });
       delete sidast[s.thradur_id];   /* næsta umferð sækir þráðinn aftur, með svarinu */
