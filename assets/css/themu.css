@@ -205,3 +205,8 @@ html[data-thema="naeturborg"] .hr-thyrla svg { display: block; width: 100%; heig
 @keyframes nb-spadi { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(.12); } }
 @keyframes nb-hali { to { transform: rotate(360deg); } }
 @keyframes nb-geisli { 0%, 20% { opacity: 0; } 40%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Glerhúsið merkið í símanum: bleikt í GTA */
+html[data-thema="naeturborg"] .simi__haus img[src*="glerhusid"] { filter: hue-rotate(112deg) saturate(1.6) brightness(1.02); }
+html[data-thema="naeturborg"] .simi__haus img[src*="glerhusid"] { display: block; }
+html[data-thema="naeturborg"] .simi__haus:has(img[src*="glerhusid"])::before { content: none; display: none; }

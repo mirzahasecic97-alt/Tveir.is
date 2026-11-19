@@ -786,3 +786,23 @@ h1 em, h2 em {
   .vinnulag__listi b, .vinnulag__listi span { grid-column: 2; }
   .vinnulag__listi span { margin-top: 3px; }
 }
+
+/* --------------------------------------------------------------------------
+   Svona vinnum við (Glerhúsið): í síma poppar spjald skrefsins upp yfir
+   neðri hluta símans, eitt í einu, í stað þess að hverfa alveg
+   -------------------------------------------------------------------------- */
+@media (max-width: 819px) {
+  html .vinnulag .fljot { display: block; left: 50%; right: auto; top: auto; bottom: 6%; width: min(240px, 78vw);
+    margin-left: calc(min(240px, 78vw) / -2); opacity: 0; transform: translateY(18px) scale(.96);
+    transition: opacity .35s ease, transform .45s cubic-bezier(.22, 1, .36, 1); }
+  html .vinnulag[data-skref="1"] .fljot--1,
+  html .vinnulag[data-skref="2"] .fljot--5,
+  html .vinnulag[data-skref="3"] .fljot--4 { opacity: 1; transform: translateY(0) scale(1) rotate(-1.5deg); }
+  html .vinnulag[data-skref="2"] .fljot--1, html .vinnulag[data-skref="3"] .fljot--1,
+  html .vinnulag[data-skref="3"] .fljot--2, html .vinnulag[data-skref="3"] .fljot--3,
+  html .vinnulag[data-skref="2"] .fljot--2, html .vinnulag[data-skref="2"] .fljot--3,
+  html .vinnulag[data-skref="1"] .fljot--3, html .vinnulag[data-skref="3"] .fljot--5, html .vinnulag[data-skref="3"] .fljot--6 { opacity: 0; transform: translateY(18px) scale(.96); }
+}
+
+/* Glerhúsið merkið í símanum er breiðara en Tveir merkið var */
+.simi__haus img[src*="glerhusid"] { width: 64px; }
