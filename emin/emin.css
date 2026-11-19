@@ -217,3 +217,4 @@ h2 { margin-top: 0; }
   .um__profill { width: 64px; height: 64px; right: -12px; bottom: -12px; border-width: 3px; }
 }
 .um__mynd > img:first-child { height: auto; }
+.um__mynd > img:first-child { object-position: 50% 22%; }
