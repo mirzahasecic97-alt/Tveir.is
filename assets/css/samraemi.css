@@ -517,3 +517,18 @@ html[data-thema="naeturborg"] .profill__spurn { color: rgba(44, 15, 69, .55); }
 @media (max-width: 760px) { .profill__nafn { font-size: 20px !important; } .profill__texti { max-width: calc(100% - 64px) !important; } }
 /* Ert þú næst/ur?: bara maðurinn, heil skuggamynd sem stendur á botni kortsins */
 .profill__skuggi { top: auto !important; bottom: 0; width: 82% !important; height: 78%; filter: none !important; }
+
+/* Svona vinnum við: hlekkur á Glerhúsið undir fyrirsögninni */
+.vinnulag__inni { text-align: center; }
+.vinnulag__listi, .vinnulag__svid { text-align: left; }
+.vl-gler {
+  display: inline-flex; align-items: center; gap: 9px; margin: 0 auto clamp(12px, 2vh, 20px); padding: 8px 16px 8px 10px;
+  border-radius: 999px; text-decoration: none; font: 500 14.5px/1 var(--f-body); color: var(--ink);
+  background: linear-gradient(150deg, rgba(255, 255, 255, .9), rgba(255, 255, 255, .62)); border: 1px solid rgba(255, 255, 255, .95);
+  box-shadow: inset 0 1px 0 #fff, 0 10px 24px -16px rgba(28, 48, 80, .45); transition: transform .2s ease;
+}
+.vl-gler:hover { transform: translateY(-2px); }
+.vl-gler img { width: 22px; height: 22px; }
+.vl-gler__or { color: var(--acc); }
+html[data-thema="naeturborg"] .vl-gler img { filter: hue-rotate(112deg) saturate(1.6); }
+@media (min-width: 760px) { .simi__skjar { height: min(calc(100svh - 410px), 520px) !important; min-height: 280px; } }
