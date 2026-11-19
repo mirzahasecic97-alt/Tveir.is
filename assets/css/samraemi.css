@@ -248,3 +248,6 @@ html .card.trust::before, html .card.trust::after { display: none !important; }
 /* Logostrimillinn stoppar ekki heldur undir músinni */
 .marquee:hover .marquee__track, .marquee:focus-within .marquee__track { animation-play-state: running !important; }
 .marquee__track { animation-duration: 32s !important; }
+/* Skuggar sem strimlarnir klipptu í beinar línur: burt */
+.logo-chip, .work-tile, .work-tile .slot,
+html[data-thema="naeturborg"] .logo-chip, html[data-thema="naeturborg"] .work-tile, html[data-thema="naeturborg"] .work-tile .slot { box-shadow: none !important; }
