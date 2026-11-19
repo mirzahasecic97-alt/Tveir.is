@@ -1598,3 +1598,36 @@ a.service:focus-visible { outline: 2px solid var(--acc); outline-offset: 6px; bo
 /* Merki sem eru heilt app tákn (t.d. Payday) fylla flísina */
 .ghk-hub__app.er-fyllt, .gh-logo.er-fyllt { overflow: hidden; }
 .ghk-hub__app.er-fyllt img, .gh-logo.er-fyllt img { width: 100%; height: 100%; object-fit: cover; }
+/* Glerhúsið kaflinn í stað "Svona vinnum við": þéttari, sérstaklega í síma */
+.ghk-teng { grid-template-areas: "texti hub"; }
+@media (max-width: 960px) { .ghk-teng { grid-template-areas: "texti" "hub"; } }
+@media (max-width: 760px) {
+  .ghk { padding: clamp(40px, 10vw, 64px) 0; }
+  .ghk__haus { gap: 10px; }
+  .ghk__merki { height: 30px; }
+  .ghk__lysing { font-size: 16px; }
+  .ghk-flaedi { margin-top: 28px; }
+  .ghk-flaedi__skref { gap: 16px; }
+  .ghk-flaedi__nr { width: 50px; height: 50px; font-size: 17px; }
+  .ghk-flaedi__skref li { grid-template-columns: 50px minmax(0, 1fr); column-gap: 14px; }
+  .ghk-flaedi__braut { left: 24px; top: 25px; bottom: 25px; }
+  .ghk-flaedi__skref strong { font-size: 16px; }
+  .ghk-flaedi__skref span:not(.ghk-flaedi__nr) { font-size: 13.5px; }
+  .ghk-teng { margin-top: 40px; padding: 24px 16px 28px; gap: 18px; }
+  .ghk-teng__texti h3 { font-size: 23px; }
+  .ghk-teng__texti p { font-size: 15px; }
+  .ghk-hub { --b: min(300px, calc(100vw - 72px)); }
+  .ghk-hub__mid { width: 30%; box-shadow: 0 0 0 6px var(--accs), 0 14px 30px -16px rgba(28, 48, 80, .45); font-size: 11.5px; }
+  .ghk-hub__app { width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 12px; }
+  .ghk-hub__app img { width: 20px; height: 20px; }
+  .ghk-hub__app.er-fyllt img { width: 100%; height: 100%; }
+  .ghk-eig, .ghk-afhverju { margin-top: 44px; }
+  .ghk-eig__grind { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .ghk-eig__grind li { padding: 16px 14px 18px; }
+  .ghk-eig__grind b { font-size: 15.5px; }
+  .ghk-eig__grind span { font-size: 13.5px; }
+  .ghk-afhverju h3 { font-size: 24px; }
+  .ghk-afhverju li { padding: 18px; }
+  .ghk__hnappar { flex-direction: column; align-items: stretch; }
+  .ghk__hnappar .btn { justify-content: center; }
+}

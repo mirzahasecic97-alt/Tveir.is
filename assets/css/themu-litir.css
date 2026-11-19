@@ -760,6 +760,14 @@
   color: #fff;
   background: var(--acc);
 }
+@media (max-width: 760px) {
+:where(html[data-thema="naeturborg"]) .ghk-hub {
+  --b: min(300px, calc(100vw - 72px));
+}
+:where(html[data-thema="naeturborg"]) .ghk-hub__mid {
+  box-shadow: 0 0 0 6px var(--accs), 0 14px 30px -16px rgba(71, 20, 88, .45);
+}
+}
 
 /* úr assets/css/glans.css */
 :root:where([data-thema="naeturborg"]) {

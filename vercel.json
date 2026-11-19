@@ -20,6 +20,16 @@
       "source": "/kerfi",
       "destination": "/thjonusta.html",
       "permanent": false
+    },
+    {
+      "source": "/glerhusid",
+      "destination": "https://glerhusid.vercel.app/",
+      "permanent": false
+    },
+    {
+      "source": "/glerhusid/:slod*",
+      "destination": "https://glerhusid.vercel.app/:slod*",
+      "permanent": false
     }
   ],
   "headers": [
