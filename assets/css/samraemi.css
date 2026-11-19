@@ -470,3 +470,9 @@ html[data-thema="naeturborg"] .profill-sida__texti h1 { font-family: var(--nb-le
   .profill__or { width: 42px; height: 42px; font-size: 18px; }
 }
 .profill__texti { max-width: calc(100% - 90px); }
+/* Prófílmynd (lítil, hringlaga) við nafnið */
+.profill__nafn { display: inline-flex; align-items: center; gap: 12px; }
+.profill__avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; flex: none; }
+.profill-sida__nafn { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.profill-sida__avatar { width: clamp(64px, 6vw, 92px); height: clamp(64px, 6vw, 92px); border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 12px 26px -14px rgba(28, 48, 80, .5); flex: none; }
+@media (max-width: 560px) { .profill__avatar { width: 40px; height: 40px; } }
