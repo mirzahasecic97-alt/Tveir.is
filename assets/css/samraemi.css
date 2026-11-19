@@ -413,3 +413,6 @@ html[data-thema="naeturborg"] .vl-teng__texti { color: rgba(58, 22, 80, .72); }
             mask-image: linear-gradient(90deg, transparent 0, #000 26%, #000 100%);
   }
 }
+/* Yfirtitlarnir teknir: fyrirsögnin byrjar efst */
+.kafla-haus .section-title { margin-top: 0 !important; }
+.cta h2 { margin-top: 0 !important; }
