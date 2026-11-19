@@ -678,6 +678,88 @@
   border-color: var(--acc);
 }
 }
+:where(html[data-thema="naeturborg"]) .ghk__lysing {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .ghk__midi {
+  color: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .ghk-flaedi__braut {
+  background: var(--accs);
+}
+:where(html[data-thema="naeturborg"]) .ghk-flaedi__ljos {
+  background: linear-gradient(90deg, var(--acc), #f79dca);
+}
+:where(html[data-thema="naeturborg"]) .ghk-flaedi__pakki {
+  background: var(--sur);
+  color: var(--acc);
+  box-shadow: 0 10px 24px -10px rgba(71, 20, 88, .45), 0 0 0 4px var(--accs);
+}
+:where(html[data-thema="naeturborg"]) .ghk-flaedi__nr {
+  color: var(--acc);
+  background: var(--sur);
+  border: 2px solid var(--accs);
+  box-shadow: 0 8px 20px -14px rgba(71, 20, 88, .4);
+}
+:where(html[data-thema="naeturborg"]) .ghk-flaedi__skref strong {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .ghk-flaedi__skref span:not(.ghk-flaedi__nr) {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .ghk-teng {
+  background: var(--sur);
+  box-shadow: var(--sh-card);
+}
+:where(html[data-thema="naeturborg"]) .ghk-teng__texti h3 {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .ghk-teng__texti p {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .ghk-teng__listi li {
+  background: var(--bg);
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .gh-logo {
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(71, 20, 88, .08);
+}
+:where(html[data-thema="naeturborg"]) .ghk-hub {
+  --b: min(400px, calc(100vw - 96px));
+}
+:where(html[data-thema="naeturborg"]) .ghk-hub__linur line {
+  stroke: var(--acc);
+}
+:where(html[data-thema="naeturborg"]) .ghk-hub__mid {
+  background: var(--sur);
+  box-shadow: 0 0 0 8px var(--accs), 0 20px 40px -18px rgba(71, 20, 88, .45);
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .ghk-hub__app {
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(71, 20, 88, .06), 0 10px 22px -12px rgba(71, 20, 88, .45);
+}
+:where(html[data-thema="naeturborg"]) .ghk-eig__grind li,
+:where(html[data-thema="naeturborg"]) .ghk-afhverju li {
+  background: var(--sur);
+  box-shadow: var(--sh-card);
+}
+:where(html[data-thema="naeturborg"]) .ghk-eig__grind b,
+:where(html[data-thema="naeturborg"]) .ghk-afhverju li b {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .ghk-eig__grind span,
+:where(html[data-thema="naeturborg"]) .ghk-afhverju li span {
+  color: var(--soft);
+}
+:where(html[data-thema="naeturborg"]) .ghk-afhverju h3 {
+  color: var(--ink);
+}
+:where(html[data-thema="naeturborg"]) .ghk-afhverju li::before {
+  color: #fff;
+  background: var(--acc);
+}
 
 /* úr assets/css/glans.css */
 :root:where([data-thema="naeturborg"]) {
