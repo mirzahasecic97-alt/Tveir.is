@@ -119,3 +119,51 @@ h2 { font-size: clamp(40px, 26px + 4vw, 84px); }
 }
 @media (max-width: 420px) { .haus > .hnappur { display: none; } .haus__hamborgari { margin-left: auto; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .hetja__skruna i { animation: none; } .hnappur { transition: none; } }
+
+/* Samfélagsmiðlar */
+.smidlar { display: flex; gap: 6px; }
+.smidill { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .06); border: 1px solid var(--lina); transition: background .2s ease, border-color .2s ease; }
+.smidill img { width: 18px; height: 18px; filter: brightness(0) invert(1); }
+.smidill:hover { background: rgba(143, 211, 255, .16); border-color: rgba(143, 211, 255, .5); }
+.smidlar--stor { margin-top: 26px; }
+.smidlar--stor .smidill { width: 52px; height: 52px; }
+.smidlar--stor .smidill img { width: 22px; height: 22px; }
+.haus .smidlar { margin-left: 6px; }
+
+/* Bardagaferillinn: tímalína */
+.bardagar { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 10px; }
+.bardagi {
+  display: grid; grid-template-columns: 170px minmax(0, 1fr) auto; gap: 18px; align-items: center;
+  padding: 20px 24px; border-radius: 20px; background: linear-gradient(160deg, var(--flotur), var(--djup)); border: 1px solid var(--lina);
+}
+.bardagi--saga { border-color: rgba(143, 211, 255, .35); background: radial-gradient(60% 120% at 0% 0%, rgba(143, 211, 255, .12), transparent 60%), linear-gradient(160deg, var(--flotur), var(--djup)); }
+.bardagi__dags { font: 600 14px/1.2 var(--letur); color: var(--dauft); letter-spacing: .04em; }
+.bardagi__stadur { display: flex; flex-direction: column; gap: 4px; color: var(--dauft); font-size: 15px; }
+.bardagi__stadur strong { color: var(--hvitt); font-weight: 600; font-size: 17px; }
+.bardagi__nidurstada { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; color: var(--dauft); font-size: 14px; text-align: right; }
+.bardagi__nidurstada b { font: 400 22px/1 var(--letur-h); letter-spacing: .06em; text-transform: uppercase; color: #8ff0b4; }
+
+/* Samstörf: formið */
+.samstorf { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(28px, 5vw, 70px); align-items: start; padding-bottom: clamp(60px, 9vw, 110px); }
+.samstorf__form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: clamp(22px, 3vw, 34px); border-radius: 28px; background: linear-gradient(160deg, #101722, #0a0e14); border: 1px solid rgba(143, 211, 255, .22); }
+.samstorf__form label { display: grid; gap: 7px; font: 500 14px/1.2 var(--letur); color: var(--dauft); }
+.samstorf__form input, .samstorf__form select, .samstorf__form textarea {
+  width: 100%; min-height: 48px; padding: 12px 14px; border-radius: 14px; font: 400 16px/1.4 var(--letur);
+  color: var(--hvitt); background: rgba(255, 255, 255, .05); border: 1px solid var(--lina); outline: none;
+}
+.samstorf__form textarea { resize: vertical; }
+.samstorf__form select option { color: #000; }
+.samstorf__form input:focus, .samstorf__form select:focus, .samstorf__form textarea:focus { border-color: var(--is); box-shadow: 0 0 0 4px rgba(143, 211, 255, .15); }
+.samstorf__breitt { grid-column: 1 / -1; }
+.samstorf__form .hnappur { justify-self: start; cursor: pointer; }
+.samstorf__stada { margin: 0; font-size: 15px; color: var(--is); }
+.samstorf__stada.er-villa { color: #ff9b9b; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+@media (max-width: 820px) {
+  .haus .smidlar { display: none; }
+  .bardagi { grid-template-columns: 1fr auto; gap: 8px 14px; }
+  .bardagi__dags { grid-column: 1 / -1; }
+  .samstorf { grid-template-columns: 1fr; }
+  .samstorf__form { grid-template-columns: 1fr; }
+}
