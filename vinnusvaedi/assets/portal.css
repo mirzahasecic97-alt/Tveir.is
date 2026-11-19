@@ -1849,3 +1849,28 @@ body.sk-les .page-head.sk-haus { display: none !important; }
 .st-teng__stada { font-size: 13.5px; color: var(--ink); }
 .st-teng__tharf { font-size: 13.5px; line-height: 1.5; color: var(--soft); padding: 10px 12px; border-radius: 12px; background: rgba(28, 48, 80, .04); }
 .st-teng__fot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; }
+
+/* Tengingar með merkjum: hvítt merki á lit appsins, eða merkið í lit á ljósri flís */
+.st-teng-yfirlit { margin: -4px 0 16px; font-size: 14px; color: var(--soft); }
+.st-teng-hopur + .st-teng-hopur { margin-top: 26px; }
+.st-teng-hopur h3 { font: 600 13px/1.2 var(--f-body); text-transform: uppercase; letter-spacing: .07em; color: var(--soft); margin: 0 0 12px; }
+.st-teng__takn { overflow: hidden; }
+.st-teng__takn img { width: 22px; height: 22px; object-fit: contain; filter: brightness(0) invert(1); }
+.st-teng__takn.er-ljos { border: 1px solid rgba(28, 48, 80, .1); }
+.st-teng__takn.er-ljos img { filter: none; width: 30px; height: 30px; }
+.st-teng--kemur .st-teng__takn, .st-teng--ekki .st-teng__takn { opacity: 1; }
+.st-teng--kemur .st-teng__takn { background: inherit; }
+.st-teng__fot { justify-content: flex-end; }
+.st-t__haus { display: flex; align-items: center; gap: 12px; }
+.st-t__haus .st-teng__takn { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; }
+.st-t__hvad { margin-top: 14px; font-size: 16px; color: var(--ink); }
+.st-t__stada { margin-top: 10px; padding: 10px 14px; border-radius: 12px; font-size: 14.5px; font-weight: 500; }
+.st-t__stada--tengt { background: #e6f4ea; color: #1e6b34; }
+.st-t__stada--bidur { background: #fff3d6; color: #8a5a00; }
+.st-t__stada--ekki { background: #fdecec; color: #a3261e; }
+.st-t__stada--handvirkt, .st-t__stada--kemur { background: rgba(28, 48, 80, .05); color: #4a5f80; }
+.st-t__tharf { margin-top: 14px; padding: 14px 16px; border-radius: 14px; background: #fff; border: 1px solid rgba(28, 48, 80, .08); }
+.st-t__tharf strong { display: block; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--soft); margin-bottom: 6px; }
+.st-t__tharf p { font-size: 15px; line-height: 1.55; color: var(--ink); }
+.st-t__haus { flex: 1; min-width: 0; }
+.st-t__haus h2 { margin: 0; }
