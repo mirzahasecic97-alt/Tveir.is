@@ -1939,3 +1939,17 @@ body.sk-les .page-head.sk-haus { display: none !important; }
 }
 .dg-titill { text-transform: none; }
 .st-teng__takn.er-fyllt img { width: 100%; height: 100%; object-fit: cover; filter: none; }
+
+/* Tengingar með API lykli: leiðbeiningar, reitir og Vista */
+.st-t__lykill { display: grid; gap: 14px; }
+.st-t__skref { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 6px; }
+.st-t__skref li { line-height: 1.45; }
+.st-t__form { display: grid; gap: 12px; }
+.st-t__reitur { display: grid; gap: 6px; }
+.st-t__reitur span { font-weight: 600; font-size: 14px; }
+.st-t__reitur input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
+.st-t__reitur small { color: var(--soft); font-size: 12.5px; }
+.st-t__oruggt { font-size: 12.5px; margin: 0; }
+.st-t__form .villa { color: #b3261e; margin: 0; }
+.pdialog .st-t__lykill + .spjald__fot { display: none; }
+.st-t__reitur input { width: 100%; min-height: 46px; padding: 11px 14px; border-radius: 14px; box-sizing: border-box; }

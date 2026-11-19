@@ -9,6 +9,38 @@ import { lesaUndirskrift, sjalfgefinUndirskrift, undirskriftHtml, opnaUndirskrif
 const ek = await vardaHlid({ badir: true });
 if (ek) start();
 
+/* Tengingar með API lykli. reitir: leynt: false fer í stillingar (sést aftur), annað í Vault. */
+const LYKLAR = {
+  payday: { veita: 'payday', heiti: 'Payday', merki: 'payday.png', litur: '#52bb62', fyllt: true,
+    hvad: 'Lokin verk og samningar verða að reikningum', opna: ['Opna Payday', 'https://app.payday.is'],
+    skref: ['Skráðu þig inn á Payday.', 'Farðu í Stillingar og opnaðu API (undir fyrirtækinu).', 'Búðu til nýtt forrit og kallaðu það Glerhúsið.', 'Afritaðu Client ID og Client Secret og límdu þá hér fyrir neðan.'],
+    reitir: [{ nafn: 'clientId', heiti: 'Client ID' }, { nafn: 'clientSecret', heiti: 'Client Secret' }] },
+  dk: { veita: 'dk', heiti: 'DK', merki: 'dk.png', litur: '#4743f7',
+    hvad: 'Lokin verk og samningar verða að reikningum', opna: ['Opna dkPlus', 'https://dkplus.is'],
+    skref: ['Skráðu þig inn á dkPlus með aðgangi fyrirtækisins.', 'Búðu til API token (aðgangslykil) fyrir Glerhúsið í stillingunum.', 'Gefðu honum aðgang að viðskiptavinum og sölureikningum.', 'Límdu tokeninn hér fyrir neðan.'],
+    athugid: 'Finnurðu ekki API token í dkPlus? Biddu dk hugbúnað um aðgang að dkPlus API fyrir fyrirtækið.',
+    reitir: [{ nafn: 'token', heiti: 'API token' }] },
+  shopify: { veita: 'shopify', heiti: 'Shopify', merki: 'shopify.svg', litur: '#5E8E3E',
+    hvad: 'Lagerstaða og pantanir úr vefversluninni', opna: ['Opna Shopify Dev Dashboard', 'https://dev.shopify.com/dashboard'],
+    skref: ['Opnaðu Shopify Dev Dashboard með sama aðgangi og verslunin.', 'Smelltu á Create app og kallaðu það Glerhúsið.', 'Veldu aðganginn read_products, read_inventory og read_orders og settu appið upp á versluninni.', 'Afritaðu Client ID og Client secret úr stillingum appsins og límdu hér, ásamt slóð verslunarinnar.'],
+    reitir: [{ nafn: 'verslun', heiti: 'Slóð verslunarinnar', daemi: 'nafn.myshopify.com', leynt: false }, { nafn: 'clientId', heiti: 'Client ID' }, { nafn: 'clientSecret', heiti: 'Client secret' }] },
+  gorilla: { veita: 'gorilla', heiti: 'Gorilla vöruhús', merki: 'gorilla.jpg', litur: '#ffffff', fyllt: true,
+    hvad: 'Lagerinn í vöruhúsinu, í gegnum Shopify', opna: ['Opna birgðakerfi Gorilla', 'https://app.extensiv.com'],
+    skref: ['Gorilla geymir vörurnar og uppfærir birgðirnar í Shopify versluninni þinni.', 'Tengdu Shopify hér á síðunni, þá sést lagerstaðan í kerfinu.', 'Smelltu á Vista hér fyrir neðan til að merkja að Gorilla sjái um lagerinn.', 'Viltu sjá vöruhúsið sjálft: skráðu þig inn í birgðakerfi Gorilla.'],
+    athugid: 'Beinn aðgangur að vöruhúsakerfinu (API) fæst bara hjá Gorilla. Sendu þeim línu ef þú vilt hann líka.',
+    fastar: { leid: 'shopify' }, vistaTexti: 'Vista: Gorilla sér um lagerinn', reitir: [] },
+  claude: { veita: 'claude', heiti: 'Claude', merki: 'claude.svg', litur: '#D97757',
+    hvad: 'Gervigreind sem skrifar drög að svörum og samantektir', opna: ['Opna Claude Console', 'https://console.anthropic.com/settings/keys'],
+    skref: ['Skráðu þig inn á Claude Console (console.anthropic.com).', 'Settu upp greiðslu og mánaðarhámark undir Billing. Hver notkun kostar smá.', 'Farðu í API Keys, smelltu á Create Key og kallaðu hann Glerhúsið.', 'Afritaðu lykilinn strax (hann sést bara einu sinni) og límdu hér.'],
+    athugid: 'Claude áskrift (Pro eða Max) gefur ekki API lykil. API notkun er rukkuð sér hjá Anthropic.',
+    reitir: [{ nafn: 'lykill', heiti: 'API lykill', daemi: 'sk-ant-...' }] },
+  chatgpt: { veita: 'chatgpt', heiti: 'ChatGPT', merki: 'openai.svg', litur: '#000000',
+    hvad: 'Gervigreind sem skrifar drög að svörum og samantektir', opna: ['Opna OpenAI Platform', 'https://platform.openai.com/api-keys'],
+    skref: ['Skráðu þig inn á OpenAI Platform (platform.openai.com).', 'Settu upp greiðslu og mánaðarhámark undir Billing. Hver notkun kostar smá.', 'Farðu í API keys, smelltu á Create new secret key og kallaðu hann Glerhúsið.', 'Afritaðu lykilinn strax (hann sést bara einu sinni) og límdu hér.'],
+    athugid: 'ChatGPT Plus áskrift gefur ekki API lykil. API notkun er rukkuð sér hjá OpenAI.',
+    reitir: [{ nafn: 'lykill', heiti: 'API lykill', daemi: 'sk-...' }] }
+};
+
 const MAN = ['jan', 'feb', 'mar', 'apr', 'maí', 'jún', 'júl', 'ágú', 'sep', 'okt', 'nóv', 'des'];
 const pad = (n) => String(n).padStart(2, '0');
 const hvenaer = (s) => { const d = new Date(s); return d.getDate() + '. ' + MAN[d.getMonth()] + ' kl. ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); };
@@ -16,6 +48,7 @@ const hvenaer = (s) => { const d = new Date(s); return d.getDate() + '. ' + MAN[
 async function start() {
   const g = await gogn();
   const admin = ek.hlutverk === 'admin';
+  let sidastaStada = null;
   teiknaHaus(ek, 'Stillingar');
   const innihald = document.getElementById('innihald');
 
@@ -111,10 +144,23 @@ async function start() {
       s.meta = ['ekki', 'Náði ekki í miðlana'];
       s.tiktok = ['handvirkt', 'Tölurnar eru skráðar í höndunum'];
     }
+    /* API lyklarnir (kafli 28): null ef taflan er ekki komin */
+    try { s.lyklar = g.tengingarStada ? await g.tengingarStada() : null; } catch (e) { s.lyklar = null; }
     return s;
   }
 
+  /* Staða tengingar sem notar API lykil */
+  function lykilStada(s, veita, synidaemi) {
+    if (s.lyklar === null) return ['ekki', 'Tengingarnar eru ekki komnar í gagnagrunninn'];
+    const r = s.lyklar[veita];
+    if (!r) return synidaemi ? ['tengt', 'Sýnidæmi'] : ['ekki', ''];
+    if (veita === 'gorilla') return ['bidur', s.lyklar.shopify ? 'Gorilla sér um lagerinn, birgðirnar koma úr Shopify' : 'Gorilla sér um lagerinn. Tengdu Shopify til að sjá birgðirnar'];
+    if (r.prufad) return /^ok/i.test(r.prufa_svar || '') ? ['tengt', 'Prófað ' + hvenaer(r.prufad)] : ['ekki', 'Prófun mistókst: ' + (r.prufa_svar || 'óþekkt villa')];
+    return ['bidur', 'Lykill vistaður (endar á ' + (r.sidustu4 || '????') + '), ' + hvenaer(r.uppfaert)];
+  }
+
   function teiknaTengingar(s) {
+    sidastaStada = s;
     const POSTUR = g.prufa ? 'pósthólfi stofunnar' : 'tveir@tveir.is';
     const VERK = g.prufa ? 'verk-netfang stofunnar' : 'verk@tveir.is';
     const PILLUR = { tengt: 'Tengt', bidur: 'Bíður', ekki: 'Ekki tengt', handvirkt: 'Handvirkt', kemur: 'Kemur' };
@@ -142,10 +188,16 @@ async function start() {
         { heiti: 'Instagram skilaboð', merki: 'instagram.svg', litur: '#C13584', hvad: 'DM inn í Samskipti', stada: KEMUR, tharf: 'Sama Meta app og leyfi og Messenger.' }
       ]],
       ['Bókhald', [
-        { heiti: 'Payday', merki: 'payday.png', litur: '#52bb62', fyllt: true, hvad: 'Lokin verk og samningar verða að reikningum',
-          stada: g.prufa && bok === 'Payday' ? ['tengt', 'Sýnidæmi'] : EKKI, tharf: 'Þarf API lykil úr Payday (Stillingar > API). Þá fara reikningar beint úr Bókhaldi.' },
-        { heiti: 'DK', merki: 'dk.png', litur: '#4743f7', hvad: 'Lokin verk og samningar verða að reikningum',
-          stada: g.prufa && bok === 'DK' ? ['tengt', 'Sýnidæmi'] : EKKI, tharf: 'Þarf aðgang að vefþjónustu DK frá dk hugbúnaði.' }
+        { ...LYKLAR.payday, stada: lykilStada(s, 'payday', g.prufa && bok === 'Payday') },
+        { ...LYKLAR.dk, stada: lykilStada(s, 'dk', g.prufa && bok === 'DK') }
+      ]],
+      ['Verslun og lager', [
+        { ...LYKLAR.shopify, stada: lykilStada(s, 'shopify') },
+        { ...LYKLAR.gorilla, stada: lykilStada(s, 'gorilla') }
+      ]],
+      ['Gervigreind', [
+        { ...LYKLAR.claude, stada: lykilStada(s, 'claude') },
+        { ...LYKLAR.chatgpt, stada: lykilStada(s, 'chatgpt') }
       ]],
       ['Vefur og skrár', [
         { heiti: 'Google Analytics', merki: 'googleanalytics.svg', litur: '#E37400', hvad: 'Heimsóknir á vef viðskiptavinarins á Tölfræði', stada: KEMUR, tharf: 'Má tengja í gegnum Google. Viðskiptavinurinn gefur okkur lesaðgang að sínu Analytics.' },
@@ -203,14 +255,68 @@ async function start() {
       ]),
       el('p', { class: 'st-t__hvad', texti: t.hvad + '.' }),
       el('p', { class: 'st-t__stada st-t__stada--' + stada, texti: TEXTI[stada] || '' }),
-      el('div', { class: 'st-t__tharf' }, [el('strong', { texti: 'Hvað þarf til' }), el('p', { texti: t.tharf })]),
-      el('div', { class: 'spjald__fot' }, [
+      t.veita ? lykilForm(t, stada, d) : el('div', { class: 'st-t__tharf' }, [el('strong', { texti: 'Hvað þarf til' }), el('p', { texti: t.tharf })]),
+      t.veita ? null : el('div', { class: 'spjald__fot' }, [
         t.slod ? el('a', { class: 'btn', href: t.slod, texti: 'Opna' }) : null,
         el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Loka', onclick: () => d.close() })
       ])
     ]);
     document.body.append(d);
     d.showModal();
+  }
+
+  /* Leiðbeiningar skref fyrir skref, reitirnir og Vista. Lykillinn fer beint
+     í gagnagrunninn og er aldrei sýndur aftur. */
+  function lykilForm(t, stada, d) {
+    const r = (sidastaStada && sidastaStada.lyklar && sidastaStada.lyklar[t.veita]) || null;
+    const villa = el('p', { class: 'villa', role: 'alert', hidden: true });
+    const reitir = (t.reitir || []).map((f) => {
+      const inn = el('input', { type: f.leynt === false ? 'text' : 'password', name: f.nafn, autocomplete: 'off', spellcheck: 'false',
+        autocapitalize: 'off', placeholder: f.daemi || '', value: f.leynt === false && r && r.stillingar ? (r.stillingar[f.nafn] || '') : '' });
+      return { f, inn, svid: el('label', { class: 'st-t__reitur' }, [el('span', { texti: f.heiti }), inn,
+        f.leynt !== false && r ? el('small', { texti: 'Vistað. Skildu eftir autt til að halda núverandi lykli.' }) : null]) };
+    });
+    const vista = el('button', { type: 'submit', class: 'btn', texti: t.vistaTexti || (r ? 'Vista breytingar' : 'Vista og tengja') });
+    const form = el('form', { class: 'st-t__form', onsubmit: async (e) => {
+      e.preventDefault(); villa.hidden = true;
+      const stillingar = { ...(t.fastar || {}) }, leyndo = {};
+      for (const { f, inn } of reitir) {
+        const v = inn.value.trim();
+        if (f.leynt === false) stillingar[f.nafn] = v.toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+        else if (v) leyndo[f.nafn] = v;
+      }
+      const leyndirReitir = reitir.filter(({ f }) => f.leynt !== false);
+      if (Object.keys(leyndo).length && Object.keys(leyndo).length < leyndirReitir.length) { villa.textContent = 'Fylltu út alla lyklareitina.'; villa.hidden = false; return; }
+      vista.disabled = true; vista.textContent = 'Vista';
+      try {
+        await g.vistaTengingu(t.veita, stillingar, Object.keys(leyndo).length ? leyndo : null);
+        reitir.forEach(({ inn }) => { if (inn.type === 'password') inn.value = ''; });
+        d.close();
+        teiknaTengingar(await stadaTenginga());
+      } catch (er) {
+        villa.textContent = er.message || 'Ekki tókst að vista.'; villa.hidden = false;
+        vista.disabled = false; vista.textContent = t.vistaTexti || 'Vista og tengja';
+      }
+    } }, [
+      ...reitir.map((x) => x.svid),
+      villa,
+      el('div', { class: 'spjald__fot' }, [
+        vista,
+        t.opna ? el('a', { class: 'btn btn--ghost', href: t.opna[1], target: '_blank', rel: 'noopener', texti: t.opna[0] }) : null,
+        r ? el('button', { type: 'button', class: 'btn btn--ghost btn--danger', texti: 'Aftengja', onclick: async () => {
+          if (!confirm('Aftengja ' + t.heiti + '? Lykillinn er þurrkaður út.')) return;
+          try { await g.eydaTengingu(t.veita); d.close(); teiknaTengingar(await stadaTenginga()); }
+          catch (er) { villa.textContent = er.message || 'Ekki tókst að aftengja.'; villa.hidden = false; }
+        } }) : null
+      ])
+    ]);
+    return el('div', { class: 'st-t__lykill' }, [
+      el('div', { class: 'st-t__tharf' }, [el('strong', { texti: 'Svona tengirðu' }),
+        el('ol', { class: 'st-t__skref' }, t.skref.map((x) => el('li', { texti: x })))]),
+      t.athugid ? el('p', { class: 'skyring', texti: t.athugid }) : null,
+      form,
+      el('p', { class: 'skyring st-t__oruggt', texti: 'Lyklarnir eru geymdir dulkóðaðir og sjást aldrei aftur á þessari síðu, ekki heldur hjá þér.' })
+    ]);
   }
 
   /* Í Glerhúsinu: bókhaldskerfið sem var valið í "Settu saman" */

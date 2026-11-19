@@ -880,7 +880,21 @@ async function supabaseBakendi() {
       const notandi = minn && minn.id;
       const svar = await sb.from('undirskriftir').upsert({ notandi_id: notandi, gogn, uppfaert: new Date().toISOString() }, { onConflict: 'notandi_id' });
       kastaPost(svar);
-    }
+    },
+
+    /* Tengingar með API lykli (kafli 28). Lykillinn fer í Supabase Vault og
+       kemur aldrei aftur út: hér sést bara hvort tengt sé og síðustu 4 stafirnir. */
+    async tengingarStada() {
+      const svar = await sb.rpc('tengingar_stada');
+      if (svar.error) { if (/does not exist|could not find|schema cache/i.test(String(svar.error.message))) return null; kasta(svar); }
+      const ut = {}; (svar.data || []).forEach((r) => { ut[r.veita] = r; }); return ut;
+    },
+    async vistaTengingu(veita, stillingar, leyndo) {
+      const svar = await sb.rpc('vista_tengingu', { p_veita: veita, p_stillingar: stillingar || {}, p_leyndo: leyndo || null });
+      if (svar.error && /could not find|schema cache/i.test(String(svar.error.message))) throw new Error('Tengingarnar eru ekki komnar í gagnagrunninn. Keyrðu migrations/2026-11-19-tengingar.sql í Supabase.');
+      kasta(svar);
+    },
+    async eydaTengingu(veita) { kasta(await sb.rpc('eyda_tengingu', { p_veita: veita })); }
   };
 
   function kastaPost({ error }) {
@@ -1928,6 +1942,19 @@ function prufuBakendi() {
       vista(); return { id: 'np' + Date.now(), stada: 'bidur' };
     },
     async vistaUndirskrift(gogn) { krefjastAdmin(); g.undirskrift = gogn; vista(); },
+    async tengingarStada() { krefjastAdmin(); return { ...(g.tengingar || {}) }; },
+    async vistaTengingu(veita, stillingar, leyndo) {
+      krefjastAdmin();
+      const fyrri = (g.tengingar || {})[veita];
+      const gildi = leyndo ? Object.values(leyndo).filter(Boolean) : [];
+      if (!gildi.length && !fyrri && veita !== 'gorilla') throw new Error('Það vantar lykilinn');
+      if (gildi.some((v) => String(v).length < 4 || /\s/.test(v))) throw new Error('Lykillinn er ekki á réttu formi');
+      if (veita === 'shopify' && !/^[a-z0-9][a-z0-9-]{0,60}\.myshopify\.com$/.test((stillingar || {}).verslun || '')) throw new Error('Verslunin á að vera á forminu nafn.myshopify.com');
+      const adal = leyndo && (leyndo.lykill || leyndo.clientSecret || leyndo.token || gildi[0]);
+      g.tengingar = { ...(g.tengingar || {}), [veita]: { veita, stillingar: stillingar || {}, sidustu4: adal ? String(adal).slice(-4) : (fyrri && fyrri.sidustu4) || null, uppfaert: new Date().toISOString(), prufad: null, prufa_svar: null } };
+      vista();
+    },
+    async eydaTengingu(veita) { krefjastAdmin(); const t = { ...(g.tengingar || {}) }; delete t[veita]; g.tengingar = t; vista(); },
     async svaraPosti(thradur_id, texti) {
       krefjastAdmin(); prufuPostholf();
       if (!String(texti || '').trim()) throw new Error('Skrifaðu eitthvað fyrst.');
