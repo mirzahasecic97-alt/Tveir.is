@@ -5,7 +5,7 @@
 import {
   gogn, el, tom, fylla, dags, sidan, erSeint, pilla, opnaTask, kronur, lesaTolu,
   vardaHlid, teiknaHaus, uppfaeraMerki, STODUR_VERK, stillingar, undirverkTala
-, tolu, erEnska} from './portal.js';
+, tolu, erEnska, setjaUpphaed, lesaUpphaed, snyrtaUpphaed, upphaedInntak} from './portal.js';
 
 const ek = await vardaHlid({ badir: true });
 if (ek) start();
@@ -297,14 +297,11 @@ async function start() {
     const dagurVal = el('input', { type: 'date', value: v.skiladagur || '' });
 
     const verdVal = el('input', {
-      type: 'text', inputmode: 'numeric', 'aria-label': 'Verð okkar',
+      type: 'text', inputmode: upphaedInntak(), 'aria-label': 'Verð okkar',
       placeholder: v.innan_samnings ? 'Innan áskriftar' : 'Verð okkar',
-      value: v.verd_okkar ? tolu(v.verd_okkar) : '',
-      onblur: () => {
-        const t = lesaTolu(verdVal.value);
-        verdVal.value = t ? tolu(t) : '';
-      }
+      onblur: () => snyrtaUpphaed(verdVal)
     });
+    setjaUpphaed(verdVal, v.verd_okkar);
     const svarVal = el('textarea', { rows: '3', placeholder: 'Svar til viðskiptavinar' });
     svarVal.value = v.svar_admin || '';
 
@@ -317,7 +314,7 @@ async function start() {
           stada: stadaVal.value,
           skiladagur: dagurVal.value || null,
           svar_admin: svarVal.value.trim() || null,
-          verd_okkar: v.innan_samnings ? null : lesaTolu(verdVal.value)
+          verd_okkar: v.innan_samnings ? null : lesaUpphaed(verdVal)
         });
         teikna();
       } }, [

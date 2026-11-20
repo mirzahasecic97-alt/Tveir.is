@@ -9,7 +9,7 @@
    reikningur fram í pari: [VSK-skylt, VSK-laust].
    ========================================================================== */
 
-import { gogn, el, fylla, kronur, tolu, erEnska, lesaTolu, vardaHlid, teiknaHaus, geymt, geyma, bokhaldskerfi, tilkynna } from './portal.js';
+import { gogn, el, fylla, kronur, tolu, erEnska, lesaTolu, vardaHlid, teiknaHaus, geymt, geyma, bokhaldskerfi, tilkynna, setjaUpphaed, lesaUpphaed, snyrtaUpphaed, umreikna, virkurGjaldmidill, synaGjaldmidil, syntTala, upphaedInntak} from './portal.js';
 import {
   MAN, MAN_LANGT, VSK, LYKILL_VSK, P, pPlus, pAf, pAn, pMed,
   mk, NU_AR, NU_MAN, naestiMan, NAESTI, manHeiti, lesaMedVsk, reiknivel
@@ -155,7 +155,7 @@ async function start() {
           const h = (v) => (mest > 0 && v > 0 ? Math.max(2, (v / mest) * 100) + '%' : '0');
           return el('div', {
             class: 'bok__sula' + (r.m > NU_MAN ? ' er-framtid' : '') + (r.m === NU_MAN ? ' er-nu' : ''),
-            title: MAN_LANGT[r.i] + ' ' + synaAr + ': ' + kronur(Math.round(alls))
+            title: MAN_LANGT[r.i] + ' ' + synaAr + ': ' + synaGjaldmidil(syntTala(r.f) + syntTala(r.a))
               + (r.a ? ' (samningar ' + kronur(Math.round(r.f)) + ', aukaverkefni ' + kronur(Math.round(r.a)) + ')' : '')
           }, [
             el('span', { class: 'bok__sulutala', texti: alls ? stytt(alls) : '' }),
@@ -314,7 +314,9 @@ async function start() {
   }
 
   /* 1.147.500 -> "1,15 m", 400.000 -> "400 þ." */
-  function stytt(v) {
+  function stytt(isk) {
+    const v = umreikna(isk);
+    if (virkurGjaldmidill() !== 'ISK' && v < 1e4) return tolu(v);
     if (v >= 1e6) return erEnska() ? String(Math.round(v / 1e4) / 100) + 'M' : String(Math.round(v / 1e4) / 100).replace('.', ',') + ' m';
     return Math.round(v / 1000) + (erEnska() ? 'k' : ' þ.');
   }
@@ -324,16 +326,17 @@ async function start() {
   function upphaedReitur(merki, r) {
     const tala = Number(r.upphaed) || 0;
     let hamur = r.vsklaust ? 'ekkert' : (medVsk ? 'med' : 'an');
-    const punktar = (n) => tolu(n);
-    const birt = tala ? Math.round(hamur === 'med' ? tala * (1 + VSK) : tala) : '';
-    const inn = el('input', { type: 'text', inputmode: 'numeric', required: true, placeholder: '0',
-      value: birt ? punktar(birt) : '' });
-    inn.addEventListener('blur', () => { const t = lesaTolu(inn.value); if (t) inn.value = punktar(t); });
+    const hamurUpphaf = hamur;
+    /* Sýnt í völdum gjaldmiðli, alltaf geymt í krónum */
+    const birtIsk = tala ? Math.round(hamur === 'med' ? tala * (1 + VSK) : tala) : '';
+    const inn = el('input', { type: 'text', inputmode: upphaedInntak(), required: true, placeholder: '0' });
+    setjaUpphaed(inn, birtIsk);
+    inn.addEventListener('blur', () => snyrtaUpphaed(inn));
     const lina = el('p', { class: 'skyring bok__vsklina' });
     const hnappar = {};
     const uppfaera = () => {
       Object.keys(hnappar).forEach((k) => hnappar[k].setAttribute('aria-pressed', String(k === hamur)));
-      const t = lesaTolu(inn.value) || 0;
+      const t = lesaUpphaed(inn) || 0;
       if (!t) { lina.textContent = hamur === 'ekkert' ? 'Ekkert VSK lagt ofan á.' : ''; return; }
       if (hamur === 'an') lina.textContent = '= ' + kronur(Math.round(t * (1 + VSK))) + ' með VSK';
       else if (hamur === 'med') lina.textContent = '= ' + kronur(Math.round(t / (1 + VSK))) + ' án VSK';
@@ -352,7 +355,9 @@ async function start() {
       ]),
       inn,
       ut() {
-        const t = lesaTolu(inn.value) || 0;
+        /* Ekkert snert: upphaflega krónutalan, óháð genginu */
+        if (hamur === hamurUpphaf && inn.value.trim() === inn.dataset.birt && inn.dataset.isk) return { upphaed: tala, vsklaust: hamur === 'ekkert' };
+        const t = lesaUpphaed(inn) || 0;
         return { upphaed: hamur === 'med' ? Math.round(t / (1 + VSK)) : t, vsklaust: hamur === 'ekkert' };
       }
     };

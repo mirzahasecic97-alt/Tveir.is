@@ -6,7 +6,7 @@ import {
   gogn, el, tom, fylla, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
   vardaHlid, teiknaHaus, STODUR_VERK,
   geymt, geyma, ervalid, bokhaldskerfi, tengingaSpjald, tilkynna
-, tolu} from './portal.js';
+, tolu, lesaUpphaed, snyrtaUpphaed, upphaedInntak} from './portal.js';
 import { NU_MAN, manHeiti, NAESTI, naestiMan, MAN, pPlus, pAn, pMed, lesaMedVsk, reiknivel } from './bokreikningur.js';
 
 const ek = await vardaHlid({ krefstAdmin: true });
@@ -539,11 +539,8 @@ async function start() {
     const fjoldi = el('p', { class: 'skyring', texti: '' });
 
     const verd = el('input', {
-      type: 'text', inputmode: 'numeric', placeholder: 'Verð okkar', 'aria-label': 'Verð okkar',
-      onblur: () => {
-        const t = lesaTolu(verd.value);
-        verd.value = t ? tolu(t) : '';
-      }
+      type: 'text', inputmode: upphaedInntak(), placeholder: 'Verð okkar', 'aria-label': 'Verð okkar',
+      onblur: () => snyrtaUpphaed(verd)
     });
     const verdReitur = el('div', { class: 'field' }, [el('span', { texti: 'Verð okkar' }), verd]);
 
@@ -570,7 +567,7 @@ async function start() {
             lysing: lysing.value.trim() || null,
             skiladagur: dagur.value || null,
             innan_samnings: greidsla.value === 'innan',
-            verd_okkar: lesaTolu(verd.value),
+            verd_okkar: lesaUpphaed(verd),
             snid_id: snidVal.value || null
           });
           d.close(); teikna();
@@ -600,12 +597,9 @@ async function start() {
     const villa = el('div', { class: 'form-status form-status--err', hidden: true });
 
     const verd = el('input', {
-      type: 'text', inputmode: 'numeric', placeholder: 'Mánaðargjald',
+      type: 'text', inputmode: upphaedInntak(), placeholder: 'Mánaðargjald',
       'aria-label': 'Mánaðargjald',
-      onblur: () => {
-        const t = lesaTolu(verd.value);
-        verd.value = t ? tolu(t) : '';
-      }
+      onblur: () => snyrtaUpphaed(verd)
     });
     const verdReitur = el('div', { class: 'field' }, [
       el('span', { texti: 'Mánaðargjald' }), verd
@@ -634,7 +628,7 @@ async function start() {
             nafn: nafn.value.trim(),
             askrift: askrift.value.trim() || null,
             er_askrift: erAskrift.value === 'ja',
-            askrift_verd: erAskrift.value === 'ja' ? lesaTolu(verd.value) : null
+            askrift_verd: erAskrift.value === 'ja' ? lesaUpphaed(verd) : null
           });
           d.close(); teikna();
         } catch (f) { villa.textContent = f.message; villa.hidden = false; }

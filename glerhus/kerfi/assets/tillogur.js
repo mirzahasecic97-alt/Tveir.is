@@ -5,7 +5,7 @@
 import {
   gogn, el, tom, fylla, dags, kronur, lesaTolu,
   vardaHlid, teiknaHaus, uppfaeraMerki
-, tolu} from './portal.js';
+, tolu, setjaUpphaed, lesaUpphaed, snyrtaUpphaed, upphaedInntak} from './portal.js';
 
 const ek = await vardaHlid({ krefstAdmin: true });
 if (ek) start();
@@ -65,14 +65,11 @@ async function start() {
     const dagur = el('input', { type: 'date', value: v.skiladagur || '' });
 
     const verd = el('input', {
-      type: 'text', inputmode: 'numeric', placeholder: 'Hvað ætlum við að taka',
+      type: 'text', inputmode: upphaedInntak(), placeholder: 'Hvað ætlum við að taka',
       'aria-label': 'Verð okkar',
-      value: v.budget ? tolu(v.budget) : '',
-      onblur: () => {
-        const t = lesaTolu(verd.value);
-        verd.value = t ? tolu(t) : '';
-      }
+      onblur: () => snyrtaUpphaed(verd)
     });
+    setjaUpphaed(verd, v.budget);
 
     const verdReitur = el('div', { class: 'field', style: 'margin-top:12px' }, [
       el('span', { texti: 'Verð okkar' }), verd
@@ -96,7 +93,7 @@ async function start() {
         svar_admin: svar.value.trim() || null,
         skiladagur: dagur.value || null,
         innan_samnings: innan,
-        verd_okkar: innan ? null : lesaTolu(verd.value)
+        verd_okkar: innan ? null : lesaUpphaed(verd)
       });
       teikna();
     }

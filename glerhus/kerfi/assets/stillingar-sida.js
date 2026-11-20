@@ -3,7 +3,7 @@
    Viðskiptavinur sér bara aðganginn sinn.
    ========================================================================== */
 
-import { gogn, el, fylla, vardaHlid, teiknaHaus, opnaLykilord, sersnid, stofuNafn, gestNafn, tungumal, setjaTungumal, gjaldmidill, setjaGjaldmidil } from './portal.js';
+import { gogn, el, fylla, vardaHlid, teiknaHaus, opnaLykilord, sersnid, stofuNafn, gestNafn, tungumal, setjaTungumal, gjaldmidill, setjaGjaldmidil, gengid, virkurGjaldmidill, erEnska } from './portal.js';
 import { lesaUndirskrift, sjalfgefinUndirskrift, undirskriftHtml, opnaUndirskriftGlugga } from './undirskrift.js';
 
 /* Sýnidæmi úr Settu saman: enginn prufuaðgangur sýndur, engin tæknimál.
@@ -106,9 +106,21 @@ async function start() {
     el('label', { class: 'st-val__reitur' }, [el('span', { texti: 'Tungumál' }), tungaVal]),
     admin ? el('label', { class: 'st-val__reitur' }, [el('span', { texti: 'Gjaldmiðill í bókhaldi' }), gjaldVal]) : null
   ]);
+  /* Gengið sem upphæðirnar eru umreiknaðar á */
+  const gg = gengid(), vg = virkurGjaldmidill();
+  const kommu = (n) => (erEnska() ? String(n) : String(n).replace('.', ','));
+  const gengiLina = !admin || gjaldmidill() === 'ISK' ? null
+    : vg === 'ISK'
+      ? el('p', { class: 'skyring', texti: 'Gengið náðist ekki, svo upphæðir eru sýndar í krónum þar til það næst.' })
+      : el('p', { class: 'skyring' }, [
+          document.createTextNode('Gengi'),
+          document.createTextNode(': 1 ' + (vg === 'EUR' ? '€' : '$') + ' = ' + kommu(Math.round(1 / gg[vg] * 100) / 100) + (erEnska() ? ' ISK' : ' kr.')),
+          gg.dags ? document.createTextNode(' (' + gg.dags.split('-').reverse().join('.') + ')') : null,
+          document.createTextNode('. '),
+          document.createTextNode('Viðmiðunargengi Seðlabanka Evrópu, uppfært daglega.')]);
   const synKafli = kafli('Tungumál og gjaldmiðill',
-    admin ? 'Tungumálið gildir í þessum vafra. Gjaldmiðillinn gildir fyrir allt kerfið og breytir bara merkinu á upphæðunum, ekki tölunum sjálfum.' : 'Tungumálið gildir í þessum vafra.',
-    [synid, admin ? gjaldSvar : null]);
+    admin ? 'Tungumálið gildir í þessum vafra. Gjaldmiðillinn gildir fyrir allt kerfið. Allar upphæðir eru geymdar í krónum og umreiknaðar á gengi dagsins, og reikningar í Payday og DK eru áfram í krónum.' : 'Tungumálið gildir í þessum vafra.',
+    [synid, gengiLina, admin ? gjaldSvar : null]);
 
   if (!admin) { fylla(innihald, [siduHaus(), adgangur, synKafli]); return; }
 

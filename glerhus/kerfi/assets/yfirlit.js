@@ -5,7 +5,7 @@
 import {
   gogn, el, tom, fylla, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
   vardaHlid, teiknaHaus, erUppsett, erSimi, bordiFalinn, opnaUppsetningu, STODUR_VERK
-, tolu, gjaldmidilsMerki} from './portal.js';
+, tolu, gjaldmidilsMerki, virkurGjaldmidill, synaGjaldmidil, lesaUpphaed, snyrtaUpphaed, upphaedInntak} from './portal.js';
 
 const ek = await vardaHlid({});
 if (ek) start();
@@ -372,17 +372,16 @@ async function start() {
     const villa  = el('div', { class: 'form-status form-status--err', hidden: true });
 
     const budget = el('input', {
-      type: 'text', inputmode: 'numeric', placeholder: 'Til dæmis 250.000',
+      type: 'text', inputmode: upphaedInntak(), placeholder: 'Til dæmis ' + (virkurGjaldmidill() === 'ISK' ? tolu(250000) : tolu(2000)),
       'aria-label': 'Budget (' + gjaldmidilsMerki() + ')',
-      onblur: () => {
-        const t = lesaTolu(budget.value);
-        budget.value = t ? tolu(t) : '';
-      }
+      onblur: () => snyrtaUpphaed(budget)
     });
 
+    /* Flýtihnappar í sýndum gjaldmiðli: hringlaga tölur, ekki umreiknaðar krónur */
+    const FLYTI = virkurGjaldmidill() === 'ISK' ? [150000, 300000, 500000, 1000000] : [1000, 2000, 3500, 7000];
     const flytir = el('div', { class: 'budgetflyt' },
-      [150000, 300000, 500000, 1000000].map((n) => el('button', {
-        type: 'button', texti: kronur(n),
+      FLYTI.map((n) => el('button', {
+        type: 'button', texti: synaGjaldmidil(n),
         onclick: () => { budget.value = tolu(n); budget.focus(); }
       })));
 
@@ -417,7 +416,7 @@ async function start() {
       el('form', { class: 'form-grid', style: 'margin-top:20px', onsubmit: async (e) => {
         e.preventDefault();
         const innan = askrift && greidsla.value === 'innan';
-        const upphaed = lesaTolu(budget.value);
+        const upphaed = lesaUpphaed(budget);
 
         if (!titill.value.trim()) {
           villa.textContent = 'Titill vantar.'; villa.hidden = false; return;

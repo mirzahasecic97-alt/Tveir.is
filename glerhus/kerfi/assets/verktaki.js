@@ -11,7 +11,7 @@
    fyrirtæki Yfirlit og Tilboð. Annað er sent á rétta síðu.
    ========================================================================== */
 
-import { el, fylla, vardaHlid, teiknaHaus, tilkynna, sersnid, erVerktaki, ervalid, gestNafn, kronur } from './portal.js';
+import { el, fylla, vardaHlid, teiknaHaus, tilkynna, sersnid, erVerktaki, ervalid, gestNafn, kronur, setjaUpphaed, lesaUpphaed, snyrtaUpphaed, synaGjaldmidil, syntTala, upphaedInntak } from './portal.js';
 
 const LYKILL = 'glerhus-tveir-verktaki-v2';
 const IDAG = new Date(); IDAG.setHours(12, 0, 0, 0);
@@ -128,11 +128,14 @@ const siduHaus = (h1, lysing, auka) => el('div', { class: 'ps-haus' }, [
   el('div', {}, [el('h1', { texti: h1 }), lysing ? el('p', { class: 'ps-lysing', texti: lysing }) : null]), auka || null]);
 
 /* Án VSK, VSK 24% og samtals með VSK */
-function summur(an, stor) {
+/* Í evrum og dollurum er lagt saman það sem er sýnt, svo línurnar stemmi við samtöluna */
+function summur(an, stor, linur) {
   const lina = (h, upph, adal) => el('div', { class: 'vt-summur__lina' + (adal ? ' vt-summur__lina--adal' : '') }, [
-    el('dt', { texti: h }), el('dd', { texti: kr(upph) })]);
+    el('dt', { texti: h }), el('dd', { texti: synaGjaldmidil(upph) })]);
+  const anS = linur ? linur.reduce((n, l) => n + syntTala(+l.u || 0), 0) : syntTala(an);
+  const vskS = Math.round(anS * 0.24);
   return el('dl', { class: 'vt-summur' + (stor ? ' vt-summur--stor' : '') }, [
-    lina('Án VSK', an), lina('VSK 24%', vsk(an)), lina('Samtals með VSK', an + vsk(an), true)]);
+    lina('Án VSK', anS), lina('VSK 24%', vskS), lina('Samtals með VSK', anS + vskS, true)]);
 }
 
 /* ---------------- Tilboðið eins og viðskiptavinurinn sér það ---------------- */
@@ -166,7 +169,7 @@ function synaKunna(t, eftir) {
         el('h2', { class: 'vt-syn__titill', texti: t.titill }),
         el('p', { class: 'ps-smatt', texti: 'Til ' + t.kunni }),
         el('ul', { class: 'vt-lidir' }, t.linur.map((l) => el('li', {}, [el('span', { texti: l.t }), el('span', { texti: kr(+l.u || 0) })]))),
-        summur(an, true),
+        summur(an, true, t.linur),
         el('div', { class: 'vt-syn__hn' }, [
           el('button', { type: 'button', class: 'btn', texti: 'Hafna', onclick: () => svara(false) }),
           el('button', { type: 'button', class: 'btn btn--gull', texti: 'Samþykkja', onclick: () => svara(true) })])
@@ -193,14 +196,20 @@ function siduTilbod(teikna) {
     if (!opid) { fylla(ritill, []); return; }
     const linur = el('div', { class: 'vt-linur' });
     const summuSvid = el('div');
-    const uppf = () => { fylla(summuSvid, [summur(anVsk(opid))]); };
+    const uppf = () => { fylla(summuSvid, [summur(anVsk(opid), false, opid.linur)]); };
     const teiknaLinur = () => {
       fylla(linur, [
         el('div', { class: 'vt-lina vt-lina--haus', 'aria-hidden': 'true' }, [el('span', { texti: 'Liður' }), el('span', { texti: 'Upphæð án VSK' }), el('span')]),
         ...opid.linur.map((l, i) => el('div', { class: 'vt-lina' }, [
           el('input', { value: l.t, 'aria-label': 'Liður', placeholder: 'Liður', oninput: (e) => { l.t = e.target.value; } }),
-          el('input', { value: l.u, inputmode: 'numeric', 'aria-label': 'Upphæð án VSK', placeholder: 'Upphæð án VSK',
-            oninput: (e) => { l.u = e.target.value.replace(/[^\d]/g, ''); e.target.value = l.u; uppf(); } }),
+          (() => {
+            /* Línan er geymd í krónum en slegin inn í völdum gjaldmiðli */
+            const inn = el('input', { inputmode: upphaedInntak(), 'aria-label': 'Upphæð án VSK', placeholder: 'Upphæð án VSK',
+              oninput: () => { const isk = lesaUpphaed(inn); l.u = isk ? String(isk) : ''; uppf(); },
+              onblur: () => snyrtaUpphaed(inn) });
+            setjaUpphaed(inn, l.u);
+            return inn;
+          })(),
           el('button', { type: 'button', class: 'ps-texti-hn', 'aria-label': 'Fjarlægja lið', texti: 'Taka út',
             onclick: () => { opid.linur.splice(i, 1); teiknaLinur(); uppf(); } })]))]);
     };
@@ -254,7 +263,7 @@ function siduTilbod(teikna) {
           el('div', {}, [el('h2', { texti: t.titill }), el('span', { class: 'ps-smatt', texti: t.kunni + ', ' + dg(t.dags) })]),
           pill(STOD_TILB[t.stada][0], STOD_TILB[t.stada][1])]),
         el('ul', { class: 'vt-lidir' }, t.linur.map((l) => el('li', {}, [el('span', { texti: l.t }), el('span', { texti: kr(+l.u || 0) })]))),
-        summur(anVsk(t)),
+        summur(anVsk(t), false, t.linur),
         fot ? el('div', { class: 'vt-kort__fot' }, [fot]) : null
       ]);
     }))

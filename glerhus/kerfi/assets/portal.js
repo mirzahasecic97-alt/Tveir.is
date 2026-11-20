@@ -177,7 +177,58 @@ export function setjaGjaldmidil(v) { try { localStorage.setItem(GJALD_LYKILL, ['
 /* Enskt snið á tölum bara ef þýðingin hlóðst, annars er allt á íslensku */
 let enska = false;
 export const erEnska = () => enska;
-export const gjaldmidilsMerki = () => ({ ISK: enska ? 'ISK' : 'kr.', EUR: '€', USD: '$' })[gjaldmidill()];
+
+/* Gengi: allar upphæðir eru geymdar í krónum og umreiknaðar á gengi dagsins
+   (viðmiðunargengi Seðlabanka Evrópu). Sótt einu sinni á dag og geymt í vafranum.
+   Náist ekkert gengi eru upphæðirnar sýndar í krónum, aldrei rangt merki á krónutölu. */
+const GENGI_LYKILL = 'glerhus-tveir-gengi';
+const GENGI_SLOD = 'https://api.frankfurter.dev/v1/latest?base=ISK&symbols=EUR,USD';
+let gengi = null;
+function lesaGeymtGengi() {
+  try { const g = JSON.parse(localStorage.getItem(GENGI_LYKILL) || 'null'); return g && g.EUR > 0 && g.USD > 0 ? g : null; } catch (e) { return null; }
+}
+async function saekjaGengi() {
+  try {
+    const st = new AbortController(); const t = setTimeout(() => st.abort(), 4000);
+    try {
+      const svar = await fetch(GENGI_SLOD, { signal: st.signal });
+      if (!svar.ok) throw new Error('gengi ' + svar.status);
+      const d = await svar.json();
+      const EUR = Number(d && d.rates && d.rates.EUR), USD = Number(d && d.rates && d.rates.USD);
+      if (!(EUR > 0 && USD > 0)) throw new Error('ekkert gengi');
+      const nytt = { EUR, USD, dags: String(d.date || ''), sott: Date.now() };
+      try { localStorage.setItem(GENGI_LYKILL, JSON.stringify(nytt)); } catch (e) { /* lokað */ }
+      return nytt;
+    } finally { clearTimeout(t); }
+  } catch (e) {
+    /* Mistókst: reynum ekki aftur fyrr en eftir hálftíma, svo síðurnar bíði ekki */
+    const geymt = lesaGeymtGengi();
+    try { localStorage.setItem(GENGI_LYKILL, JSON.stringify({ ...(geymt || {}), reynt: Date.now() })); } catch (e2) { /* lokað */ }
+    return geymt;
+  }
+}
+if (gjaldmidill() !== 'ISK') {
+  const geymt = lesaGeymtGengi();
+  try {
+    const hratt = JSON.parse(localStorage.getItem(GENGI_LYKILL) || '{}') || {};
+    const ferskt = geymt && Date.now() - (geymt.sott || 0) < 6 * 3600 * 1000;
+    const nyreynt = Date.now() - (hratt.reynt || 0) < 30 * 60 * 1000;
+    if (geymt) {
+      /* Gengi til: notað strax, uppfært í bakgrunni ef það er orðið gamalt */
+      gengi = geymt;
+      if (!ferskt && !nyreynt) saekjaGengi();
+    } else if (!nyreynt) {
+      gengi = await saekjaGengi();
+    }
+  } catch (e) { gengi = geymt; }
+}
+export const gengid = () => gengi;
+/* Gjaldmiðillinn sem upphæðirnar eru í raun sýndar í */
+export const virkurGjaldmidill = () => { const g = gjaldmidill(); return g !== 'ISK' && gengi && gengi[g] > 0 ? g : 'ISK'; };
+/* Krónur -> sýndur gjaldmiðill, og til baka */
+export function umreikna(isk) { const g = virkurGjaldmidill(); return g === 'ISK' ? Number(isk) : Number(isk) * gengi[g]; }
+export function iKronur(upph) { const g = virkurGjaldmidill(); return Math.round(g === 'ISK' ? Number(upph) : Number(upph) / gengi[g]); }
+export const gjaldmidilsMerki = () => ({ ISK: enska ? 'ISK' : 'kr.', EUR: '€', USD: '$' })[virkurGjaldmidill()];
 
 /* 250000 -> "250.000" (á ensku "250,000"). Fyrir reiti og útreikninga. */
 export function tolu(gildi) {
@@ -187,11 +238,16 @@ export function tolu(gildi) {
   return String(tala).replace(/\B(?=(\d{3})+(?!\d))/g, enska ? ',' : '.');
 }
 
-/* 250000 -> "250.000 kr." eða "€250,000" eftir gjaldmiðli og tungumáli */
+/* 250000 (krónur) -> "250.000 kr." eða, í evrum, "1.822 €" / "€1,822" á ensku */
 export function kronur(gildi) {
-  const t = tolu(gildi);
+  if (gildi === null || gildi === undefined || gildi === '' || isNaN(Number(gildi))) return null;
+  return synaGjaldmidil(umreikna(gildi));
+}
+/* Tala sem er þegar í sýndum gjaldmiðli -> "1.822 €" / "€1,822" / "250.000 kr." */
+export function synaGjaldmidil(n) {
+  const t = tolu(n);
   if (t === null) return null;
-  const en = enska, g = gjaldmidill();
+  const en = enska, g = virkurGjaldmidill();
   if (g === 'EUR') return en ? '€' + t : t + ' €';
   if (g === 'USD') return en ? '$' + t : t + ' $';
   return en ? t + ' ISK' : t + ' kr.';
@@ -206,6 +262,62 @@ if (tungumal() === 'en') {
 export function lesaTolu(texti) {
   const hreint = String(texti == null ? '' : texti).replace(/[^0-9]/g, '');
   return hreint ? Number(hreint) : null;
+}
+
+/* Upphæðarreitir: sýna krónutöluna í völdum gjaldmiðli og skila alltaf krónum.
+   Sé reiturinn óbreyttur kemur upphaflega krónutalan til baka, svo gengið
+   breyti aldrei vistaðri upphæð sem enginn snerti. */
+export function upphaedTexti(isk) {
+  if (isk === null || isk === undefined || isk === '' || !Number(isk)) return '';
+  return tolu(umreikna(isk));
+}
+export function setjaUpphaed(inn, isk) {
+  inn.value = upphaedTexti(isk);
+  inn.dataset.isk = inn.value ? String(Math.round(Number(isk))) : '';
+  inn.dataset.birt = inn.value;
+}
+/* Tala í sýndum gjaldmiðli, með aurum/sentum ef þeir eru slegnir inn ("1.500,50" eða "1,500.50") */
+/* Lesið úr textanum sjálfum, ekki tungumálinu: "1.500" og "1,500" eru þúsund,
+   "12.99", "12,99" og "1.500,50" / "1,500.50" hafa aura. */
+export function lesaGjaldmidil(texti) {
+  let s = String(texti == null ? '' : texti).replace(/[^0-9.,]/g, '');
+  if (!/\d/.test(s)) return null;
+  const sidPunktur = s.lastIndexOf('.'), sidKomma = s.lastIndexOf(',');
+  let tug = null;
+  if (sidPunktur >= 0 && sidKomma >= 0) tug = sidPunktur > sidKomma ? '.' : ',';
+  else if (sidPunktur >= 0 || sidKomma >= 0) {
+    const sk = sidPunktur >= 0 ? '.' : ',';
+    const hlutar = s.split(sk);
+    const thusund = hlutar.length > 1 && hlutar[0].length >= 1 && hlutar[0].length <= 3 && hlutar.slice(1).every((h) => h.length === 3);
+    if (!thusund) tug = sk;
+  }
+  let heilt = s, brot = '';
+  if (tug) { const k = s.lastIndexOf(tug); heilt = s.slice(0, k); brot = s.slice(k + 1); }
+  heilt = heilt.replace(/[.,]/g, ''); brot = brot.replace(/[.,]/g, '');
+  const n = Number((heilt || '0') + (brot ? '.' + brot : ''));
+  return isFinite(n) ? n : null;
+}
+/* Lyklaborð á síma: aurar bara í evrum og dollurum */
+export const upphaedInntak = () => (virkurGjaldmidill() === 'ISK' ? 'numeric' : 'decimal');
+/* Krónutala -> heil tala í sýndum gjaldmiðli. Notað til að leggja saman það sem er sýnt. */
+export const syntTala = (isk) => Math.round(umreikna(Number(isk) || 0));
+export function lesaUpphaed(inn) {
+  const v = String(inn.value || '').trim();
+  if (!v) return null;
+  if (inn.dataset.birt && v === inn.dataset.birt && inn.dataset.isk) return Number(inn.dataset.isk);
+  if (virkurGjaldmidill() === 'ISK') return lesaTolu(v);
+  const n = lesaGjaldmidil(v);
+  return n === null ? null : iKronur(n);
+}
+/* Snyrtir reitinn eftir innslátt án þess að breyta upphæðinni */
+export function snyrtaUpphaed(inn) {
+  const v = String(inn.value || '').trim();
+  if (!v || v === inn.dataset.birt) return;
+  if (virkurGjaldmidill() === 'ISK') { const t = lesaTolu(v); inn.value = t ? tolu(t) : ''; return; }
+  const n = lesaGjaldmidil(v);
+  if (n === null) { inn.value = ''; return; }
+  const aurar = Math.round(n * 100);
+  inn.value = aurar % 100 === 0 ? tolu(aurar / 100) : tolu(Math.floor(aurar / 100)) + (enska ? '.' : ',') + String(aurar % 100).padStart(2, '0');
 }
 
 /* Hversu langt síðan, í orðum */

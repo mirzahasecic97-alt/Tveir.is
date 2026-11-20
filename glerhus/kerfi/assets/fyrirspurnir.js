@@ -8,7 +8,7 @@
 import {
   gogn, el, fylla, dags, sidan, kronur, tolu, lesaTolu, vardaHlid, teiknaHaus, uppfaeraMerki,
   geymt, geyma, samskiptaFlipar
-, gjaldmidilsMerki} from './portal.js';
+, gjaldmidilsMerki, upphaedTexti, setjaUpphaed, lesaUpphaed, snyrtaUpphaed, upphaedInntak} from './portal.js';
 import { STODUR_FYRIRSPURN, UPPRUNI } from './gogn.js';
 
 const ek = await vardaHlid({ krefstAdmin: true });
@@ -182,8 +182,9 @@ async function start() {
       const abyrgd = el('select', {}, [el('option', { value: '', texti: 'Enginn' })].concat(
         vid.map((n) => el('option', { value: n.id, selected: f.abyrgd === n.id,
                                       texti: fyrstaNafn(n.nafn) + (n.id === ek.id ? ' (ég)' : '') }))));
-      const virdi = el('input', { type: 'text', inputmode: 'numeric', placeholder: 'T.d. 250.000',
-                                  value: f.verdmaeti ? tolu(f.verdmaeti) : '' });
+      const virdi = el('input', { type: 'text', inputmode: upphaedInntak(), placeholder: 'T.d. ' + upphaedTexti(250000),
+                                  onblur: () => snyrtaUpphaed(virdi) });
+      setjaUpphaed(virdi, f.verdmaeti);
       const nota = el('textarea', { rows: '3', placeholder: 'Hvað var sagt, hvað er næst' }, [f.nota || '']);
       const stadan = el('div', { class: 'form-status', hidden: true });
 
@@ -260,7 +261,7 @@ async function start() {
               await g.uppfaeraFyrirspurn(f.id, {
                 stada: stada.value,
                 abyrgd: abyrgd.value || null,
-                verdmaeti: lesaTolu(virdi.value),
+                verdmaeti: lesaUpphaed(virdi),
                 nota: nota.value.trim() || null
               });
               uppfaeraMerki(); d.close(); teikna();
