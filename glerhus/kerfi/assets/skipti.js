@@ -96,16 +96,32 @@
     location.href = slod;
   }
 
+  /* Ný útgáfa á vefnum: síðuskiptin halda gömlu stílskránum, svo ef einhver
+     þeirra hefur breyst síðan síðan opnaðist er farið venjulega á milli og
+     allt hleðst upp á nýtt. */
+  var stilar = Array.prototype.map.call(document.querySelectorAll('link[rel="stylesheet"][href]'), function (l) { return l.href; })
+    .filter(function (h) { try { return new URL(h).origin === location.origin; } catch (v) { return false; } });
+  var merkiStila = function () {
+    return Promise.all(stilar.map(function (h) {
+      return fetch(h, { method: 'HEAD', cache: 'no-store', credentials: 'same-origin' })
+        .then(function (r) { return r.headers.get('etag') || r.headers.get('last-modified') || ''; })
+        .catch(function () { return ''; });
+    })).then(function (l) { return l.join('|'); });
+  };
+  var upphafsStilar = merkiStila();
+
   async function skipta(slod, stefna) {
     var min = ++umferd;
     var main = document.getElementById('main');
     if (!KYRRT) html.classList.add('gh-skipti-ut', 'gh-skipti-ut-' + stefna);
     var svar;
     try {
-      var [texti] = await Promise.all([
+      var [texti, nuStilar, fyrriStilar] = await Promise.all([
         fetch(slod, { credentials: 'same-origin' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); }),
+        merkiStila(), upphafsStilar,
         bida(KYRRT ? 0 : 260)
       ]);
+      if (fyrriStilar && nuStilar && fyrriStilar !== nuStilar) { venjulega(slod, stefna); return; }
       svar = new DOMParser().parseFromString(texti, 'text/html');
     } catch (villa) { venjulega(slod, stefna); return; }
     if (min !== umferd) return;
