@@ -529,18 +529,18 @@ html[data-thema="naeturborg"] .profill__spurn { color: rgba(44, 15, 69, .55); }
 html[data-thema="naeturborg"] .vl-gler img { filter: hue-rotate(112deg) saturate(1.6); }
 @media (min-width: 760px) { .simi__skjar { height: min(calc(100svh - 410px), 520px) !important; min-height: 280px; } }
 
-/* Fyrirtækin undir klippunum: minni lógó, renna til vinstri á móti
-   myndböndunum sem renna til hægri */
+/* Fyrirtækin undir klippunum: renna til vinstri á móti myndböndunum, á
+   sama hraða (synis.js reiknar tímann út frá breiddinni) */
 .trust.trust--undir { margin-top: clamp(14px, 1.6vw, 20px) !important; padding: 0 0 clamp(24px, 3vw, 40px) !important; overflow: visible; }
 .trust--undir .marquee {
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%);
           mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%);
 }
-.trust--undir .marquee__track { animation-duration: 40s !important; }
-.trust--undir .marquee__group { gap: 10px; padding-right: 10px; }
-.trust--undir .logo-chip { height: 46px; width: 112px; border-radius: 14px; padding: 0 10px; }
-.trust--undir .logo-chip img { max-height: 28px; max-width: 82px; }
+.trust--undir .marquee__track { animation-duration: var(--logo-timi, 22s) !important; }
+.trust--undir .marquee__group { gap: 12px; padding-right: 12px; }
+.trust--undir .logo-chip { height: 56px; width: 134px; border-radius: 16px; padding: 0 12px; }
+.trust--undir .logo-chip img { max-height: 34px; max-width: 98px; }
 @media (max-width: 640px) {
-  .trust--undir .logo-chip { height: 40px; width: 96px; border-radius: 12px; }
-  .trust--undir .logo-chip img { max-height: 24px; max-width: 70px; }
+  .trust--undir .logo-chip { height: 46px; width: 110px; border-radius: 13px; }
+  .trust--undir .logo-chip img { max-height: 28px; max-width: 80px; }
 }
