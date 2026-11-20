@@ -28,6 +28,9 @@ export const sersnid = (() => {
   try { const x = JSON.parse(localStorage.getItem('glerhusid-byggja') || 'null'); return x && x.buid ? x : null; }
   catch (e) { return null; }
 })();
+/* Íþróttafólk og áhrifavaldar fá sitt eigið kerfi í sýnidæminu (persona.js) */
+export const erPersona = () => !!sersnid && ['ithrottir', 'ahrif'].includes(sersnid.grein);
+if (erPersona() && /(^|\/)stjornbord\.html$/.test(location.pathname)) location.replace('mitt.html' + location.search);
 export const ertengt = (id) => !!sersnid && (sersnid.tengingar || []).includes(id);
 /* Tenging kallar á sinn hluta: bókhaldskerfi opnar Bókhald, miðill opnar Tölfræði */
 export const ervalid = (id) => !sersnid || (sersnid.einingar || []).includes(id)
@@ -324,7 +327,7 @@ export function teiknaHaus(ek, heiti) {
   fylla(haus, [
     el('div', { class: 'wrap' }, [
       el('div', { class: 'phead__inn' }, [
-        el('a', { class: 'phead__logo', href: admin ? 'stjornbord.html' : 'yfirlit.html',
+        el('a', { class: 'phead__logo', href: admin ? (erPersona() ? 'mitt.html' : 'stjornbord.html') : 'yfirlit.html',
                   'aria-label': 'Glerhúsið' }, [
           /* Hafi viðskiptavinurinn sett inn merki kemur það í stað okkar.
              Þetta er hans vinnusvæði, tvö merki eru einu of mikil. */
@@ -343,7 +346,15 @@ export function teiknaHaus(ek, heiti) {
         ]),
         el('span', { class: 'phead__skil', 'aria-hidden': 'true' }),
 
-        admin
+        admin && erPersona()
+          ? el('nav', { class: 'phead__nav', 'aria-label': 'Vinnusvæði' }, [
+              el('a', { href: 'mitt.html', texti: 'Yfirlit', 'aria-current': nuna === 'mitt.html' ? 'page' : null }),
+              ervalid('samstarf') ? el('a', { href: 'samstarfsadilar.html', texti: 'Samstarfsaðilar', 'aria-current': nuna === 'samstarfsadilar.html' ? 'page' : null }) : null,
+              ervalid('efnisplan') ? el('a', { href: 'efnisplan.html', texti: 'Efnisplan', 'aria-current': nuna === 'efnisplan.html' ? 'page' : null }) : null,
+              sersnid.stofa && sersnid.stofa !== 'enginn' ? el('a', { href: 'beidnir.html', texti: 'Beiðnir', 'aria-current': nuna === 'beidnir.html' ? 'page' : null }) : null,
+              ervalid('postur') || ervalid('postur_verk') ? el('a', { href: 'samskipti.html', texti: 'Pósturinn', 'aria-current': nuna === 'samskipti.html' ? 'page' : null }) : null
+            ])
+        : admin
           ? el('nav', { class: 'phead__nav', 'aria-label': 'Vinnusvæði' }, [
               el('a', { href: 'stjornbord.html', texti: 'Stjórnborð',
                         'aria-current': nuna === 'stjornbord.html' ? 'page' : null }),
@@ -404,8 +415,8 @@ export function teiknaHaus(ek, heiti) {
             }
           }) : null,
           el('div', { class: 'phead__notandi' }, [
-            el('strong', { texti: ek.nafn }),
-            document.createTextNode(admin ? stofuNafn() : ek.netfang)
+            el('strong', { texti: admin && erPersona() ? stofuNafn() : ek.nafn }),
+            document.createTextNode(admin && erPersona() ? 'Sýnidæmi' : admin ? stofuNafn() : ek.netfang)
           ]),
           /* Stillingar: aðgangur, lykilorð, undirskrift og tengingar */
           el('a', {

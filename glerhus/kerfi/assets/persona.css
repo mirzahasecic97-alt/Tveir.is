@@ -1,0 +1,118 @@
+/* ==========================================================================
+   Glerhúsið fyrir íþróttafólk og áhrifavalda (persona.js)
+   Sama gler og ljós litir og restin af kerfinu.
+   ========================================================================== */
+.ps { display: grid; gap: 16px; padding-bottom: 40px; }
+.ps-haus { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 6px 0 4px; }
+.ps-haus h1 { font: 600 clamp(28px, 20px + 1.6vw, 40px)/1.1 var(--f-head, 'Inter Tight', sans-serif); letter-spacing: -.025em; color: var(--ink); margin: 0; }
+.ps-lysing { margin-top: 8px; color: var(--soft); font-size: 16px; }
+.ps-smatt { color: var(--soft); font-size: 13.5px; }
+.ps .card { border-radius: 22px; padding: 18px 20px; }
+
+.ps .btn--litill { padding: 8px 14px; font-size: 13.5px; min-height: 36px; }
+.ps .btn--gull { color: #fff !important; background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 88%, #fff), var(--acc)) !important; border-color: transparent !important; }
+
+/* Tölurnar efst */
+.ps-kpir { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.ps-kpi { display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: var(--ink); transition: transform .2s ease; }
+a.ps-kpi:hover { transform: translateY(-2px); }
+.ps-kpi__h { font-size: 13px; color: var(--soft); }
+.ps-kpi__tala { font: 600 26px/1.15 var(--f-head, 'Inter Tight', sans-serif); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.ps-kpi__undir { font-size: 13px; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ps-vidvorun { display: flex; align-items: center; gap: 12px; background: linear-gradient(150deg, rgba(255, 244, 222, .92), rgba(255, 250, 240, .7)) !important; }
+.ps-vidvorun__takn { flex: 0 0 auto; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #f0b45a; color: #fff; font-weight: 700; }
+.ps-vidvorun > span:nth-child(2) { flex: 1; font-size: 14.5px; color: var(--ink); }
+
+.ps-tvo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.ps-blokk h2 { font: 600 17px/1.2 var(--f-head, 'Inter Tight', sans-serif); color: var(--ink); margin: 0 0 12px; }
+.ps-blokk__hn { margin-top: 12px; }
+.ps-listi { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.ps-listi li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: rgba(28, 48, 80, .035); }
+.ps-listi__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ps-listi__t strong { font-weight: 600; font-size: 14.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-listi__t span { font-size: 13px; color: var(--soft); }
+.ps-tomt { color: var(--soft); }
+.ps-dags { flex: 0 0 auto; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: #fff; box-shadow: 0 0 0 1px rgba(28, 48, 80, .08); font-size: 11px; color: var(--soft); line-height: 1; }
+.ps-dags b { font: 600 17px/1 var(--f-head, 'Inter Tight', sans-serif); color: var(--ink); }
+.ps-stafur { flex: 0 0 auto; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; color: #fff; font: 700 14px/1 var(--f-head, 'Inter Tight', sans-serif); background: var(--l); }
+.ps-stafur--stor { width: 48px; height: 48px; border-radius: 15px; font-size: 19px; }
+.ps-pilla { flex: 0 0 auto; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.ps-pilla--grar { color: #4f6380; background: rgba(28, 48, 80, .07); }
+.ps-pilla--gul { color: #8a5a12; background: rgba(240, 180, 90, .2); }
+.ps-pilla--blar { color: var(--acc-djupt, #2c62c4); background: color-mix(in srgb, var(--acc) 14%, #fff); }
+.ps-pilla--graen { color: #1f7a45; background: rgba(46, 158, 91, .14); }
+.ps-hak { flex: 0 0 auto; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: #fff; background: #2e9e5b; font-weight: 700; font-size: 14px; }
+.ps-tolur { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ps-tolur div { padding: 12px; border-radius: 14px; background: rgba(28, 48, 80, .035); }
+.ps-tolur span { display: block; font-size: 12.5px; color: var(--soft); }
+.ps-tolur strong { font: 600 21px/1.2 var(--f-head, 'Inter Tight', sans-serif); color: var(--ink); font-variant-numeric: tabular-nums; }
+.ps-tolur + .ps-smatt { margin-top: 10px; }
+.ps-texti-hn { background: none; border: 0; padding: 6px 4px; color: var(--acc-djupt, #2c62c4); font: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; }
+
+/* Flipar */
+.ps-flipar { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, .7); box-shadow: 0 0 0 1px rgba(28, 48, 80, .08); }
+.ps-flipar button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; border: 0; background: none; font: 500 14px/1 inherit; color: var(--soft); cursor: pointer; }
+.ps-flipar button[aria-selected="true"] { background: #fff; color: var(--ink); box-shadow: 0 4px 12px -6px rgba(28, 48, 80, .35); }
+.ps-merki { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; display: inline-grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; background: var(--acc); }
+
+/* Samningar */
+.ps-samningar { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.ps-samn { display: flex; flex-direction: column; gap: 14px; }
+.ps-samn__haus { display: flex; align-items: center; gap: 12px; }
+.ps-samn__haus > div:nth-child(2) { flex: 1; min-width: 0; }
+.ps-samn__haus h2 { font: 600 17px/1.2 var(--f-head, 'Inter Tight', sans-serif); color: var(--ink); margin: 0 0 3px; }
+.ps-samn__upph { text-align: right; }
+.ps-samn__upph strong { display: block; font: 600 16px/1.2 var(--f-head, 'Inter Tight', sans-serif); color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ps-samn__upph span { font-size: 12px; color: var(--soft); }
+.ps-samn__vid { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ps-skil { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.ps-skil li { display: grid; grid-template-columns: minmax(0, 1fr) 90px auto; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: rgba(28, 48, 80, .035); }
+.ps-skil__t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ps-skil__t strong { font-size: 14px; font-weight: 600; color: var(--ink); }
+.ps-skil__t span { font-size: 12.5px; color: var(--soft); }
+.ps-stika { display: block; height: 6px; border-radius: 99px; background: rgba(28, 48, 80, .08); overflow: hidden; }
+.ps-stika i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--acc), color-mix(in srgb, var(--acc) 50%, #fff)); }
+.ps-samn__fot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid rgba(28, 48, 80, .07); }
+.ps-samn__fot .btn { margin-top: 10px; }
+.ps-samn__fot .ps-smatt { margin-top: 10px; }
+
+/* Fyrirspurnir */
+.ps-tafla { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.ps-dalkur { display: grid; gap: 10px; }
+.ps-dalkur h2 { display: flex; align-items: center; gap: 8px; font: 600 15px/1 var(--f-head, 'Inter Tight', sans-serif); color: var(--ink); margin: 0; padding: 4px 4px 2px; }
+.ps-dalkur h2 span { font-size: 12px; font-weight: 600; color: var(--soft); padding: 3px 8px; border-radius: 99px; background: rgba(28, 48, 80, .06); }
+.ps-fyrir { display: grid; gap: 6px; padding: 14px 16px !important; }
+.ps-fyrir strong { font-size: 14.5px; color: var(--ink); }
+.ps-fyrir p { font-size: 13.5px; color: var(--ink); opacity: .85; }
+.ps-fyrir__hn { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+
+/* Efnisplan og beiðnir */
+.ps-nyr { display: grid; grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr)) auto; gap: 8px; align-items: center; }
+.ps-nyr--beidni { grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1fr) auto; }
+.ps-nyr input, .ps-nyr select { font: inherit; font-size: 14.5px; min-height: 42px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(28, 48, 80, .14); background: rgba(255, 255, 255, .85); color: var(--ink); min-width: 0; }
+.ps-nyr input:focus, .ps-nyr select:focus { outline: none; border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 18%, transparent); }
+.ps-plan { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.ps-plan__lina { display: flex; align-items: center; gap: 12px; padding: 12px 16px !important; }
+.ps-plan__lina.er-lidin { opacity: .7; }
+
+@media (max-width: 1000px) {
+  .ps-kpir { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ps-tafla { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ps-nyr, .ps-nyr--beidni { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ps-nyr input[name="t"] { grid-column: 1 / -1; }
+}
+@media (max-width: 680px) {
+  .ps-tvo, .ps-tafla { grid-template-columns: minmax(0, 1fr); }
+  .ps-kpi__tala { font-size: 21px; }
+  .ps-tolur strong { font-size: 17px; }
+  .ps-skil li { grid-template-columns: minmax(0, 1fr) auto; }
+  .ps-skil .ps-stika { grid-column: 1 / -1; grid-row: 2; }
+  .ps-plan__lina { flex-wrap: wrap; }
+  .ps-plan__lina .ps-listi__t { flex-basis: calc(100% - 60px); }
+  .ps-nyr .btn, .ps-nyr--beidni .btn { grid-column: 1 / -1; }
+  .ps-vidvorun { flex-wrap: wrap; }
+}
+/* Listarnir mega ekki ýta kortinu út fyrir skjáinn í síma */
+.ps-listi, .ps-plan, .ps-skil { grid-template-columns: minmax(0, 1fr); }
+.ps-listi li, .ps-plan__lina, .ps-skil li { min-width: 0; }
