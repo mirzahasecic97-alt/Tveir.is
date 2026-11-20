@@ -397,3 +397,10 @@ h3 .teng__smidi, .vk__punktar .teng__smidi { display: inline-block; vertical-ali
 .teng__lb::after { content: " \2192"; }
 .teng__lb:hover, .teng__lb:focus-visible { text-decoration: underline; }
 .teng__fleiri a { color: var(--acc-djupt); }
+
+/* Fyrirsögnin alltaf í tveimur línum: "Allt sem þú heldur utan um" og
+   "á einum stað." Fyrri línan er um 10,8 sinnum leturstærðin á breidd, svo
+   letrið minnkar bara þegar hún kæmist ekki fyrir í einni línu. */
+.hero2__texti { container-type: inline-size; }
+.hero2 #hero-h { max-width: none; font-size: min(clamp(36px, 18px + 5.4vw, 104px), 100cqi / 11.1) !important; }
+.hero2__lina, .hero2 #hero-h .hero2__ytri { display: block; white-space: nowrap; }
