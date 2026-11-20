@@ -157,3 +157,7 @@ html.gh-eigin-litur body::before, body::before { background: none !important; }
 #innihald .skyring:not(.card .skyring, .gk .skyring, .pkort .skyring, .tf-kort .skyring, dialog .skyring, .st-teng .skyring, .sk-thradur .skyring, .sk-listi .skyring, .tilkynning .skyring, .dg-manudur .skyring, .pdialog__kort .skyring) {
   color: rgba(255, 255, 255, .72) !important;
 }
+
+/* Tveir: ís 2 merkið í hausnum, gegnsætt og í sínum litum */
+.phead__tveir[src*="tveir-2-klaki"] { filter: drop-shadow(0 2px 6px rgba(10, 30, 60, .25)) !important; height: 38px !important; width: auto; }
+@media (max-width: 760px) { .phead__tveir[src*="tveir-2-klaki"] { height: 32px !important; } }

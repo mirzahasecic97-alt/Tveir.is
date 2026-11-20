@@ -32,7 +32,7 @@ const FLOKKAR = {
   taskur: { heiti: 'Taskar viðskiptavina', litur: '#e0a21b' },
   innri: { heiti: 'Innri verk', litur: '#2e9e5b' }
 };
-const TEGUND = { fundur: 'Fundur', verkefni: 'Skiladagur verkefnis', taskur: 'Skiladagur tasks', undirverk: 'Undirverk', innri: 'Innra verk' };
+const TEGUND = { fundur_okkar: 'Fundur', fundur: 'Fundur úr Google Calendar', verkefni: 'Skiladagur verkefnis', taskur: 'Skiladagur tasks', undirverk: 'Undirverk', innri: 'Innra verk' };
 
 /* Bil á milli þegar mörg eru búin til í einu */
 const BIL = [['0', 'Öll sama dag'], ['1', 'Eitt á dag'], ['2', 'Annan hvern dag'], ['3', 'Á þriggja daga fresti'], ['7', 'Eitt í viku'], ['14', 'Á tveggja vikna fresti']];
@@ -65,11 +65,12 @@ async function start() {
      { flokkur, teg, id, titill, byrjar, endar, allan, lokid, undir, task_id, ... } */
   async function hlada({ hljodlaust } = {}) {
     if (!hljodlaust) fylla(svid, [el('p', { class: 'tomt', texti: 'Sæki dagatalið' })]);
-    const [fundir, verkefni, taskar, innri, undirverk, fyr] = await Promise.all([
+    const [fundir, verkefni, taskar, innri, undirverk, fyr, okkarFundir] = await Promise.all([
       g.dagatal ? g.dagatal().catch(() => []) : [],
       g.verkefni().catch(() => []), g.taskar({}).catch(() => []), g.innriTaskar().catch(() => []),
       g.undirverkADagatali ? g.undirverkADagatali().catch(() => []) : [],
-      g.fyrirtaeki().catch(() => [])
+      g.fyrirtaeki().catch(() => []),
+      g.fundir ? g.fundir().catch(() => []) : []
     ]);
     dagatalTengt = fundir !== null;
     fyrirtaeki = (fyr || []).slice().sort((a, b) => String(a.nafn).localeCompare(String(b.nafn), 'is'));
@@ -82,6 +83,9 @@ async function start() {
     atridi = [
       ...(fundir || []).map((f) => ({ flokkur: 'fundur', teg: 'fundur', titill: f.titill || '(enginn titill)', byrjar: new Date(f.byrjar), endar: new Date(f.endar),
         allan: f.allan_daginn, stadur: f.stadur, fundarhlekkur: oruggSlod(f.fundarhlekkur), tengill: oruggSlod(f.tengill), gestir: f.gestir, lysing: f.lysing })),
+      /* Fundir sem voru skráðir hér (tími, staður, viðskiptavinur) */
+      ...(okkarFundir || []).map((f) => ({ flokkur: 'fundur', teg: 'fundur_okkar', id: f.id, titill: f.titill, byrjar: new Date(f.byrjar), endar: new Date(f.endar),
+        allan: !!f.allan_daginn, stadur: f.stadur, lysing: f.lysing, undir: nafn(f), fundur: f })),
       ...(verkefni || []).filter((v) => v.skiladagur && v.stada !== 'tillaga').map((v) => ({
         flokkur: 'verkefni', teg: 'verkefni', id: v.id, titill: v.titill, byrjar: dagur(v.skiladagur), allan: true, lokid: verkLokid(v), undir: nafn(v), slod: 'verk.html?id=' + encodeURIComponent(v.id) })),
       ...(taskar || []).filter((t) => t.skiladagur && !medUndir.has(t.id)).map((t) => ({
@@ -117,7 +121,15 @@ async function start() {
         skiladagar.set(a.task_id, gildi);
       }
     }
-    else throw new Error('Fundir eru færðir í Google Calendar.');
+    else if (a.teg === 'fundur_okkar') {
+      /* Fundurinn færist um jafn marga daga, sami tími og sama lengd */
+      if (!gildi) throw new Error('Fundi er eytt, ekki tekinn af dagatalinu.');
+      const dagar = Math.round((dagur(gildi) - dagur(ymd(a.byrjar))) / 864e5);
+      const b0 = new Date(a.byrjar); b0.setDate(b0.getDate() + dagar);
+      const e0 = new Date(a.endar); e0.setDate(e0.getDate() + dagar);
+      await g.uppfaeraFund(a.id, { byrjar: b0.toISOString(), endar: e0.toISOString() });
+    }
+    else throw new Error('Fundir úr Google Calendar eru færðir þar.');
   }
   const opnirGluggar = () => [...document.querySelectorAll('dialog.pdialog[open]')];
   /* Skilar true ef það tókst */
@@ -312,9 +324,11 @@ async function start() {
 
   function opna(a) {
     const f = FLOKKAR[a.flokkur];
-    const timi = a.teg !== 'fundur' ? '' : a.allan ? dagsTexti(a.byrjar) + (a.endar && (a.endar - a.byrjar) > 864e5 ? ' til ' + dagsTexti(new Date(a.endar.getTime() - 1)) : '') + ', allan daginn'
+    const erFundur = a.teg === 'fundur' || a.teg === 'fundur_okkar';
+    const timi = !erFundur ? '' : a.allan ? dagsTexti(a.byrjar) + (a.endar && (a.endar - a.byrjar) > 864e5 ? ' til ' + dagsTexti(new Date(a.endar.getTime() - 1)) : '') + ', allan daginn'
       : dagsTexti(a.byrjar) + ', kl. ' + kl(a.byrjar) + (a.endar ? ' til ' + kl(a.endar) : '');
-    const fundur = a.teg === 'fundur';
+    const fundur = erFundur;
+    const okkar = a.teg === 'fundur_okkar';
     const villa = el('p', { class: 'form-status form-status--err', role: 'alert', hidden: true });
     const dagReitur = fundur ? null : el('input', { type: 'date', value: a.byrjar ? ymd(a.byrjar) : '' });
     let dlg = null;
@@ -331,7 +345,7 @@ async function start() {
       el('dl', { class: 'dg-spjald__upp' }, [
         fundur ? el('div', {}, [el('dt', { texti: 'Hvenær' }), el('dd', { texti: timi })]) : null,
         a.undir ? el('div', {}, [el('dt', { texti: a.teg === 'innri' ? 'Á ábyrgð' : a.teg === 'undirverk' ? 'Fyrir' : 'Fyrirtæki' }), el('dd', { texti: a.undir })]) : null,
-        a.stadur ? el('div', {}, [el('dt', { texti: 'Staður' }), el('dd', { texti: a.stadur })]) : null,
+        a.stadur ? el('div', {}, [el('dt', { texti: 'Staður' }), el('dd', {}, [el('a', { href: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(a.stadur), target: '_blank', rel: 'noopener noreferrer', texti: a.stadur })])]) : null,
         a.gestir ? el('div', {}, [el('dt', { texti: 'Gestir' }), el('dd', { texti: String(a.gestir) })]) : null,
         a.lysing ? el('div', {}, [el('dt', { texti: 'Lýsing' }), el('dd', { texti: a.lysing })]) : null
       ]),
@@ -351,36 +365,115 @@ async function start() {
         a.tengill ? el('a', { class: 'btn btn--ghost', href: a.tengill, target: '_blank', rel: 'noopener noreferrer', texti: 'Opna í Google Calendar' }) : null,
         a.task_id ? el('button', { type: 'button', class: 'btn btn--ghost', texti: a.teg === 'undirverk' ? 'Opna taskinn' : 'Opna',
           onclick: () => { opnirGluggar().forEach((x) => x.close()); opnaTask(a.task_id, { admin: true, eftir: () => hlada({ hljodlaust: true }).catch(() => {}) }); } }) : null,
-        a.slod ? el('a', { class: 'btn btn--ghost', href: a.slod, texti: 'Opna' }) : null
+        a.slod ? el('a', { class: 'btn btn--ghost', href: a.slod, texti: 'Opna' }) : null,
+        okkar ? el('button', { type: 'button', class: 'btn', texti: 'Breyta', onclick: () => { dlg.close(); opnaNytt(ymd(a.byrjar), { fundur: a.fundur }); } }) : null,
+        okkar ? (() => {
+          let viss = false;
+          const hn = el('button', { type: 'button', class: 'btn btn--ghost btn--danger', texti: 'Eyða fundi', onclick: async () => {
+            if (!viss) { viss = true; hn.textContent = 'Viss? Ýttu aftur'; return; }
+            const opnir = opnirGluggar();
+            try { await g.eydaFundi(a.id); } catch (e) { villa.textContent = e.message || 'Ekki tókst að eyða.'; villa.hidden = false; return; }
+            tilkynna(a.titill + ': eytt');
+            await endurhlada(opnir);
+          } });
+          return hn;
+        })() : null
       ])
     ]));
   }
 
-  /* ---------- Nýtt: eitt verk eða mörg í röð (t.d. 4 myndbönd, eitt í viku) ---------- */
-  function opnaNytt(dagsetning) {
+  /* ---------- Nýtt: fundur (tími og staður) eða verk (eitt eða mörg í röð) ----------
+     Eins og í Google Calendar: titill efst, svo Fundur eða Verk. Fundir eru
+     skráðir í kerfinu (taflan fundir); verk fara á viðskiptavin eða innra. */
+  const TAKN = {
+    klukka: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z',
+    stadur: 'M12 21s-7-6.2-7-11.5a7 7 0 1114 0C19 14.8 12 21 12 21zM12 12a2.5 2.5 0 100-5 2.5 2.5 0 000 5z',
+    texti: 'M4 6h16M4 11h16M4 16h10',
+    manneskja: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4.5 20.5c.9-3.6 3.9-5.5 7.5-5.5s6.6 1.9 7.5 5.5',
+    endurtaka: 'M4 12a8 8 0 0113.7-5.6L20 9M20 4v5h-5M20 12a8 8 0 01-13.7 5.6L4 15M4 20v-5h5'
+  };
+  const takn = (n) => {
+    const sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    sv.setAttribute('viewBox', '0 0 24 24'); sv.setAttribute('width', '20'); sv.setAttribute('height', '20'); sv.setAttribute('aria-hidden', 'true');
+    sv.setAttribute('fill', 'none'); sv.setAttribute('stroke', 'currentColor'); sv.setAttribute('stroke-width', '1.8'); sv.setAttribute('stroke-linecap', 'round'); sv.setAttribute('stroke-linejoin', 'round');
+    const pa = document.createElementNS('http://www.w3.org/2000/svg', 'path'); pa.setAttribute('d', TAKN[n]); sv.append(pa);
+    return el('span', { class: 'dg-nytt__takn' }, [sv]);
+  };
+  const rod = (tn, born, klasi) => el('div', { class: 'dg-nytt__rod' + (klasi ? ' ' + klasi : '') }, [takn(tn), el('div', { class: 'dg-nytt__rod-inn' }, born)]);
+  const klTexti = (d) => pad(d.getHours()) + ':' + pad(d.getMinutes());
+  /* Tími dagsins (HH:MM) á dagsetningu (YYYY-MM-DD) sem Date í staðartíma */
+  const saman = (ds, t) => { const [y, m, d] = ds.split('-').map(Number); const [h, mi] = String(t || '00:00').split(':').map(Number); return new Date(y, m - 1, d, h || 0, mi || 0); };
+
+  function opnaNytt(dagsetning, { fundur: breyta } = {}) {
     const NYR = '__nyr';
-    const hver = el('select', {}, [
-      el('option', { value: '', texti: 'Veldu' }),
+    let tegund = 'fundur';
+    const fyrirVal = (medInnri) => el('select', {}, [
+      el('option', { value: '', texti: medInnri ? 'Veldu' : 'Enginn sérstakur' }),
       ...fyrirtaeki.map((f) => el('option', { value: f.id, texti: f.nafn })),
       el('option', { value: NYR, texti: '+ Nýr viðskiptavinur' }),
-      el('option', { value: 'innri', texti: 'Innra verk (bara við)' })
+      medInnri ? el('option', { value: 'innri', texti: 'Innra verk (bara við)' }) : null
     ]);
-    const nyttNafn = el('input', { type: 'text', maxlength: '120', placeholder: 'Nafn fyrirtækisins', autocomplete: 'off' });
-    const nyttSvid = el('label', { class: 'field', hidden: true }, [el('span', { texti: 'Nafn nýja viðskiptavinarins' }), nyttNafn]);
-    const titill = el('input', { type: 'text', maxlength: '200', placeholder: 'T.d. Myndbönd í desember' });
-    const fyrsti = el('input', { type: 'date', value: dagsetning });
-    const fjoldi = el('input', { type: 'number', min: '1', max: '30', value: '1', inputmode: 'numeric' });
-    const heiti = el('input', { type: 'text', maxlength: '120', value: 'Myndband' });
-    const bil = el('select', {}, BIL.map(([v, h]) => el('option', { value: v, texti: h })));
+    const titill = el('input', { type: 'text', class: 'dg-nytt__titill', maxlength: '200', placeholder: 'Bæta við titli', 'aria-label': 'Titill' });
+
+    /* --- Fundur --- */
+    const nu2 = new Date(); const naestaKl = new Date(nu2.getFullYear(), nu2.getMonth(), nu2.getDate(), nu2.getHours() + 1, 0);
+    const fDagur = el('input', { type: 'date', value: dagsetning, 'aria-label': 'Dagur' });
+    const fFra = el('input', { type: 'time', step: '900', value: klTexti(naestaKl), 'aria-label': 'Frá kl.' });
+    const fTil = el('input', { type: 'time', step: '900', value: klTexti(new Date(naestaKl.getTime() + 36e5)), 'aria-label': 'Til kl.' });
+    const fAllan = el('input', { type: 'checkbox' });
+    const fStadur = el('input', { type: 'text', maxlength: '300', placeholder: 'Bæta við staðsetningu', 'aria-label': 'Staðsetning' });
+    const fLysing = el('textarea', { rows: '3', maxlength: '4000', placeholder: 'Bæta við lýsingu', 'aria-label': 'Lýsing' });
+    const fFyrir = fyrirVal(false);
+    const fNyttNafn = el('input', { type: 'text', maxlength: '120', placeholder: 'Nafn fyrirtækisins', hidden: true });
+    let lengd = 36e5;
+    fFra.addEventListener('change', () => { /* til færist með og heldur lengdinni */
+      if (!fFra.value) return;
+      const b0 = saman(fDagur.value || dagsetning, fFra.value); fTil.value = klTexti(new Date(b0.getTime() + lengd));
+    });
+    fTil.addEventListener('change', () => {
+      const b0 = saman(fDagur.value || dagsetning, fFra.value), e0 = saman(fDagur.value || dagsetning, fTil.value);
+      if (e0 > b0) lengd = e0 - b0;
+    });
+    const timar = el('span', { class: 'dg-nytt__timar' }, [fFra, el('span', { texti: 'til' }), fTil]);
+    fAllan.addEventListener('change', () => { timar.hidden = fAllan.checked; });
+    fFyrir.addEventListener('change', () => { fNyttNafn.hidden = fFyrir.value !== NYR; });
+    if (breyta) {
+      titill.value = breyta.titill || '';
+      const b0 = new Date(breyta.byrjar), e0 = new Date(breyta.endar);
+      fDagur.value = ymd(b0); fFra.value = klTexti(b0); fTil.value = klTexti(e0); lengd = Math.max(15 * 6e4, e0 - b0);
+      fAllan.checked = !!breyta.allan_daginn; timar.hidden = fAllan.checked;
+      fStadur.value = breyta.stadur || ''; fLysing.value = breyta.lysing || ''; fFyrir.value = breyta.fyrirtaeki_id || '';
+    }
+    const fundurSvid = el('div', { class: 'dg-nytt__hluti' }, [
+      rod('klukka', [el('div', { class: 'dg-nytt__tima-lina' }, [fDagur, timar]),
+        el('label', { class: 'dg-nytt__haka' }, [fAllan, document.createTextNode('Allan daginn')])]),
+      rod('stadur', [fStadur]),
+      rod('texti', [fLysing]),
+      rod('manneskja', [fFyrir, fNyttNafn])
+    ]);
+
+    /* --- Verk (eitt eða mörg í röð) --- */
+    const hver = fyrirVal(true);
+    const nyttNafn = el('input', { type: 'text', maxlength: '120', placeholder: 'Nafn fyrirtækisins', autocomplete: 'off', hidden: true });
+    const fyrsti = el('input', { type: 'date', value: dagsetning, 'aria-label': 'Fyrsti dagur' });
+    const fjoldi = el('input', { type: 'number', min: '1', max: '30', value: '1', inputmode: 'numeric', 'aria-label': 'Hversu mörg' });
+    const heiti = el('input', { type: 'text', maxlength: '120', value: 'Myndband', 'aria-label': 'Heiti hvers og eins' });
+    const bil = el('select', { 'aria-label': 'Bil á milli' }, BIL.map(([v, h]) => el('option', { value: v, texti: h })));
     bil.value = '7';
     const morgSvid = el('div', { class: 'dg-nytt__tvo', hidden: true }, [
       el('label', { class: 'field' }, [el('span', { texti: 'Heiti hvers og eins' }), heiti]),
       el('label', { class: 'field' }, [el('span', { texti: 'Bil á milli' }), bil])
     ]);
     const forsyn = el('ol', { class: 'dg-nytt__forsyn', hidden: true });
+    const verkSvid = el('div', { class: 'dg-nytt__hluti', hidden: true }, [
+      rod('manneskja', [hver, nyttNafn]),
+      rod('klukka', [el('div', { class: 'dg-nytt__tima-lina' }, [fyrsti, el('label', { class: 'dg-nytt__fjoldi' }, [fjoldi, el('span', { texti: 'stk.' })])])]),
+      rod('endurtaka', [morgSvid, forsyn], 'dg-nytt__rod--morg')
+    ]);
+
     const skyring = el('p', { class: 'skyring' });
     const villa = el('p', { class: 'form-status form-status--err', role: 'alert', hidden: true });
-    const senda = el('button', { type: 'submit', class: 'btn', texti: 'Setja á dagatalið' });
+    const senda = el('button', { type: 'submit', class: 'btn', texti: 'Vista' });
 
     const tala = () => Math.max(1, Math.min(30, Math.round(Number(fjoldi.value) || 1)));
     const dagarnir = () => {
@@ -391,9 +484,17 @@ async function start() {
     const heitiNr = (i) => (heiti.value.trim() || 'Verk') + ' ' + (i + 1);
 
     function uppfaera() {
+      fundurSvid.hidden = tegund !== 'fundur'; verkSvid.hidden = tegund !== 'verk';
+      flipar.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.teg === tegund)));
+      if (tegund === 'fundur') {
+        senda.textContent = breyta ? 'Vista breytingar' : 'Vista';
+        skyring.textContent = breyta ? '' : 'Fundurinn fer á Dagatalið hér. Viðskiptavinir sjá hann ekki.';
+        return;
+      }
       const n = tala();
-      nyttSvid.hidden = hver.value !== NYR;
+      nyttNafn.hidden = hver.value !== NYR;
       morgSvid.hidden = n < 2;
+      verkSvid.querySelector('.dg-nytt__rod--morg').hidden = n < 2;
       const innri = hver.value === 'innri';
       if (n > 1) {
         fylla(forsyn, dagarnir().map((s, i) => { const d = dagur(s); return el('li', {}, [el('strong', { texti: heitiNr(i) }), document.createTextNode(' ' + DAGAR_STUTT[d.getDay()] + ' ' + dagsTexti(d))]); }));
@@ -408,36 +509,67 @@ async function start() {
         senda.textContent = 'Setja á dagatalið';
       }
     }
+    const flipar = el('div', { class: 'dg-nytt__flipar', role: 'group', 'aria-label': 'Tegund' }, [['fundur', 'Fundur'], ['verk', 'Verk']].map(([k, h]) =>
+      el('button', { type: 'button', class: 'filter', 'data-teg': k, texti: h, onclick: () => { tegund = k; uppfaera(); } })));
+    if (breyta) flipar.hidden = true;
     [hver, fjoldi, heiti, bil, fyrsti].forEach((x) => { x.addEventListener('input', uppfaera); x.addEventListener('change', uppfaera); });
+
+    /* Það sem er þegar vistað, svo Prófa aftur búi ekki til tvennt */
+    const buid = { fyrId: null, taskId: null, innri: 0, undir: false };
+    async function fyrirtaekiId(val, nafnReitur, valReitur) {
+      if (val !== NYR) return val || null;
+      if (!buid.fyrId) {
+        const f = await g.nyttFyrirtaeki({ nafn: nafnReitur.value.trim().slice(0, 120) });
+        buid.fyrId = f.id;
+        valReitur.insertBefore(el('option', { value: f.id, texti: f.nafn }), valReitur.querySelector('option[value="' + NYR + '"]'));
+        valReitur.value = f.id; nafnReitur.hidden = true;
+      }
+      return buid.fyrId;
+    }
 
     let ibid = false;
     let dlg = null;
-    /* Það sem er þegar vistað, svo Prófa aftur búi ekki til tvennt */
-    const buid = { fyrId: null, taskId: null, innri: 0, undir: false };
-    const form = el('form', { class: 'form-grid dg-nytt', onsubmit: async (e) => {
+    const form = el('form', { class: 'dg-nytt', onsubmit: async (e) => {
       e.preventDefault();
       if (ibid) return;
       villa.hidden = true;
       const t = titill.value.trim();
       const synaVillu = (texti, reitur) => { villa.textContent = texti; villa.hidden = false; if (reitur) reitur.focus(); };
+      if (!t) return synaVillu('Skrifaðu titil.', titill);
+
+      if (tegund === 'fundur') {
+        if (!gildurDagur(fDagur.value)) return synaVillu('Veldu dag.', fDagur);
+        if (fFyrir.value === NYR && !fNyttNafn.value.trim()) return synaVillu('Skrifaðu nafn nýja viðskiptavinarins.', fNyttNafn);
+        let b0, e0;
+        if (fAllan.checked) { b0 = saman(fDagur.value, '00:00'); e0 = new Date(b0); e0.setDate(e0.getDate() + 1); }
+        else {
+          if (!fFra.value || !fTil.value) return synaVillu('Veldu tíma.', fFra);
+          b0 = saman(fDagur.value, fFra.value); e0 = saman(fDagur.value, fTil.value);
+          if (e0 <= b0) e0 = new Date(e0.getTime() + 864e5); /* yfir miðnætti */
+        }
+        ibid = true; senda.disabled = true;
+        try {
+          const fyrId = await fyrirtaekiId(fFyrir.value, fNyttNafn, fFyrir);
+          const gogn = { titill: t.slice(0, 200), byrjar: b0.toISOString(), endar: e0.toISOString(), allan_daginn: fAllan.checked,
+            stadur: fStadur.value.trim().slice(0, 300) || null, lysing: fLysing.value.trim().slice(0, 4000) || null, fyrirtaeki_id: fyrId };
+          if (breyta) await g.uppfaeraFund(breyta.id, gogn); else await g.nyrFundur(gogn);
+          tilkynna(t + ': ' + dagsTexti(b0) + (fAllan.checked ? '' : ' kl. ' + klTexti(b0)));
+          if (syn === 'manudur') manudur = new Date(b0.getFullYear(), b0.getMonth(), 1);
+        } catch (er) {
+          synaVillu(er.message || 'Ekki tókst að vista.');
+          ibid = false; senda.disabled = false; return;
+        }
+        await endurhlada([dlg]);
+        return;
+      }
+
       if (!hver.value) return synaVillu('Veldu fyrir hvern þetta er.', hver);
       if (hver.value === NYR && !nyttNafn.value.trim()) return synaVillu('Skrifaðu nafn nýja viðskiptavinarins.', nyttNafn);
-      if (!t) return synaVillu('Skrifaðu hvað á að gera.', titill);
       if (!gildurDagur(fyrsti.value)) return synaVillu('Veldu dag.', fyrsti);
       ibid = true; senda.disabled = true; senda.textContent = 'Set á dagatalið';
       try {
         const n = tala(), dagar = dagarnir();
-        let fyrId = hver.value;
-        if (fyrId === NYR) {
-          if (!buid.fyrId) {
-            const f = await g.nyttFyrirtaeki({ nafn: nyttNafn.value.trim().slice(0, 120) });
-            buid.fyrId = f.id;
-            /* Nýi viðskiptavinurinn verður valinn, svo ekkert tvítekst við Prófa aftur */
-            hver.insertBefore(el('option', { value: f.id, texti: f.nafn }), hver.querySelector('option[value="' + NYR + '"]'));
-            hver.value = f.id;
-          }
-          fyrId = buid.fyrId;
-        }
+        const fyrId = hver.value === 'innri' ? 'innri' : await fyrirtaekiId(hver.value, nyttNafn, hver);
         if (fyrId === 'innri') {
           for (let i = buid.innri; i < n; i++) {
             await g.nyrInnriTask({ titill: (n > 1 ? heitiNr(i) + ': ' + t : t).slice(0, 200), skiladagur: dagar[i], stada: 'nytt' });
@@ -465,22 +597,18 @@ async function start() {
       }
       await endurhlada([dlg]);
     } }, [
-      el('label', { class: 'field' }, [el('span', { texti: 'Fyrir hvern' }), hver]),
-      nyttSvid,
-      el('label', { class: 'field' }, [el('span', { texti: 'Hvað á að gera' }), titill]),
-      el('div', { class: 'dg-nytt__tvo' }, [
-        el('label', { class: 'field' }, [el('span', { texti: 'Fyrsti dagur' }), fyrsti]),
-        el('label', { class: 'field' }, [el('span', { texti: 'Hversu mörg' }), fjoldi])
-      ]),
-      morgSvid,
-      forsyn,
+      titill,
+      flipar,
+      fundurSvid,
+      verkSvid,
       skyring,
       villa,
       el('div', { class: 'spjald__fot' }, [senda, el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Hætta við', onclick: () => dlg.close() })])
     ]);
-    ({ d: dlg } = spjald('Nýtt á dagatalið', [form]));
+    ({ d: dlg } = spjald(breyta ? 'Breyta fundi' : 'Nýtt á dagatalið', [form]));
+    dlg.classList.add('dg-nytt-gluggi');
     uppfaera();
-    setTimeout(() => hver.focus(), 50);
+    setTimeout(() => titill.focus(), 50);
   }
 
   function spjald(titill, born) {

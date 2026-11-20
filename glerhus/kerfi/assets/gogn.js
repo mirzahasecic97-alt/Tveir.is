@@ -566,6 +566,32 @@ async function supabaseBakendi() {
       kastaUv(svar); return svar.data;
     },
 
+    /* Fundir sem eru skráðir í kerfinu (ekki úr Google Calendar). Tómur listi
+       ef taflan er ekki komin (migrations/2026-11-20-fundir.sql). */
+    async fundir() {
+      const fra = new Date(Date.now() - 60 * 864e5).toISOString();
+      const svar = await sb.from('fundir').select('*, fyrirtaeki(nafn)').gte('byrjar', fra).order('byrjar').limit(2000);
+      if (svar.error) {
+        if (/fundir|does not exist|schema cache|could not find/i.test(String(svar.error.message))) return [];
+        kasta(svar);
+      }
+      return svar.data || [];
+    },
+    async nyrFundur(f) {
+      const ek = await eg();
+      const svar = await sb.from('fundir').insert({ ...f, hofundur: ek.id }).select('*, fyrirtaeki(nafn)').single();
+      if (svar.error && /fundir|schema cache|could not find/i.test(String(svar.error.message))) throw new Error('Fundirnir eru ekki komnir í gagnagrunninn. Keyrðu migrations/2026-11-20-fundir.sql.');
+      kasta(svar); return svar.data;
+    },
+    async uppfaeraFund(id, breytingar) {
+      const svar = await sb.from('fundir').update(breytingar).eq('id', id).select('*, fyrirtaeki(nafn)').single();
+      kasta(svar); return svar.data;
+    },
+    async eydaFundi(id) {
+      const svar = await sb.from('fundir').delete().eq('id', id);
+      kasta(svar);
+    },
+
     /* Undirverk með dag, fyrir Dagatalið. Tómur listi ef dálkurinn er ekki
        kominn (migrations/2026-11-20-dagatal-plan.sql). */
     async undirverkADagatali() {
@@ -1661,6 +1687,22 @@ function prufuBakendi() {
       vista(); return { ...u };
     },
 
+    async fundir() {
+      return (g.fundir || []).map((f) => ({ ...f, fyrirtaeki: fyrNafn(f.fyrirtaeki_id) })).sort((a, b) => new Date(a.byrjar) - new Date(b.byrjar));
+    },
+    async nyrFundur(f) {
+      krefjastAdmin();
+      if (!String(f.titill || '').trim()) throw new Error('Titill vantar.');
+      const nyr = { id: nyttId(), stadur: null, lysing: null, fyrirtaeki_id: null, allan_daginn: false, google_id: null, ...f, stofnad: new Date().toISOString() };
+      g.fundir = [...(g.fundir || []), nyr]; vista();
+      return { ...nyr, fyrirtaeki: fyrNafn(nyr.fyrirtaeki_id) };
+    },
+    async uppfaeraFund(id, breytingar) {
+      krefjastAdmin();
+      const f = finna(g.fundir || [], id); if (!f) return null;
+      Object.assign(f, breytingar); vista(); return { ...f, fyrirtaeki: fyrNafn(f.fyrirtaeki_id) };
+    },
+    async eydaFundi(id) { krefjastAdmin(); g.fundir = (g.fundir || []).filter((f) => f.id !== id); vista(); },
     async undirverkADagatali() {
       return (g.undirverk || []).filter((u) => u.dags).map((u) => {
         const t = finna(g.taskar, u.task_id);

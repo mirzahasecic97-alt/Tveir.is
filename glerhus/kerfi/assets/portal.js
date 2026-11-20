@@ -364,7 +364,7 @@ export function teiknaHaus(ek, heiti) {
                               width: '26', height: '26' }),
                   el('img', { class: 'phead__stofumerki', src: stofuMerki(), alt: stofuNafn(), referrerpolicy: 'no-referrer' })
                 ])
-              : el('img', { class: 'phead__tveir', src: '/assets/img/tveir-merki-gegnsaett.png', alt: 'Tveir',
+              : el('img', { class: 'phead__tveir', src: '/assets/img/tveir-2-klaki.png', alt: 'Tveir',
                             width: '124', height: '29' })
         ]),
         el('span', { class: 'phead__skil', 'aria-hidden': 'true' }),

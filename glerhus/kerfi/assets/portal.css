@@ -2009,3 +2009,34 @@ body.sk-les .page-head.sk-haus { display: none !important; }
 /* Undirverk: dagurinn á dagatalinu */
 .uv__dags { padding: 3px 8px; border-radius: 8px; border: 1px solid var(--line); font: inherit; font-size: 12.5px; color: var(--ink); background: #fff; max-width: 150px; }
 .uv__aaetlad { font-size: 12.5px; color: var(--soft); }
+
+/* Nýtt á dagatalið: eins og í Google Calendar */
+.dg-nytt { display: grid; gap: 14px; margin-top: 10px; }
+.dg-nytt__titill { width: 100%; border: 0; border-bottom: 2px solid var(--line); border-radius: 0; background: transparent; padding: 8px 2px 10px; font: 500 clamp(20px, 18px + .6vw, 26px)/1.25 var(--f-head); color: var(--ink); outline: none; }
+.dg-nytt__titill:focus { border-bottom-color: var(--acc, #5b93f0); }
+.dg-nytt__titill::placeholder { color: var(--soft); opacity: .8; }
+.dg-nytt__flipar { display: flex; gap: 6px; }
+.dg-nytt__hluti { display: grid; gap: 12px; }
+.dg-nytt__hluti[hidden], .dg-nytt__rod[hidden] { display: none; }
+.dg-nytt__rod { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: start; }
+.dg-nytt__takn { display: grid; place-items: center; height: 42px; color: var(--soft); }
+.dg-nytt__rod-inn { display: grid; gap: 8px; min-width: 0; }
+.dg-nytt__rod input:not([type="checkbox"]), .dg-nytt__rod select, .dg-nytt__rod textarea {
+  width: 100%; min-height: 42px; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: 400 15px/1.4 var(--f-body); }
+.dg-nytt__rod textarea { resize: vertical; min-height: 70px; }
+.dg-nytt__tima-lina { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.dg-nytt__tima-lina > input[type="date"] { width: auto; flex: 1 1 160px; }
+.dg-nytt__timar { display: inline-flex; align-items: center; gap: 8px; flex: 1 1 220px; }
+.dg-nytt__timar[hidden] { display: none; }
+.dg-nytt__timar input { flex: 1; min-width: 0; }
+.dg-nytt__timar span { color: var(--soft); font-size: 14px; }
+.dg-nytt__haka { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; color: var(--ink); cursor: pointer; }
+.dg-nytt__haka input { width: 18px; height: 18px; accent-color: var(--acc, #5b93f0); }
+.dg-nytt__fjoldi { display: inline-flex; align-items: center; gap: 8px; color: var(--soft); font-size: 14px; }
+.dg-nytt__fjoldi input { width: 84px !important; }
+.dg-nytt .spjald__fot { flex-wrap: wrap; margin-top: 4px; }
+.dg-nytt .skyring:empty { display: none; }
+@media (max-width: 480px) {
+  .dg-nytt__rod { grid-template-columns: 22px minmax(0, 1fr); gap: 8px; }
+  .dg-nytt__timar { flex-basis: 100%; }
+}
