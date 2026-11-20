@@ -985,12 +985,11 @@ export { gogn, STODUR_TASK, STODUR_VERK, STODUR_INNRI, FORGANGUR, stillingar, un
 /* Glerborði neðst á skjánum þegar gesturinn kom úr "Settu saman ykkar kerfi" */
 function synaBorda() {
   if (!sersnid || document.querySelector('.gh-bordi')) return;
-  const efni = encodeURIComponent('Halló,\n\nVið prófuðum Glerhúsið og viljum kynningu.\n\nStofan: ' + stofuNafn() + '\n');
   const b = el('div', { class: 'gh-bordi', role: 'region', 'aria-label': 'Sýnidæmi' }, [
     el('span', { class: 'gh-bordi__punktur', 'aria-hidden': 'true' }),
     el('span', { class: 'gh-bordi__texti', texti: 'Sýnidæmi ' + stofuNafn() }),
     el('a', { class: 'gh-bordi__hn', href: '../byggja.html?breyta=1', texti: 'Breyta vali' }),
-    el('a', { class: 'gh-bordi__hn gh-bordi__hn--gull', href: 'mailto:tveir@tveir.is?subject=' + encodeURIComponent('Kynning á Glerhúsinu: ' + stofuNafn()) + '&body=' + efni, texti: 'Bóka kynningu' })
+    el('a', { class: 'gh-bordi__hn gh-bordi__hn--gull', href: '../index.html#kynning', texti: 'Bóka kynningu' })
   ]);
   document.body.appendChild(b);
 }

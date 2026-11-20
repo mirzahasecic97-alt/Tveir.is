@@ -340,3 +340,21 @@ a:not([class]) { color: var(--acc-djupt); }
 @media (min-width: 881px) and (max-width: 1040px) {
   .haus__tenglar a { padding: 9px 9px !important; font-size: 14px !important; }
 }
+
+/* ---------- Forsíðan: í smíðum, spurningar og kynningarformið ---------- */
+.eig2__smidi { margin-top: 18px; color: var(--soft); font-size: 15px; max-width: 46em; }
+.eig2__smidi b { color: var(--ink); font-weight: 600; }
+.sp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 28px; align-items: start; }
+.sp__lidur { border-radius: 22px !important; padding: 0; }
+.sp__lidur summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 18px 20px; font: 600 16.5px/1.3 var(--f-head); color: var(--ink); }
+.sp__lidur summary::-webkit-details-marker { display: none; }
+.sp__lidur summary::after { content: ''; flex: 0 0 auto; width: 10px; height: 10px; border-right: 2px solid var(--acc-djupt); border-bottom: 2px solid var(--acc-djupt); transform: rotate(45deg) translateY(-3px); transition: transform .25s ease; }
+.sp__lidur[open] summary::after { transform: rotate(-135deg) translateY(-3px); }
+.sp__lidur summary:focus-visible { outline: 2px solid var(--acc); outline-offset: -4px; border-radius: 22px; }
+.sp__lidur p { padding: 0 20px 20px; margin: -4px 0 0; color: var(--soft); font-size: 15.5px; }
+.kynning2 { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(20px, 4vw, 48px); align-items: start; padding: clamp(24px, 4vw, 44px); border-radius: 32px !important; }
+.kynning2 h2 { margin-top: 0 !important; }
+.kynning2__texti p { margin-top: 12px; color: var(--soft); font-size: 17px; }
+.kynning2__form { margin-top: 0; padding: 0; background: none !important; border: 0 !important; box-shadow: none !important; }
+@media (max-width: 860px) { .kynning2 { grid-template-columns: minmax(0, 1fr); } .sp { grid-template-columns: minmax(0, 1fr); } }
