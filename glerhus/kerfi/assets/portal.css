@@ -2044,3 +2044,9 @@ body.sk-les .page-head.sk-haus { display: none !important; }
 /* Pósthólf: drög sem eru ekki farin */
 .sk-sb--drog { background: transparent !important; border: 1.5px dashed rgba(28, 48, 80, .28) !important; opacity: .85; }
 .sk-sb__drog { display: inline-block; margin-right: 8px; padding: 3px 9px; border-radius: 999px; font: 600 11.5px/1.2 var(--f-body); letter-spacing: .04em; text-transform: uppercase; color: #8a5a00; background: #fff3d6; vertical-align: 1px; }
+/* Margra daga atriði á Dagatalinu og Frá/Til í Nýtt */
+.dg-atr.er-margra { border-left-width: 0; border-radius: 4px; background: color-mix(in srgb, var(--l) 30%, #fff); }
+.dg-atr.er-margra:not(.er-framhald) { border-top-left-radius: 7px; border-bottom-left-radius: 7px; border-left: 3px solid var(--l); }
+.dg-atr.er-framhald .dg-atr__titill { opacity: .75; }
+.dg-nytt__merki { flex: 0 0 34px; font-size: 13.5px; color: var(--soft); }
+@media (max-width: 480px) { .dg-nytt__merki { flex-basis: 100%; } }

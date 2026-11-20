@@ -124,7 +124,7 @@ async function start() {
     else if (a.teg === 'fundur_okkar') {
       /* Fundurinn færist um jafn marga daga, sami tími og sama lengd */
       if (!gildi) throw new Error('Fundi er eytt, ekki tekinn af dagatalinu.');
-      const dagar = Math.round((dagur(gildi) - dagur(ymd(a.byrjar))) / 864e5);
+      const dagar = Math.round((dagur(gildi) - dagur(a.dagurinn || ymd(a.byrjar))) / 864e5);
       const b0 = new Date(a.byrjar); b0.setDate(b0.getDate() + dagar);
       const e0 = new Date(a.endar); e0.setDate(e0.getDate() + dagar);
       await g.uppfaeraFund(a.id, { byrjar: b0.toISOString(), endar: e0.toISOString() });
@@ -134,7 +134,7 @@ async function start() {
   const opnirGluggar = () => [...document.querySelectorAll('dialog.pdialog[open]')];
   /* Skilar true ef það tókst */
   async function flytja(a, nyr) {
-    if (a.byrjar && ymd(a.byrjar) === nyr) return true;
+    if (a.byrjar && (a.dagurinn || ymd(a.byrjar)) === nyr) return true;
     const opnir = opnirGluggar();
     try { await setjaDag(a, nyr); }
     catch (e) { tilkynna(e.message || 'Ekki tókst að færa.'); return false; }
@@ -200,16 +200,37 @@ async function start() {
 
   function teikna() {
     teiknaHausinn();
-    const synileg = atridi.filter((a) => virkir.has(a.flokkur) && (synaLokid || !a.lokid));
+    const synileg = dreifa(atridi.filter((a) => virkir.has(a.flokkur) && (synaLokid || !a.lokid)));
     if (syn === 'listi') teiknaLista(synileg); else teiknaManud(synileg);
     teiknaAnDags();
   }
 
+  /* Atriði sem ná yfir fleiri daga (t.d. ferð 24. til 29. nóv) birtast á
+     hverjum degi. dagurinn er dagurinn sem eintakið stendur á. */
+  function dreifa(listi) {
+    const ut = [];
+    for (const a of listi) {
+      if (!a.endar || !a.byrjar) { ut.push(a); continue; }
+      const fyrsti = ymd(a.byrjar);
+      const sidasti = ymd(new Date(a.endar.getTime() - 1));
+      if (sidasti <= fyrsti) { ut.push(a); continue; }
+      const d = dagur(fyrsti);
+      for (let i = 0; i < 62; i++) {
+        const k = ymd(d);
+        if (k > sidasti) break;
+        ut.push({ ...a, dagurinn: k, framhald: k !== fyrsti, sidastiDagur: k === sidasti });
+        d.setDate(d.getDate() + 1);
+      }
+    }
+    return ut;
+  }
+  const dagurAtr = (a) => a.dagurinn || ymd(a.byrjar);
+
   const lina = (a, stutt) => {
-    const hnappur = el('button', { type: 'button', class: 'dg-atr dg-atr--' + a.flokkur + (stutt ? ' er-stutt' : '') + (a.lokid ? ' er-lokid' : '') + (a.teg === 'undirverk' ? ' er-undir' : ''),
+    const hnappur = el('button', { type: 'button', class: 'dg-atr dg-atr--' + a.flokkur + (stutt ? ' er-stutt' : '') + (a.lokid ? ' er-lokid' : '') + (a.teg === 'undirverk' ? ' er-undir' : '') + (a.framhald ? ' er-framhald' : '') + (a.dagurinn ? ' er-margra' : ''),
       style: '--l:' + FLOKKAR[a.flokkur].litur, title: (a.allan || !a.byrjar ? '' : kl(a.byrjar) + ' ') + a.titill + (a.undir ? ' · ' + a.undir : ''),
       onclick: (e) => { e.stopPropagation(); opna(a); } }, [
-      a.allan || !a.byrjar ? null : el('span', { class: 'dg-atr__kl', texti: kl(a.byrjar) }),
+      a.allan || !a.byrjar || a.framhald ? null : el('span', { class: 'dg-atr__kl', texti: kl(a.byrjar) }),
       el('span', { class: 'dg-atr__titill', texti: a.titill })
     ]);
     /* Allt nema fundir má draga á annan dag */
@@ -218,6 +239,7 @@ async function start() {
       hnappur.addEventListener('dragstart', (e) => {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', a.teg + ':' + a.id);
+        if (a.dagurinn) e.dataTransfer.setData('text/x-dagur', a.dagurinn);
         hnappur.classList.add('er-dreginn');
       });
       hnappur.addEventListener('dragend', () => hnappur.classList.remove('er-dreginn'));
@@ -233,7 +255,9 @@ async function start() {
     reitur.addEventListener('drop', (e) => {
       e.preventDefault(); reitur.classList.remove('er-yfir');
       const [teg, id] = String(e.dataTransfer.getData('text/plain')).split(':');
-      const a = atridi.find((x) => x.teg === teg && x.id === id) || anDags.find((x) => x.teg === teg && x.id === id);
+      const [tegund, audk, dg] = [teg, id, String(e.dataTransfer.getData('text/x-dagur') || '')];
+      const grunnur = atridi.find((x) => x.teg === tegund && x.id === audk) || anDags.find((x) => x.teg === tegund && x.id === audk);
+      const a = grunnur && dg ? { ...grunnur, dagurinn: dg } : grunnur;
       if (a) flytja(a, dagsetning);
     });
   }
@@ -245,11 +269,12 @@ async function start() {
     for (let i = 0; i < 42; i++) { const d = new Date(upphaf); d.setDate(upphaf.getDate() + i); dagar.push(d); }
     const vikur = dagar[35].getMonth() !== manudur.getMonth() ? 5 : 6;
     const eftirDegi = new Map();
-    for (const a of listi) { const k = ymd(a.byrjar); if (!eftirDegi.has(k)) eftirDegi.set(k, []); eftirDegi.get(k).push(a); }
+    for (const a of listi) { const k = dagurAtr(a); if (!eftirDegi.has(k)) eftirDegi.set(k, []); eftirDegi.get(k).push(a); }
     fylla(svid, [el('div', { class: 'dg-manudur card' }, [
       el('div', { class: 'dg-vikudagar' }, DAGAR.map((d) => el('span', { texti: d }))),
       el('div', { class: 'dg-grind', style: '--vikur:' + vikur }, dagar.slice(0, vikur * 7).map((d) => {
-        const hans = (eftirDegi.get(ymd(d)) || []).sort((a, b) => (a.allan === b.allan ? a.byrjar - b.byrjar : a.allan ? -1 : 1));
+        /* Margra daga atriði efst, svo allan daginn, svo eftir tíma */
+        const hans = (eftirDegi.get(ymd(d)) || []).sort((a, b) => (!!b.dagurinn - !!a.dagurinn) || (a.allan === b.allan ? a.byrjar - b.byrjar : a.allan ? -1 : 1));
         const iDag = ymd(d) === ymd(nu);
         const reitur = el('div', { class: 'dg-dagur' + (d.getMonth() !== manudur.getMonth() ? ' er-utan' : '') + (iDag ? ' er-i-dag' : '') + ((d.getDay() + 6) % 7 > 4 ? ' er-helgi' : '') }, [
           el('div', { class: 'dg-dagur__efst' }, [
@@ -272,10 +297,10 @@ async function start() {
   function teiknaLista(listi) {
     const fra = new Date(nu); fra.setHours(0, 0, 0, 0);
     const til = new Date(fra); til.setDate(til.getDate() + 30);
-    const naest = listi.filter((a) => a.byrjar >= fra && a.byrjar < til);
-    const seint = listi.filter((a) => a.flokkur !== 'fundur' && !a.lokid && a.byrjar < fra);
+    const naest = listi.filter((a) => { const d = dagur(dagurAtr(a)); return d >= fra && d < til; });
+    const seint = listi.filter((a) => a.flokkur !== 'fundur' && !a.lokid && !a.framhald && a.byrjar < fra && !a.dagurinn);
     const hopar = new Map();
-    for (const a of naest) { const k = ymd(a.byrjar); if (!hopar.has(k)) hopar.set(k, []); hopar.get(k).push(a); }
+    for (const a of naest) { const k = dagurAtr(a); if (!hopar.has(k)) hopar.set(k, []); hopar.get(k).push(a); }
     fylla(svid, [
       seint.length ? el('section', { class: 'card dg-listi dg-listi--seint' }, [
         el('h2', { texti: 'Komið fram yfir skiladag' }),
@@ -326,7 +351,9 @@ async function start() {
     const f = FLOKKAR[a.flokkur];
     const erFundur = a.teg === 'fundur' || a.teg === 'fundur_okkar';
     const timi = !erFundur ? '' : a.allan ? dagsTexti(a.byrjar) + (a.endar && (a.endar - a.byrjar) > 864e5 ? ' til ' + dagsTexti(new Date(a.endar.getTime() - 1)) : '') + ', allan daginn'
-      : dagsTexti(a.byrjar) + ', kl. ' + kl(a.byrjar) + (a.endar ? ' til ' + kl(a.endar) : '');
+      : a.endar && ymd(a.byrjar) !== ymd(new Date(a.endar.getTime() - 1))
+        ? dagsTexti(a.byrjar) + ' kl. ' + kl(a.byrjar) + ' til ' + dagsTexti(a.endar) + ' kl. ' + kl(a.endar)
+        : dagsTexti(a.byrjar) + ', kl. ' + kl(a.byrjar) + (a.endar ? ' til ' + kl(a.endar) : '');
     const fundur = erFundur;
     const okkar = a.teg === 'fundur_okkar';
     const villa = el('p', { class: 'form-status form-status--err', role: 'alert', hidden: true });
@@ -417,7 +444,8 @@ async function start() {
 
     /* --- Fundur --- */
     const nu2 = new Date(); const naestaKl = new Date(nu2.getFullYear(), nu2.getMonth(), nu2.getDate(), nu2.getHours() + 1, 0);
-    const fDagur = el('input', { type: 'date', value: dagsetning, 'aria-label': 'Dagur' });
+    const fDagur = el('input', { type: 'date', value: dagsetning, 'aria-label': 'Frá dagur' });
+    const fTilDagur = el('input', { type: 'date', value: dagsetning, 'aria-label': 'Til dagur' });
     const fFra = el('input', { type: 'time', step: '900', value: klTexti(naestaKl), 'aria-label': 'Frá kl.' });
     const fTil = el('input', { type: 'time', step: '900', value: klTexti(new Date(naestaKl.getTime() + 36e5)), 'aria-label': 'Til kl.' });
     const fAllan = el('input', { type: 'checkbox' });
@@ -426,26 +454,44 @@ async function start() {
     const fFyrir = fyrirVal(false);
     const fNyttNafn = el('input', { type: 'text', maxlength: '120', placeholder: 'Nafn fyrirtækisins', hidden: true });
     let lengd = 36e5;
-    fFra.addEventListener('change', () => { /* til færist með og heldur lengdinni */
-      if (!fFra.value) return;
-      const b0 = saman(fDagur.value || dagsetning, fFra.value); fTil.value = klTexti(new Date(b0.getTime() + lengd));
+    /* Lokin færast með byrjuninni og halda lengdinni, eins og í Google Calendar */
+    const byrjunNu = () => saman(fDagur.value || dagsetning, fAllan.checked ? '00:00' : fFra.value);
+    const setjaLok = () => {
+      const e0 = new Date(byrjunNu().getTime() + lengd);
+      fTilDagur.value = ymd(fAllan.checked ? new Date(e0.getTime() - 1) : e0);
+      if (!fAllan.checked) fTil.value = klTexti(e0);
+    };
+    fDagur.addEventListener('change', () => { if (gildurDagur(fDagur.value)) setjaLok(); });
+    fFra.addEventListener('change', () => { if (fFra.value) setjaLok(); });
+    const lesaLengd = () => {
+      if (!gildurDagur(fTilDagur.value)) return;
+      const e0 = fAllan.checked ? new Date(saman(fTilDagur.value, '00:00').getTime() + 864e5) : saman(fTilDagur.value, fTil.value);
+      if (e0 > byrjunNu()) lengd = e0 - byrjunNu();
+    };
+    fTilDagur.addEventListener('change', lesaLengd);
+    fTil.addEventListener('change', lesaLengd);
+    const timar = el('span', { class: 'dg-nytt__timar' }, [fFra]);
+    const timarTil = el('span', { class: 'dg-nytt__timar' }, [fTil]);
+    fAllan.addEventListener('change', () => {
+      timar.hidden = timarTil.hidden = fAllan.checked;
+      /* Allan daginn: lengdin í heilum dögum */
+      const milli = gildurDagur(fTilDagur.value) && gildurDagur(fDagur.value) ? Math.max(0, Math.round((dagur(fTilDagur.value) - dagur(fDagur.value)) / 864e5)) : 0;
+      lengd = fAllan.checked ? (milli + 1) * 864e5 : milli * 864e5 + 36e5;
+      setjaLok();
     });
-    fTil.addEventListener('change', () => {
-      const b0 = saman(fDagur.value || dagsetning, fFra.value), e0 = saman(fDagur.value || dagsetning, fTil.value);
-      if (e0 > b0) lengd = e0 - b0;
-    });
-    const timar = el('span', { class: 'dg-nytt__timar' }, [fFra, el('span', { texti: 'til' }), fTil]);
-    fAllan.addEventListener('change', () => { timar.hidden = fAllan.checked; });
     fFyrir.addEventListener('change', () => { fNyttNafn.hidden = fFyrir.value !== NYR; });
     if (breyta) {
       titill.value = breyta.titill || '';
       const b0 = new Date(breyta.byrjar), e0 = new Date(breyta.endar);
       fDagur.value = ymd(b0); fFra.value = klTexti(b0); fTil.value = klTexti(e0); lengd = Math.max(15 * 6e4, e0 - b0);
-      fAllan.checked = !!breyta.allan_daginn; timar.hidden = fAllan.checked;
+      fAllan.checked = !!breyta.allan_daginn; timar.hidden = timarTil.hidden = fAllan.checked;
+      fTilDagur.value = ymd(fAllan.checked ? new Date(e0.getTime() - 1) : e0);
       fStadur.value = breyta.stadur || ''; fLysing.value = breyta.lysing || ''; fFyrir.value = breyta.fyrirtaeki_id || '';
     }
     const fundurSvid = el('div', { class: 'dg-nytt__hluti' }, [
-      rod('klukka', [el('div', { class: 'dg-nytt__tima-lina' }, [fDagur, timar]),
+      rod('klukka', [
+        el('div', { class: 'dg-nytt__tima-lina' }, [el('span', { class: 'dg-nytt__merki', texti: 'Frá' }), fDagur, timar]),
+        el('div', { class: 'dg-nytt__tima-lina' }, [el('span', { class: 'dg-nytt__merki', texti: 'Til' }), fTilDagur, timarTil]),
         el('label', { class: 'dg-nytt__haka' }, [fAllan, document.createTextNode('Allan daginn')])]),
       rod('stadur', [fStadur]),
       rod('texti', [fLysing]),
@@ -540,12 +586,15 @@ async function start() {
       if (tegund === 'fundur') {
         if (!gildurDagur(fDagur.value)) return synaVillu('Veldu dag.', fDagur);
         if (fFyrir.value === NYR && !fNyttNafn.value.trim()) return synaVillu('Skrifaðu nafn nýja viðskiptavinarins.', fNyttNafn);
+        if (!gildurDagur(fTilDagur.value)) return synaVillu('Veldu hvenær þetta endar.', fTilDagur);
+        if (fTilDagur.value < fDagur.value) return synaVillu('Lokin mega ekki vera á undan byrjuninni.', fTilDagur);
         let b0, e0;
-        if (fAllan.checked) { b0 = saman(fDagur.value, '00:00'); e0 = new Date(b0); e0.setDate(e0.getDate() + 1); }
+        if (fAllan.checked) { b0 = saman(fDagur.value, '00:00'); e0 = saman(fTilDagur.value, '00:00'); e0.setDate(e0.getDate() + 1); }
         else {
           if (!fFra.value || !fTil.value) return synaVillu('Veldu tíma.', fFra);
-          b0 = saman(fDagur.value, fFra.value); e0 = saman(fDagur.value, fTil.value);
-          if (e0 <= b0) e0 = new Date(e0.getTime() + 864e5); /* yfir miðnætti */
+          b0 = saman(fDagur.value, fFra.value); e0 = saman(fTilDagur.value, fTil.value);
+          if (e0 <= b0 && fTilDagur.value === fDagur.value) e0 = new Date(e0.getTime() + 864e5); /* yfir miðnætti */
+          if (e0 <= b0) return synaVillu('Lokin mega ekki vera á undan byrjuninni.', fTil);
         }
         ibid = true; senda.disabled = true;
         try {
