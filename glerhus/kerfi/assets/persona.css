@@ -116,3 +116,37 @@ a.ps-kpi:hover { transform: translateY(-2px); }
 /* Listarnir mega ekki ýta kortinu út fyrir skjáinn í síma */
 .ps-listi, .ps-plan, .ps-skil { grid-template-columns: minmax(0, 1fr); }
 .ps-listi li, .ps-plan__lina, .ps-skil li { min-width: 0; }
+
+/* ---------- Verktakar: tilboð og myndir (verktaki.js) ---------- */
+.vt-ritill { display: grid; gap: 12px; }
+.vt-ritill h2 { font: 600 17px/1.2 var(--f-head, 'Inter Tight', sans-serif); color: var(--ink); margin: 0; }
+.vt-reitir { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.vt-linur { display: grid; gap: 8px; }
+.vt-lina { display: grid; grid-template-columns: minmax(0, 1fr) 160px auto; gap: 8px; align-items: center; }
+.vt-ritill input { font: inherit; font-size: 14.5px; min-height: 42px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(28, 48, 80, .14); background: rgba(255, 255, 255, .85); color: var(--ink); min-width: 0; }
+.vt-ritill input:focus { outline: none; border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 18%, transparent); }
+.vt-fot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; padding-top: 6px; border-top: 1px solid rgba(28, 48, 80, .07); }
+.vt-summa { margin-right: auto; font: 600 16px/1.2 var(--f-head, 'Inter Tight', sans-serif); color: var(--ink); font-variant-numeric: tabular-nums; }
+.vt-tilbod { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 14px; }
+.vt-kort { display: flex; flex-direction: column; gap: 12px; }
+.vt-kort__haus { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.vt-kort__haus h2 { font: 600 17px/1.2 var(--f-head, 'Inter Tight', sans-serif); color: var(--ink); margin: 0 0 3px; }
+.vt-lidir { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.vt-lidir li { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--ink); padding: 8px 10px; border-radius: 10px; background: rgba(28, 48, 80, .035); }
+.vt-lidir li span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vt-kort__fot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(28, 48, 80, .07); }
+.vt-kort__fot strong { font: 600 18px/1.2 var(--f-head, 'Inter Tight', sans-serif); color: var(--ink); font-variant-numeric: tabular-nums; }
+.vt-verk__haus { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.vt-verk__haus h2 { margin: 0 0 3px; }
+.vt-skra { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.vt-myndir { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+.vt-mynd { margin: 0; display: grid; gap: 8px; }
+.vt-mynd img, .vt-mynd__tom { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 14px; }
+.vt-mynd__tom { display: grid; place-items: center; color: rgba(28, 48, 80, .35); background: linear-gradient(150deg, rgba(28, 48, 80, .06), rgba(28, 48, 80, .02)); box-shadow: inset 0 0 0 1px rgba(28, 48, 80, .08); }
+.vt-mynd__tom--eftir { color: #2e9e5b; background: linear-gradient(150deg, rgba(46, 158, 91, .14), rgba(46, 158, 91, .04)); }
+.vt-mynd figcaption { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--soft); }
+@media (max-width: 680px) {
+  .vt-reitir { grid-template-columns: minmax(0, 1fr); }
+  .vt-lina { grid-template-columns: minmax(0, 1fr) 110px; }
+  .vt-lina .ps-texti-hn { grid-column: 1 / -1; justify-self: start; padding-top: 0; }
+}

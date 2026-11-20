@@ -358,3 +358,11 @@ a:not([class]) { color: var(--acc-djupt); }
 .kynning2__texti p { margin-top: 12px; color: var(--soft); font-size: 17px; }
 .kynning2__form { margin-top: 0; padding: 0; background: none !important; border: 0 !important; box-shadow: none !important; }
 @media (max-width: 860px) { .kynning2 { grid-template-columns: minmax(0, 1fr); } .sp { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Persónuvernd og skilmálar ---------- */
+.texti-sida { max-width: 760px; padding-bottom: clamp(50px, 8vw, 100px); }
+.texti-sida h2 { font-size: 21px !important; margin-top: 34px !important; color: var(--ink); }
+.texti-sida p, .texti-sida li { margin-top: 10px; color: var(--ink); opacity: .88; font-size: 16px; line-height: 1.65; }
+.texti-sida ul { padding-left: 20px; }
+.texti-sida a { color: var(--acc-djupt); }
+.fotur__tenglar { display: inline-flex; gap: 18px; flex-wrap: wrap; }

@@ -122,7 +122,7 @@ function siduYfirlit(teikna) {
   const kpi = (h, tala, undir, href) => el(href ? 'a' : 'div', { class: 'card ps-kpi', href }, [
     el('span', { class: 'ps-kpi__h', texti: h }), el('strong', { class: 'ps-kpi__tala', texti: tala }), undir ? el('span', { class: 'ps-kpi__undir', texti: undir }) : null]);
   return el('div', { class: 'ps' }, [
-    siduHaus('Góðan dag, ' + NAFN.split(' ')[0] + '.', 'Þetta er það sem skiptir máli núna.'),
+    siduHaus(NAFN === 'Glerhúsið mitt' ? 'Góðan dag.' : 'Góðan dag, ' + NAFN.split(' ')[0] + '.', 'Þetta er það sem skiptir máli núna.'),
     el('div', { class: 'ps-kpir' }, [
       kpi('Tekjur í mánuðinum', kr(tekjurManadar()), G.samningar.length + ' samningar', 'samstarfsadilar.html'),
       kpi('Þarf að skila', String(opin.reduce((n, x) => n + (x.k.af - x.k.buid), 0)), 'til ' + new Set(opin.map((x) => x.s.id)).size + ' samstarfsaðila', 'samstarfsadilar.html'),

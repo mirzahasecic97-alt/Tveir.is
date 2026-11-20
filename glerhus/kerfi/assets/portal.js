@@ -31,6 +31,8 @@ export const sersnid = (() => {
 /* Íþróttafólk og áhrifavaldar fá sitt eigið kerfi í sýnidæminu (persona.js) */
 export const erPersona = () => !!sersnid && ['ithrottir', 'ahrif'].includes(sersnid.grein);
 if (erPersona() && /(^|\/)stjornbord\.html$/.test(location.pathname)) location.replace('mitt.html' + location.search);
+/* Verktakar og lítil fyrirtæki fá Tilboð og Myndir í sýnidæminu (verktaki.js) */
+export const erVerktaki = () => !!sersnid && ['verktaki', 'fyrirtaeki'].includes(sersnid.grein);
 export const ertengt = (id) => !!sersnid && (sersnid.tengingar || []).includes(id);
 /* Tenging kallar á sinn hluta: bókhaldskerfi opnar Bókhald, miðill opnar Tölfræði */
 export const ervalid = (id) => !sersnid || (sersnid.einingar || []).includes(id)
@@ -358,6 +360,8 @@ export function teiknaHaus(ek, heiti) {
           ? el('nav', { class: 'phead__nav', 'aria-label': 'Vinnusvæði' }, [
               el('a', { href: 'stjornbord.html', texti: 'Stjórnborð',
                         'aria-current': nuna === 'stjornbord.html' ? 'page' : null }),
+              erVerktaki() && ervalid('tilbod') ? el('a', { href: 'tilbod.html', texti: 'Tilboð', 'aria-current': nuna === 'tilbod.html' ? 'page' : null }) : null,
+              erVerktaki() && ervalid('myndir') ? el('a', { href: 'myndir.html', texti: 'Myndir', 'aria-current': nuna === 'myndir.html' ? 'page' : null }) : null,
               ervalid('tillogur') ? el('a', { href: 'tillogur.html',
                         'aria-current': nuna === 'tillogur.html' ? 'page' : null }, [
                 document.createTextNode('Tillögur'), merki
