@@ -32,10 +32,13 @@ function samstillaPostholf_() {
     nytt[id] = lykill;
     if (sidast[id] === lykill) return;
 
-    /* Drög sem Gmail vistar meðan skrifað er eru ekki send skilaboð: sleppa þeim */
-    const oll = th.getMessages().filter((m) => !m.isDraft());
+    /* Drög sem Gmail vistar meðan skrifað er koma með, merkt sem drög, svo
+       þau sjáist en ruglist ekki við send skilaboð. Þráður sem er bara drög
+       (nýr póstur sem er ekki farinn) er ekki tekinn með. */
+    const allt = th.getMessages();
+    const oll = allt.filter((m) => !m.isDraft());
     if (!oll.length) return;
-    const skilabod = oll.slice(-POSTHOLF_SKILABOD).map((m) => {
+    const skilabod = allt.slice(-POSTHOLF_SKILABOD).map((m) => {
       const fra = String(m.getFrom() || '');
       const netfang = netfangUr_(fra);
       let vidhengi = 0;
@@ -48,13 +51,15 @@ function samstillaPostholf_() {
         dags: m.getDate().toISOString(),
         texti: hreinsa_(m.getPlainBody()).slice(0, 20000),
         fra_okkur: /@tveir\.is$/.test(netfang),
-        vidhengi: vidhengi
+        vidhengi: vidhengi,
+        drog: m.isDraft()
       };
     });
     /* Sá sem þráðurinn er við: síðasti sendandi sem er ekki við */
-    const theirra = skilabod.filter((s) => !s.fra_okkur);
-    const vidmaelandi = theirra.length ? theirra[theirra.length - 1] : skilabod[0];
-    const seinast = skilabod[skilabod.length - 1];
+    const sendSkilabod = skilabod.filter((s) => !s.drog);
+    const theirra = sendSkilabod.filter((s) => !s.fra_okkur);
+    const vidmaelandi = theirra.length ? theirra[theirra.length - 1] : sendSkilabod[0];
+    const seinast = sendSkilabod[sendSkilabod.length - 1];
     let tengill = null;
     try { tengill = th.getPermalink(); } catch (e) { tengill = null; }
 

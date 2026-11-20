@@ -200,14 +200,17 @@ async function start() {
           ])
         ])
       ]),
-      el('ol', { class: 'sk-skilabod' }, skilabod.map((m) => el('li', { class: 'sk-sb' + (m.fra_okkur ? ' sk-sb--okkar' : '') }, [
+      el('ol', { class: 'sk-skilabod' }, skilabod.map((m) => el('li', { class: 'sk-sb' + (m.fra_okkur ? ' sk-sb--okkar' : '') + (m.drog ? ' sk-sb--drog' : '') }, [
         el('div', { class: 'sk-sb__haus' }, [
-          el('strong', { texti: m.fra_okkur ? 'Við' + (m.fra_nafn ? ' (' + m.fra_nafn + ')' : '') : m.fra_nafn || m.fra_netfang || 'Óþekktur' }),
-          el('span', { texti: hvenaer(m.dags, true) })
+          el('strong', {}, [
+            m.drog ? el('span', { class: 'sk-sb__drog', texti: 'Drög' }) : null,
+            document.createTextNode(m.drog ? 'Ekki sent' : m.fra_okkur ? 'Við' + (m.fra_nafn ? ' (' + m.fra_nafn + ')' : '') : m.fra_nafn || m.fra_netfang || 'Óþekktur')
+          ]),
+          el('span', { texti: (m.drog ? 'Vistað ' : '') + hvenaer(m.dags, true) })
         ]),
         el('div', { class: 'sk-sb__texti', texti: m.texti || '(enginn texti, opnaðu í Gmail)' }),
         m.vidhengi ? el('p', { class: 'sk-sb__vidhengi', texti: (m.vidhengi === 1 ? '1 viðhengi' : m.vidhengi + ' viðhengi') + ', opnaðu þráðinn í Gmail til að sjá ' + (m.vidhengi === 1 ? 'það' : 'þau') + '.' }) : null
-      ])).concat(svor.filter((s) => s.stada !== 'send' || !skilabod.some((m) => m.fra_okkur && new Date(m.dags) >= new Date(s.stofnad))).map((s) =>
+      ])).concat(svor.filter((s) => s.stada !== 'send' || !skilabod.some((m) => m.fra_okkur && !m.drog && new Date(m.dags) >= new Date(s.stofnad))).map((s) =>
         el('li', { class: 'sk-sb sk-sb--okkar sk-sb--svar' }, [
           el('div', { class: 'sk-sb__haus' }, [
             el('strong', { texti: 'Svarið þitt' }),
