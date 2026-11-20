@@ -51,7 +51,11 @@
     var img = document.querySelector('.hero__bak');
     if (!img) return;
     if (!img.dataset.upphafleg) img.dataset.upphafleg = img.getAttribute('src');
+    if (img.dataset.upphaflegSrcset === undefined) img.dataset.upphaflegSrcset = img.getAttribute('srcset') || '';
     var ny = (THEMU[nafn] && THEMU[nafn].hetja) || img.dataset.upphafleg;
+    /* srcset ræður yfir src: þemamynd fær engan srcset, venjulega myndin sinn */
+    if (ny === img.dataset.upphafleg) { if (img.dataset.upphaflegSrcset) img.setAttribute('srcset', img.dataset.upphaflegSrcset); }
+    else img.removeAttribute('srcset');
     if (img.getAttribute('src') !== ny) img.setAttribute('src', ny);
   }
   document.addEventListener('DOMContentLoaded', function () { setjaMynd(html.getAttribute('data-thema')); });
