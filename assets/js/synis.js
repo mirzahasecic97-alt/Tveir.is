@@ -30,7 +30,7 @@
       if (a.isIntersecting) { hlada(v); if (!kyrrt) { var p = v.play(); if (p && p.catch) p.catch(function () {}); } }
       else if (!v.paused) v.pause();
     });
-  }, { rootMargin: '0px 160px', threshold: 0.01 });
+  }, { rootMargin: '0px 1400px', threshold: 0.01 });  /* byrjar að hlaðast vel áður en myndbandið rennur inn */
   vids.forEach(function (v) { vakt.observe(v); });
   /* Flipinn falinn: allt stoppar */
   document.addEventListener('visibilitychange', function () {
