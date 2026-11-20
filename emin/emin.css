@@ -413,3 +413,60 @@ html, body { background: linear-gradient(165deg, #3b4558 0%, #283041 42%, #1b1f2
 .efni__or:hover { background: linear-gradient(150deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, .1)); }
 .efni__or:disabled { opacity: .35; cursor: default; }
 @media (max-width: 820px) { .efni__orvar { display: none; } }
+
+/* Bardagaferillinn rennur inn í bakgrunninn: engir þungir kassar, bara
+   mjúkt ljós á bak við, hárfínar línur sem dofna út til hliðanna og
+   tölur sem glóa aðeins. */
+.ferill { position: relative; isolation: isolate; }
+.ferill::before {
+  content: ''; position: absolute; z-index: -1; inset: -40px 0; pointer-events: none;
+  background:
+    radial-gradient(38% 46% at 18% 30%, rgba(110, 168, 255, .16), transparent 70%),
+    radial-gradient(34% 40% at 82% 62%, rgba(160, 120, 255, .12), transparent 70%),
+    radial-gradient(30% 36% at 50% 100%, rgba(120, 220, 230, .08), transparent 70%);
+  filter: blur(10px);
+}
+.ferill .tala, .ferill .bardagi, .ferill .bardagi--saga {
+  background: none; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; border-radius: 0;
+}
+/* Tölurnar: ekkert kort, bara talan með ljóma og fínt strik á milli */
+.ferill .ferill__tolur { gap: 0; }
+.ferill .tala { position: relative; padding: 18px 26px 18px 0; }
+.ferill .tala + .tala { padding-left: 30px; }
+.ferill .tala + .tala::before {
+  content: ''; position: absolute; left: 0; top: 14%; bottom: 14%; width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(190, 215, 255, .32), transparent);
+}
+.ferill .tala strong { text-shadow: 0 0 42px rgba(140, 190, 255, .35); }
+.ferill .tala span { color: rgba(220, 230, 245, .58); }
+/* Bardagarnir: línur sem dofna út, enginn kassi */
+.ferill .bardagar { gap: 0; margin-top: 36px; }
+.ferill .bardagi { position: relative; padding: 22px 4px; transition: background .3s ease; }
+.ferill .bardagi::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+  background: linear-gradient(to right, transparent, rgba(190, 215, 255, .22) 18%, rgba(190, 215, 255, .22) 82%, transparent);
+}
+.ferill .bardagi:first-child::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+  background: linear-gradient(to right, transparent, rgba(190, 215, 255, .22) 18%, rgba(190, 215, 255, .22) 82%, transparent);
+}
+.ferill .bardagi:hover { background: radial-gradient(60% 120% at 50% 50%, rgba(140, 190, 255, .07), transparent 70%); }
+/* Nýjasti bardaginn fær smá ljós, eins og hann sé lýstur upp */
+.ferill .bardagi--saga { background: radial-gradient(45% 140% at 12% 50%, rgba(110, 168, 255, .14), transparent 70%); }
+.ferill .bardagi--saga .bardagi__stadur strong {
+  background: linear-gradient(100deg, #ffffff, #bcdcff 60%, #a9b8ff); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.ferill .bardagi__dags { color: rgba(220, 230, 245, .5); }
+.ferill .bardagi__nidurstada b {
+  display: inline-flex; align-items: center; gap: 7px; color: #c2f5d7; text-shadow: 0 0 18px rgba(120, 240, 170, .35);
+}
+.ferill .bardagi__nidurstada b::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%; background: #8ff0b4; box-shadow: 0 0 10px 2px rgba(143, 240, 180, .55);
+}
+@media (max-width: 720px) {
+  .ferill .ferill__tolur { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ferill .tala { padding: 12px 10px 12px 0; }
+  .ferill .tala + .tala { padding-left: 14px; }
+  .ferill .tala strong { font-size: clamp(40px, 13vw, 64px); }
+  .ferill .tala span { font-size: 13px; line-height: 1.3; }
+}
