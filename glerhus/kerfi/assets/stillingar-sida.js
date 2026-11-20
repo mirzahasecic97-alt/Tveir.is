@@ -357,7 +357,7 @@ async function start() {
 
   /* Í Glerhúsinu: bókhaldskerfið sem var valið í "Settu saman" */
   function bokhaldsKerfi() {
-    try { const x = JSON.parse(localStorage.getItem('glerhusid-byggja') || 'null'); const t = (x && x.tengingar) || []; return t.includes('payday') ? 'Payday' : t.includes('dk') ? 'DK' : null; }
+    try { const x = JSON.parse(localStorage.getItem('glerhus-tveir-byggja') || 'null'); const t = (x && x.tengingar) || []; return t.includes('payday') ? 'Payday' : t.includes('dk') ? 'DK' : null; }
     catch (e) { return null; }
   }
 }

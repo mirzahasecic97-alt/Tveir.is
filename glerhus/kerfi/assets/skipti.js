@@ -15,8 +15,8 @@
   'use strict';
   var html = document.documentElement;
   var KYRRT = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var LYKILL = 'glerhusid-skipti';
-  var HAUS = 'glerhusid-skipti-haus';
+  var LYKILL = 'glerhus-tveir-skipti';
+  var HAUS = 'glerhus-tveir-skipti-haus';
   var STUDD = !!(window.fetch && window.DOMParser && history.pushState);
   var umferd = 0;
 

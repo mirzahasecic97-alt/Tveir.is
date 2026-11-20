@@ -13,7 +13,7 @@
 
 import { el, fylla, vardaHlid, teiknaHaus, tilkynna, sersnid, erVerktaki, ervalid, gestNafn } from './portal.js';
 
-const LYKILL = 'glerhusid-verktaki-v2';
+const LYKILL = 'glerhus-tveir-verktaki-v2';
 const IDAG = new Date(); IDAG.setHours(12, 0, 0, 0);
 const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const dagar = (n) => { const d = new Date(IDAG); d.setDate(d.getDate() + n); return iso(d); };
@@ -114,7 +114,7 @@ function nyGogn() {
 let G;
 try { G = JSON.parse(localStorage.getItem(LYKILL) || 'null'); } catch (e) { G = null; }
 if (!G || !G.tilbod || !G.fy || G.grein !== GREIN) G = nyGogn();
-try { localStorage.removeItem('glerhusid-verktaki-v1'); } catch (e) { /* lokað */ }
+try { localStorage.removeItem('glerhus-tveir-verktaki-v1'); } catch (e) { /* lokað */ }
 const vista = () => { try { localStorage.setItem(LYKILL, JSON.stringify(G)); return true; } catch (e) { return false; } };
 
 const pill = (texti, litur) => el('span', { class: 'ps-pilla ps-pilla--' + litur, texti });

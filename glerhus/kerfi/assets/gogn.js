@@ -1286,8 +1286,8 @@ function prufuBakendi() {
   let g = les();
   /* Kemur gesturinn beint úr "Settu saman ykkar kerfi" er hann skráður inn sem stjórnandi */
   try {
-    if (localStorage.getItem('glerhusid-innskra')) {
-      localStorage.removeItem('glerhusid-innskra');
+    if (localStorage.getItem('glerhus-tveir-innskra')) {
+      localStorage.removeItem('glerhus-tveir-innskra');
       g.innskradur = 'u-mirza';
       g.lykilordSett = { ...(g.lykilordSett || {}), 'u-mirza': true };
       localStorage.setItem(LYKILL, JSON.stringify(g));

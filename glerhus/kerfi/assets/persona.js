@@ -21,7 +21,7 @@ import { el, fylla, vardaHlid, teiknaHaus, tilkynna, sersnid, erPersona, ervalid
 
 
 /* ---------------- Hjálp ---------------- */
-const LYKILL = 'glerhusid-personan-v1';
+const LYKILL = 'glerhus-tveir-personan-v1';
 const IDAG = new Date(); IDAG.setHours(12, 0, 0, 0);
 const dagar = (n) => { const d = new Date(IDAG); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
 const MAN = ['jan.', 'feb.', 'mars', 'apr.', 'maí', 'jún.', 'júl.', 'ágú.', 'sep.', 'okt.', 'nóv.', 'des.'];

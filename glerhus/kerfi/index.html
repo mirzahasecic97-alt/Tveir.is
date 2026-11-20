@@ -32,7 +32,7 @@
 
 <main class="inn">
   <div class="card inn__kort">
-    <img class="inn__logo" src="../assets/merki/glerhusid-logo-blatt.svg" alt="Glerhúsið" width="170" height="40">
+    <img class="inn__logo" src="/assets/img/tveir-merki-gegnsaett.png" alt="Tveir" width="160" height="40">
     <h1>Vinnusvæði</h1>
     <p class="lead" id="inngangur">Skráðu þig inn með netfangi og lykilorði, eða fáðu hlekk sendan í póstinum.</p>
 
@@ -168,7 +168,7 @@ if (g.prufa || sersnid) {
        og hægt er að hreinsa sýnidæmið í burtu. */
     const hreinsa = document.createElement('button');
     hreinsa.type = 'button'; hreinsa.className = 'texti-hn'; hreinsa.textContent = 'Ég er með aðgang';
-    hreinsa.addEventListener('click', () => { try { localStorage.removeItem('glerhusid-byggja'); } catch (e) { /* lokað */ } location.reload(); });
+    hreinsa.addEventListener('click', () => { try { localStorage.removeItem('glerhus-tveir-byggja'); } catch (e) { /* lokað */ } location.reload(); });
     banner.append(' ', hreinsa);
   }
   if (!heima && g.prufa) {

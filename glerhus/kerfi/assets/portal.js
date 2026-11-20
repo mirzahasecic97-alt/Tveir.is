@@ -25,7 +25,7 @@ try {
    ------------------------------------------------------------------ */
 /* Valið úr "Settu saman ykkar kerfi" (byggja.html), ef gesturinn kom þaðan */
 export const sersnid = (() => {
-  try { const x = JSON.parse(localStorage.getItem('glerhusid-byggja') || 'null'); return x && x.buid ? x : null; }
+  try { const x = JSON.parse(localStorage.getItem('glerhus-tveir-byggja') || 'null'); return x && x.buid ? x : null; }
   catch (e) { return null; }
 })();
 /* Íþróttafólk og áhrifavaldar fá sitt eigið kerfi í sýnidæminu (persona.js) */
@@ -364,7 +364,7 @@ export function teiknaHaus(ek, heiti) {
                               width: '26', height: '26' }),
                   el('img', { class: 'phead__stofumerki', src: stofuMerki(), alt: stofuNafn(), referrerpolicy: 'no-referrer' })
                 ])
-              : el('img', { class: 'phead__tveir', src: '../assets/merki/glerhusid-logo-blatt.svg', alt: 'Glerhúsið',
+              : el('img', { class: 'phead__tveir', src: '/assets/img/tveir-merki-gegnsaett.png', alt: 'Tveir',
                             width: '124', height: '29' })
         ]),
         el('span', { class: 'phead__skil', 'aria-hidden': 'true' }),
