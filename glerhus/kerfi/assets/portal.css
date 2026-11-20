@@ -642,6 +642,21 @@
   .phead__nav a { padding: 9px 13px; min-height: 40px; }
 }
 
+/* Þéttari valmynd þegar liðirnir komast rétt svo ekki fyrir (sjá fittaHaus) */
+.phead.phead--thett .phead__inn { gap: 10px; }
+.phead.phead--thett .phead__nav { gap: 0; }
+.phead.phead--thett .phead__nav a { padding-inline: 9px; font-size: 14px; gap: 5px; }
+.phead.phead--thett .phead__notandi { max-width: 150px; }
+
+/* Sama útlit þegar liðirnir komast ekki fyrir á breiðari skjá (sjá fittaHaus) */
+.phead--throngt .phead__inn { flex-wrap: wrap; min-height: 0; padding-block: 11px 9px; }
+.phead--throngt .phead__hnappar { margin-left: auto; }
+.phead--throngt .phead__nav {
+  order: 3; width: 100%; gap: 4px; margin-top: 2px;
+  overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+}
+.phead--throngt .phead__nav::-webkit-scrollbar { display: none; }
+
 /* Á allra þrengstu símunum þarf að þrengja liðina til að þeir komist
    allir þrír fyrir á línunni */
 @media (max-width: 430px) {

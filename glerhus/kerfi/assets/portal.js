@@ -648,10 +648,34 @@ export function teiknaHaus(ek, heiti) {
 
   /* Liðirnir eru orðnir sex og komast ekki allir fyrir á þrengstu
      símunum. Sá sem maður stendur á skal alltaf sjást. */
+  fittaHaus(haus);
   const virkur = haus.querySelector('.phead__nav a[aria-current="page"]');
   if (virkur && virkur.parentElement.scrollWidth > virkur.parentElement.clientWidth) {
     virkur.parentElement.scrollLeft = Math.max(0, virkur.offsetLeft - 10);
   }
+}
+
+/* Komist liðirnir ekki fyrir á einni línu (t.d. lengri heiti á ensku eða
+   margir liðir) fer valmyndin á eigin línu undir merkinu, eins og á minni skjám,
+   í stað þess að lenda ofan á nafninu og hnöppunum. */
+function fittaHaus(haus) {
+  const fitta = () => {
+    const nav = haus.querySelector('.phead__nav');
+    if (!nav) return;
+    haus.classList.remove('phead--thett', 'phead--throngt');
+    if (nav.scrollWidth <= nav.clientWidth + 1) return;
+    /* Fyrst þéttara bil á milli liða, svo eigin lína ef það dugar ekki */
+    haus.classList.add('phead--thett');
+    if (nav.scrollWidth > nav.clientWidth + 1) { haus.classList.remove('phead--thett'); haus.classList.add('phead--throngt'); }
+  };
+  fitta();
+  requestAnimationFrame(fitta);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitta);
+  if (haus.__fitta) return;
+  haus.__fitta = true;
+  if ('ResizeObserver' in window) new ResizeObserver(() => requestAnimationFrame(fitta)).observe(haus);
+  /* Merkin (ólesið o.fl.) og þýðingin breyta breidd liðanna eftir á */
+  new MutationObserver(() => requestAnimationFrame(fitta)).observe(haus, { subtree: true, childList: true, characterData: true });
 }
 
 /* ==================================================================
