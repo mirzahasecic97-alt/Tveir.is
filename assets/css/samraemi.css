@@ -531,7 +531,7 @@ html[data-thema="naeturborg"] .vl-gler img { filter: hue-rotate(112deg) saturate
 
 /* Fyrirtækin undir klippunum: renna til vinstri á móti myndböndunum, á
    sama hraða (synis.js reiknar tímann út frá breiddinni) */
-.trust.trust--undir { margin-top: clamp(14px, 1.6vw, 20px) !important; padding: 0 0 clamp(24px, 3vw, 40px) !important; overflow: visible; }
+.trust.trust--undir { margin-top: -8px !important; padding: 0 0 clamp(24px, 3vw, 40px) !important; overflow: visible; }
 .trust--undir .marquee {
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%);
           mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%);
