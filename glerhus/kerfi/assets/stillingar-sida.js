@@ -12,36 +12,33 @@ const SYNID = !!sersnid;
 const EINFALT = 'Tveir setur tenginguna upp með þér.';
 /* Í sýnidæminu kemur einföld skýring í stað skrefanna með lyklum */
 const synidSpjald = (t, tharf) => (SYNID ? { ...t, veita: null, tharf: tharf || EINFALT } : t);
+/* Nánari leiðbeiningar fyrir hverja tengingu, skref fyrir skref */
+const LEIDBEININGAR = 'https://tveir.is/glerhusid/leidbeiningar.html';
 
 const ek = await vardaHlid({ badir: true });
 if (ek) start();
 
 /* Tengingar með API lykli. reitir: leynt: false fer í stillingar (sést aftur), annað í Vault. */
 const LYKLAR = {
-  payday: { veita: 'payday', heiti: 'Payday', merki: 'payday.png', litur: '#52bb62', fyllt: true,
+  payday: { veita: 'payday', lb: 'payday', heiti: 'Payday', merki: 'payday.png', litur: '#52bb62', fyllt: true,
     hvad: 'Lokin verk og samningar verða að reikningum', opna: ['Opna Payday', 'https://app.payday.is'],
     skref: ['Skráðu þig inn á Payday.', 'Farðu í Stillingar og opnaðu API (undir fyrirtækinu).', 'Búðu til nýtt forrit og kallaðu það Glerhúsið.', 'Afritaðu Client ID og Client Secret og límdu þá hér fyrir neðan.'],
     reitir: [{ nafn: 'clientId', heiti: 'Client ID' }, { nafn: 'clientSecret', heiti: 'Client Secret' }] },
-  dk: { veita: 'dk', heiti: 'DK', merki: 'dk.png', litur: '#4743f7',
+  dk: { veita: 'dk', lb: 'dk', heiti: 'DK', merki: 'dk.png', litur: '#4743f7',
     hvad: 'Lokin verk og samningar verða að reikningum', opna: ['Opna dkPlus', 'https://dkplus.is'],
     skref: ['Skráðu þig inn á dkPlus með aðgangi fyrirtækisins.', 'Búðu til API token (aðgangslykil) fyrir Glerhúsið í stillingunum.', 'Gefðu honum aðgang að viðskiptavinum og sölureikningum.', 'Límdu tokeninn hér fyrir neðan.'],
     athugid: 'Finnurðu ekki API token í dkPlus? Biddu dk hugbúnað um aðgang að dkPlus API fyrir fyrirtækið.',
     reitir: [{ nafn: 'token', heiti: 'API token' }] },
-  shopify: { veita: 'shopify', heiti: 'Shopify', merki: 'shopify.svg', litur: '#5E8E3E',
+  shopify: { veita: 'shopify', lb: 'shopify', heiti: 'Shopify', merki: 'shopify.svg', litur: '#5E8E3E',
     hvad: 'Lagerstaða og pantanir úr vefversluninni', opna: ['Opna Shopify Dev Dashboard', 'https://dev.shopify.com/dashboard'],
     skref: ['Opnaðu Shopify Dev Dashboard með sama aðgangi og verslunin.', 'Smelltu á Create app og kallaðu það Glerhúsið.', 'Veldu aðganginn read_products, read_inventory og read_orders og settu appið upp á versluninni.', 'Afritaðu Client ID og Client secret úr stillingum appsins og límdu hér, ásamt slóð verslunarinnar.'],
     reitir: [{ nafn: 'verslun', heiti: 'Slóð verslunarinnar', daemi: 'nafn.myshopify.com', leynt: false }, { nafn: 'clientId', heiti: 'Client ID' }, { nafn: 'clientSecret', heiti: 'Client secret' }] },
-  gorilla: { veita: 'gorilla', heiti: 'Gorilla vöruhús', merki: 'gorilla.jpg', litur: '#ffffff', fyllt: true,
-    hvad: 'Lagerinn í vöruhúsinu, í gegnum Shopify', opna: ['Opna birgðakerfi Gorilla', 'https://app.extensiv.com'],
-    skref: ['Gorilla geymir vörurnar og uppfærir birgðirnar í Shopify versluninni þinni.', 'Tengdu Shopify hér á síðunni, þá sést lagerstaðan í kerfinu.', 'Smelltu á Vista hér fyrir neðan til að merkja að Gorilla sjái um lagerinn.', 'Viltu sjá vöruhúsið sjálft: skráðu þig inn í birgðakerfi Gorilla.'],
-    athugid: 'Beinn aðgangur að vöruhúsakerfinu (API) fæst bara hjá Gorilla. Sendu þeim línu ef þú vilt hann líka.',
-    fastar: { leid: 'shopify' }, vistaTexti: 'Vista: Gorilla sér um lagerinn', reitir: [] },
-  claude: { veita: 'claude', heiti: 'Claude', merki: 'claude.svg', litur: '#D97757',
-    hvad: 'Gervigreind sem skrifar drög að svörum og samantektir', opna: ['Opna Claude Console', 'https://console.anthropic.com/settings/keys'],
-    skref: ['Skráðu þig inn á Claude Console (console.anthropic.com).', 'Settu upp greiðslu og mánaðarhámark undir Billing. Hver notkun kostar smá.', 'Farðu í API Keys, smelltu á Create Key og kallaðu hann Glerhúsið.', 'Afritaðu lykilinn strax (hann sést bara einu sinni) og límdu hér.'],
+  claude: { veita: 'claude', lb: 'claude', heiti: 'Claude', merki: 'claude.svg', litur: '#D97757',
+    hvad: 'Gervigreind sem skrifar drög að svörum og samantektir', opna: ['Opna Claude Console', 'https://platform.claude.com/settings/keys'],
+    skref: ['Skráðu þig inn á Claude Console (platform.claude.com).', 'Keyptu inneign undir Billing og settu hámark. Hver notkun kostar smá.', 'Farðu í API Keys, smelltu á Create Key og kallaðu hann Glerhúsið.', 'Afritaðu lykilinn strax (hann sést bara einu sinni) og límdu hér.'],
     athugid: 'Claude áskrift (Pro eða Max) gefur ekki API lykil. API notkun er rukkuð sér hjá Anthropic.',
     reitir: [{ nafn: 'lykill', heiti: 'API lykill', daemi: 'sk-ant-...' }] },
-  chatgpt: { veita: 'chatgpt', heiti: 'ChatGPT', merki: 'openai.svg', litur: '#000000',
+  chatgpt: { veita: 'chatgpt', lb: 'chatgpt', heiti: 'ChatGPT', merki: 'openai.svg', litur: '#000000',
     hvad: 'Gervigreind sem skrifar drög að svörum og samantektir', opna: ['Opna OpenAI Platform', 'https://platform.openai.com/api-keys'],
     skref: ['Skráðu þig inn á OpenAI Platform (platform.openai.com).', 'Settu upp greiðslu og mánaðarhámark undir Billing. Hver notkun kostar smá.', 'Farðu í API keys, smelltu á Create new secret key og kallaðu hann Glerhúsið.', 'Afritaðu lykilinn strax (hann sést bara einu sinni) og límdu hér.'],
     athugid: 'ChatGPT Plus áskrift gefur ekki API lykil. API notkun er rukkuð sér hjá OpenAI.',
@@ -167,9 +164,10 @@ async function start() {
     if (s.lyklar === null) return ['ekki', 'Tengingarnar eru ekki komnar í gagnagrunninn'];
     const r = s.lyklar[veita];
     if (!r) return synidaemi ? ['tengt', 'Sýnidæmi'] : ['ekki', ''];
-    if (veita === 'gorilla') return ['bidur', s.lyklar.shopify ? 'Gorilla sér um lagerinn, birgðirnar koma úr Shopify' : 'Gorilla sér um lagerinn. Tengdu Shopify til að sjá birgðirnar'];
-    if (r.prufad) return /^ok/i.test(r.prufa_svar || '') ? ['tengt', 'Prófað ' + hvenaer(r.prufad)] : ['ekki', 'Prófun mistókst: ' + (r.prufa_svar || 'óþekkt villa')];
-    return ['bidur', 'Lykill vistaður (endar á ' + (r.sidustu4 || '????') + '), ' + hvenaer(r.uppfaert)];
+    if (r.prufad) return /^ok/i.test(r.prufa_svar || '')
+      ? ['tengt', (String(r.prufa_svar).replace(/^ok:?\s*/i, '') || 'Lykillinn virkar') + '. Prófað ' + hvenaer(r.prufad)]
+      : ['ekki', 'Lykillinn virkar ekki: ' + (r.prufa_svar || 'óþekkt villa')];
+    return ['bidur', 'Lykill vistaður (endar á ' + (r.sidustu4 || '????') + ') en ekki prófaður ennþá'];
   }
 
   function teiknaTengingar(s) {
@@ -185,19 +183,19 @@ async function start() {
     /* merki: skrá í assets/tengingar. litur: bakgrunnur flísarinnar. ljos: merkið er í lit á hvítu, annars hvítt á lit */
     const HOPAR = [
       ['Póstur og dagatal', [
-        { heiti: 'Gmail', merki: 'gmail.svg', litur: '#EA4335', hvad: 'Pósthólfið á Samskiptum og póstar úr kerfinu', stada: s.gmail, slod: 'samskipti.html',
+        { heiti: 'Gmail', lb: 'gmail', merki: 'gmail.svg', litur: '#EA4335', hvad: 'Pósthólfið á Samskiptum og póstar úr kerfinu', stada: s.gmail, slod: 'samskipti.html',
           tharf: SYNID ? EINFALT + ' Pósturinn uppfærist á 5 mínútna fresti.' : 'Tengt í gegnum Apps Script á ' + POSTUR + '. Uppfærist á 5 mínútna fresti.' },
-        { heiti: 'Verk-netfangið', stafur: '@', litur: '#1c3050', hvad: 'Póstur á ' + VERK + ' verður að verkum', stada: g.prufa ? ['handvirkt', 'Sýnidæmi'] : ['tengt', VERK],
+        { heiti: 'Verk-netfangið', lb: 'gmail', stafur: '@', litur: '#1c3050', hvad: 'Póstur á ' + VERK + ' verður að verkum', stada: g.prufa ? ['handvirkt', 'Sýnidæmi'] : ['tengt', VERK],
           tharf: 'Viðskiptavinur sendir póst á ' + VERK + ' og verkið birtist á Stjórnborðinu innan 5 mínútna.' },
-        { heiti: 'Google Calendar', merki: 'googlecalendar.svg', litur: '#4285F4', hvad: 'Fundirnir þínir á Dagatalinu, við hlið skiladaga', stada: s.dagatal, slod: 'dagatal.html',
+        { heiti: 'Google Calendar', lb: 'googlecalendar', merki: 'googlecalendar.svg', litur: '#4285F4', hvad: 'Fundirnir þínir á Dagatalinu, við hlið skiladaga', stada: s.dagatal, slod: 'dagatal.html',
           tharf: SYNID ? EINFALT + ' Dagatalið uppfærist á 5 mínútna fresti.' : 'Tengt í gegnum sömu Apps Script skrift og Gmail. Dagatalið uppfærist á 5 mínútna fresti.' }
       ]],
       ['Samfélagsmiðlar', [
-        { heiti: 'Instagram', merki: 'instagram.svg', litur: '#E4405F', hvad: 'Fylgjendur, áhorf og færslur á Tölfræði', stada: s.meta, slod: 'tolfraedi.html',
+        { heiti: 'Instagram', lb: 'instagram', merki: 'instagram.svg', litur: '#E4405F', hvad: 'Fylgjendur, áhorf og færslur á Tölfræði', stada: s.meta, slod: 'tolfraedi.html',
           tharf: SYNID ? EINFALT + ' Þú gefur okkur aðgang að Instagram reikningnum.' : 'Þarf Meta app og System User token (META_TOKEN) í Apps Script, og auðkenni reikningsins á Tölfræði.' },
-        { heiti: 'Facebook', merki: 'facebook.svg', litur: '#0866FF', hvad: 'Áhorf og fylgjendur síðunnar á Tölfræði', stada: s.meta, slod: 'tolfraedi.html',
+        { heiti: 'Facebook', lb: 'facebook', merki: 'facebook.svg', litur: '#0866FF', hvad: 'Áhorf og fylgjendur síðunnar á Tölfræði', stada: s.meta, slod: 'tolfraedi.html',
           tharf: SYNID ? EINFALT + ' Þú gefur okkur aðgang að Facebook síðunni.' : 'Sama Meta app og Instagram. Page ID síðunnar fer á Tölfræði.' },
-        { heiti: 'TikTok', merki: 'tiktok.svg', litur: '#000000', hvad: 'Tölur á Tölfræði', stada: s.tiktok, slod: 'tolfraedi.html',
+        { heiti: 'TikTok', lb: 'tiktok', merki: 'tiktok.svg', litur: '#000000', hvad: 'Tölur á Tölfræði', stada: s.tiktok, slod: 'tolfraedi.html',
           tharf: SYNID ? 'TikTok leyfir ekki sjálfvirka söfnun ennþá. Tölurnar eru skráðar í höndunum.' : 'TikTok leyfir ekki sjálfvirka söfnun fyrir okkur ennþá. Tölurnar eru skráðar í höndunum eða úr CSV.' },
         { heiti: 'Messenger', merki: 'messenger.svg', litur: '#00B2FF', hvad: 'Skilaboð inn í Samskipti', stada: KEMUR, tharf: SYNID ? 'Bíður eftir leyfi frá Meta, það tekur nokkrar vikur. ' + EINFALT : 'Sama Meta app, auk leyfis Meta fyrir skilaboðum (App Review, nokkrar vikur).' },
         { heiti: 'Instagram skilaboð', merki: 'instagram.svg', litur: '#C13584', hvad: 'DM inn í Samskipti', stada: KEMUR, tharf: SYNID ? 'Bíður eftir sama leyfi frá Meta og Messenger. ' + EINFALT : 'Sama Meta app og leyfi og Messenger.' }
@@ -206,9 +204,8 @@ async function start() {
         synidSpjald({ ...LYKLAR.payday, stada: lykilStada(s, 'payday', g.prufa && bok === 'Payday') }),
         synidSpjald({ ...LYKLAR.dk, stada: lykilStada(s, 'dk', g.prufa && bok === 'DK') })
       ]],
-      ['Verslun og lager', [
-        synidSpjald({ ...LYKLAR.shopify, stada: lykilStada(s, 'shopify') }),
-        synidSpjald({ ...LYKLAR.gorilla, stada: lykilStada(s, 'gorilla') }, 'Gorilla geymir vörurnar og uppfærir birgðirnar í Shopify. ' + EINFALT)
+      ['Verslun', [
+        synidSpjald({ ...LYKLAR.shopify, stada: lykilStada(s, 'shopify') })
       ]],
       ['Gervigreind', [
         SYNID ? synidSpjald({ ...LYKLAR.claude, stada: SMIDUM, pilla: 'Í smíðum', smidum: true }, 'Í smíðum. Þegar þetta er tilbúið setur Tveir tenginguna upp með þér.')
@@ -217,8 +214,8 @@ async function start() {
           : { ...LYKLAR.chatgpt, stada: lykilStada(s, 'chatgpt') }
       ]],
       ['Vefur og skrár', [
-        { heiti: 'Google Analytics', merki: 'googleanalytics.svg', litur: '#E37400', hvad: 'Heimsóknir á vef viðskiptavinarins á Tölfræði', stada: KEMUR, tharf: SYNID ? 'Viðskiptavinurinn gefur okkur lesaðgang að sínu Google Analytics. ' + EINFALT : 'Má tengja í gegnum Google. Viðskiptavinurinn gefur okkur lesaðgang að sínu Analytics.' },
-        { heiti: 'WeTransfer', merki: 'wetransfer.svg', litur: '#409FFF', hvad: 'Hlekkir á undirverkum', stada: ['tengt', 'Hlekkir virka beint á undirverkum'], tharf: 'Engin tenging þarf: límdu WeTransfer hlekkinn á undirverkið og viðskiptavinurinn fær hann í pósti.' }
+        { heiti: 'Google Analytics', lb: 'googleanalytics', merki: 'googleanalytics.svg', litur: '#E37400', hvad: 'Heimsóknir á vef viðskiptavinarins á Tölfræði', stada: KEMUR, tharf: SYNID ? 'Viðskiptavinurinn gefur okkur lesaðgang að sínu Google Analytics. ' + EINFALT : 'Má tengja í gegnum Google. Viðskiptavinurinn gefur okkur lesaðgang að sínu Analytics.' },
+        { heiti: 'WeTransfer', lb: 'wetransfer', merki: 'wetransfer.svg', litur: '#409FFF', hvad: 'Hlekkir á undirverkum', stada: ['tengt', 'Hlekkir virka beint á undirverkum'], tharf: 'Engin tenging þarf: límdu WeTransfer hlekkinn á undirverkið og viðskiptavinurinn fær hann í pósti.' }
       ]]
     ];
 
@@ -272,7 +269,8 @@ async function start() {
       ]),
       el('p', { class: 'st-t__hvad', texti: t.hvad + '.' }),
       el('p', { class: 'st-t__stada st-t__stada--' + stada, texti: t.smidum ? 'Þetta er í smíðum og ekki tilbúið ennþá.' : TEXTI[stada] || '' }),
-      t.veita ? lykilForm(t, stada, d) : el('div', { class: 'st-t__tharf' }, [el('strong', { texti: 'Hvað þarf til' }), el('p', { texti: t.tharf })]),
+      t.veita ? lykilForm(t, stada, d) : el('div', { class: 'st-t__tharf' }, [el('strong', { texti: 'Hvað þarf til' }), el('p', { texti: t.tharf }),
+        t.lb ? el('a', { class: 'st-t__lb', href: LEIDBEININGAR + '#' + t.lb, target: '_blank', rel: 'noopener', texti: 'Nánari leiðbeiningar' }) : null]),
       t.veita ? null : el('div', { class: 'spjald__fot' }, [
         t.slod ? el('a', { class: 'btn', href: t.slod, texti: 'Opna' }) : null,
         el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Loka', onclick: () => d.close() })
@@ -287,15 +285,33 @@ async function start() {
   function lykilForm(t, stada, d) {
     const r = (sidastaStada && sidastaStada.lyklar && sidastaStada.lyklar[t.veita]) || null;
     const villa = el('p', { class: 'villa', role: 'alert', hidden: true });
+    const tokst = el('p', { class: 'st-t__tokst', role: 'status', hidden: true });
+    const syna = (ok, texti) => { villa.hidden = tokst.hidden = true; const x = ok ? tokst : villa; x.textContent = texti; x.hidden = false; };
+    /* Prófar lykilinn strax hjá veitunni. Tekst það: glugginn lokast og spjaldið
+       sýnir Tengt. Tekst það ekki: glugginn helst opinn með skýringunni. */
+    async function profa(hnappur, venjulegt) {
+      hnappur.disabled = true; hnappur.textContent = 'Prófa lykilinn';
+      let n;
+      try { n = await g.profaTengingu(t.veita); }
+      catch (er) { n = { ok: false, svar: er.message || 'Ekki tókst að prófa.' }; }
+      teiknaTengingar(await stadaTenginga());
+      hnappur.disabled = false; hnappur.textContent = venjulegt;
+      if (n && n.ok) {
+        syna(true, String(n.svar || 'Lykillinn virkar').replace(/\.$/, '') + (g.prufa ? '.' : '. Tengingin er komin á.'));
+        setTimeout(() => { if (d.open) d.close(); }, 1600);
+      } else syna(false, (n && n.svar) || 'Lykillinn virkar ekki.');
+      return n;
+    }
     const reitir = (t.reitir || []).map((f) => {
       const inn = el('input', { type: f.leynt === false ? 'text' : 'password', name: f.nafn, autocomplete: 'off', spellcheck: 'false',
         autocapitalize: 'off', placeholder: f.daemi || '', value: f.leynt === false && r && r.stillingar ? (r.stillingar[f.nafn] || '') : '' });
       return { f, inn, svid: el('label', { class: 'st-t__reitur' }, [el('span', { texti: f.heiti }), inn,
         f.leynt !== false && r ? el('small', { texti: 'Vistað. Skildu eftir autt til að halda núverandi lykli.' }) : null]) };
     });
-    const vista = el('button', { type: 'submit', class: 'btn', texti: t.vistaTexti || (r ? 'Vista breytingar' : 'Vista og tengja') });
+    const vista = el('button', { type: 'submit', class: 'btn', texti: r ? 'Vista breytingar' : 'Vista og tengja' });
+    const aftur = r ? el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Prófa aftur', onclick: () => profa(aftur, 'Prófa aftur') }) : null;
     const form = el('form', { class: 'st-t__form', onsubmit: async (e) => {
-      e.preventDefault(); villa.hidden = true;
+      e.preventDefault(); villa.hidden = tokst.hidden = true;
       const stillingar = { ...(t.fastar || {}) }, leyndo = {};
       for (const { f, inn } of reitir) {
         const v = inn.value.trim();
@@ -308,22 +324,24 @@ async function start() {
       try {
         await g.vistaTengingu(t.veita, stillingar, Object.keys(leyndo).length ? leyndo : null);
         reitir.forEach(({ inn }) => { if (inn.type === 'password') inn.value = ''; });
-        d.close();
-        teiknaTengingar(await stadaTenginga());
       } catch (er) {
-        villa.textContent = er.message || 'Ekki tókst að vista.'; villa.hidden = false;
-        vista.disabled = false; vista.textContent = t.vistaTexti || 'Vista og tengja';
+        syna(false, er.message || 'Ekki tókst að vista.');
+        vista.disabled = false; vista.textContent = r ? 'Vista breytingar' : 'Vista og tengja';
+        return;
       }
+      await profa(vista, 'Vista breytingar');
     } }, [
       ...reitir.map((x) => x.svid),
       villa,
+      tokst,
       el('div', { class: 'spjald__fot' }, [
         vista,
+        aftur,
         t.opna ? el('a', { class: 'btn btn--ghost', href: t.opna[1], target: '_blank', rel: 'noopener', texti: t.opna[0] }) : null,
         r ? el('button', { type: 'button', class: 'btn btn--ghost btn--danger', texti: 'Aftengja', onclick: async () => {
           if (!confirm('Aftengja ' + t.heiti + '? Lykillinn er þurrkaður út.')) return;
           try { await g.eydaTengingu(t.veita); d.close(); teiknaTengingar(await stadaTenginga()); }
-          catch (er) { villa.textContent = er.message || 'Ekki tókst að aftengja.'; villa.hidden = false; }
+          catch (er) { syna(false, er.message || 'Ekki tókst að aftengja.'); }
         } }) : null
       ])
     ]);
@@ -331,8 +349,9 @@ async function start() {
       el('div', { class: 'st-t__tharf' }, [el('strong', { texti: 'Svona tengirðu' }),
         el('ol', { class: 'st-t__skref' }, t.skref.map((x) => el('li', { texti: x })))]),
       t.athugid ? el('p', { class: 'skyring', texti: t.athugid }) : null,
+      t.lb ? el('a', { class: 'st-t__lb', href: LEIDBEININGAR + '#' + t.lb, target: '_blank', rel: 'noopener', texti: 'Nánari leiðbeiningar og algeng vandamál' }) : null,
       form,
-      el('p', { class: 'skyring st-t__oruggt', texti: 'Lyklarnir eru geymdir dulkóðaðir og sjást aldrei aftur á þessari síðu, ekki heldur hjá þér.' })
+      el('p', { class: 'skyring st-t__oruggt', texti: 'Lykillinn er prófaður um leið og þú vistar. Hann er geymdur dulkóðaður og sést aldrei aftur á þessari síðu, ekki heldur hjá þér.' })
     ]);
   }
 

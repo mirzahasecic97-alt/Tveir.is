@@ -391,3 +391,9 @@ h3 .teng__smidi, .vk__punktar .teng__smidi { display: inline-block; vertical-ali
 .sa-form__personuvernd { margin: -4px 0 0; color: var(--soft); font-size: 13.5px; }
 .sa-form__personuvernd a { color: var(--acc-djupt); }
 .sa-bod { margin-top: 16px; color: var(--soft); font-size: 15.5px; max-width: 46em; }
+
+/* Tengingar: hlekkur á leiðbeiningarnar í hverju spjaldi */
+.teng__lb { display: inline-block; margin-top: 12px; font-size: 14.5px; font-weight: 500; color: var(--acc-djupt); text-decoration: none; }
+.teng__lb::after { content: " \2192"; }
+.teng__lb:hover, .teng__lb:focus-visible { text-decoration: underline; }
+.teng__fleiri a { color: var(--acc-djupt); }

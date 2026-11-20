@@ -1951,5 +1951,14 @@ body.sk-les .page-head.sk-haus { display: none !important; }
 .st-t__reitur small { color: var(--soft); font-size: 12.5px; }
 .st-t__oruggt { font-size: 12.5px; margin: 0; }
 .st-t__form .villa { color: #b3261e; margin: 0; }
+/* Langir hnappar mega ekki breikka gluggann í síma */
+.st-t__lykill, .st-t__form { grid-template-columns: minmax(0, 1fr); }
+.st-t__form .spjald__fot { flex-wrap: wrap; }
+.st-t__form .st-t__tokst { margin: 0; padding: 10px 12px; border-radius: 10px; color: #1d6b3a; background: rgba(46, 160, 90, .12); font-weight: 500; }
+.st-t__form .villa:not([hidden]) { padding: 10px 12px; border-radius: 10px; background: rgba(179, 38, 30, .08); }
+.st-t__lb { display: inline-block; font-size: 14px; font-weight: 500; color: var(--acc-djupt, #2c62c4); text-decoration: none; }
+.st-t__lb::after { content: " \2197"; }
+.st-t__lb:hover, .st-t__lb:focus-visible { text-decoration: underline; }
+.st-t__tharf .st-t__lb { margin-top: 8px; }
 .pdialog .st-t__lykill + .spjald__fot { display: none; }
 .st-t__reitur input { width: 100%; min-height: 46px; padding: 11px 14px; border-radius: 14px; box-sizing: border-box; }

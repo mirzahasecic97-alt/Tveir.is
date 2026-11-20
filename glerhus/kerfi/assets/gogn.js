@@ -199,6 +199,21 @@ function hreinMaeling(r) {
   return tolur ? lina : null;
 }
 
+/* Sýnidæmið: lykillinn er ekki sendur neitt, bara athugað hvort hann líti
+   út eins og lykill frá þessari veitu. */
+function synidaemiPrufa(veita, l) {
+  const HEITI = { claude: 'Claude', chatgpt: 'OpenAI', payday: 'Payday', dk: 'DK', shopify: 'Shopify' };
+  const REGLUR = {
+    claude: () => /^sk-ant-[A-Za-z0-9_-]{20,}$/.test(l.lykill || '') || 'Claude lykill byrjar á sk-ant-',
+    chatgpt: () => (/^sk-[A-Za-z0-9_-]{20,}$/.test(l.lykill || '') && !/^sk-ant-/.test(l.lykill)) || 'OpenAI lykill byrjar á sk- (ekki sk-ant-, það er Claude lykill)',
+    payday: () => (String(l.clientId || '').length >= 8 && String(l.clientSecret || '').length >= 8) || 'Client ID og Client Secret eru of stutt',
+    dk: () => String(l.token || '').length >= 20 || 'API tokeninn er of stuttur',
+    shopify: () => (String(l.clientId || '').length >= 16 && String(l.clientSecret || '').length >= 16) || 'Client ID og Client secret eru of stutt'
+  };
+  const nidur = REGLUR[veita] ? REGLUR[veita]() : true;
+  return { prufa_svar: nidur === true ? 'OK: Sýnidæmi: lykillinn lítur rétt út. Í alvöru aðgangi er hann prófaður hjá ' + (HEITI[veita] || 'veitunni') : nidur };
+}
+
 async function supabaseBakendi() {
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm');
   /* Lotan er geymd í vafranum og endurnýjast sjálf, svo fólk helst inni á
@@ -894,7 +909,15 @@ async function supabaseBakendi() {
       if (svar.error && /could not find|schema cache/i.test(String(svar.error.message))) throw new Error('Tengingarnar eru ekki komnar í gagnagrunninn. Keyrðu migrations/2026-11-19-tengingar.sql í Supabase.');
       kasta(svar);
     },
-    async eydaTengingu(veita) { kasta(await sb.rpc('eyda_tengingu', { p_veita: veita })); }
+    async eydaTengingu(veita) { kasta(await sb.rpc('eyda_tengingu', { p_veita: veita })); },
+    /* Prófar vistaða lykilinn hjá veitunni (Edge Function profa-tengingu).
+       Lykillinn er lesinn úr Vault á þjóninum og kemur aldrei hingað. */
+    async profaTengingu(veita) {
+      const { data, error } = await sb.functions.invoke('profa-tengingu', { body: { veita } });
+      if (!error) return data || { ok: false, svar: 'Ekkert svar frá prófuninni' };
+      try { const svar = await error.context.json(); if (svar && svar.svar) return svar; } catch (e) { /* ekki JSON */ }
+      return { ok: false, svar: 'Lykillinn er vistaður, en prófunin náði ekki sambandi. Ýttu á Prófa aftur eftir smá stund.' };
+    }
   };
 
   function kastaPost({ error }) {
@@ -1947,14 +1970,25 @@ function prufuBakendi() {
       krefjastAdmin();
       const fyrri = (g.tengingar || {})[veita];
       const gildi = leyndo ? Object.values(leyndo).filter(Boolean) : [];
-      if (!gildi.length && !fyrri && veita !== 'gorilla') throw new Error('Það vantar lykilinn');
+      if (!gildi.length && !fyrri) throw new Error('Það vantar lykilinn');
       if (gildi.some((v) => String(v).length < 4 || /\s/.test(v))) throw new Error('Lykillinn er ekki á réttu formi');
       if (veita === 'shopify' && !/^[a-z0-9][a-z0-9-]{0,60}\.myshopify\.com$/.test((stillingar || {}).verslun || '')) throw new Error('Verslunin á að vera á forminu nafn.myshopify.com');
       const adal = leyndo && (leyndo.lykill || leyndo.clientSecret || leyndo.token || gildi[0]);
-      g.tengingar = { ...(g.tengingar || {}), [veita]: { veita, stillingar: stillingar || {}, sidustu4: adal ? String(adal).slice(-4) : (fyrri && fyrri.sidustu4) || null, uppfaert: new Date().toISOString(), prufad: null, prufa_svar: null } };
+      /* Í sýnidæminu fer lykillinn hvergi: bara athugað hvort hann líti rétt út */
+      const prufa = gildi.length ? synidaemiPrufa(veita, leyndo) : fyrri ? { prufa_svar: fyrri.prufa_svar } : { prufa_svar: null };
+      g.tengingar = { ...(g.tengingar || {}), [veita]: { veita, stillingar: stillingar || {}, sidustu4: adal ? String(adal).slice(-4) : (fyrri && fyrri.sidustu4) || null, uppfaert: new Date().toISOString(), prufad: null, prufa_svar: prufa.prufa_svar } };
       vista();
     },
     async eydaTengingu(veita) { krefjastAdmin(); const t = { ...(g.tengingar || {}) }; delete t[veita]; g.tengingar = t; vista(); },
+    async profaTengingu(veita) {
+      krefjastAdmin();
+      const t = (g.tengingar || {})[veita];
+      if (!t) return { ok: false, svar: 'Enginn lykill vistaður fyrir þessa tengingu' };
+      const ok = /^ok/i.test(t.prufa_svar || '');
+      g.tengingar = { ...g.tengingar, [veita]: { ...t, prufad: new Date().toISOString() } };
+      vista();
+      return { ok, svar: String(t.prufa_svar || 'Lykillinn lítur ekki rétt út').replace(/^ok:?\s*/i, '') };
+    },
     async svaraPosti(thradur_id, texti) {
       krefjastAdmin(); prufuPostholf();
       if (!String(texti || '').trim()) throw new Error('Skrifaðu eitthvað fyrst.');
