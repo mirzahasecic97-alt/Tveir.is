@@ -344,7 +344,8 @@
 .pmeta select,
 .pyfir select,
 .flyti select,
-.okkar__sia select {
+.okkar__sia select,
+.st-val__reitur select {
   font: 400 15px/1.5 var(--f-body);
   color: var(--ink); background-color: #fff;
   border: 1px solid var(--line); border-radius: var(--r-input);
@@ -2050,3 +2051,10 @@ body.sk-les .page-head.sk-haus { display: none !important; }
 .dg-atr.er-framhald .dg-atr__titill { opacity: .75; }
 .dg-nytt__merki { flex: 0 0 34px; font-size: 13.5px; color: var(--soft); }
 @media (max-width: 480px) { .dg-nytt__merki { flex-basis: 100%; } }
+
+/* Stillingar: tungumál og gjaldmiðill */
+.st-val__lina { display: flex; flex-wrap: wrap; gap: 16px; }
+.st-val__reitur { display: grid; gap: 6px; min-width: 220px; flex: 1 1 220px; max-width: 320px; }
+.st-val__reitur > span { font: 500 13px/1.3 var(--f-body); color: var(--soft); }
+.st-val { width: 100%; }
+.st-val__svar:empty { display: none; }

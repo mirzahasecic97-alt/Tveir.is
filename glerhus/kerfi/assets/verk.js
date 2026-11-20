@@ -5,7 +5,7 @@
 import {
   gogn, el, tom, fylla, dags, sidan, erSeint, pilla, opnaTask, kronur, lesaTolu,
   vardaHlid, teiknaHaus, uppfaeraMerki, STODUR_VERK, stillingar, undirverkTala
-} from './portal.js';
+, tolu, erEnska} from './portal.js';
 
 const ek = await vardaHlid({ badir: true });
 if (ek) start();
@@ -248,7 +248,7 @@ async function start() {
                  texti: 'Tímar og rukkun' }),
 
       el('div', { class: 'timar__tala', style: 'margin-top:14px',
-                  texti: String(klst).replace('.', ',') + ' klst.' }),
+                  texti: (erEnska() ? String(klst) : String(klst).replace('.', ',')) + ' klst.' }),
 
       v.innan_samnings
         ? el('p', { class: 'timar__hja', texti: 'Innan áskriftarinnar' })
@@ -268,7 +268,7 @@ async function start() {
 
       timalog.length
         ? el('ul', { class: 'timalog' }, timalog.slice(0, 8).map((t) => el('li', {}, [
-            el('b', { texti: String(t.klst).replace('.', ',') + ' klst.' }),
+            el('b', { texti: (erEnska() ? String(t.klst) : String(t.klst).replace('.', ',')) + ' klst.' }),
             el('span', { class: 'nota',
                          texti: (t.notandi_nafn ? t.notandi_nafn.nafn.split(' ')[0] : '')
                                 + (t.nota ? ', ' + t.nota : '') }),
@@ -299,10 +299,10 @@ async function start() {
     const verdVal = el('input', {
       type: 'text', inputmode: 'numeric', 'aria-label': 'Verð okkar',
       placeholder: v.innan_samnings ? 'Innan áskriftar' : 'Verð okkar',
-      value: v.verd_okkar ? kronur(v.verd_okkar).replace(' kr.', '') : '',
+      value: v.verd_okkar ? tolu(v.verd_okkar) : '',
       onblur: () => {
         const t = lesaTolu(verdVal.value);
-        verdVal.value = t ? kronur(t).replace(' kr.', '') : '';
+        verdVal.value = t ? tolu(t) : '';
       }
     });
     const svarVal = el('textarea', { rows: '3', placeholder: 'Svar til viðskiptavinar' });

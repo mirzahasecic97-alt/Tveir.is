@@ -72,7 +72,7 @@ export function opnaUndirskriftGlugga({ g, u: upphaf, sjalfgefin }) {
     d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
     d.addEventListener('close', () => { d.remove(); leysa(vistad); });
     const u = { ...upphaf };
-    const forsyn = el('div', { class: 'sk-us__forsyn' });
+    const forsyn = el('div', { class: 'sk-us__forsyn', 'data-ekki-thyda': '' });
     const teikna = () => { forsyn.innerHTML = '<div style="font-family:Inter,Arial,sans-serif;font-size:15px;color:#1c3050;">Hæ,<br><br>Takk fyrir póstinn, við skoðum þetta í dag.</div>' + undirskriftHtml({ ...u, virk: true }); };
     const reitur = (merki, lykill, eig = {}) => {
       const inn = el('input', { type: 'text', value: u[lykill] || '', maxlength: '160', autocomplete: 'off', ...eig,

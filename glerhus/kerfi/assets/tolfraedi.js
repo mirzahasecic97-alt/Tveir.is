@@ -9,7 +9,7 @@
    Gröfin eru teiknuð hér sem SVG, ekkert safn að utan.
    ========================================================================== */
 
-import { gogn, el, fylla, lesaTolu, vardaHlid, teiknaHaus, geymt, geyma } from './portal.js';
+import { gogn, el, fylla, lesaTolu, vardaHlid, teiknaHaus, geymt, geyma, tolu, erEnska } from './portal.js';
 import { opnaSendingu } from './tolfraedi-senda.js';
 
 const ek = await vardaHlid({ badir: true });
@@ -40,6 +40,9 @@ const TOLUHEITI = {
   fylgjendur: 'Fylgjendur', ahorf: 'Áhorf', nadir: 'Náð', samskipti: 'Samskipti',
   heimsoknir: 'Heimsóknir á prófíl', faerslur: 'Færslur'
 };
+/* Á ensku: heiti sem passa tölfræðinni (Samskipti eru hér interactions, ekki pósthólfið) */
+if (erEnska()) Object.assign(TOLUHEITI, { fylgjendur: 'Followers', ahorf: 'Views', nadir: 'Reach', samskipti: 'Interactions', heimsoknir: 'Profile visits', faerslur: 'Posts' });
+const eittDag = (n) => (erEnska() ? n === 1 : n % 10 === 1 && n % 100 !== 11);
 const MAELITOLUR = ['fylgjendur', 'ahorf', 'nadir', 'samskipti', 'heimsoknir', 'faerslur'];
 
 const MAN_STUTT = ['jan', 'feb', 'mar', 'apr', 'maí', 'jún', 'júl', 'ágú', 'sep', 'okt', 'nóv', 'des'];
@@ -85,16 +88,16 @@ const manNafn = (s) => MAN_LANGT[lesaD(s).getMonth()];
 function tala(n) {
   if (n === null || n === undefined || !isFinite(n)) return '';
   const t = Math.round(Math.abs(Number(n)));
-  return (Number(n) < 0 && t ? '-' : '') + String(t).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return (Number(n) < 0 && t ? '-' : '') + tolu(t);
 }
 function asTala(v) {
-  if (Math.abs(v) >= 1e6) return String(Math.round(v / 1e5) / 10).replace('.', ',') + ' m.';
+  if (Math.abs(v) >= 1e6) return erEnska() ? String(Math.round(v / 1e5) / 10) + 'M' : String(Math.round(v / 1e5) / 10).replace('.', ',') + ' m.';
   return tala(v);
 }
 function prosenta(hlutfall) {
   const a = Math.abs(hlutfall * 100);
   const t = a < 10 ? Math.round(a * 10) / 10 : Math.round(a);
-  return String(t).replace('.', ',') + '%';
+  return (erEnska() ? String(t) : String(t).replace('.', ',')) + '%';
 }
 
 /* Bara https hlekkir og myndir, án bila og gæsalappa */
@@ -817,7 +820,7 @@ async function start() {
         ? el('section', { class: 'card pblokk' }, [
             el('div', { class: 'pyfir' }, [el('h2', { texti: 'Tengdu fyrsta miðilinn' })]),
             el('p', { class: 'skyring', style: 'margin:-6px 0 16px',
-              texti: 'Settu inn Instagram, Facebook eða TikTok reikning ' + fyrNafn() + '. Með auðkenni safnast Instagram og Facebook sjálfkrafa á hverjum morgni. Annars eru tölurnar skráðar í höndunum eða fluttar inn úr CSV.' }),
+              texti: 'Settu inn Instagram, Facebook eða TikTok reikning fyrir ' + fyrNafn() + '. Með auðkenni safnast Instagram og Facebook sjálfkrafa á hverjum morgni. Annars eru tölurnar skráðar í höndunum eða fluttar inn úr CSV.' }),
             midilsForm({}, null)
           ])
         : el('div', { class: 'card pblokk' }, [
@@ -1793,10 +1796,10 @@ async function start() {
         return;
       }
       const r = greint.radir;
-      vistaHn.textContent = 'Vista ' + tala(r.length) + (r.length % 10 === 1 && r.length % 100 !== 11 ? ' dag' : ' daga');
+      vistaHn.textContent = 'Vista ' + tala(r.length) + (eittDag(r.length) ? ' dag' : ' daga');
       fylla(forsyn, [
         el('p', { class: 'skyring', style: 'margin-top:0', texti: 'Fann ' + tala(r.length)
-          + (r.length % 10 === 1 && r.length % 100 !== 11 ? ' dag' : ' daga') + ', frá ' + dagsLangt(r[0].dags) + ' til '
+          + (eittDag(r.length) ? ' dag' : ' daga') + ', frá ' + dagsLangt(r[0].dags) + ' til '
           + dagsLangt(r[r.length - 1].dags) + '. Dálkar: ' + greint.tolur.map((k) => TOLUHEITI[k]).join(', ') + '.'
           + (greint.ogild ? ' ' + tala(greint.ogild) + ' línum var sleppt, þær vantaði dagsetningu eða tölu.' : '') }),
         el('div', { class: 'ptafla-skrun' }, [el('table', { class: 'ptafla tf-csv__tafla' }, [
@@ -1805,7 +1808,7 @@ async function start() {
           el('tbody', {}, r.slice(0, 8).map((x) => el('tr', {}, [el('td', { texti: dagsLangt(x.dags) })]
             .concat(greint.tolur.map((k) => el('td', { texti: x.gildi[k] !== undefined ? tala(x.gildi[k]) : '' }))))))
         ])]),
-        r.length > 8 ? el('p', { class: 'skyring', texti: 'Og ' + tala(r.length - 8) + ' í viðbót.' }) : null
+        r.length > 8 ? el('p', { class: 'skyring', texti: tala(r.length - 8) + ' í viðbót.' }) : null
       ]);
     };
     svaedi.addEventListener('input', () => { clearTimeout(bid); bid = setTimeout(greina, 250); });
@@ -1832,7 +1835,7 @@ async function start() {
           await hladaMaelingum();
           teiknaTolur();
           teiknaMidla();
-          stadaBod(stadan, 'Vistað: ' + tala(n) + (n % 10 === 1 && n % 100 !== 11 ? ' dagur.' : ' dagar.'), 'ok');
+          stadaBod(stadan, 'Vistað: ' + tala(n) + (eittDag(n) ? ' dagur.' : ' dagar.'), 'ok');
           vistaHn.textContent = 'Loka';
           vistaHn.disabled = false;
           vistaHn.type = 'button';

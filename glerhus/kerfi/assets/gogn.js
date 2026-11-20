@@ -957,6 +957,17 @@ async function supabaseBakendi() {
       kasta(svar);
     },
     async eydaTengingu(veita) { kasta(await sb.rpc('eyda_tengingu', { p_veita: veita })); },
+    /* Stillingar sem gilda fyrir allt kerfið, t.d. gjaldmiðill bókhaldsins */
+    async kerfisstillingar() {
+      const svar = await sb.from('kerfisstillingar').select('lykill, gildi');
+      if (svar.error) return null;
+      const ut = {}; (svar.data || []).forEach((r) => { ut[r.lykill] = r.gildi; }); return ut;
+    },
+    async vistaKerfisstillingu(lykill, gildi) {
+      const svar = await sb.from('kerfisstillingar').upsert({ lykill, gildi, uppfaert: new Date().toISOString() });
+      if (svar.error && /does not exist|could not find|schema cache/i.test(String(svar.error.message))) throw new Error('Kerfisstillingarnar eru ekki komnar í gagnagrunninn. Keyrðu migrations/2026-11-20-kerfisstillingar.sql í Supabase.');
+      kasta(svar);
+    },
     /* Prófar vistaða lykilinn hjá veitunni (Edge Function profa-tengingu).
        Lykillinn er lesinn úr Vault á þjóninum og kemur aldrei hingað. */
     async profaTengingu(veita) {
@@ -2052,6 +2063,8 @@ function prufuBakendi() {
       vista();
     },
     async eydaTengingu(veita) { krefjastAdmin(); const t = { ...(g.tengingar || {}) }; delete t[veita]; g.tengingar = t; vista(); },
+    async kerfisstillingar() { return { ...(g.kerfisstillingar || {}) }; },
+    async vistaKerfisstillingu(lykill, gildi) { krefjastAdmin(); g.kerfisstillingar = { ...(g.kerfisstillingar || {}), [lykill]: gildi }; vista(); },
     async profaTengingu(veita) {
       krefjastAdmin();
       const t = (g.tengingar || {})[veita];

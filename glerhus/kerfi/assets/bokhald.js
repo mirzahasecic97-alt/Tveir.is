@@ -9,7 +9,7 @@
    reikningur fram í pari: [VSK-skylt, VSK-laust].
    ========================================================================== */
 
-import { gogn, el, fylla, kronur, lesaTolu, vardaHlid, teiknaHaus, geymt, geyma, bokhaldskerfi, tilkynna } from './portal.js';
+import { gogn, el, fylla, kronur, tolu, erEnska, lesaTolu, vardaHlid, teiknaHaus, geymt, geyma, bokhaldskerfi, tilkynna } from './portal.js';
 import {
   MAN, MAN_LANGT, VSK, LYKILL_VSK, P, pPlus, pAf, pAn, pMed,
   mk, NU_AR, NU_MAN, naestiMan, NAESTI, manHeiti, lesaMedVsk, reiknivel
@@ -34,7 +34,7 @@ async function start() {
   let aukaSia = 'framundan';
 
   const syna = (p) => (medVsk ? pMed(p) : pAn(p));
-  const kr = (p) => kronur(Math.round(syna(Array.isArray(p) ? p : [p, 0]))) || '0 kr.';
+  const kr = (p) => kronur(Math.round(syna(Array.isArray(p) ? p : [p, 0]))) || kronur(0);
   const vskOrd = () => (medVsk ? 'með VSK' : 'án VSK');
   /* Hin talan, smátt undir: með VSK þegar sýnt er án, og öfugt.
      Vsklausar upphæðir eru eins í báðum og fá því bara athugasemd. */
@@ -315,8 +315,8 @@ async function start() {
 
   /* 1.147.500 -> "1,15 m", 400.000 -> "400 þ." */
   function stytt(v) {
-    if (v >= 1e6) return String(Math.round(v / 1e4) / 100).replace('.', ',') + ' m';
-    return Math.round(v / 1000) + ' þ.';
+    if (v >= 1e6) return erEnska() ? String(Math.round(v / 1e4) / 100) + 'M' : String(Math.round(v / 1e4) / 100).replace('.', ',') + ' m';
+    return Math.round(v / 1000) + (erEnska() ? 'k' : ' þ.');
   }
 
   /* Upphæðarreitur með eigin vali: talan er án VSK, með VSK eða vsklaus.
@@ -324,7 +324,7 @@ async function start() {
   function upphaedReitur(merki, r) {
     const tala = Number(r.upphaed) || 0;
     let hamur = r.vsklaust ? 'ekkert' : (medVsk ? 'med' : 'an');
-    const punktar = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const punktar = (n) => tolu(n);
     const birt = tala ? Math.round(hamur === 'med' ? tala * (1 + VSK) : tala) : '';
     const inn = el('input', { type: 'text', inputmode: 'numeric', required: true, placeholder: '0',
       value: birt ? punktar(birt) : '' });
@@ -409,7 +409,7 @@ async function start() {
   function opnaSamning(s) {
     const vid = el('input', { type: 'text', value: s.vidskiptavinur || '', required: true });
     const thj = el('input', { type: 'text', value: s.thjonusta || '', placeholder: 'Samfélagsmiðlar' });
-    const upp = upphaedReitur('Kr. á mánuði', s);
+    const upp = upphaedReitur('Upphæð á mánuði', s);
     const hefst = el('input', { type: 'month', value: s.hefst || NU_MAN });
     const lykur = el('input', { type: 'month', value: s.lykur || '' });
     spjald(s.id ? 'Samningur' : 'Nýr samningur', [

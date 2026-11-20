@@ -7,7 +7,7 @@
    verk sem hafa engan.
    ========================================================================== */
 
-import { gogn, el, fylla, vardaHlid, teiknaHaus, geymt, geyma, tilkynna, opnaTask } from './portal.js';
+import { gogn, el, fylla, vardaHlid, teiknaHaus, geymt, geyma, tilkynna, opnaTask, erEnska } from './portal.js';
 
 const ek = await vardaHlid({ krefstAdmin: true });
 if (ek) start();
@@ -372,7 +372,7 @@ async function start() {
       el('p', { class: 'dg-spjald__flokkur', style: '--l:' + f.litur }, [el('i', { 'aria-hidden': 'true' }), document.createTextNode((a.flokkur === 'personulegt' ? 'Persónulegt, bara þú sérð þetta' : TEGUND[a.teg]) + (a.lokid ? ', lokið' : ''))]),
       el('dl', { class: 'dg-spjald__upp' }, [
         fundur ? el('div', {}, [el('dt', { texti: 'Hvenær' }), el('dd', { texti: timi })]) : null,
-        a.undir ? el('div', {}, [el('dt', { texti: a.teg === 'innri' ? 'Á ábyrgð' : a.teg === 'undirverk' ? 'Fyrir' : 'Fyrirtæki' }), el('dd', { texti: a.undir })]) : null,
+        a.undir ? el('div', {}, [el('dt', { texti: a.teg === 'innri' ? 'Á ábyrgð' : a.teg === 'undirverk' ? 'Hluti af' : 'Fyrirtæki' }), el('dd', { texti: a.undir })]) : null,
         a.stadur ? el('div', {}, [el('dt', { texti: 'Staður' }), el('dd', {}, [el('a', { href: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(a.stadur), target: '_blank', rel: 'noopener noreferrer', texti: a.stadur })])]) : null,
         a.gestir ? el('div', {}, [el('dt', { texti: 'Gestir' }), el('dd', { texti: String(a.gestir) })]) : null,
         a.lysing ? el('div', {}, [el('dt', { texti: 'Lýsing' }), el('dd', { texti: a.lysing })]) : null
@@ -504,7 +504,7 @@ async function start() {
     const nyttNafn = el('input', { type: 'text', maxlength: '120', placeholder: 'Nafn fyrirtækisins', autocomplete: 'off', hidden: true });
     const fyrsti = el('input', { type: 'date', value: dagsetning, 'aria-label': 'Fyrsti dagur' });
     const fjoldi = el('input', { type: 'number', min: '1', max: '30', value: '1', inputmode: 'numeric', 'aria-label': 'Hversu mörg' });
-    const heiti = el('input', { type: 'text', maxlength: '120', value: 'Myndband', 'aria-label': 'Heiti hvers og eins' });
+    const heiti = el('input', { type: 'text', maxlength: '120', value: erEnska() ? 'Video' : 'Myndband', 'aria-label': 'Heiti hvers og eins' });
     const bil = el('select', { 'aria-label': 'Bil á milli' }, BIL.map(([v, h]) => el('option', { value: v, texti: h })));
     bil.value = '7';
     const morgSvid = el('div', { class: 'dg-nytt__tvo', hidden: true }, [
@@ -528,7 +528,7 @@ async function start() {
       if (!fyrsti.value) return [];
       return Array.from({ length: n }, (_, i) => { const d = dagur(fyrsti.value); d.setDate(d.getDate() + i * skref); return ymd(d); });
     };
-    const heitiNr = (i) => (heiti.value.trim() || 'Verk') + ' ' + (i + 1);
+    const heitiNr = (i) => (heiti.value.trim() || (erEnska() ? 'Task' : 'Verk')) + ' ' + (i + 1);
 
     function uppfaera() {
       const vidburdur = tegund === 'fundur' || tegund === 'personulegt';
@@ -552,7 +552,7 @@ async function start() {
         skyring.textContent = innri
           ? n + ' innri verk, eitt á hverjum degi. Viðskiptavinir sjá þau ekki.'
           : 'Einn taskur með ' + n + ' undirverkum, hvert á sínum degi. Viðskiptavinurinn sér taskinn og fær póst þegar þú hakar í hvert og setur skrána eða hlekkinn með.';
-        senda.textContent = 'Setja ' + n + ' á dagatalið';
+        senda.textContent = 'Setja á dagatalið (' + n + ')';
       } else {
         fylla(forsyn, []); forsyn.hidden = true;
         skyring.textContent = innri ? 'Innra verk. Viðskiptavinir sjá það ekki.' : hver.value ? 'Taskur sem viðskiptavinurinn sér, með skiladag.' : '';

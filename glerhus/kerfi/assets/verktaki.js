@@ -11,7 +11,7 @@
    fyrirtæki Yfirlit og Tilboð. Annað er sent á rétta síðu.
    ========================================================================== */
 
-import { el, fylla, vardaHlid, teiknaHaus, tilkynna, sersnid, erVerktaki, ervalid, gestNafn } from './portal.js';
+import { el, fylla, vardaHlid, teiknaHaus, tilkynna, sersnid, erVerktaki, ervalid, gestNafn, kronur } from './portal.js';
 
 const LYKILL = 'glerhus-tveir-verktaki-v2';
 const IDAG = new Date(); IDAG.setHours(12, 0, 0, 0);
@@ -22,7 +22,7 @@ const iMan = (n) => { const d = new Date(IDAG); d.setDate(Math.max(1, d.getDate(
 const MAN = ['jan.', 'feb.', 'mars', 'apr.', 'maí', 'jún.', 'júl.', 'ágú.', 'sep.', 'okt.', 'nóv.', 'des.'];
 const MAN_LANGT = ['janúar', 'febrúar', 'mars', 'apríl', 'maí', 'júní', 'júlí', 'ágúst', 'september', 'október', 'nóvember', 'desember'];
 const dg = (s) => { const d = new Date(s + 'T12:00:00'); return d.getDate() + '. ' + MAN[d.getMonth()]; };
-const kr = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' kr.';
+const kr = (n) => kronur(n);
 const iThessumMan = (s) => !!s && s.slice(0, 7) === iso(IDAG).slice(0, 7);
 
 const GREIN = sersnid ? sersnid.grein : null;
@@ -121,7 +121,7 @@ const pill = (texti, litur) => el('span', { class: 'ps-pilla ps-pilla--' + litur
 const smidi = () => el('p', { class: 'ps-smidi', texti: SMIDI });
 const STOD_TILB = { drog: ['Drög', 'grar'], sent: ['Bíður svars', 'gul'], samthykkt: ['Samþykkt', 'graen'], hafnad: ['Hafnað', 'grar'] };
 const STOD_BEID = { ny: ['Ný', 'blar'], tilbod: ['Tilboð gert', 'gul'], hafnad: ['Hafnað', 'grar'] };
-const HVENAER = { fyrir: ['Fyrir', 'grar'], medan: ['Á meðan', 'gul'], eftir: ['Eftir', 'graen'] };
+const HVENAER = { fyrir: ['Fyrir verkið', 'grar'], medan: ['Á meðan', 'gul'], eftir: ['Eftir verkið', 'graen'] };
 const anVsk = (t) => t.linur.reduce((n, l) => n + (+l.u || 0), 0);
 const vsk = (n) => Math.round(n * 0.24);
 const siduHaus = (h1, lysing, auka) => el('div', { class: 'ps-haus' }, [
@@ -157,7 +157,7 @@ function synaKunna(t, eftir) {
   const d = el('dialog', { class: 'pdialog vt-syn', 'aria-label': 'Tilboðið eins og viðskiptavinurinn sér það' }, [
     el('div', { class: 'pdialog__kort' }, [
       el('div', { class: 'pdialog__haus' }, [
-        el('p', { class: 'vt-syn__merki', texti: 'Svona sér ' + t.kunni.split(',')[0] + ' tilboðið' }),
+        el('p', { class: 'vt-syn__merki', texti: 'Sýn viðskiptavinar: ' + t.kunni.split(',')[0] }),
         el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '×', onclick: () => d.close() })]),
       el('div', { class: 'vt-syn__blad' }, [
         el('div', { class: 'vt-syn__fra' }, [

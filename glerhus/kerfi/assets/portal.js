@@ -167,12 +167,39 @@ export function dags(gildi, medAri) {
   return d.getDate() + '. ' + m + (medAri ? ' ' + d.getFullYear() : '');
 }
 
-/* 250000 -> "250.000 kr." Handvirkt af sömu ástæðu og mánuðirnir. */
-export function kronur(gildi) {
+/* Tungumál (hver notandi í sínum vafra) og gjaldmiðill (allt kerfið,
+   samstillt úr kerfisstillingum í gagnagrunninum) */
+const TUNGA_LYKILL = 'glerhus-tveir-tungumal', GJALD_LYKILL = 'glerhus-tveir-gjaldmidill';
+export const tungumal = () => { try { return localStorage.getItem(TUNGA_LYKILL) === 'en' ? 'en' : 'is'; } catch (e) { return 'is'; } };
+export const gjaldmidill = () => { try { const v = localStorage.getItem(GJALD_LYKILL); return ['ISK', 'EUR', 'USD'].includes(v) ? v : 'ISK'; } catch (e) { return 'ISK'; } };
+export function setjaTungumal(t) { try { localStorage.setItem(TUNGA_LYKILL, t === 'en' ? 'en' : 'is'); } catch (e) { /* lokað */ } }
+export function setjaGjaldmidil(v) { try { localStorage.setItem(GJALD_LYKILL, ['ISK', 'EUR', 'USD'].includes(v) ? v : 'ISK'); } catch (e) { /* lokað */ } }
+/* Enskt snið á tölum bara ef þýðingin hlóðst, annars er allt á íslensku */
+let enska = false;
+export const erEnska = () => enska;
+export const gjaldmidilsMerki = () => ({ ISK: enska ? 'ISK' : 'kr.', EUR: '€', USD: '$' })[gjaldmidill()];
+
+/* 250000 -> "250.000" (á ensku "250,000"). Fyrir reiti og útreikninga. */
+export function tolu(gildi) {
   if (gildi === null || gildi === undefined || gildi === '') return null;
   const tala = Math.round(Number(gildi));
   if (isNaN(tala)) return null;
-  return String(tala).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' kr.';
+  return String(tala).replace(/\B(?=(\d{3})+(?!\d))/g, enska ? ',' : '.');
+}
+
+/* 250000 -> "250.000 kr." eða "€250,000" eftir gjaldmiðli og tungumáli */
+export function kronur(gildi) {
+  const t = tolu(gildi);
+  if (t === null) return null;
+  const en = enska, g = gjaldmidill();
+  if (g === 'EUR') return en ? '€' + t : t + ' €';
+  if (g === 'USD') return en ? '$' + t : t + ' $';
+  return en ? t + ' ISK' : t + ' kr.';
+}
+
+/* Enska: þýðingarlagið þýðir textann á síðunni um leið og hann birtist */
+if (tungumal() === 'en') {
+  try { await import('./thyding.js'); enska = true; } catch (e) { document.documentElement.lang = 'is'; /* íslenska ef þýðingin hleðst ekki */ }
 }
 
 /* "250.000" eða "250000" -> 250000 */
@@ -185,12 +212,12 @@ export function lesaTolu(texti) {
 export function sidan(gildi) {
   if (!gildi) return '';
   const min = Math.round((Date.now() - new Date(gildi)) / 60000);
-  if (min < 2) return 'núna';
-  if (min < 60) return min + ' mín.';
+  if (min < 2) return enska ? 'just now' : 'núna';
+  if (min < 60) return min + (enska ? ' min' : ' mín.');
   const klst = Math.round(min / 60);
-  if (klst < 24) return klst + (klst === 1 ? ' klst.' : ' klst.');
+  if (klst < 24) return klst + (enska ? ' h' : ' klst.');
   const dagar = Math.round(klst / 24);
-  if (dagar < 8) return dagar === 1 ? 'í gær' : dagar + ' dagar';
+  if (dagar < 8) return dagar === 1 ? (enska ? 'yesterday' : 'í gær') : dagar + (enska ? ' days' : ' dagar');
   return dags(gildi);
 }
 
@@ -199,7 +226,8 @@ export function staerd(bitar) {
   if (!bitar && bitar !== 0) return '';
   if (bitar < 1024) return bitar + ' B';
   if (bitar < 1024 * 1024) return Math.round(bitar / 1024) + ' KB';
-  return String(Math.round(bitar / 1024 / 102.4) / 10).replace('.', ',') + ' MB';
+  const mb = String(Math.round(bitar / 1024 / 102.4) / 10);
+  return (enska ? mb : mb.replace('.', ',')) + ' MB';
 }
 
 /* Er skiladagur liðinn */
@@ -229,11 +257,25 @@ export function geyma(lykill, gildi) {
   try { sessionStorage.setItem('tveir-sida-' + lykill, JSON.stringify(gildi)); } catch (e) { /* of stórt eða lokað */ }
 }
 
+/* Gjaldmiðill kerfisins: sóttur einu sinni í hverri lotu. Hafi hann breyst
+   er síðan hlaðin aftur svo allar upphæðir sýni réttan gjaldmiðil. */
+async function samstillaGjaldmidil(g) {
+  try {
+    if (!g.kerfisstillingar || sessionStorage.getItem('glerhus-tveir-gjald-lotu')) return;
+    const s = await g.kerfisstillingar();
+    if (!s) return; /* lesturinn mistókst: höldum því sem er geymt og reynum aftur næst */
+    sessionStorage.setItem('glerhus-tveir-gjald-lotu', '1');
+    const ny = s.gjaldmidill || 'ISK';
+    if (ny !== gjaldmidill()) { setjaGjaldmidil(ny); location.reload(); }
+  } catch (e) { /* sjálfgefið ISK */ }
+}
+
 export async function vardaHlid({ krefstAdmin, badir } = {}) {
   const g = await gogn();
   const ek = await g.eg();
 
   if (!ek) { location.replace('./'); return null; }
+  samstillaGjaldmidil(g);
 
   if (krefstAdmin && ek.hlutverk !== 'admin') { location.replace('yfirlit.html'); return null; }
   if (!krefstAdmin && !badir && ek.hlutverk === 'admin') {

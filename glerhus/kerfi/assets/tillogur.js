@@ -5,7 +5,7 @@
 import {
   gogn, el, tom, fylla, dags, kronur, lesaTolu,
   vardaHlid, teiknaHaus, uppfaeraMerki
-} from './portal.js';
+, tolu} from './portal.js';
 
 const ek = await vardaHlid({ krefstAdmin: true });
 if (ek) start();
@@ -67,10 +67,10 @@ async function start() {
     const verd = el('input', {
       type: 'text', inputmode: 'numeric', placeholder: 'Hvað ætlum við að taka',
       'aria-label': 'Verð okkar',
-      value: v.budget ? kronur(v.budget).replace(' kr.', '') : '',
+      value: v.budget ? tolu(v.budget) : '',
       onblur: () => {
         const t = lesaTolu(verd.value);
-        verd.value = t ? kronur(t).replace(' kr.', '') : '';
+        verd.value = t ? tolu(t) : '';
       }
     });
 

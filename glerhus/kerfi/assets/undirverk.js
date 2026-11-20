@@ -32,7 +32,7 @@ export function lesaTengil(texti) {
 }
 
 function lenAf(tengill) {
-  try { return new URL(tengill).hostname.replace(/^www\./, ''); } catch (e) { return 'hlekkur'; }
+  try { return new URL(tengill).hostname.replace(/^www\./, ''); } catch (e) { return ''; }
 }
 
 /* Hlutinn í taskspjaldinu. teiknaAftur() opnar spjaldið upp á nýtt
@@ -124,12 +124,11 @@ export function undirverkHluti({ t, listi, admin, g, teiknaAftur, eftir }) {
     const skil = [];
     if (synaSkil && u.tengill) {
       skil.push(el('a', { class: 'uv__skil', href: u.tengill, target: '_blank',
-                          rel: 'noopener noreferrer', texti: 'Opna hlekk (' + lenAf(u.tengill) + ')' }));
+                          rel: 'noopener noreferrer', texti: lenAf(u.tengill) ? 'Opna hlekk (' + lenAf(u.tengill) + ')' : 'Opna hlekk' }));
     }
     if (synaSkil && u.skra_slod) {
       skil.push(el('button', {
         type: 'button', class: 'uv__skil uv__skil--hnappur',
-        texti: (admin ? u.skra_nafn : 'Sækja ' + u.skra_nafn) + (u.skra_staerd ? ' (' + staerd(u.skra_staerd) + ')' : ''),
         onclick: async (e) => {
           const hnappur = e.currentTarget;
           hnappur.disabled = true;
@@ -143,7 +142,11 @@ export function undirverkHluti({ t, listi, admin, g, teiknaAftur, eftir }) {
             hnappur.disabled = false;
           }
         }
-      }));
+      }, [
+        admin ? null : document.createTextNode('Hlaða niður: '),
+        el('span', { 'data-ekki-thyda': '', texti: u.skra_nafn }),
+        u.skra_staerd ? document.createTextNode(' (' + staerd(u.skra_staerd) + ')') : null
+      ]));
     }
 
     let postur = null;
@@ -277,7 +280,7 @@ export function undirverkHluti({ t, listi, admin, g, teiknaAftur, eftir }) {
           valinSkra = null;
           e.target.value = '';
           skraNafn.textContent = u.skra_nafn ? 'Núna: ' + u.skra_nafn : 'Engin skrá valin';
-          segja(sk.name + ' er ' + staerd(sk.size) + ' en hámarkið er ' + HAMARK_MB + ' MB. '
+          segja('Skráin er ' + staerd(sk.size) + ' en hámarkið er ' + HAMARK_MB + ' MB. '
             + 'Settu hana á WeTransfer eða Google Drive og límdu hlekkinn hér fyrir neðan.', 'err');
           return;
         }
@@ -340,7 +343,7 @@ export function undirverkHluti({ t, listi, admin, g, teiknaAftur, eftir }) {
         ]),
         skraNafn
       ]),
-      el('p', { class: 'skyring', texti: 'Hámark ' + HAMARK_MB + ' MB. Stærri myndbönd: settu þau á WeTransfer eða Google Drive og límdu hlekkinn.' }),
+      el('p', { class: 'skyring' }, [document.createTextNode('Hámark ' + HAMARK_MB + ' MB.'), document.createTextNode(' Stærri myndbönd: settu þau á WeTransfer eða Google Drive og límdu hlekkinn.')]),
       el('label', { class: 'field uv__hlekkur' }, [el('span', { texti: 'Eða hlekkur' }), tengill]),
       anLokid ? null : el('label', { class: 'uv__val' }, [anSkrar, document.createTextNode(' Senda án skrár eða hlekks')]),
       anLokid ? null : el('label', { class: 'uv__val' }, [sendaPost, document.createTextNode(' Senda viðskiptavininum póst')]),

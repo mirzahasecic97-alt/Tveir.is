@@ -279,9 +279,9 @@ async function start() {
             el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Vista' }),
             eyda
           ]),
-          el('p', { class: 'skyring',
-                    texti: 'Stofnað ' + dags(t.stofnad, true)
-                      + (t.lokid_dags ? ', lokið ' + dags(t.lokid_dags, true) : '') })
+          el('p', { class: 'skyring' }, [
+            document.createTextNode('Stofnað ' + dags(t.stofnad, true)),
+            t.lokid_dags ? document.createTextNode(', lokið ' + dags(t.lokid_dags, true)) : null])
         ])
       ])]);
 

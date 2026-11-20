@@ -5,7 +5,7 @@
 import {
   gogn, el, tom, fylla, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
   vardaHlid, teiknaHaus, erUppsett, erSimi, bordiFalinn, opnaUppsetningu, STODUR_VERK
-} from './portal.js';
+, tolu, gjaldmidilsMerki} from './portal.js';
 
 const ek = await vardaHlid({});
 if (ek) start();
@@ -373,21 +373,21 @@ async function start() {
 
     const budget = el('input', {
       type: 'text', inputmode: 'numeric', placeholder: 'Til dæmis 250.000',
-      'aria-label': 'Budget í krónum',
+      'aria-label': 'Budget (' + gjaldmidilsMerki() + ')',
       onblur: () => {
         const t = lesaTolu(budget.value);
-        budget.value = t ? kronur(t).replace(' kr.', '') : '';
+        budget.value = t ? tolu(t) : '';
       }
     });
 
     const flytir = el('div', { class: 'budgetflyt' },
       [150000, 300000, 500000, 1000000].map((n) => el('button', {
         type: 'button', texti: kronur(n),
-        onclick: () => { budget.value = kronur(n).replace(' kr.', ''); budget.focus(); }
+        onclick: () => { budget.value = tolu(n); budget.focus(); }
       })));
 
     const budgetReitur = el('div', { class: 'field' }, [
-      el('span', { texti: 'Budget í krónum' }),
+      el('span', { texti: 'Budget (' + gjaldmidilsMerki() + ')' }),
       budget,
       el('p', { class: 'skyring',
                 texti: 'Gróft mat dugar. Við svörum með raunverði og þú ræður hvort þú heldur áfram.' }),

@@ -17,7 +17,7 @@
    valmyndinni.
    ========================================================================== */
 
-import { el, fylla, vardaHlid, teiknaHaus, tilkynna, sersnid, erPersona, ervalid } from './portal.js';
+import { el, fylla, vardaHlid, teiknaHaus, tilkynna, sersnid, erPersona, ervalid, kronur, tolu } from './portal.js';
 
 
 /* ---------------- Hjálp ---------------- */
@@ -30,7 +30,7 @@ const dg = (s) => { const d = new Date(s + 'T12:00:00'); return d.getDate() + '.
 const dgLangt = (s) => { const d = new Date(s + 'T12:00:00'); return VIKUDAGAR[d.getDay()] + ' ' + d.getDate() + '. ' + MAN[d.getMonth()]; };
 const manAr = (s) => { const d = new Date(s + 'T12:00:00'); return MAN[d.getMonth()] + ' ' + d.getFullYear(); };
 const eftir = (s) => Math.round((new Date(s + 'T12:00:00') - IDAG) / 864e5);
-const kr = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' kr.';
+const kr = (n) => kronur(n);
 const ATH = !!sersnid && sersnid.grein === 'ithrottir';
 /* Stofan: HEFUR_STOFU ef Tveir eða önnur stofa. STOFA er nafnið, ef það er
    til (Tveir eða nafnið sem var slegið inn), annars null. */
@@ -222,9 +222,9 @@ function siduYfirlit(teikna) {
   const tolurBlokk = () => el('section', { class: 'card ps-blokk' }, [
     el('h2', { texti: 'Samfélagsmiðlarnir' }),
     el('div', { class: 'ps-tolur' }, [
-      el('div', {}, [el('span', { texti: 'Fylgjendur' }), el('strong', { texti: G.tolur.fylgjendur.toLocaleString('de-DE') })]),
-      el('div', {}, [el('span', { texti: 'Nýir í mánuðinum' }), el('strong', { texti: '+' + G.tolur.nyir.toLocaleString('de-DE') })]),
-      el('div', {}, [el('span', { texti: 'Áhorf í mánuðinum' }), el('strong', { texti: G.tolur.ahorf.toLocaleString('de-DE') })])
+      el('div', {}, [el('span', { texti: 'Fylgjendur' }), el('strong', { texti: tolu(G.tolur.fylgjendur) })]),
+      el('div', {}, [el('span', { texti: 'Nýir í mánuðinum' }), el('strong', { texti: '+' + tolu(G.tolur.nyir) })]),
+      el('div', {}, [el('span', { texti: 'Áhorf í mánuðinum' }), el('strong', { texti: tolu(G.tolur.ahorf) })])
     ]),
     el('p', { class: 'ps-smatt', texti: 'Tölurnar koma af Instagram og Facebook á hverjum morgni þegar miðlarnir eru tengdir.' })
   ]);
@@ -348,8 +348,8 @@ function siduEfnisplan(teikna) {
   } }, [
     el('input', { name: 't', placeholder: ATH ? 'Ný færsla, til dæmis Æfing vikunnar' : 'Ný færsla, til dæmis Nýju vörurnar frá Glóa', 'aria-label': 'Heiti færslunnar', maxlength: '80' }),
     el('input', { name: 'd', type: 'date', value: dagar(3), 'aria-label': 'Dagsetning' }),
-    el('select', { name: 'midill', 'aria-label': 'Miðill' }, ['Instagram', 'TikTok', 'YouTube', 'Facebook'].map((m) => el('option', { texti: m }))),
-    el('select', { name: 'teg', 'aria-label': 'Tegund' }, ['Reel', 'Færsla', 'Saga', 'Myndband', 'Hringekja'].map((m) => el('option', { texti: m }))),
+    el('select', { name: 'midill', 'aria-label': 'Miðill' }, ['Instagram', 'TikTok', 'YouTube', 'Facebook'].map((m) => el('option', { value: m, texti: m }))),
+    el('select', { name: 'teg', 'aria-label': 'Tegund' }, ['Reel', 'Færsla', 'Saga', 'Myndband', 'Hringekja'].map((m) => el('option', { value: m, texti: m }))),
     VALID.samstarf ? el('select', { name: 'styrkt', 'aria-label': ATH ? 'Styrktaraðili' : 'Samstarfsaðili' }, [el('option', { value: '', texti: ORD.enginn }), ...G.samningar.map((s) => el('option', { value: s.id, texti: s.nafn }))]) : null,
     el('button', { type: 'submit', class: 'btn btn--gull', texti: 'Bæta við' })
   ]);
@@ -398,7 +398,7 @@ function siduBeidnir(teikna) {
     el('ul', { class: 'ps-plan' }, G.beidnir.map((b) => el('li', { class: 'card ps-plan__lina' }, [
       el('span', { class: 'ps-listi__t' }, [el('strong', { texti: b.t }), el('span', { texti: b.teg + ', send ' + dg(b.dags) + ', skil ' + dg(b.skil) })]),
       pill(STOD_BEIDNI[b.stada][0], STOD_BEIDNI[b.stada][1]),
-      b.stada === 'tilbuid' ? el('button', { type: 'button', class: 'btn btn--litill', texti: 'Sækja', onclick: () => tilkynna('Í alvöru kerfinu sækir þú skrána hér') })
+      b.stada === 'tilbuid' ? el('button', { type: 'button', class: 'btn btn--litill', texti: 'Sækja skrána', onclick: () => tilkynna('Í alvöru kerfinu sækir þú skrána hér') })
         : el('span', { class: 'ps-smatt', texti: b.stada === 'send' ? STOFAN + ' hefur fengið hana' : STOFAN + ' er að vinna í henni' })
     ]))),
     el('p', { class: 'ps-smatt', texti: STOFAN + ' sér bara beiðnirnar sem þú sendir. Samningarnir og tekjurnar þínar eru bara þínar.' })

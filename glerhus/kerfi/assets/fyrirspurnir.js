@@ -6,9 +6,9 @@
    ========================================================================== */
 
 import {
-  gogn, el, fylla, dags, sidan, kronur, lesaTolu, vardaHlid, teiknaHaus, uppfaeraMerki,
+  gogn, el, fylla, dags, sidan, kronur, tolu, lesaTolu, vardaHlid, teiknaHaus, uppfaeraMerki,
   geymt, geyma, samskiptaFlipar
-} from './portal.js';
+, gjaldmidilsMerki} from './portal.js';
 import { STODUR_FYRIRSPURN, UPPRUNI } from './gogn.js';
 
 const ek = await vardaHlid({ krefstAdmin: true });
@@ -83,7 +83,7 @@ async function start() {
       el('dl', { class: 'tekjur', style: 'margin-top:4px' }, [
         el('div', { class: 'adal' }, [el('dt', { texti: 'Nýjar' }), el('dd', { texti: String(nyjar.length) })]),
         el('div', {}, [el('dt', { texti: 'Í ferli' }), el('dd', { texti: String(iFerli.length) })]),
-        el('div', {}, [el('dt', { texti: 'Virði í ferli' }), el('dd', { texti: kronur(virdiIFerli) || '0 kr.' })]),
+        el('div', {}, [el('dt', { texti: 'Virði í ferli' }), el('dd', { texti: kronur(virdiIFerli) || kronur(0) })]),
         el('div', {}, [
           el('dt', { texti: 'Hlutfall unnið' }),
           el('dd', { texti: lokadar ? Math.round(unnar.length * 100 / lokadar) + '%' : 'Ekkert enn' })
@@ -183,7 +183,7 @@ async function start() {
         vid.map((n) => el('option', { value: n.id, selected: f.abyrgd === n.id,
                                       texti: fyrstaNafn(n.nafn) + (n.id === ek.id ? ' (ég)' : '') }))));
       const virdi = el('input', { type: 'text', inputmode: 'numeric', placeholder: 'T.d. 250.000',
-                                  value: f.verdmaeti ? String(f.verdmaeti).replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '' });
+                                  value: f.verdmaeti ? tolu(f.verdmaeti) : '' });
       const nota = el('textarea', { rows: '3', placeholder: 'Hvað var sagt, hvað er næst' }, [f.nota || '']);
       const stadan = el('div', { class: 'form-status', hidden: true });
 
@@ -275,7 +275,7 @@ async function start() {
             el('label', { class: 'field' }, [el('span', { texti: 'Staða' }), stada]),
             el('label', { class: 'field' }, [el('span', { texti: 'Á hvern' }), abyrgd])
           ]),
-          el('label', { class: 'field' }, [el('span', { texti: 'Virði (kr. án VSK)' }), virdi]),
+          el('label', { class: 'field' }, [el('span', {}, [document.createTextNode('Virði'), document.createTextNode(' (' + gjaldmidilsMerki() + ' '), document.createTextNode('án VSK'), document.createTextNode(')')]), virdi]),
           el('label', { class: 'field' }, [el('span', { texti: 'Nóta' }), nota]),
           stadan,
           el('div', { class: 'spjald__fot' }, [

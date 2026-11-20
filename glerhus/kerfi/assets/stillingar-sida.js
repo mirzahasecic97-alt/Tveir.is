@@ -3,7 +3,7 @@
    Viðskiptavinur sér bara aðganginn sinn.
    ========================================================================== */
 
-import { gogn, el, fylla, vardaHlid, teiknaHaus, opnaLykilord, sersnid, stofuNafn, gestNafn } from './portal.js';
+import { gogn, el, fylla, vardaHlid, teiknaHaus, opnaLykilord, sersnid, stofuNafn, gestNafn, tungumal, setjaTungumal, gjaldmidill, setjaGjaldmidil } from './portal.js';
 import { lesaUndirskrift, sjalfgefinUndirskrift, undirskriftHtml, opnaUndirskriftGlugga } from './undirskrift.js';
 
 /* Sýnidæmi úr Settu saman: enginn prufuaðgangur sýndur, engin tæknimál.
@@ -82,7 +82,35 @@ async function start() {
         ])
   ]);
 
-  if (!admin) { fylla(innihald, [siduHaus(), adgangur]); return; }
+  /* ---------- Tungumál og gjaldmiðill ---------- */
+  /* Tungumálið fylgir vafranum, gjaldmiðillinn gildir fyrir allt kerfið */
+  const tungaVal = el('select', { class: 'st-val', 'aria-label': 'Tungumál' }, [
+    el('option', { value: 'is', texti: 'Íslenska', 'data-ekki-thyda': '' }), el('option', { value: 'en', texti: 'English', 'data-ekki-thyda': '' })]);
+  tungaVal.value = tungumal();
+  tungaVal.addEventListener('change', () => { setjaTungumal(tungaVal.value); location.reload(); });
+  const gjaldVal = el('select', { class: 'st-val', 'aria-label': 'Gjaldmiðill' }, [
+    el('option', { value: 'ISK', texti: 'Íslenskar krónur (ISK)' }), el('option', { value: 'EUR', texti: 'Evrur (EUR)' }), el('option', { value: 'USD', texti: 'Dollarar (USD)' })]);
+  gjaldVal.value = gjaldmidill();
+  const gjaldSvar = el('p', { class: 'skyring st-val__svar', role: 'status' });
+  gjaldVal.addEventListener('change', async () => {
+    const fyrra = gjaldmidill();
+    gjaldVal.disabled = true; gjaldSvar.textContent = 'Vistar';
+    try {
+      await g.vistaKerfisstillingu('gjaldmidill', gjaldVal.value);
+      setjaGjaldmidil(gjaldVal.value); location.reload();
+    } catch (e) {
+      gjaldVal.value = fyrra; gjaldVal.disabled = false; gjaldSvar.textContent = e.message || 'Tókst ekki að vista';
+    }
+  });
+  const synid = el('div', { class: 'st-val__lina' }, [
+    el('label', { class: 'st-val__reitur' }, [el('span', { texti: 'Tungumál' }), tungaVal]),
+    admin ? el('label', { class: 'st-val__reitur' }, [el('span', { texti: 'Gjaldmiðill í bókhaldi' }), gjaldVal]) : null
+  ]);
+  const synKafli = kafli('Tungumál og gjaldmiðill',
+    admin ? 'Tungumálið gildir í þessum vafra. Gjaldmiðillinn gildir fyrir allt kerfið og breytir bara merkinu á upphæðunum, ekki tölunum sjálfum.' : 'Tungumálið gildir í þessum vafra.',
+    [synid, admin ? gjaldSvar : null]);
+
+  if (!admin) { fylla(innihald, [siduHaus(), adgangur, synKafli]); return; }
 
   /* ---------- Undirskriftin ---------- */
   let undirskrift = await lesaUndirskrift(g, ekSynt);
@@ -103,7 +131,7 @@ async function start() {
   const tengingarSvid = el('div', { class: 'st-teng-svid' }, [el('p', { class: 'tomt', texti: 'Athuga tengingarnar' })]);
   const tengingarKafli = kafli('Tengingar', 'Öppin sem kerfið talar við. Ýttu á Tengja til að sjá hvað hver tenging gerir og hvað þarf til.', [tengingarSvid]);
 
-  fylla(innihald, [siduHaus(), adgangur, undirskriftKafli, tengingarKafli]);
+  fylla(innihald, [siduHaus(), adgangur, synKafli, undirskriftKafli, tengingarKafli]);
   teiknaTengingar(await stadaTenginga());
 
   function siduHaus() {

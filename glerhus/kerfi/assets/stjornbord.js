@@ -6,7 +6,7 @@ import {
   gogn, el, tom, fylla, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
   vardaHlid, teiknaHaus, STODUR_VERK,
   geymt, geyma, ervalid, bokhaldskerfi, tengingaSpjald, tilkynna
-} from './portal.js';
+, tolu} from './portal.js';
 import { NU_MAN, manHeiti, NAESTI, naestiMan, MAN, pPlus, pAn, pMed, lesaMedVsk, reiknivel } from './bokreikningur.js';
 
 const ek = await vardaHlid({ krefstAdmin: true });
@@ -58,7 +58,7 @@ async function start() {
     const fastNu = fastI(NU_MAN);
     const greidslaNu = pPlus(fastNu, aukaI(NU_MAN));
     const virkir = samningar.filter((s) => virkurI(s, NU_MAN)).length;
-    const bokTala = (p) => kronur(Math.round(medVsk ? pMed(p) : pAn(p))) || '0 kr.';
+    const bokTala = (p) => kronur(Math.round(medVsk ? pMed(p) : pAn(p))) || kronur(0);
     const bokAnnad = (p) => (!p[0] ? (p[1] ? 'ekkert VSK' : '')
       : kronur(Math.round(medVsk ? pAn(p) : pMed(p))) + (medVsk ? ' án VSK' : ' með VSK'));
     const nyjarFyrirspurnir = fyrirspurnir.filter((f) => f.stada === 'ny');
@@ -128,7 +128,7 @@ async function start() {
           class: i > 11 ? 'framtid' : i === 11 ? 'nu' : '',
           'data-v': i === 11 ? stutt(v) : null,
           style: 'height:' + Math.max(10, Math.round(v / mest * 100)) + '%',
-          title: MAN[Number(manudir[i].slice(5, 7)) - 1] + ': ' + (kronur(Math.round(v)) || '0 kr.')
+          title: MAN[Number(manudir[i].slice(5, 7)) - 1] + ': ' + (kronur(Math.round(v)) || kronur(0))
         })));
     }
     /* Fólkið sem er með opna taska, upphafsstafir í glerhringjum */
@@ -168,12 +168,12 @@ async function start() {
           virkir === 1 ? '1 samningur' : virkir + ' samningar', fyrirtaeki.length + ' fyrirtæki', 'hlytt')
       }) },
       orukkad: { heiti: 'Lokið en órukkað', tekjur: true, smida: () => glerkort({
-        midi: 'Lokið en órukkað', tala: kronur(oinnheimtAlls) || '0 kr.', slod: 'bokhald.html',
+        midi: 'Lokið en órukkað', tala: kronur(oinnheimtAlls) || kronur(0), slod: 'bokhald.html',
         vidvorun: !!oinnheimtAlls,
         stada: oinnheimt.length
           ? [oinnheimt.length + (oinnheimt.length === 1 ? ' verk bíður reiknings' : ' verk bíða reiknings'), 'raudt']
           : ['Allt rukkað', 'graent'],
-        undir: bokhaldskerfi() ? 'Fer í ' + bokhaldskerfi() + ' með einum smelli' : 'Í vinnslu ' + (kronur(ivinnslu) || '0 kr.')
+        undir: bokhaldskerfi() ? 'Fer í ' + bokhaldskerfi() + ' með einum smelli' : 'Í vinnslu ' + (kronur(ivinnslu) || kronur(0))
       }) },
       seint: { heiti: 'Á eftir áætlun', smida: () => glerkort({
         midi: 'Komið fram yfir skiladag', tala: fjoldiTaska(seinir.length), slod: '#taskar',
@@ -192,7 +192,7 @@ async function start() {
         undir: nyjarFyrirspurnir.slice(0, 3).map((f) => f.fyrirtaeki_nafn || f.nafn || f.netfang).join(', ') || null
       }) },
       vinnsla: { heiti: 'Í vinnslu', tekjur: true, smida: () => glerkort({
-        midi: 'Verkefni í vinnslu', tala: kronur(ivinnslu) || '0 kr.', slod: 'bokhald.html',
+        midi: 'Verkefni í vinnslu', tala: kronur(ivinnslu) || kronur(0), slod: 'bokhald.html',
         undir: lifandi.length + (lifandi.length === 1 ? ' verkefni í gangi' : ' verkefni í gangi')
       }) }
     };
@@ -256,8 +256,9 @@ async function start() {
           el('strong', { texti: 'Bæta við spjaldi' }),
           falin.length
             ? el('div', { class: 'sb-breyta__spjold' }, falin.map((id) => el('button', {
-                type: 'button', class: 'sb-baeta', texti: '+ ' + SPJOLD[id].heiti,
-                onclick: () => { utlit.rod = utlit.rod.filter(leyft).concat(id); vistaUtlit(); teikna(true); } })))
+                type: 'button', class: 'sb-baeta',
+                onclick: () => { utlit.rod = utlit.rod.filter(leyft).concat(id); vistaUtlit(); teikna(true); } },
+                [document.createTextNode('+ '), el('span', { texti: SPJOLD[id].heiti })])))
             : el('span', { class: 'skyring', texti: 'Öll spjöldin eru á borðinu.' })
         ]),
         el('div', { class: 'sb-breyta__lina' }, [
@@ -541,7 +542,7 @@ async function start() {
       type: 'text', inputmode: 'numeric', placeholder: 'Verð okkar', 'aria-label': 'Verð okkar',
       onblur: () => {
         const t = lesaTolu(verd.value);
-        verd.value = t ? kronur(t).replace(' kr.', '') : '';
+        verd.value = t ? tolu(t) : '';
       }
     });
     const verdReitur = el('div', { class: 'field' }, [el('span', { texti: 'Verð okkar' }), verd]);
@@ -603,7 +604,7 @@ async function start() {
       'aria-label': 'Mánaðargjald',
       onblur: () => {
         const t = lesaTolu(verd.value);
-        verd.value = t ? kronur(t).replace(' kr.', '') : '';
+        verd.value = t ? tolu(t) : '';
       }
     });
     const verdReitur = el('div', { class: 'field' }, [
