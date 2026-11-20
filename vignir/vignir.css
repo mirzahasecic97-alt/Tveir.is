@@ -417,7 +417,7 @@ html, body { background: linear-gradient(165deg, #3d3326 0%, #2a2219 42%, #17130
 .tala strong { font-size: clamp(44px, 26px + 3vw, 80px); }
 @media (max-width: 820px) { .tala strong { font-size: 34px !important; } }
 /* Andlitið sést líka á tölvu */
-.hetja__vid { object-position: 50% 22%; }
+.hetja__vid { object-position: 50% 40%; }
 
 /* ==========================================================================
    Skákstigin (FIDE)
