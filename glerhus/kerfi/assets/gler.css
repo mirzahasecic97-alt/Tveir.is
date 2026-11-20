@@ -256,7 +256,18 @@ select option { background: #2a2d33; color: #fff; }
 }
 .gh-bordi__hn:hover { background: rgba(255, 255, 255, .2); }
 .gh-bordi__hn--gull { border-color: var(--acc); }
-@media (max-width: 520px) { .gh-bordi__texti { display: none; } .gh-bordi { padding-left: 12px; } }
+/* Stutta útgáfan kemur í stað textans í síma, svo Sýnidæmi sést alltaf */
+.gh-bordi__stutt { display: none; font-size: 13.5px; font-weight: 500; color: #fff; white-space: nowrap; }
+@media (max-width: 520px) {
+  .gh-bordi__texti { display: none; }
+  .gh-bordi__stutt { display: inline; }
+  .gh-bordi { padding-left: 12px; gap: 8px; }
+  .gh-bordi__hn { padding: 10px 12px; font-size: 13px; }
+}
+@media (max-width: 360px) {
+  .gh-bordi { gap: 6px; padding: 6px 6px 6px 10px; }
+  .gh-bordi__hn { padding: 9px 10px; font-size: 12.5px; }
+}
 body { padding-bottom: 80px; }
 @media (prefers-reduced-motion: reduce) { .gh-bordi { animation: none; } }
 
@@ -380,3 +391,23 @@ html.gh-skipti-keyrir #main, html.gh-skipti-ut #main { will-change: transform; }
 
 /* Síðuskipti: pláss fyrir skrunstikuna alltaf frátekið, svo hausinn hliðrast aldrei á milli síðna */
 html { scrollbar-gutter: stable; }
+
+/* --------------------------------------------------------------------------
+   Sýnidæmi í hausnum: nafn gestsins (ef það var skrifað) og orðið Sýnidæmi.
+   Sést líka í síma, ólíkt nafninu á venjulegum aðgangi.
+   -------------------------------------------------------------------------- */
+.phead__notandi--synid { display: block !important; max-width: 160px; }
+.phead__notandi--synid strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.phead__synid { display: block; font-size: 12.5px; color: var(--soft); white-space: nowrap; }
+.phead__notandi--synid strong + .phead__synid { margin-top: 1px; }
+.phead__loka { white-space: nowrap; }
+@media (max-width: 560px) {
+  .phead__notandi--synid { max-width: 96px; font-size: 12.5px; }
+  .phead__inn:has(.phead__notandi--synid) .phead__hnappar { gap: 6px; }
+}
+/* Þrengstu símarnir: Loka dugar við hliðina á orðinu Sýnidæmi */
+@media (max-width: 420px) {
+  .phead__loka-sd { display: none; }
+  .phead__notandi--synid { max-width: 78px; }
+  .phead__inn:has(.phead__notandi--synid) .phead__tveir { height: 22px; }
+}

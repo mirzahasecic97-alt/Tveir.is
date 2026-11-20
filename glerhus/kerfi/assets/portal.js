@@ -30,22 +30,35 @@ export const sersnid = (() => {
 })();
 /* Íþróttafólk og áhrifavaldar fá sitt eigið kerfi í sýnidæminu (persona.js) */
 export const erPersona = () => !!sersnid && ['ithrottir', 'ahrif'].includes(sersnid.grein);
-if (erPersona() && /(^|\/)stjornbord\.html$/.test(location.pathname)) location.replace('mitt.html' + location.search);
 /* Verktakar og lítil fyrirtæki fá Tilboð og Myndir í sýnidæminu (verktaki.js) */
 export const erVerktaki = () => !!sersnid && ['verktaki', 'fyrirtaeki'].includes(sersnid.grein);
+/* Lítil fyrirtæki fá sitt eigið yfirlit (fyrirtaeki.html), verktakar byrja á Tilboðum */
+export const erFyrirtaeki = () => !!sersnid && sersnid.grein === 'fyrirtaeki';
+const erBaraVerktaki = () => !!sersnid && sersnid.grein === 'verktaki';
+/* Fyrsta síðan í sýnidæmi hvers hóps. Stofurnar byrja á Stjórnborðinu. */
+export const upphafssida = () => (erPersona() ? 'mitt.html' : erFyrirtaeki() ? 'fyrirtaeki.html'
+  : erBaraVerktaki() ? 'tilbod.html' : 'stjornbord.html');
+if (sersnid && /(^|\/)stjornbord\.html$/.test(location.pathname) && upphafssida() !== 'stjornbord.html') {
+  location.replace(upphafssida() + location.search);
+}
 export const ertengt = (id) => !!sersnid && (sersnid.tengingar || []).includes(id);
-/* Tenging kallar á sinn hluta: bókhaldskerfi opnar Bókhald, miðill opnar Tölfræði */
-export const ervalid = (id) => !sersnid || (sersnid.einingar || []).includes(id)
-  || (id === 'tekjur' && (ertengt('payday') || ertengt('dk')))
-  || (id === 'tolfraedi' && (ertengt('facebook') || ertengt('instagram')));
+/* Í sýnidæminu birtist nákvæmlega það sem gesturinn valdi, ekkert annað */
+export const ervalid = (id) => !sersnid || (sersnid.einingar || []).includes(id);
 export const bokhaldskerfi = () => (ertengt('payday') ? 'Payday' : ertengt('dk') ? 'DK' : null);
 const TENGINGAR_HEITI = {
   gmail: ['Gmail', 'Póstur á verk-netfangið verður að verkum og lokið-pósturinn fer héðan'],
   facebook: ['Facebook', 'Áhorf og fylgjendur síðunnar koma inn á hverjum morgni'],
   instagram: ['Instagram', 'Áhorf, heimsóknir og fylgjendur koma inn á hverjum morgni'],
+  googlecalendar: ['Google Calendar', 'Fundirnir koma á dagatalið, við hlið skiladaga'],
+  tiktok: ['TikTok', 'Tölurnar skráðar í höndunum eða úr skrá'],
   dk: ['DK', 'Lokin verk og samningar verða að reikningum í DK'],
-  payday: ['Payday', 'Lokin verk og samningar verða að reikningum í Payday']
+  payday: ['Payday', 'Lokin verk og samningar verða að reikningum í Payday'],
+  shopify: ['Shopify', 'Pantanir og sala úr vefversluninni'],
+  claude: ['Claude', 'Gervigreind sem skrifar drög að svörum og samantektum'],
+  chatgpt: ['ChatGPT', 'Gervigreind sem skrifar drög að svörum og samantektum']
 };
+/* Tengingar sem eru ekki tilbúnar í alvöru aðganginum */
+const TENGINGAR_SMIDI = ['dk', 'payday', 'shopify', 'claude', 'chatgpt'];
 /* Tengingarnar sem gesturinn valdi, sem glerspjald */
 export function tengingaSpjald() {
   const valdar = sersnid ? (sersnid.tengingar || []).filter((t) => TENGINGAR_HEITI[t]) : [];
@@ -55,7 +68,7 @@ export function tengingaSpjald() {
     el('ul', {}, valdar.map((t, i) => el('li', { style: '--d:' + (200 + i * 180) + 'ms' }, [
       el('b', { texti: TENGINGAR_HEITI[t][0] }),
       el('span', { texti: TENGINGAR_HEITI[t][1] }),
-      el('em', { texti: 'Tengt' })
+      el('em', { texti: TENGINGAR_SMIDI.includes(t) ? 'Í smíðum' : t === 'tiktok' ? 'Handvirkt' : 'Tengt' })
     ])))
   ]);
 }
@@ -99,7 +112,14 @@ export const stofuMerki = () => {
   const m = sersnid && sersnid.merki;
   return typeof m === 'string' && (/^https:\/\//.test(m) || /^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,/.test(m)) ? m : null;
 };
-const stofuNafn = () => (sersnid && sersnid.nafn) || 'Tveir';
+export const stofuNafn = () => (sersnid && sersnid.nafn) || 'Tveir';
+/* Nafnið sem gesturinn skrifaði í Settu saman. Tómt ef hann skrifaði
+   ekkert og sjálfgefna nafnið stendur, svo það birtist ekki eins og alvöru nafn. */
+const SJALFGEFIN_NOFN = ['Stofan', 'Fyrirtækið', 'Glerhúsið mitt'];
+export const gestNafn = () => {
+  const n = sersnid && typeof sersnid.nafn === 'string' ? sersnid.nafn.trim() : '';
+  return n && !SJALFGEFIN_NOFN.includes(n) ? n : '';
+};
 
 export function el(tag, eigin, born) {
   const n = document.createElement(tag);
@@ -250,7 +270,7 @@ function setjaTolu(n, fjoldi) {
   n.hidden = fjoldi === 0;
 }
 
-/* Kallað eftir að tillaga er afgreidd eða taskur hakaður, svo tölurnar
+/* Kallað eftir að tillaga er afgreidd eða verk hakað, svo tölurnar
    í hausnum séu réttar án þess að hlaða síðunni upp á nýtt. */
 export function uppfaeraMerki() {
   if (hausMerki) {
@@ -317,6 +337,7 @@ export function teiknaHaus(ek, heiti) {
   uppfaeraMerki();
 
   const nuna = location.pathname.split('/').pop() || 'stjornbord.html';
+  const tengill = (slod, texti) => el('a', { href: slod, texti, 'aria-current': nuna === slod ? 'page' : null });
 
   /* Tölurnar í merkjunum haldast á meðan nýju tölurnar eru sóttar, svo
      þær blikki ekki þegar skipt er um síðu (skipti.js) */
@@ -329,7 +350,7 @@ export function teiknaHaus(ek, heiti) {
   fylla(haus, [
     el('div', { class: 'wrap' }, [
       el('div', { class: 'phead__inn' }, [
-        el('a', { class: 'phead__logo', href: admin ? (erPersona() ? 'mitt.html' : 'stjornbord.html') : 'yfirlit.html',
+        el('a', { class: 'phead__logo', href: admin ? upphafssida() : 'yfirlit.html',
                   'aria-label': 'Glerhúsið' }, [
           /* Hafi viðskiptavinurinn sett inn merki kemur það í stað okkar.
              Þetta er hans vinnusvæði, tvö merki eru einu of mikil. */
@@ -348,30 +369,41 @@ export function teiknaHaus(ek, heiti) {
         ]),
         el('span', { class: 'phead__skil', 'aria-hidden': 'true' }),
 
+        /* Sýnidæmi fyrir íþróttafólk og áhrifavalda: bara það sem skiptir máli */
         admin && erPersona()
           ? el('nav', { class: 'phead__nav', 'aria-label': 'Vinnusvæði' }, [
-              el('a', { href: 'mitt.html', texti: 'Yfirlit', 'aria-current': nuna === 'mitt.html' ? 'page' : null }),
-              ervalid('samstarf') ? el('a', { href: 'samstarfsadilar.html', texti: 'Samstarfsaðilar', 'aria-current': nuna === 'samstarfsadilar.html' ? 'page' : null }) : null,
-              ervalid('efnisplan') ? el('a', { href: 'efnisplan.html', texti: 'Efnisplan', 'aria-current': nuna === 'efnisplan.html' ? 'page' : null }) : null,
-              sersnid.stofa && sersnid.stofa !== 'enginn' ? el('a', { href: 'beidnir.html', texti: 'Beiðnir', 'aria-current': nuna === 'beidnir.html' ? 'page' : null }) : null,
-              ervalid('postur') || ervalid('postur_verk') ? el('a', { href: 'samskipti.html', texti: 'Pósturinn', 'aria-current': nuna === 'samskipti.html' ? 'page' : null }) : null
+              tengill('mitt.html', 'Yfirlit'),
+              ervalid('samstarf') ? tengill('samstarfsadilar.html', 'Samstarfsaðilar') : null,
+              ervalid('efnisplan') ? tengill('efnisplan.html', 'Efnisplan') : null,
+              ['tveir', 'onnur'].includes(sersnid.stofa) && ervalid('stofan') ? tengill('beidnir.html', 'Beiðnir') : null
+            ])
+        /* Sýnidæmi fyrir lítil fyrirtæki: yfirlitið og tilboðin */
+        : admin && erFyrirtaeki()
+          ? el('nav', { class: 'phead__nav', 'aria-label': 'Vinnusvæði' }, [
+              tengill('fyrirtaeki.html', 'Yfirlit'),
+              ervalid('tilbod') ? tengill('tilbod.html', 'Tilboð') : null
+            ])
+        /* Sýnidæmi fyrir verktaka: tilboðin og myndirnar */
+        : admin && erBaraVerktaki()
+          ? el('nav', { class: 'phead__nav', 'aria-label': 'Vinnusvæði' }, [
+              ervalid('tilbod') || !ervalid('myndir') ? tengill('tilbod.html', 'Tilboð') : null,
+              ervalid('myndir') ? tengill('myndir.html', 'Myndir') : null
             ])
         : admin
           ? el('nav', { class: 'phead__nav', 'aria-label': 'Vinnusvæði' }, [
               el('a', { href: 'stjornbord.html', texti: 'Stjórnborð',
                         'aria-current': nuna === 'stjornbord.html' ? 'page' : null }),
-              erVerktaki() && ervalid('tilbod') ? el('a', { href: 'tilbod.html', texti: 'Tilboð', 'aria-current': nuna === 'tilbod.html' ? 'page' : null }) : null,
-              erVerktaki() && ervalid('myndir') ? el('a', { href: 'myndir.html', texti: 'Myndir', 'aria-current': nuna === 'myndir.html' ? 'page' : null }) : null,
               ervalid('tillogur') ? el('a', { href: 'tillogur.html',
                         'aria-current': nuna === 'tillogur.html' ? 'page' : null }, [
                 document.createTextNode('Tillögur'), merki
               ]) : null,
-              el('a', { href: 'okkar.html',
+              /* Innri verkin eru fyrir Tveir sjálf, ekki sýnidæmið */
+              sersnid ? null : el('a', { href: 'okkar.html',
                         'aria-current': nuna === 'okkar.html' ? 'page' : null }, [
                 document.createTextNode('Okkar'), merkiOkkar
               ]),
               /* Samskipti: pósthólfið og fyrirspurnirnar, fellivalmynd í tölvu */
-              el('div', { class: 'phead__hopur' }, [
+              sersnid && !ervalid('postur') && !ervalid('postur_verk') ? null : el('div', { class: 'phead__hopur' }, [
                 el('a', { href: 'samskipti.html', class: 'phead__hopur-hn', 'aria-haspopup': 'true',
                           'aria-current': ['samskipti.html', 'fyrirspurnir.html'].includes(nuna) ? 'page' : null }, [
                   document.createTextNode('Samskipti'), merkiSamskipti
@@ -382,7 +414,7 @@ export function teiknaHaus(ek, heiti) {
                   el('span', { class: 'phead__undir phead__undir--kemur', texti: 'Messenger og Instagram koma' })
                 ])
               ]),
-              el('a', { href: 'dagatal.html', texti: 'Dagatal',
+              sersnid && !ertengt('googlecalendar') ? null : el('a', { href: 'dagatal.html', texti: 'Dagatal',
                         'aria-current': nuna === 'dagatal.html' ? 'page' : null }),
               ervalid('tekjur') ? el('a', { href: 'bokhald.html', texti: 'Bókhald',
                         'aria-current': nuna === 'bokhald.html' ? 'page' : null }) : null,
@@ -418,21 +450,35 @@ export function teiknaHaus(ek, heiti) {
               e.currentTarget.setAttribute('aria-expanded', String(opid));
             }
           }) : null,
-          el('div', { class: 'phead__notandi' }, [
-            el('strong', { texti: admin && erPersona() ? stofuNafn() : ek.nafn }),
-            document.createTextNode(admin && erPersona() ? 'Sýnidæmi' : admin ? stofuNafn() : ek.netfang)
-          ]),
-          /* Stillingar: aðgangur, lykilorð, undirskrift og tengingar */
-          el('a', {
+          /* Í sýnidæmi: nafnið sem gesturinn skrifaði, ef eitthvað, og Sýnidæmi
+             undir. Aldrei nafnið á prufuaðganginum. Sést líka í síma. */
+          sersnid
+            ? el('div', { class: 'phead__notandi phead__notandi--synid' }, [
+                gestNafn() ? el('strong', { texti: gestNafn() }) : null,
+                el('span', { class: 'phead__synid', texti: 'Sýnidæmi' })
+              ])
+            : el('div', { class: 'phead__notandi' }, [
+                el('strong', { texti: ek.nafn }),
+                document.createTextNode(admin ? stofuNafn() : ek.netfang)
+              ]),
+          /* Stillingar: aðgangur, lykilorð, undirskrift og tengingar.
+             Sýnidæmi persónu, verktaka og fyrirtækis eru án þeirra. */
+          erPersona() || erVerktaki() ? null : el('a', {
             class: 'btn btn--sm btn--ghost phead__lykill phead__stillingar', href: 'stillingar.html',
             'aria-label': 'Stillingar', title: 'Stillingar',
             'aria-current': nuna === 'stillingar.html' ? 'page' : null,
             html: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'
           }),
-          el('button', {
-            type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Út',
-            onclick: async () => { const g = await gogn(); await g.utskra(); location.replace('./'); }
-          })
+          /* Í sýnidæmi er engin útskráning, bara leið aftur á vefinn */
+          sersnid
+            ? el('a', { class: 'btn btn--sm btn--ghost phead__loka', href: '../index.html', 'aria-label': 'Loka sýnidæmi' }, [
+                document.createTextNode('Loka'),
+                el('span', { class: 'phead__loka-sd', texti: ' sýnidæmi' })
+              ])
+            : el('button', {
+                type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Út',
+                onclick: async () => { const g = await gogn(); await g.utskra(); location.replace('./'); }
+              })
         ])
       ])
     ])
@@ -724,6 +770,8 @@ function felaBorda(bordi) {
 }
 
 function syndaSimabordi() {
+  /* Í sýnidæmi er Sýnidæmisborðinn neðst, tveir borðar þar rekast á */
+  if (sersnid) return;
   if (!erSimi() || erUppsett() || bordiFalinn()) return;
   if (document.querySelector('.simabordi')) return;
 
@@ -765,7 +813,7 @@ if (document.readyState === 'loading') {
 }
 
 /* ------------------------------------------------------------------
-   Taskspjald
+   Verkspjald
    ------------------------------------------------------------------ */
 let spjald = null;
 
@@ -953,7 +1001,7 @@ function skraLina(sk, g) {
 }
 
 /* ------------------------------------------------------------------
-   Tasklína
+   Verklína
    ------------------------------------------------------------------ */
 export function taskLina(t, { admin, eftir }) {
   const lokid = t.stada === 'lokid';
@@ -1000,9 +1048,12 @@ export { gogn, STODUR_TASK, STODUR_VERK, STODUR_INNRI, FORGANGUR, stillingar, un
 /* Glerborði neðst á skjánum þegar gesturinn kom úr "Settu saman ykkar kerfi" */
 function synaBorda() {
   if (!sersnid || document.querySelector('.gh-bordi')) return;
+  const nafn = gestNafn();
   const b = el('div', { class: 'gh-bordi', role: 'region', 'aria-label': 'Sýnidæmi' }, [
     el('span', { class: 'gh-bordi__punktur', 'aria-hidden': 'true' }),
-    el('span', { class: 'gh-bordi__texti', texti: 'Sýnidæmi ' + stofuNafn() }),
+    el('span', { class: 'gh-bordi__texti', texti: nafn ? 'Sýnidæmi: ' + nafn : 'Sýnidæmi með tilbúnum gögnum' }),
+    /* Í síma er ekki pláss fyrir allt, en orðið Sýnidæmi sést alltaf */
+    el('span', { class: 'gh-bordi__stutt', texti: 'Sýnidæmi' }),
     el('a', { class: 'gh-bordi__hn', href: '../byggja.html?breyta=1', texti: 'Breyta vali' }),
     el('a', { class: 'gh-bordi__hn gh-bordi__hn--gull', href: '../index.html#kynning', texti: 'Sækja um aðgang' })
   ]);

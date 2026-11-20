@@ -373,3 +373,21 @@ a:not([class]) { color: var(--acc-djupt); }
 .hero2__prufa i { width: 8px; height: 8px; border-radius: 50%; background: #f0b45a; box-shadow: 0 0 0 4px rgba(240, 180, 90, .2); }
 .kynning2__smatt { margin-top: 14px !important; font-size: 15px !important; }
 .kynning2__smatt a { color: var(--acc-djupt); font-weight: 500; }
+
+/* Einföldun: forsíða og opnar síður */
+/* Sækja um í hamborgaranum: aðeins í mjóum síma, þar sem hausahnappurinn er falinn */
+.haus__tenglar a.haus__umsokn-tengill { display: none; }
+@media (max-width: 420px) {
+  .haus__tenglar a.haus__umsokn-tengill { display: block; font-weight: 600; color: var(--acc-djupt) !important; }
+}
+/* Tengingaröðin: virkar fyrst, svo það sem er á leiðinni, aðeins daufara */
+.teng__rod li.teng__rod-merki { background: none !important; border: 0 !important; box-shadow: none !important; padding: 7px 2px 7px 6px !important; font-size: 14px; font-weight: 500; color: var(--soft) !important; }
+.teng__rod li.teng__rod-leidinni { opacity: .62; }
+.teng__rod li.teng__rod-leidinni .teng-merki { filter: saturate(.6); }
+/* Í smíðum merki inni í fyrirsögn eða lista */
+h3 .teng__smidi, .vk__punktar .teng__smidi { display: inline-block; vertical-align: middle; margin-left: 6px; font-size: 11.5px; padding: 5px 9px; }
+/* Verðlínan og smátt letur við formin */
+.fh-verd a { color: var(--acc-djupt); font-weight: 500; }
+.sa-form__personuvernd { margin: -4px 0 0; color: var(--soft); font-size: 13.5px; }
+.sa-form__personuvernd a { color: var(--acc-djupt); }
+.sa-bod { margin-top: 16px; color: var(--soft); font-size: 15.5px; max-width: 46em; }

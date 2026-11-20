@@ -109,17 +109,13 @@ async function start() {
         el('div', { class: 'gh-bok__haus' }, [
           el('span', { class: 'gh-bok__merki', texti: bokhaldskerfi() === 'Payday' ? 'P' : 'DK' }),
           el('div', {}, [
-            el('strong', { texti: 'Tengt við ' + bokhaldskerfi() }),
-            el('span', { class: 'gh-bok__stada', texti: 'Samstillt rétt í þessu' })
+            el('strong', { texti: bokhaldskerfi() + ' tengingin er í smíðum' }),
+            el('span', { class: 'gh-bok__stada', texti: 'Svona mun hún virka' })
           ])
         ]),
         el('p', { texti: 'Samningar og lokin verk verða að reikningum í ' + bokhaldskerfi() + '. Þú þarft ekki að slá neitt inn tvisvar.' }),
         el('button', { type: 'button', class: 'btn', texti: 'Búa til reikninga fyrir ' + manHeiti(NU_MAN), onclick: (e) => {
-          const b = e.currentTarget; b.disabled = true; b.textContent = 'Sendi í ' + bokhaldskerfi() + '…';
-          setTimeout(() => {
-            b.textContent = 'Reikningar komnir í ' + bokhaldskerfi();
-            tilkynna((virkir === 1 ? '1 reikningur' : virkir + ' reikningar') + ' fyrir ' + manHeiti(NU_MAN) + ' búnir til í ' + bokhaldskerfi());
-          }, 900);
+          tilkynna('Í alvöru aðganginum verða reikningarnir til beint í ' + bokhaldskerfi() + ' þegar tengingin er tilbúin');
         } })
       ]) : null,
 

@@ -1,0 +1,78 @@
+/* ==========================================================================
+   Glerhúsið fyrir verktaka og lítil fyrirtæki (verktaki.js)
+   Nýjar reglur. Eldri vt-* reglurnar eru áfram í persona.css og þessi
+   skrá kemur á eftir henni.
+   ========================================================================== */
+
+/* Texti undir fyrirsögn í blokk */
+.vt-undir { margin: -6px 0 12px; }
+
+/* Tilboð: fyrirsagnir yfir línunum í ritlinum */
+.vt-lina--haus { font-size: 12.5px; color: var(--soft); padding: 0 4px; margin-bottom: -2px; }
+.vt-baeta { justify-self: start; }
+
+/* Án VSK, VSK 24% og samtals með VSK */
+.vt-summur { margin: 0; display: grid; gap: 4px; padding: 10px 12px; border-radius: 12px; background: rgba(28, 48, 80, .035); }
+.vt-summur__lina { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--soft); }
+.vt-summur__lina dt, .vt-summur__lina dd { margin: 0; }
+.vt-summur__lina dd { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vt-summur__lina--adal { padding-top: 6px; margin-top: 2px; border-top: 1px solid rgba(28, 48, 80, .08); color: var(--ink); }
+.vt-summur__lina--adal dt { font-weight: 600; }
+.vt-summur__lina--adal dd { font: 600 17px/1.2 var(--f-head, 'Inter Tight', sans-serif); }
+.vt-summur--stor .vt-summur__lina--adal dd { font-size: 21px; }
+.vt-kort .vt-summur { margin-top: auto; }
+
+/* Tilboðið eins og viðskiptavinurinn sér það */
+.vt-syn { max-width: 520px; }
+.vt-syn .pdialog__haus { align-items: center; margin-bottom: 12px; }
+.vt-syn__merki { flex: 1; margin: 0; font-size: 13px; font-weight: 600; color: var(--soft); text-transform: uppercase; letter-spacing: .04em; }
+.vt-syn__blad { display: grid; gap: 12px; padding: 18px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 1px rgba(28, 48, 80, .08), 0 10px 30px -18px rgba(28, 48, 80, .35); }
+.vt-syn__fra { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(28, 48, 80, .07); }
+.vt-syn__fra strong { display: block; font: 600 16px/1.2 var(--f-head, 'Inter Tight', sans-serif); color: var(--ink); }
+.vt-syn__fra span:not(.ps-stafur) { font-size: 13px; color: var(--soft); }
+.vt-syn__titill { margin: 0; font: 600 21px/1.2 var(--f-head, 'Inter Tight', sans-serif); color: var(--ink); }
+.vt-syn__titill + .ps-smatt { margin-top: -8px; }
+.vt-syn__hn { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding-top: 4px; }
+.vt-syn__hn .btn { width: 100%; justify-content: center; }
+.vt-syn__ath { margin-top: 12px; text-align: center; }
+
+/* Myndir: velja fyrir, á meðan eða eftir */
+.vt-verk__hn { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.vt-hvenaer__merki { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--soft); }
+.vt-hvenaer, .fy-nytt select, .fy-postur select { font: inherit; font-size: 14px; min-height: 36px; padding: 0 10px; border-radius: 10px; border: 1px solid rgba(28, 48, 80, .14); background: rgba(255, 255, 255, .85); color: var(--ink); }
+.vt-hvenaer:focus, .fy-nytt select:focus, .fy-postur select:focus, .fy-nytt input:focus { outline: none; border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 18%, transparent); }
+.vt-mynd__tom--medan { color: #b07a1f; background: linear-gradient(150deg, rgba(240, 180, 90, .18), rgba(240, 180, 90, .05)); }
+
+/* Lítið fyrirtæki: verk dagsins */
+.fy-nytt { display: grid; grid-template-columns: minmax(0, 1fr) 150px auto; gap: 8px; align-items: center; margin-bottom: 14px; }
+.fy-nytt input { font: inherit; font-size: 14.5px; min-height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(28, 48, 80, .14); background: rgba(255, 255, 255, .85); color: var(--ink); min-width: 0; }
+.fy-nytt select { min-height: 40px; }
+.fy-folk { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+.fy-manneskja { display: grid; gap: 10px; align-content: start; padding: 12px; border-radius: 16px; background: rgba(28, 48, 80, .035); }
+.fy-manneskja__haus { display: flex; align-items: center; gap: 10px; }
+.fy-manneskja__haus strong { display: block; font-size: 14.5px; color: var(--ink); }
+.fy-manneskja__haus span:not(.ps-stafur) { font-size: 12.5px; color: var(--soft); }
+.fy-hak { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.fy-hak label { display: flex; align-items: flex-start; gap: 10px; padding: 7px 8px; border-radius: 10px; background: rgba(255, 255, 255, .75); font-size: 14px; color: var(--ink); cursor: pointer; }
+.fy-hak input { flex: 0 0 auto; width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--acc); cursor: pointer; }
+.fy-hak .er-buid span { color: var(--soft); text-decoration: line-through; }
+
+/* Lítið fyrirtæki: póstur, pantanir og tekjur */
+.fy-postur { flex-wrap: wrap; }
+.fy-postur .ps-listi__t strong { white-space: normal; }
+.fy-postur__hn { display: inline-flex; align-items: center; gap: 6px; }
+.fy-tolur { margin-bottom: 12px; }
+.fy-samtals { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 12px 0 6px; padding-top: 10px; border-top: 1px solid rgba(28, 48, 80, .08); color: var(--ink); }
+.fy-samtals span { font-weight: 600; font-size: 14.5px; }
+.fy-samtals strong { font: 600 21px/1.2 var(--f-head, 'Inter Tight', sans-serif); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 680px) {
+  .vt-lina--haus { display: none; }
+  .vt-verk__haus { flex-wrap: wrap; }
+  .vt-verk__hn { justify-content: flex-start; }
+  .fy-nytt { grid-template-columns: minmax(0, 1fr) auto; }
+  .fy-nytt input { grid-column: 1 / -1; }
+  .fy-postur__hn { width: 100%; }
+  .fy-postur__hn select { flex: 1; min-width: 0; }
+  .fy-tolur strong { font-size: 16px; }
+}

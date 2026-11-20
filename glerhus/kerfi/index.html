@@ -72,7 +72,7 @@
 </main>
 
 <script type="module">
-import { gogn, opnaLykilord } from './assets/portal.js';
+import { gogn, opnaLykilord, sersnid } from './assets/portal.js';
 
 /* Slóðin lesin áður en Supabase ræsir og hreinsar hana */
 const vildiEndurstilla = new URLSearchParams(location.search).has('endurstilla')
@@ -141,7 +141,7 @@ if (ek && (vildiEndurstilla || g.erEndurstilling())) {
   history.replaceState(null, '', location.pathname);
   opnaLykilord({
     heiti: 'Veldu nýtt lykilorð',
-    inngangur: 'Fyrir ' + ek.netfang + '. Þú ert skráð/ur inn og ferð beint inn þegar það er komið.',
+    inngangur: 'Fyrir ' + ek.netfang + '. Þú ferð beint inn þegar það er komið.',
     netfang: ek.netfang,
     eftir: () => inn(ek)
   });
@@ -153,11 +153,30 @@ if (ek && (vildiEndurstilla || g.erEndurstilling())) {
     + 'Skrifaðu netfangið og biddu um nýjan.', 'err');
 }
 
-if (g.prufa) {
+/* Í prufu og sýnidæmi er engin innskráning fyrir gesti. Sýnidæmið opnast
+   í gegnum Settu saman. Á localhost helst formið svo hægt sé að prófa. */
+if (g.prufa || sersnid) {
+  const heima = ['localhost', '127.0.0.1'].includes(location.hostname);
   banner.hidden = false;
-  banner.innerHTML = '<strong>Prufustilling.</strong> Gögnin eru sýnidæmi í þessum vafra og fara ekki út á netið. '
-    + 'Skráðu þig inn sem viðskiptavinur með <code>anna@steinvik.is</code> eða sem stjórnandi með <code>sara@nordurljos.is</code>, '
-    + 'með hvaða lykilorði sem er.';
+  banner.textContent = 'Þetta er sýnidæmi. Opnaðu það í gegnum ';
+  const tengill = document.createElement('a');
+  tengill.href = '../byggja.html';
+  tengill.textContent = 'Settu saman';
+  banner.append(tengill, '.');
+  if (!heima && !g.prufa) {
+    /* Alvöru kerfi: gesturinn prófaði sýnidæmið í þessum vafra. Innskráningin helst,
+       og hægt er að hreinsa sýnidæmið í burtu. */
+    const hreinsa = document.createElement('button');
+    hreinsa.type = 'button'; hreinsa.className = 'texti-hn'; hreinsa.textContent = 'Ég er með aðgang';
+    hreinsa.addEventListener('click', () => { try { localStorage.removeItem('glerhusid-byggja'); } catch (e) { /* lokað */ } location.reload(); });
+    banner.append(' ', hreinsa);
+  }
+  if (!heima && g.prufa) {
+    form.hidden = true;
+    flipar.hidden = true;
+    document.getElementById('taeki').hidden = true;
+    document.getElementById('inngangur').textContent = 'Veldu hópinn þinn og það sem skiptir máli. Þá opnast kerfið með tilbúnum gögnum.';
+  }
 }
 
 gleymt.addEventListener('click', async () => {
