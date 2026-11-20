@@ -32,7 +32,9 @@ function samstillaPostholf_() {
     nytt[id] = lykill;
     if (sidast[id] === lykill) return;
 
-    const oll = th.getMessages();
+    /* Drög sem Gmail vistar meðan skrifað er eru ekki send skilaboð: sleppa þeim */
+    const oll = th.getMessages().filter((m) => !m.isDraft());
+    if (!oll.length) return;
     const skilabod = oll.slice(-POSTHOLF_SKILABOD).map((m) => {
       const fra = String(m.getFrom() || '');
       const netfang = netfangUr_(fra);
@@ -107,7 +109,7 @@ function sendaPostholfSvor_() {
       }
       const th = GmailApp.getThreadById(s.thradur_id);
       if (!th) { kalla_('merkja_postholf_svar', { p_id: s.id, p_villa: 'Þráðurinn fannst ekki í Gmail' }); return; }
-      const skilabod = th.getMessages();
+      const skilabod = th.getMessages().filter((m) => !m.isDraft());
       const theirra = skilabod.filter((m) => !/@tveir\.is$/.test(netfangUr_(m.getFrom())));
       const svaraTil = theirra.length ? theirra[theirra.length - 1] : skilabod[skilabod.length - 1];
       /* HTML útgáfan (texti og undirskrift með merki) var smíðuð á vinnusvæðinu */
