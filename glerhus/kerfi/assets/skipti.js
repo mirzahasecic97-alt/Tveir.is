@@ -110,7 +110,7 @@
   };
   var upphafsStilar = merkiStila();
 
-  async function skipta(slod, stefna) {
+  async function skipta(slod, stefna, { saga } = {}) {
     var min = ++umferd;
     var main = document.getElementById('main');
     if (!KYRRT) html.classList.add('gh-skipti-ut', 'gh-skipti-ut-' + stefna);
@@ -134,7 +134,7 @@
     document.querySelectorAll('dialog').forEach(function (d) { try { d.close(); } catch (v) { /* ekkert */ } d.remove(); });
 
     /* Nýja síðan inn: slóð fyrst, svo síðan lesi rétta slóð (t.d. ?f=) */
-    history.pushState({ glerhus: 1 }, '', slod);
+    if (!saga) history.pushState({ glerhus: 1 }, '', slod);
     sidastaSlod = location.pathname + location.search;
     document.title = svar.title;
     document.body.className = svar.body.className;
@@ -175,9 +175,16 @@
   /* Til baka og áfram: síðan hlaðin venjulega, alltaf rétt. Hopp innan
      síðunnar (t.d. #taskar) breytir bara slóðarenda og er látið í friði. */
   var sidastaSlod = location.pathname + location.search;
+  /* Til baka og áfram í vafranum (líka strokið til baka): rennur eins og
+     smellur, í átt að flipanum sem farið er á */
   window.addEventListener('popstate', function () {
     if (location.pathname + location.search === sidastaSlod) return;
-    location.reload();
+    if (!STUDD) { location.reload(); return; }
+    var flipar = Array.prototype.slice.call(document.querySelectorAll('.phead__nav a[href]:not(.phead__undir), a.phead__stillingar'));
+    var nu = flipar.findIndex(function (x) { return x.getAttribute('aria-current') === 'page'; });
+    var nyr = flipar.findIndex(function (x) { try { return new URL(x.href, location.href).pathname === location.pathname; } catch (v) { return false; } });
+    var stefna = nu !== -1 && nyr !== -1 && nyr < nu ? 'aftur' : nu !== -1 && nyr > nu ? 'fram' : 'aftur';
+    skipta(location.href, stefna, { saga: true });
   });
   window.addEventListener('pageshow', function (e) {
     if (e.persisted) html.classList.remove('gh-skipti-ut', 'gh-skipti-ut-fram', 'gh-skipti-ut-aftur');

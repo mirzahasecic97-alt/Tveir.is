@@ -28,6 +28,7 @@ const dagsTexti = (d) => d.getDate() + '. ' + MAN[d.getMonth()];
 /* Flokkarnir og litirnir þeirra */
 const FLOKKAR = {
   fundur: { heiti: 'Fundir', litur: '#5b93f0' },
+  personulegt: { heiti: 'Persónulegt', litur: '#d9669a' },
   verkefni: { heiti: 'Verkefni', litur: '#1c3050' },
   taskur: { heiti: 'Taskar viðskiptavina', litur: '#e0a21b' },
   innri: { heiti: 'Innri verk', litur: '#2e9e5b' }
@@ -84,7 +85,7 @@ async function start() {
       ...(fundir || []).map((f) => ({ flokkur: 'fundur', teg: 'fundur', titill: f.titill || '(enginn titill)', byrjar: new Date(f.byrjar), endar: new Date(f.endar),
         allan: f.allan_daginn, stadur: f.stadur, fundarhlekkur: oruggSlod(f.fundarhlekkur), tengill: oruggSlod(f.tengill), gestir: f.gestir, lysing: f.lysing })),
       /* Fundir sem voru skráðir hér (tími, staður, viðskiptavinur) */
-      ...(okkarFundir || []).map((f) => ({ flokkur: 'fundur', teg: 'fundur_okkar', id: f.id, titill: f.titill, byrjar: new Date(f.byrjar), endar: new Date(f.endar),
+      ...(okkarFundir || []).map((f) => ({ flokkur: f.tegund === 'personulegt' ? 'personulegt' : 'fundur', teg: 'fundur_okkar', id: f.id, titill: f.titill, byrjar: new Date(f.byrjar), endar: new Date(f.endar),
         allan: !!f.allan_daginn, stadur: f.stadur, lysing: f.lysing, undir: nafn(f), fundur: f })),
       ...(verkefni || []).filter((v) => v.skiladagur && v.stada !== 'tillaga').map((v) => ({
         flokkur: 'verkefni', teg: 'verkefni', id: v.id, titill: v.titill, byrjar: dagur(v.skiladagur), allan: true, lokid: verkLokid(v), undir: nafn(v), slod: 'verk.html?id=' + encodeURIComponent(v.id) })),
@@ -368,7 +369,7 @@ async function start() {
       await endurhlada(opnir);
     };
     ({ d: dlg } = spjald(a.titill, [
-      el('p', { class: 'dg-spjald__flokkur', style: '--l:' + f.litur }, [el('i', { 'aria-hidden': 'true' }), document.createTextNode(TEGUND[a.teg] + (a.lokid ? ', lokið' : ''))]),
+      el('p', { class: 'dg-spjald__flokkur', style: '--l:' + f.litur }, [el('i', { 'aria-hidden': 'true' }), document.createTextNode((a.flokkur === 'personulegt' ? 'Persónulegt, bara þú sérð þetta' : TEGUND[a.teg]) + (a.lokid ? ', lokið' : ''))]),
       el('dl', { class: 'dg-spjald__upp' }, [
         fundur ? el('div', {}, [el('dt', { texti: 'Hvenær' }), el('dd', { texti: timi })]) : null,
         a.undir ? el('div', {}, [el('dt', { texti: a.teg === 'innri' ? 'Á ábyrgð' : a.teg === 'undirverk' ? 'Fyrir' : 'Fyrirtæki' }), el('dd', { texti: a.undir })]) : null,
@@ -396,7 +397,7 @@ async function start() {
         okkar ? el('button', { type: 'button', class: 'btn', texti: 'Breyta', onclick: () => { dlg.close(); opnaNytt(ymd(a.byrjar), { fundur: a.fundur }); } }) : null,
         okkar ? (() => {
           let viss = false;
-          const hn = el('button', { type: 'button', class: 'btn btn--ghost btn--danger', texti: 'Eyða fundi', onclick: async () => {
+          const hn = el('button', { type: 'button', class: 'btn btn--ghost btn--danger', texti: a.flokkur === 'personulegt' ? 'Eyða' : 'Eyða fundi', onclick: async () => {
             if (!viss) { viss = true; hn.textContent = 'Viss? Ýttu aftur'; return; }
             const opnir = opnirGluggar();
             try { await g.eydaFundi(a.id); } catch (e) { villa.textContent = e.message || 'Ekki tókst að eyða.'; villa.hidden = false; return; }
@@ -433,7 +434,7 @@ async function start() {
 
   function opnaNytt(dagsetning, { fundur: breyta } = {}) {
     const NYR = '__nyr';
-    let tegund = 'fundur';
+    let tegund = breyta && breyta.tegund === 'personulegt' ? 'personulegt' : 'fundur';
     const fyrirVal = (medInnri) => el('select', {}, [
       el('option', { value: '', texti: medInnri ? 'Veldu' : 'Enginn sérstakur' }),
       ...fyrirtaeki.map((f) => el('option', { value: f.id, texti: f.nafn })),
@@ -495,7 +496,7 @@ async function start() {
         el('label', { class: 'dg-nytt__haka' }, [fAllan, document.createTextNode('Allan daginn')])]),
       rod('stadur', [fStadur]),
       rod('texti', [fLysing]),
-      rod('manneskja', [fFyrir, fNyttNafn])
+      rod('manneskja', [fFyrir, fNyttNafn], 'dg-nytt__rod--fyrir')
     ]);
 
     /* --- Verk (eitt eða mörg í röð) --- */
@@ -530,11 +531,14 @@ async function start() {
     const heitiNr = (i) => (heiti.value.trim() || 'Verk') + ' ' + (i + 1);
 
     function uppfaera() {
-      fundurSvid.hidden = tegund !== 'fundur'; verkSvid.hidden = tegund !== 'verk';
+      const vidburdur = tegund === 'fundur' || tegund === 'personulegt';
+      fundurSvid.hidden = !vidburdur; verkSvid.hidden = tegund !== 'verk';
+      fundurSvid.querySelector('.dg-nytt__rod--fyrir').hidden = tegund === 'personulegt';
       flipar.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.teg === tegund)));
-      if (tegund === 'fundur') {
+      if (vidburdur) {
         senda.textContent = breyta ? 'Vista breytingar' : 'Vista';
-        skyring.textContent = breyta ? '' : 'Fundurinn fer á Dagatalið hér. Viðskiptavinir sjá hann ekki.';
+        skyring.textContent = tegund === 'personulegt' ? 'Bara þú sérð þetta. Aðrir í kerfinu og viðskiptavinir sjá það ekki.'
+          : breyta ? '' : 'Fundurinn fer á Dagatalið hér. Viðskiptavinir sjá hann ekki.';
         return;
       }
       const n = tala();
@@ -555,7 +559,7 @@ async function start() {
         senda.textContent = 'Setja á dagatalið';
       }
     }
-    const flipar = el('div', { class: 'dg-nytt__flipar', role: 'group', 'aria-label': 'Tegund' }, [['fundur', 'Fundur'], ['verk', 'Verk']].map(([k, h]) =>
+    const flipar = el('div', { class: 'dg-nytt__flipar', role: 'group', 'aria-label': 'Tegund' }, [['fundur', 'Fundur'], ['personulegt', 'Persónulegt'], ['verk', 'Verk']].map(([k, h]) =>
       el('button', { type: 'button', class: 'filter', 'data-teg': k, texti: h, onclick: () => { tegund = k; uppfaera(); } })));
     if (breyta) flipar.hidden = true;
     [hver, fjoldi, heiti, bil, fyrsti].forEach((x) => { x.addEventListener('input', uppfaera); x.addEventListener('change', uppfaera); });
@@ -583,7 +587,7 @@ async function start() {
       const synaVillu = (texti, reitur) => { villa.textContent = texti; villa.hidden = false; if (reitur) reitur.focus(); };
       if (!t) return synaVillu('Skrifaðu titil.', titill);
 
-      if (tegund === 'fundur') {
+      if (tegund === 'fundur' || tegund === 'personulegt') {
         if (!gildurDagur(fDagur.value)) return synaVillu('Veldu dag.', fDagur);
         if (fFyrir.value === NYR && !fNyttNafn.value.trim()) return synaVillu('Skrifaðu nafn nýja viðskiptavinarins.', fNyttNafn);
         if (!gildurDagur(fTilDagur.value)) return synaVillu('Veldu hvenær þetta endar.', fTilDagur);
@@ -598,9 +602,9 @@ async function start() {
         }
         ibid = true; senda.disabled = true;
         try {
-          const fyrId = await fyrirtaekiId(fFyrir.value, fNyttNafn, fFyrir);
+          const fyrId = tegund === 'personulegt' ? null : await fyrirtaekiId(fFyrir.value, fNyttNafn, fFyrir);
           const gogn = { titill: t.slice(0, 200), byrjar: b0.toISOString(), endar: e0.toISOString(), allan_daginn: fAllan.checked,
-            stadur: fStadur.value.trim().slice(0, 300) || null, lysing: fLysing.value.trim().slice(0, 4000) || null, fyrirtaeki_id: fyrId };
+            stadur: fStadur.value.trim().slice(0, 300) || null, lysing: fLysing.value.trim().slice(0, 4000) || null, fyrirtaeki_id: fyrId, tegund };
           if (breyta) await g.uppfaeraFund(breyta.id, gogn); else await g.nyrFundur(gogn);
           tilkynna(t + ': ' + dagsTexti(b0) + (fAllan.checked ? '' : ' kl. ' + klTexti(b0)));
           if (syn === 'manudur') manudur = new Date(b0.getFullYear(), b0.getMonth(), 1);
@@ -654,7 +658,7 @@ async function start() {
       villa,
       el('div', { class: 'spjald__fot' }, [senda, el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Hætta við', onclick: () => dlg.close() })])
     ]);
-    ({ d: dlg } = spjald(breyta ? 'Breyta fundi' : 'Nýtt á dagatalið', [form]));
+    ({ d: dlg } = spjald(breyta ? (tegund === 'personulegt' ? 'Breyta' : 'Breyta fundi') : 'Nýtt á dagatalið', [form]));
     dlg.classList.add('dg-nytt-gluggi');
     uppfaera();
     setTimeout(() => titill.focus(), 50);
