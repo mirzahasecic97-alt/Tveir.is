@@ -544,3 +544,6 @@ html[data-thema="naeturborg"] .vl-gler img { filter: hue-rotate(112deg) saturate
   .trust--undir .logo-chip { height: 46px; width: 110px; border-radius: 13px; }
   .trust--undir .logo-chip img { max-height: 28px; max-width: 80px; }
 }
+/* KKÍ er hátt merki: fær að nýta hæðina í flísinni */
+.trust--undir .logo-chip img[src*="kki"] { max-height: 46px; }
+@media (max-width: 640px) { .trust--undir .logo-chip img[src*="kki"] { max-height: 38px; } }
