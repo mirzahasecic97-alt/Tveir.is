@@ -433,11 +433,7 @@ html:not([data-thema="naeturborg"]) .hr-opnun { display: none !important; }
   text-decoration: none; color: #fff; background: #1c3050;
   border: 1.5px solid var(--sr-brun); isolation: isolate;
 }
-.profill__mynd, .profill__vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
-.profill__mynd { transition: transform .8s cubic-bezier(.22, 1, .36, 1); }
-.profill__vid { opacity: 0; transition: opacity .45s ease; }
-.profill.er-ad-spila .profill__vid { opacity: 1; }
-.profill:hover .profill__mynd { transform: scale(1.04); }
+.profill__mynd { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
 .profill::after { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(16, 28, 48, .88) 0%, rgba(16, 28, 48, .35) 32%, rgba(16, 28, 48, 0) 55%); }
 .profill__texti { position: absolute; left: clamp(18px, 2.4vw, 30px); bottom: clamp(18px, 2.4vw, 28px); z-index: 2; display: flex; flex-direction: column; gap: 8px; }
 .profill__flokkur { align-self: flex-start; font: 500 12.5px/1 var(--f-body); padding: 7px 11px; border-radius: 999px; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .35); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
