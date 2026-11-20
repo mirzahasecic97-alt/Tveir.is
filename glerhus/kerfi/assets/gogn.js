@@ -144,6 +144,7 @@ function undirverkVilla(error) {
   if (/row-level security|permission denied|unauthorized|forbidden/i.test(bod) || String(stada) === '403') {
     return 'Þú hefur ekki aðgang að þessu.';
   }
+  if (/'dags' column|column [^ ]*\.?dags /i.test(bod)) return 'Dagatalið vantar eina breytingu í gagnagrunninum: keyrðu migrations/2026-11-20-dagatal-plan.sql.';
   if (/tengill|check constraint/i.test(bod)) return 'Hlekkurinn þarf að byrja á https:// og vera án bila.';
   if (/already exists|duplicate/i.test(bod)) return 'Skrá með þessu nafni er þegar til. Prófaðu aftur.';
   if (/not found|does not exist/i.test(bod)) return 'Fannst ekki. Endurhlaðaðu síðuna og prófaðu aftur.';
@@ -554,10 +555,30 @@ async function supabaseBakendi() {
         .eq('task_id', task_id).order('rod', { ascending: false }).limit(1);
       kastaUv(sidast);
       const fra = sidast.data && sidast.data[0] ? Number(sidast.data[0].rod) + 1 : 1;
+      /* titlar: texti, eða { titill, dags } þegar undirverkið fær dag á dagatalinu */
       const svar = await sb.from('undirverk')
-        .insert(titlar.map((titill, i) => ({ task_id, titill: String(titill).slice(0, 200), rod: fra + i })))
+        .insert(titlar.map((x, i) => {
+          const lina = { task_id, titill: String(typeof x === 'object' ? x.titill : x).slice(0, 200), rod: fra + i };
+          if (x && typeof x === 'object' && x.dags) lina.dags = x.dags;
+          return lina;
+        }))
         .select();
       kastaUv(svar); return svar.data;
+    },
+
+    /* Undirverk með dag, fyrir Dagatalið. Tómur listi ef dálkurinn er ekki
+       kominn (migrations/2026-11-20-dagatal-plan.sql). */
+    async undirverkADagatali() {
+      /* Sama gluggi og fundirnir: 60 dagar aftur, allt fram í tímann */
+      const fra = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
+      const svar = await sb.from('undirverk')
+        .select('id, task_id, titill, dags, lokid, fyrirtaeki(nafn), taskar(titill, stada)')
+        .gte('dags', fra).order('dags').limit(2000);
+      if (svar.error) {
+        if (/'dags' column|column [^ ]*\.?dags |undirverk\.dags/i.test(String(svar.error.message))) return [];
+        kastaUv(svar);
+      }
+      return svar.data || [];
     },
 
     async uppfaeraUndirverk(id, breytingar) {
@@ -1619,8 +1640,10 @@ function prufuBakendi() {
       g.undirverk = g.undirverk || [];
       const minir = g.undirverk.filter((u) => u.task_id === task_id);
       const fra = minir.length ? Math.max(...minir.map((u) => Number(u.rod) || 0)) + 1 : 1;
-      const nyjir = titlar.map((titill, i) => ({
-        id: nyttId(), task_id, fyrirtaeki_id: t ? t.fyrirtaeki_id : null, rod: fra + i, titill,
+      const nyjir = titlar.map((x, i) => ({
+        id: nyttId(), task_id, fyrirtaeki_id: t ? t.fyrirtaeki_id : null, rod: fra + i,
+        titill: String(x && typeof x === 'object' ? x.titill : x).slice(0, 200),
+        dags: (x && typeof x === 'object' && x.dags) || null,
         lokid: false, lokid_dags: null, skra_slod: null, skra_nafn: null, skra_staerd: null,
         tengill: null, senda: true, sent_dags: null, stofnad: new Date().toISOString()
       }));
@@ -1636,6 +1659,13 @@ function prufuBakendi() {
       if (u.lokid && !varLokid) u.lokid_dags = new Date().toISOString();
       if (!u.lokid) u.lokid_dags = null;
       vista(); return { ...u };
+    },
+
+    async undirverkADagatali() {
+      return (g.undirverk || []).filter((u) => u.dags).map((u) => {
+        const t = finna(g.taskar, u.task_id);
+        return { ...u, fyrirtaeki: fyrNafn(u.fyrirtaeki_id), taskar: t ? { titill: t.titill, stada: t.stada } : null };
+      });
     },
 
     async eydaUndirverk(u) {

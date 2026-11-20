@@ -155,6 +155,42 @@ export function undirverkHluti({ t, listi, admin, g, teiknaAftur, eftir }) {
           : el('span', { class: 'uv__bidur', texti: 'Póstur fer innan 5 mín.' });
     }
 
+    /* Dagurinn á dagatalinu. Stjórnandi breytir honum hér, viðskiptavinur sér hann. */
+    let dagsHluti = null;
+    if (admin) {
+      const reitur = el('input', { type: 'date', class: 'uv__dags', value: u.dags || '', 'aria-label': 'Dagur fyrir ' + u.titill,
+        title: 'Dagur á dagatalinu' });
+      /* Vistað þegar farið er úr reitnum eða ýtt á Enter, ekki í miðjum
+         innslætti. Fari dagurinn fram yfir skiladag tasksins færist hann með. */
+      /* Bara heill dagur vistast. Hálfskrifaður reitur (tómur) þurrkar aldrei út
+         daginn; hann er tekinn af á Dagatalinu. */
+      let sidast = reitur.value;
+      let ibid = false;
+      const gildur = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v) && Number(v.slice(0, 4)) >= 2000 && Number(v.slice(0, 4)) <= 2100;
+      const vista = () => {
+        const v = reitur.value;
+        if (ibid || v === sidast || !gildur(v)) return;
+        ibid = true;
+        reyna(async () => {
+          try {
+            await g.uppfaeraUndirverk(u.id, { dags: v });
+            sidast = v;
+            const skil = t && t.skiladagur ? String(t.skiladagur).slice(0, 10) : null;
+            if (t && (!skil || v > skil)) { await g.uppfaeraTask(t.id, { skiladagur: v }); t.skiladagur = v; }
+          } finally { ibid = false; }
+          /* Lokaði fólk glugganum á meðan: bara uppfæra listann á bak við */
+          const gluggi = reitur.closest('dialog');
+          if (gluggi && !gluggi.open) { if (eftir) eftir(); return; }
+          await eftirBreytingu();
+        });
+      };
+      reitur.addEventListener('blur', vista);
+      reitur.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); vista(); } });
+      dagsHluti = reitur;
+    } else if (u.dags && !u.lokid) {
+      dagsHluti = el('span', { class: 'uv__aaetlad', texti: 'Áætlað ' + dags(String(u.dags).slice(0, 10) + 'T12:00:00') });
+    }
+
     async function faera(att) {
       const nagranni = listi[i + att];
       if (!nagranni) return;
@@ -189,8 +225,9 @@ export function undirverkHluti({ t, listi, admin, g, teiknaAftur, eftir }) {
         hak,
         el('div', { class: 'uv__mid' }, [
           titill,
-          skil.length || postur || (admin && u.lokid && u.lokid_dags)
+          skil.length || postur || dagsHluti || (admin && u.lokid && u.lokid_dags)
             ? el('div', { class: 'task__undir uv__undir' }, [
+                dagsHluti,
                 ...skil,
                 admin && u.lokid && u.lokid_dags ? el('span', { texti: 'Lokið ' + dags(u.lokid_dags) }) : null,
                 postur
