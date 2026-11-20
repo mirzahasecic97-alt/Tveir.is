@@ -366,3 +366,10 @@ a:not([class]) { color: var(--acc-djupt); }
 .texti-sida ul { padding-left: 20px; }
 .texti-sida a { color: var(--acc-djupt); }
 .fotur__tenglar { display: inline-flex; gap: 18px; flex-wrap: wrap; }
+
+/* ---------- Í prufu: sækja um aðgang ---------- */
+.hero2__prufa { display: inline-flex; align-items: center; gap: 9px; margin: 0 0 16px; padding: 7px 14px 7px 10px; border-radius: 999px; font-size: 14px; font-weight: 500; color: var(--ink);
+  background: rgba(255, 255, 255, .72); border: 1px solid rgba(255, 255, 255, .95); box-shadow: 0 0 0 1px rgba(28, 48, 80, .05); pointer-events: auto; }
+.hero2__prufa i { width: 8px; height: 8px; border-radius: 50%; background: #f0b45a; box-shadow: 0 0 0 4px rgba(240, 180, 90, .2); }
+.kynning2__smatt { margin-top: 14px !important; font-size: 15px !important; }
+.kynning2__smatt a { color: var(--acc-djupt); font-weight: 500; }

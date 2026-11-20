@@ -1004,7 +1004,7 @@ function synaBorda() {
     el('span', { class: 'gh-bordi__punktur', 'aria-hidden': 'true' }),
     el('span', { class: 'gh-bordi__texti', texti: 'Sýnidæmi ' + stofuNafn() }),
     el('a', { class: 'gh-bordi__hn', href: '../byggja.html?breyta=1', texti: 'Breyta vali' }),
-    el('a', { class: 'gh-bordi__hn gh-bordi__hn--gull', href: '../index.html#kynning', texti: 'Bóka kynningu' })
+    el('a', { class: 'gh-bordi__hn gh-bordi__hn--gull', href: '../index.html#kynning', texti: 'Sækja um aðgang' })
   ]);
   document.body.appendChild(b);
 }
