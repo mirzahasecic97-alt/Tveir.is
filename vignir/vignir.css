@@ -516,7 +516,7 @@ html, body { background: linear-gradient(165deg, #3d3326 0%, #2a2219 42%, #17130
 @media (max-width: 820px) { .haus__merki img.haus__vv { width: 34px; height: 34px; } }
 
 /* Nafnið í hástöfum í hero */
-.hetja h1 { text-transform: uppercase; letter-spacing: -.035em; }
+.hetja h1 { text-transform: none; letter-spacing: -.035em; }
 
 /* Samstarfsaðilar */
 .samstarfsadilar > p { margin-top: 10px; color: var(--dauft); }
