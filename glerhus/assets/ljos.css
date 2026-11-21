@@ -150,7 +150,7 @@ h1, h2, h3, h4 { color: var(--ink) !important; }
 .phead__nav a[aria-current="page"] { background: color-mix(in srgb, var(--acc) 14%, transparent) !important; color: var(--ink) !important; }
 .hamborgari, .phead__hamborgari { background: rgba(255, 255, 255, .8) !important; border-color: rgba(28, 48, 80, .14) !important; box-shadow: none !important; }
 .hamborgari span, .phead__hamborgari span { background: var(--ink) !important; }
-.phead.er-opin .phead__nav { background: rgba(255, 255, 255, .8) !important; border-color: rgba(28, 48, 80, .08) !important; }
+.phead.er-opin:not(.phead--valmynd) .phead__nav { background: rgba(255, 255, 255, .8) !important; border-color: rgba(28, 48, 80, .08) !important; }
 @media (max-width: 880px) { .haus__tenglar a { color: var(--ink) !important; } }
 .fotur { border-top-color: rgba(28, 48, 80, .1) !important; color: var(--soft) !important; }
 

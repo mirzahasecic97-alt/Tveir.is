@@ -62,7 +62,7 @@ html.gh-eigin-litur body::before, body::before { background: none !important; }
 .phead .phead__stillingar[aria-current="page"] { background: #fff !important; color: var(--lg-djup) !important; }
 .phead__hamborgari { background: rgba(255, 255, 255, .14) !important; border-color: rgba(255, 255, 255, .28) !important; }
 .phead__hamborgari span { background: #fff !important; }
-.phead.er-opin .phead__nav { background: rgba(4, 10, 30, .3) !important; border-color: rgba(255, 255, 255, .16) !important; border-radius: 20px; }
+.phead.er-opin:not(.phead--valmynd) .phead__nav { background: rgba(4, 10, 30, .3) !important; border-color: rgba(255, 255, 255, .16) !important; border-radius: 20px; }
 
 /* ---------- Fyrirsögn síðunnar á litnum ---------- */
 .page-head h1, #innihald > h1 { color: #fff !important; font-weight: 500 !important; letter-spacing: -.035em; }

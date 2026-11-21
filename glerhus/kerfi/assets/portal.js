@@ -419,10 +419,35 @@ let hausFyrirspurnir = null;
 let hausPostholf = null;
 let hausSamskipti = null;
 
+/* Hvert merki er til tvisvar: í hausnum og í valmyndinni */
 function setjaTolu(n, fjoldi) {
-  n.textContent = String(fjoldi);
-  n.hidden = fjoldi === 0;
+  [].concat(n).forEach((x) => {
+    if (!x) return;
+    x.textContent = String(fjoldi);
+    x.hidden = fjoldi === 0;
+  });
 }
+
+/* ------------------------------------------------------------------
+   Valmyndin: hver og einn velur hvaða síður standa í hausnum. Allar
+   síðurnar eru í valmyndinni og pinninn festir þær í hausinn.
+   Geymt í þessum vafra, eftir notanda.
+   ------------------------------------------------------------------ */
+const HAUS_SJALFGEFID = ['stjornbord.html', 'tillogur.html', 'samskipti.html', 'dagatal.html', 'bokhald.html'];
+const hausLykill = (ek) => 'glerhus-tveir-haus-' + ek.id;
+function festarSidur(ek) {
+  try {
+    const x = JSON.parse(localStorage.getItem(hausLykill(ek)) || 'null');
+    if (Array.isArray(x)) return new Set(x);
+  } catch (e) { /* sjálfgefið */ }
+  return new Set(HAUS_SJALFGEFID);
+}
+function vistaFestar(ek, festar) {
+  try { localStorage.setItem(hausLykill(ek), JSON.stringify([...festar])); } catch (e) { /* bara þessi heimsókn */ }
+}
+const PINNI = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" '
+  + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/>'
+  + '<path d="M9 10.8V5h6v5.8l2.6 3.2c.4.5 0 1-.5 1H6.9c-.5 0-.9-.5-.5-1z"/><path d="M8 5h8"/></svg>';
 
 /* Kallað eftir að tillaga er afgreidd eða verk hakað, svo tölurnar
    í hausnum séu réttar án þess að hlaða síðunni upp á nýtt. */
@@ -473,25 +498,46 @@ export function teiknaHaus(ek, heiti) {
   if (!haus) return;
 
   const admin = ek.hlutverk === 'admin';
+  /* Ný síða (líka Til baka í vafranum): valmyndin byrjar lokuð */
+  haus.classList.remove('er-opin');
 
   /* Merkin fyllast á eftir, því tölurnar liggja ekki fyrir strax */
-  const merki = admin ? el('span', { class: 'phead__merki', hidden: true }) : null;
-  const merkiOkkar = admin
-    ? el('span', { class: 'phead__merki phead__merki--okkar', hidden: true }) : null;
-  hausMerki = merki;
-  hausOkkar = merkiOkkar;
-  const merkiFyrirspurna = admin
-    ? el('span', { class: 'phead__merki phead__merki--ny', hidden: true }) : null;
-  hausFyrirspurnir = merkiFyrirspurna;
-  const merkiPostholf = admin ? el('span', { class: 'phead__merki phead__merki--ny', hidden: true }) : null;
-  const merkiSamskipti = admin ? el('span', { class: 'phead__merki phead__merki--ny', hidden: true }) : null;
-  hausPostholf = merkiPostholf;
-  hausSamskipti = merkiSamskipti;
+  const tvo = (cls) => admin
+    ? [0, 1].map(() => el('span', { class: 'phead__merki' + cls, hidden: true })) : [null, null];
+  const mTill = tvo(''), mOkkar = tvo(' phead__merki--okkar'), mFsp = tvo(' phead__merki--ny'),
+        mPost = tvo(' phead__merki--ny'), mSam = tvo(' phead__merki--ny');
+  hausMerki = admin ? mTill : null;
+  hausOkkar = admin ? mOkkar : null;
+  hausFyrirspurnir = admin ? mFsp : null;
+  hausPostholf = admin ? mPost : null;
+  hausSamskipti = admin ? mSam : null;
   hausEgId = ek.id;
   uppfaeraMerki();
 
   const nuna = location.pathname.split('/').pop() || 'stjornbord.html';
   const tengill = (slod, texti) => el('a', { href: slod, texti, 'aria-current': nuna === slod ? 'page' : null });
+
+  /* Aðalvalmynd stjórnanda (Tveir og sýnidæmi stofu): allir liðirnir */
+  const valmynd = admin && !erPersona() && !erFyrirtaeki() && !erBaraVerktaki();
+  const lidir = valmynd ? [
+    { slod: 'stjornbord.html', heiti: 'Stjórnborð' },
+    ervalid('tillogur') ? { slod: 'tillogur.html', heiti: 'Tillögur', merki: mTill } : null,
+    /* Innri verkin eru fyrir Tveir sjálf, ekki sýnidæmið */
+    sersnid ? null : { slod: 'okkar.html', heiti: 'Okkar', merki: mOkkar },
+    sersnid && !ervalid('postur') && !ervalid('postur_verk') ? null : {
+      slod: 'samskipti.html', heiti: 'Samskipti', merki: mSam, virkt: ['samskipti.html', 'fyrirspurnir.html'],
+      undir: [{ slod: 'samskipti.html', heiti: 'Pósthólf', merki: mPost },
+              { slod: 'fyrirspurnir.html', heiti: 'Fyrirspurnir', merki: mFsp }]
+    },
+    sersnid && !ertengt('googlecalendar') ? null : { slod: 'dagatal.html', heiti: 'Dagatal' },
+    ervalid('tekjur') ? { slod: 'bokhald.html', heiti: 'Bókhald' } : null,
+    ervalid('tolfraedi') ? { slod: 'tolfraedi.html', heiti: 'Tölfræði' } : null,
+    /* Harvey spjallið er ekki komið í loftið, fallið undir api/ þarf
+       API lykil. Kveikt í stillingar.js þegar það er tilbúið. */
+    stillingar.harvey ? { slod: 'harvey.html', heiti: 'Harvey' } : null
+  ].filter(Boolean) : [];
+  const festar = festarSidur(ek);
+  haus.classList.toggle('phead--valmynd', valmynd);
 
   /* Tölurnar í merkjunum haldast á meðan nýju tölurnar eru sóttar, svo
      þær blikki ekki þegar skipt er um síðu (skipti.js) */
@@ -543,42 +589,24 @@ export function teiknaHaus(ek, heiti) {
               ervalid('tilbod') || !ervalid('myndir') ? tengill('tilbod.html', 'Tilboð') : null,
               ervalid('myndir') ? tengill('myndir.html', 'Myndir') : null
             ])
-        : admin
-          ? el('nav', { class: 'phead__nav', 'aria-label': 'Vinnusvæði' }, [
-              el('a', { href: 'stjornbord.html', texti: 'Stjórnborð',
-                        'aria-current': nuna === 'stjornbord.html' ? 'page' : null }),
-              ervalid('tillogur') ? el('a', { href: 'tillogur.html',
-                        'aria-current': nuna === 'tillogur.html' ? 'page' : null }, [
-                document.createTextNode('Tillögur'), merki
-              ]) : null,
-              /* Innri verkin eru fyrir Tveir sjálf, ekki sýnidæmið */
-              sersnid ? null : el('a', { href: 'okkar.html',
-                        'aria-current': nuna === 'okkar.html' ? 'page' : null }, [
-                document.createTextNode('Okkar'), merkiOkkar
-              ]),
-              /* Samskipti: pósthólfið og fyrirspurnirnar, fellivalmynd í tölvu */
-              sersnid && !ervalid('postur') && !ervalid('postur_verk') ? null : el('div', { class: 'phead__hopur' }, [
-                el('a', { href: 'samskipti.html', class: 'phead__hopur-hn', 'aria-haspopup': 'true',
-                          'aria-current': ['samskipti.html', 'fyrirspurnir.html'].includes(nuna) ? 'page' : null }, [
-                  document.createTextNode('Samskipti'), merkiSamskipti
-                ]),
+        : valmynd
+          ? el('nav', { class: 'phead__nav', 'aria-label': 'Vinnusvæði' }, lidir.map((l) => {
+              const virkt = (l.virkt || [l.slod]).includes(nuna) ? 'page' : null;
+              const tolur = l.merki ? l.merki[0] : null;
+              if (!l.undir) {
+                return el('a', { href: l.slod, 'data-lidur': l.slod, hidden: !festar.has(l.slod), 'aria-current': virkt },
+                  [document.createTextNode(l.heiti), tolur]);
+              }
+              /* Samskipti: fellivalmynd í tölvu */
+              return el('div', { class: 'phead__hopur', 'data-lidur': l.slod, hidden: !festar.has(l.slod) }, [
+                el('a', { href: l.slod, class: 'phead__hopur-hn', 'aria-haspopup': 'true', 'aria-current': virkt },
+                  [document.createTextNode(l.heiti), tolur]),
                 el('div', { class: 'phead__fellival' }, [
-                  el('a', { href: 'samskipti.html', class: 'phead__undir' }, [document.createTextNode('Pósthólf'), merkiPostholf]),
-                  el('a', { href: 'fyrirspurnir.html', class: 'phead__undir' }, [document.createTextNode('Fyrirspurnir'), merkiFyrirspurna]),
+                  ...l.undir.map((u) => el('a', { href: u.slod, class: 'phead__undir' }, [document.createTextNode(u.heiti), u.merki[0]])),
                   el('span', { class: 'phead__undir phead__undir--kemur', texti: 'Messenger og Instagram koma' })
                 ])
-              ]),
-              sersnid && !ertengt('googlecalendar') ? null : el('a', { href: 'dagatal.html', texti: 'Dagatal',
-                        'aria-current': nuna === 'dagatal.html' ? 'page' : null }),
-              ervalid('tekjur') ? el('a', { href: 'bokhald.html', texti: 'Bókhald',
-                        'aria-current': nuna === 'bokhald.html' ? 'page' : null }) : null,
-              ervalid('tolfraedi') ? el('a', { href: 'tolfraedi.html', texti: 'Tölfræði',
-                        'aria-current': nuna === 'tolfraedi.html' ? 'page' : null }) : null,
-              /* Harvey spjallið er ekki komið í loftið, fallið undir api/ þarf
-                 API lykil. Kveikt í stillingar.js þegar það er tilbúið. */
-              stillingar.harvey ? el('a', { href: 'harvey.html', texti: 'Harvey',
-                        'aria-current': nuna === 'harvey.html' ? 'page' : null }) : null
-            ])
+              ]);
+            }))
           : el('div', { class: 'phead__heiti' }, [
               /* Með valmyndinni segir hún hvar maður er, svo nafn
                  fyrirtækisins dugar eitt og sér */
@@ -599,11 +627,14 @@ export function teiknaHaus(ek, heiti) {
           (admin || ek.fyrirtaeki_id) ? el('button', {
             type: 'button', class: 'phead__hamborgari', 'aria-label': 'Valmynd', 'aria-expanded': 'false',
             html: '<span></span><span></span><span></span>',
+            'aria-controls': valmynd ? 'phead-valmynd' : null,
             onclick: (e) => {
               const opid = haus.classList.toggle('er-opin');
               e.currentTarget.setAttribute('aria-expanded', String(opid));
             }
           }) : null,
+          /* Spjaldið strax á eftir hamborgaranum, svo Tab fari beint inn í það */
+          valmynd ? valmyndarSpjald(haus, ek, lidir, festar, nuna) : null,
           /* Í sýnidæmi: nafnið sem gesturinn skrifaði, ef eitthvað, og Sýnidæmi
              undir. Aldrei nafnið á prufuaðganginum. Sést líka í síma. */
           sersnid
@@ -637,6 +668,7 @@ export function teiknaHaus(ek, heiti) {
       ])
     ])
   ]);
+  if (valmynd) lokaValmyndUtan(haus);
   haus.querySelectorAll('.phead__merki').forEach((m) => {
     const a = m.closest('a');
     const f = a && fyrriMerki[a.getAttribute('href') + '|' + a.className];
@@ -653,6 +685,101 @@ export function teiknaHaus(ek, heiti) {
   if (virkur && virkur.parentElement.scrollWidth > virkur.parentElement.clientWidth) {
     virkur.parentElement.scrollLeft = Math.max(0, virkur.offsetLeft - 10);
   }
+}
+
+/* Allar síðurnar, með pinna til að festa hverja í hausinn */
+function valmyndarSpjald(haus, ek, lidir, festar, nuna) {
+  const uppfaera = () => {
+    haus.querySelectorAll('.phead__nav [data-lidur]').forEach((n) => { n.hidden = !festar.has(n.dataset.lidur); });
+    const nav = haus.querySelector('.phead__nav');
+    if (nav) nav.classList.toggle('er-tom', !lidir.some((l) => festar.has(l.slod)));
+    fittaHaus(haus);
+  };
+  const spjald = el('div', { class: 'phead__valmynd', id: 'phead-valmynd', role: 'region', 'aria-label': 'Valmynd' }, [
+    el('div', { class: 'phead__vhaus' }, [
+      el('strong', { texti: 'Allar síður' }),
+      el('span', { texti: 'Pinninn festir síðu í hausinn. Hinar eru hér.' })
+    ]),
+    /* Nafn pinnans: "Í hausnum" og heiti síðunnar (lesið upp af skjálesara) */
+    el('span', { id: 'phead-festa-heiti', hidden: true, texti: 'Í hausnum' }),
+    el('ul', { class: 'phead__vlisti' }, lidir.map((l, i) => {
+      const fest = festar.has(l.slod);
+      const pinni = el('button', {
+        type: 'button', class: 'phead__festa', 'aria-pressed': String(fest),
+        'aria-labelledby': 'phead-festa-heiti phead-vheiti-' + i,
+        title: fest ? 'Taka úr hausnum' : 'Festa í hausinn', html: PINNI,
+        onclick: () => {
+          /* Lesið aftur, ef breytt var í öðrum flipa á meðan */
+          const nyjar = festarSidur(ek);
+          festar.clear(); nyjar.forEach((x) => festar.add(x));
+          const nu = !festar.has(l.slod);
+          if (nu) festar.add(l.slod); else festar.delete(l.slod);
+          pinni.setAttribute('aria-pressed', String(nu));
+          pinni.title = nu ? 'Taka úr hausnum' : 'Festa í hausinn';
+          vistaFestar(ek, festar);
+          uppfaera();
+        }
+      });
+      return el('li', { class: 'phead__vlina' }, [
+        el('a', { href: l.slod, class: 'phead__vtengill',
+                  'aria-current': (l.virkt || [l.slod]).includes(nuna) ? 'page' : null },
+          [el('span', { id: 'phead-vheiti-' + i, texti: l.heiti }), l.merki ? l.merki[1] : null]),
+        pinni,
+        l.undir ? el('div', { class: 'phead__vundir' }, l.undir.map((u) =>
+          el('a', { href: u.slod, class: 'phead__vundir-a', 'aria-current': u.slod === nuna ? 'page' : null },
+            [el('span', { texti: u.heiti }), u.merki[1]]))) : null
+      ]);
+    }))
+  ]);
+  /* Breytt í öðrum flipa: pinnarnir og hausinn fylgja */
+  spjald.__samstilla = () => {
+    const nyjar = festarSidur(ek);
+    festar.clear(); nyjar.forEach((x) => festar.add(x));
+    spjald.querySelectorAll('.phead__vlina').forEach((li, i) => {
+      const b = li.querySelector('.phead__festa'), f = festar.has(lidir[i].slod);
+      b.setAttribute('aria-pressed', String(f));
+      b.title = f ? 'Taka úr hausnum' : 'Festa í hausinn';
+    });
+    uppfaera();
+  };
+  requestAnimationFrame(uppfaera);
+  return spjald;
+}
+
+/* Valmyndin lokast við smell utan hennar og með Esc */
+function lokaValmyndUtan(haus) {
+  if (haus.__valmynd) return;
+  haus.__valmynd = true;
+  const loka = () => {
+    if (!haus.classList.contains('er-opin')) return;
+    haus.classList.remove('er-opin');
+    const hn = haus.querySelector('.phead__hamborgari');
+    if (hn) hn.setAttribute('aria-expanded', 'false');
+    return hn;
+  };
+  document.addEventListener('click', (e) => {
+    if (!haus.classList.contains('phead--valmynd')) return;
+    if (e.target.closest('.phead__valmynd, .phead__hamborgari')) return;
+    loka();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || !haus.classList.contains('phead--valmynd')) return;
+    const hn = loka();
+    if (hn) hn.focus();
+  });
+  /* Tab út úr valmyndinni lokar henni */
+  haus.addEventListener('focusout', (e) => {
+    if (!haus.classList.contains('phead--valmynd')) return;
+    const til = e.relatedTarget;
+    if (til && til.closest && til.closest('.phead__valmynd, .phead__hamborgari')) return;
+    if (!til) return;  /* smellt á autt svæði eða gluggi missti fókus: smellurinn sér um það */
+    loka();
+  });
+  window.addEventListener('storage', (e) => {
+    if (!e.key || !e.key.startsWith(hausLykill({ id: '' }))) return;
+    const sp = haus.querySelector('.phead__valmynd');
+    if (sp && sp.__samstilla) sp.__samstilla();
+  });
 }
 
 /* Komist liðirnir ekki fyrir á einni línu (t.d. lengri heiti á ensku eða

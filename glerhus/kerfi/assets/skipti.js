@@ -156,13 +156,18 @@
 
   document.addEventListener('click', function (e) {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    var a = e.target.closest && e.target.closest('.phead__nav a[href], a.phead__stillingar, a.phead__logo');
+    var a = e.target.closest && e.target.closest('.phead__nav a[href], .phead__valmynd a[href], a.phead__stillingar, a.phead__logo');
     if (!a || a.target === '_blank') return;
     var url;
     try { url = new URL(a.href, location.href); } catch (villa) { return; }
     if (url.origin !== location.origin || (url.pathname === location.pathname && url.search === location.search)) { e.preventDefault(); return; }
     var flipar = Array.prototype.slice.call(document.querySelectorAll('.phead__nav a[href]:not(.phead__undir), a.phead__stillingar'));
     var flipi = a.classList.contains('phead__undir') ? a.closest('.phead__hopur').querySelector('.phead__hopur-hn') : a;
+    /* Úr valmyndinni: sami liður og í hausnum, svo stefnan verði rétt */
+    if (a.closest('.phead__valmynd')) {
+      var lina = a.closest('.phead__vlina'), adal = lina && lina.querySelector('.phead__vtengill');
+      flipi = flipar.find(function (x) { return adal && x.getAttribute('href') === adal.getAttribute('href'); }) || a;
+    }
     var nu = flipar.findIndex(function (x) { return x.getAttribute('aria-current') === 'page'; });
     var nyr = flipar.indexOf(flipi);
     var stefna = nu === -1 || nyr === -1 || nyr >= nu ? 'fram' : 'aftur';

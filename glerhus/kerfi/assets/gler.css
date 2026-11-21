@@ -228,6 +228,90 @@ select option { background: #2a2d33; color: #fff; }
   .phead__notandi { display: none; }
 }
 
+/* --------------------------------------------------------------------------
+   Valmyndin: hamborgarinn sést á öllum skjám, allar síður eru í spjaldinu
+   og pinninn festir hverja í hausinn (portal.js, valmyndarSpjald)
+   -------------------------------------------------------------------------- */
+.phead--valmynd .phead__inn { position: relative; }
+.phead__nav > [hidden] { display: none !important; }
+.phead__nav.er-tom { visibility: hidden; }
+.phead--valmynd .phead__hamborgari {
+  display: inline-block; position: relative; padding: 0; flex: none;
+  width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
+  background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25);
+}
+.phead--valmynd .phead__hamborgari span {
+  position: absolute; left: 50%; top: 50%; width: 18px; height: 2px; margin: -1px 0 0 -9px;
+  border-radius: 2px; background: #fff; transition: transform .25s ease, opacity .2s ease;
+}
+.phead--valmynd .phead__hamborgari span:nth-child(1) { transform: translateY(-6px); }
+.phead--valmynd .phead__hamborgari span:nth-child(3) { transform: translateY(6px); }
+.phead--valmynd.er-opin .phead__hamborgari span:nth-child(1) { transform: rotate(45deg); }
+.phead--valmynd.er-opin .phead__hamborgari span:nth-child(2) { opacity: 0; }
+.phead--valmynd.er-opin .phead__hamborgari span:nth-child(3) { transform: rotate(-45deg); }
+/* Punktur á hamborgaranum þegar eitthvað nýtt bíður á síðu sem er bara í valmyndinni */
+.phead--valmynd .phead__hamborgari::after {
+  content: ""; position: absolute; top: 5px; right: 5px; width: 10px; height: 10px;
+  border-radius: 50%; background: #e0a63a; box-shadow: 0 0 0 2px rgba(0, 0, 0, .25); display: none;
+}
+.phead--valmynd:has(.phead__nav > [hidden] .phead__merki:not([hidden])):not(.er-opin) .phead__hamborgari::after { display: block; }
+
+/* Hringur um hamborgarann þegar maður stendur á síðu sem er bara í valmyndinni */
+.phead--valmynd:has(.phead__nav > [hidden][aria-current="page"], .phead__nav > [hidden] [aria-current="page"]) .phead__hamborgari {
+  box-shadow: 0 0 0 2px var(--acc) !important;
+}
+
+/* Spjaldið: hvítt matt gler eins og fellivalmyndin í hausnum */
+.phead__valmynd {
+  display: none; position: absolute; z-index: 40; top: calc(100% + 10px); right: 0;
+  width: min(340px, calc(100vw - 32px)); max-height: calc(100vh - 120px); overflow-y: auto;
+  padding: 10px; border-radius: 22px; color: #1c3050;
+  background: rgba(255, 255, 255, .97); border: 1px solid rgba(28, 48, 80, .1);
+  box-shadow: 0 24px 50px -18px rgba(28, 48, 80, .4);
+}
+.phead--valmynd.er-opin .phead__valmynd { display: block; }
+.phead__vhaus { padding: 8px 12px 12px; display: grid; gap: 4px; }
+.phead__vhaus strong { font: 500 15px/1.2 var(--f-body); color: #1c3050; }
+.phead__vhaus span { font: 400 13px/1.4 var(--f-body); color: #6b7f9e; }
+.phead__vlisti { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.phead__vlina { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px; }
+.phead .phead__vtengill, .phead .phead__vundir-a {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-height: 46px; padding: 10px 14px; border-radius: 14px;
+  color: #1c3050 !important; text-decoration: none; font: 400 15.5px/1.2 var(--f-body);
+}
+.phead .phead__vtengill:hover, .phead .phead__vundir-a:hover { background: rgba(91, 147, 240, .1); }
+.phead .phead__vtengill[aria-current="page"], .phead .phead__vundir-a[aria-current="page"] {
+  background: color-mix(in srgb, var(--acc) 14%, transparent); font-weight: 500;
+}
+.phead__vundir { grid-column: 1 / -1; display: grid; gap: 2px; margin: 0 52px 4px 16px; padding-left: 10px; border-left: 1px solid rgba(28, 48, 80, .12); }
+.phead .phead__vundir-a { min-height: 40px; font-size: 14.5px; }
+.phead .phead__festa {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: transparent; border: 1px solid transparent; color: #1c3050 !important; opacity: .4;
+  transition: background .15s ease, opacity .15s ease;
+}
+.phead .phead__festa:hover { background: rgba(28, 48, 80, .06); opacity: .8; }
+.phead .phead__festa[aria-pressed="true"] {
+  opacity: 1; color: var(--acc-texti, #fff) !important; background: var(--acc); border-color: transparent;
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--acc) 80%, #000);
+}
+.phead__festa[aria-pressed="true"] svg path:nth-child(2) { fill: currentColor; }
+.phead__festa:focus-visible, .phead__vtengill:focus-visible, .phead__vundir-a:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  /* Í síma er valmyndin öll í spjaldinu; pinnarnir ráða hausnum í tölvu */
+  .phead.phead--valmynd.er-opin .phead__nav { display: none !important; }
+  .phead--valmynd:has(.phead__nav .phead__merki:not([hidden])):not(.er-opin) .phead__hamborgari::after { display: block; }
+  .phead__valmynd { left: 0; right: 0; width: auto; }
+  /* Pinnarnir ráða bara hausnum í tölvu, svo í síma er þetta einfaldur listi */
+  .phead .phead__festa, .phead__vhaus { display: none; }
+  .phead__valmynd { padding: 8px; }
+  .phead__vlina { grid-template-columns: 1fr; }
+  .phead__vundir { margin-right: 0; }
+}
+
 @media (max-width: 560px) {
   .gk { padding: 24px 22px; border-radius: 32px; min-height: 0; }
   .gk__or { top: 22px; right: 22px; }
