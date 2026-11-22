@@ -18,32 +18,50 @@ const LEIDBEININGAR = 'https://tveir.is/glerhusid/leidbeiningar.html';
 const ek = await vardaHlid({ badir: true });
 if (ek) start();
 
-/* Tengingar með API lykli. reitir: leynt: false fer í stillingar (sést aftur), annað í Vault. */
+/* Tengingar með API lykli. reitir: leynt: false fer í stillingar (sést aftur), annað í Vault.
+   Allar fimm eru í smíðum: lykillinn er vistaður og prófaður, en ekkert í kerfinu
+   notar hann ennþá. kemur: hvað vantar, sagt beint á spjaldinu. */
 const LYKLAR = {
   payday: { veita: 'payday', lb: 'payday', heiti: 'Payday', merki: 'payday.png', litur: '#52bb62', fyllt: true,
     hvad: 'Lokin verk og samningar verða að reikningum', opna: ['Opna Payday', 'https://app.payday.is'],
-    skref: ['Skráðu þig inn á Payday.', 'Farðu í Stillingar og opnaðu API (undir fyrirtækinu).', 'Búðu til nýtt forrit og kallaðu það Glerhúsið.', 'Afritaðu Client ID og Client Secret og límdu þá hér fyrir neðan.'],
+    kemur: 'Reikningar fara ekki í Payday ennþá.',
+    skref: ['Skráðu þig inn á app.payday.is hjá fyrirtækinu sem gefur út reikningana.', 'Opnaðu stillingar fyrirtækisins og finndu API.', 'Búðu til nýtt forrit og kallaðu það Glerhúsið.', 'Afritaðu Client ID og Client Secret og límdu þá hér fyrir neðan.'],
     reitir: [{ nafn: 'clientId', heiti: 'Client ID' }, { nafn: 'clientSecret', heiti: 'Client Secret' }] },
   dk: { veita: 'dk', lb: 'dk', heiti: 'DK', merki: 'dk.png', litur: '#4743f7',
     hvad: 'Lokin verk og samningar verða að reikningum', opna: ['Opna dkPlus', 'https://dkplus.is'],
-    skref: ['Skráðu þig inn á dkPlus með aðgangi fyrirtækisins.', 'Búðu til API token (aðgangslykil) fyrir Glerhúsið í stillingunum.', 'Gefðu honum aðgang að viðskiptavinum og sölureikningum.', 'Límdu tokeninn hér fyrir neðan.'],
-    athugid: 'Finnurðu ekki API token í dkPlus? Biddu dk hugbúnað um aðgang að dkPlus API fyrir fyrirtækið.',
+    kemur: 'Reikningar fara ekki í DK ennþá.',
+    skref: ['Skráðu þig inn á dkPlus með aðgangi fyrirtækisins.', 'Opnaðu stillingar notandans og veldu Auðkenningar tákn.', 'Búðu til nýjan token, kallaðu hann Glerhúsið og veldu fyrirtækið. Tokeninn hefur sama aðgang og notandinn, svo notandinn þarf aðgang að viðskiptamönnum og sölu.', 'Límdu tokeninn hér fyrir neðan.'],
+    athugid: 'Er fyrirtækið ekki með dkPlus API (vefþjónustu dkPlus)? Hafðu samband við dk hugbúnað og biddu um aðgang. dk segir þér hvað hann kostar. Finnurðu ekki Auðkenningar tákn er aðgangurinn líklega ekki kominn.',
     reitir: [{ nafn: 'token', heiti: 'API token' }] },
   shopify: { veita: 'shopify', lb: 'shopify', heiti: 'Shopify', merki: 'shopify.svg', litur: '#5E8E3E',
     hvad: 'Lagerstaða og pantanir úr vefversluninni', opna: ['Opna Shopify Dev Dashboard', 'https://dev.shopify.com/dashboard'],
-    skref: ['Opnaðu Shopify Dev Dashboard með sama aðgangi og verslunin.', 'Smelltu á Create app og kallaðu það Glerhúsið.', 'Veldu aðganginn read_products, read_inventory og read_orders og settu appið upp á versluninni.', 'Afritaðu Client ID og Client secret úr stillingum appsins og límdu hér, ásamt slóð verslunarinnar.'],
+    kemur: 'Pantanir og lagerstaða birtast ekki í kerfinu ennþá.',
+    skref: ['Í stjórnborði verslunarinnar (admin.shopify.com): Settings, Apps, Develop apps og svo Build apps in Dev Dashboard. Þá lendir appið hjá sömu verslun og það á að tengjast.', 'Í Dev Dashboard: smelltu á Create app, veldu Start from Dev Dashboard, kallaðu appið Glerhúsið og smelltu á Create.', 'Í Versions: láttu App URL vera eins og það er, settu read_products, read_inventory og read_orders í Scopes og smelltu á Release.', 'Á spjaldinu Installs: smelltu á Install app, veldu verslunina, smelltu á Install og samþykktu aðganginn.', 'Opnaðu Settings í appinu, afritaðu Client ID og Client secret af spjaldinu Credentials og límdu hér, ásamt slóð verslunarinnar.'],
+    athugid: 'Sérðu ekki Develop apps eða Create app? Eigandi verslunarinnar þarf að gefa þér heimild til að búa til öpp (App developer). Slóðin admin.shopify.com/store/NAFN þýðir að verslunin er NAFN.myshopify.com. Lykill sem byrjar á shpat_ er gamla gerðin af appi og virkar ekki hér.',
     reitir: [{ nafn: 'verslun', heiti: 'Slóð verslunarinnar', daemi: 'nafn.myshopify.com', leynt: false }, { nafn: 'clientId', heiti: 'Client ID' }, { nafn: 'clientSecret', heiti: 'Client secret' }] },
   claude: { veita: 'claude', lb: 'claude', heiti: 'Claude', merki: 'claude.svg', litur: '#D97757',
-    hvad: 'Gervigreind sem skrifar drög að svörum og samantektir', opna: ['Opna Claude Console', 'https://platform.claude.com/settings/keys'],
-    skref: ['Skráðu þig inn á Claude Console (platform.claude.com).', 'Keyptu inneign undir Billing og settu hámark. Hver notkun kostar smá.', 'Farðu í API Keys, smelltu á Create Key og kallaðu hann Glerhúsið.', 'Afritaðu lykilinn strax (hann sést bara einu sinni) og límdu hér.'],
+    hvad: 'Gervigreind sem skrifar drög að svörum og samantektum', opna: ['Opna Claude Console', 'https://platform.claude.com/settings/keys'],
+    kemur: 'Drög að svörum og samantektir eru ekki tilbúin ennþá.',
+    skref: ['Skráðu þig inn á Claude Console (platform.claude.com).', 'Keyptu inneign undir Billing. Hver notkun kostar smá.', 'Viltu hámark á mánuði: opnaðu Limits í stillingunum og settu það þar.', 'Farðu í API keys, smelltu á Create key og kallaðu hann Glerhúsið.', 'Afritaðu lykilinn strax (hann sést bara einu sinni) og límdu hér.'],
     athugid: 'Claude áskrift (Pro eða Max) gefur ekki API lykil. API notkun er rukkuð sér hjá Anthropic.',
     reitir: [{ nafn: 'lykill', heiti: 'API lykill', daemi: 'sk-ant-...' }] },
   chatgpt: { veita: 'chatgpt', lb: 'chatgpt', heiti: 'ChatGPT', merki: 'openai.svg', litur: '#000000',
-    hvad: 'Gervigreind sem skrifar drög að svörum og samantektir', opna: ['Opna OpenAI Platform', 'https://platform.openai.com/api-keys'],
-    skref: ['Skráðu þig inn á OpenAI Platform (platform.openai.com).', 'Settu upp greiðslu og mánaðarhámark undir Billing. Hver notkun kostar smá.', 'Farðu í API keys, smelltu á Create new secret key og kallaðu hann Glerhúsið.', 'Afritaðu lykilinn strax (hann sést bara einu sinni) og límdu hér.'],
+    hvad: 'Gervigreind sem skrifar drög að svörum og samantektum', opna: ['Opna OpenAI Platform', 'https://platform.openai.com/api-keys'],
+    kemur: 'Drög að svörum og samantektir eru ekki tilbúin ennþá.',
+    skref: ['Skráðu þig inn á OpenAI Platform (platform.openai.com).', 'Settu inn greiðslukort og inneign undir Billing. Hver notkun kostar smá.', 'Settu mánaðarhámark undir Limits.', 'Farðu í API keys, smelltu á Create new secret key og kallaðu hann Glerhúsið.', 'Afritaðu lykilinn strax (hann sést bara einu sinni) og límdu hér.'],
     athugid: 'ChatGPT Plus áskrift gefur ekki API lykil. API notkun er rukkuð sér hjá OpenAI.',
     reitir: [{ nafn: 'lykill', heiti: 'API lykill', daemi: 'sk-...' }] }
 };
+
+/* Slóð Shopify verslunar á forminu nafn.myshopify.com. Tekur líka við slóðinni
+   úr vafranum (admin.shopify.com/store/nafn) og nafninu einu. */
+function verslunarSlod(v) {
+  const x = String(v || '').trim().toLowerCase().replace(/^https?:\/\//, '');
+  const admin = /^admin\.shopify\.com\/store\/([a-z0-9][a-z0-9-]*)/.exec(x);
+  if (admin) return admin[1] + '.myshopify.com';
+  const hrein = x.replace(/[/?#].*$/, '');
+  return /^[a-z0-9][a-z0-9-]*$/.test(hrein) ? hrein + '.myshopify.com' : hrein;
+}
 
 const MAN = ['jan', 'feb', 'mar', 'apr', 'maí', 'jún', 'júl', 'ágú', 'sep', 'okt', 'nóv', 'des'];
 const pad = (n) => String(n).padStart(2, '0');
@@ -72,7 +90,7 @@ async function start() {
     ]),
     SYNID
       ? el('div', { class: 'st-hnappar' }, [
-          el('a', { class: 'btn btn--ghost', href: '../index.html', texti: 'Loka sýnidæmi' })
+          el('a', { class: 'btn btn--ghost', href: 'https://tveir.is/glerhusid/index.html', texti: 'Loka sýnidæmi' })
         ])
       : el('div', { class: 'st-hnappar' }, [
           el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Breyta lykilorði',
@@ -119,7 +137,7 @@ async function start() {
           document.createTextNode('. '),
           document.createTextNode('Viðmiðunargengi Seðlabanka Evrópu, uppfært daglega.')]);
   const synKafli = kafli('Tungumál og gjaldmiðill',
-    admin ? 'Tungumálið gildir í þessum vafra. Gjaldmiðillinn gildir fyrir allt kerfið. Allar upphæðir eru geymdar í krónum og umreiknaðar á gengi dagsins, og reikningar í Payday og DK eru áfram í krónum.' : 'Tungumálið gildir í þessum vafra.',
+    admin ? 'Tungumálið gildir í þessum vafra. Gjaldmiðillinn gildir fyrir allt kerfið. Allar upphæðir eru geymdar í krónum og umreiknaðar á gengi dagsins. Tengingin við Payday og DK er í smíðum. Þegar hún kemur verða reikningar þar í krónum.' : 'Tungumálið gildir í þessum vafra.',
     [synid, gengiLina, admin ? gjaldSvar : null]);
 
   if (!admin) { fylla(innihald, [siduHaus(), adgangur, synKafli]); return; }
@@ -141,7 +159,7 @@ async function start() {
 
   /* ---------- Tengingarnar ---------- */
   const tengingarSvid = el('div', { class: 'st-teng-svid' }, [el('p', { class: 'tomt', texti: 'Athuga tengingarnar' })]);
-  const tengingarKafli = kafli('Tengingar', 'Öppin sem kerfið talar við. Ýttu á Tengja til að sjá hvað hver tenging gerir og hvað þarf til.', [tengingarSvid]);
+  const tengingarKafli = kafli('Tengingar', 'Öppin sem kerfið talar við. Ýttu á Tengja eða Nánar til að sjá hvað hver tenging gerir og hvað þarf til.', [tengingarSvid]);
 
   fylla(innihald, [siduHaus(), adgangur, synKafli, undirskriftKafli, tengingarKafli]);
   teiknaTengingar(await stadaTenginga());
@@ -163,35 +181,45 @@ async function start() {
       s.gmail = thraedir.length ? ['tengt', thraedir.length + ' þræðir, nýjasti ' + hvenaer(nyjast)] : ['bidur', 'Engir þræðir hafa komið inn ennþá'];
     } catch (e) { s.gmail = ['ekki', 'Pósthólfið er ekki komið upp']; }
 
-    /* Google Calendar: fundir hafa komið inn */
+    /* Google Calendar: fundir hafa komið inn. dagatal() sækir líka 45 daga aftur,
+       svo fjöldinn í textanum telur bara fundi sem eru framundan. */
     try {
       const atb = (g.dagatal ? await g.dagatal() : null);
+      const nuna = Date.now();
+      const framundan = atb ? atb.filter((a) => new Date(a.byrjar).getTime() >= nuna).length : 0;
       s.dagatal = atb === null ? ['ekki', 'Dagatalið er ekki komið upp']
-        : atb.length ? ['tengt', atb.length + (atb.length === 1 ? ' fundur' : ' fundir') + ' á næstu vikum'] : ['bidur', 'Bíður eftir fyrstu samstillingu'];
+        : atb.length ? ['tengt', framundan ? framundan + (framundan === 1 ? ' fundur framundan' : ' fundir framundan') : 'Fundir hafa komið inn, enginn framundan']
+        : ['bidur', 'Bíður eftir fyrstu samstillingu'];
     } catch (e) { s.dagatal = ['ekki', 'Dagatalið er ekki komið upp']; }
 
-    /* Meta: miðlar með auðkenni og hvort sjálfvirkar tölur hafa komið síðustu 3 daga */
+    /* Meta: Instagram og Facebook hvort fyrir sig. Hver miðill með auðkenni telst
+       tengdur ef sjálfvirkar tölur hafa komið síðustu 3 daga. */
     try {
       const fyrirtaeki = (await g.fyrirtaeki()) || [];
       const nu = new Date(), fra = new Date(nu.getTime() - 3 * 864e5);
       const ymd = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
-      let medAudkenni = 0, sjalfvirkt = 0, tiktok = 0;
+      const fj = { instagram: [0, 0], facebook: [0, 0] };
+      let tiktok = 0;
       for (const f of fyrirtaeki) {
         const midlar = (await g.midlar(f.id).catch(() => [])) || [];
-        const meta = midlar.filter((m) => m.midill !== 'tiktok' && m.ytra_id && m.virkt !== false);
+        const meta = midlar.filter((m) => fj[m.midill] && m.ytra_id && m.virkt !== false);
         tiktok += midlar.filter((m) => m.midill === 'tiktok').length;
-        medAudkenni += meta.length;
-        if (meta.length) {
-          const ma = (await g.maelingar(f.id, ymd(fra), ymd(nu)).catch(() => [])) || [];
-          if (ma.some((r) => r.uppruni === 'sjalfvirkt' && meta.some((m) => m.id === r.midill_id))) sjalfvirkt++;
+        if (!meta.length) continue;
+        const ma = (await g.maelingar(f.id, ymd(fra), ymd(nu)).catch(() => [])) || [];
+        for (const m of meta) {
+          fj[m.midill][0]++;
+          if (ma.some((r) => r.uppruni === 'sjalfvirkt' && r.midill_id === m.id)) fj[m.midill][1]++;
         }
       }
-      s.meta = sjalfvirkt ? ['tengt', 'Tölurnar koma sjálfkrafa á hverjum morgni']
-        : medAudkenni ? ['bidur', medAudkenni + (medAudkenni === 1 ? ' miðill hefur' : ' miðlar hafa') + ' auðkenni, en engar sjálfvirkar tölur ennþá']
-        : ['ekki', 'Enginn miðill með auðkenni frá Meta'];
+      const metaStada = ([n, sj], o) => sj && sj === n ? ['tengt', 'Tölurnar koma sjálfkrafa á hverjum morgni']
+        : sj ? ['bidur', sj + ' af ' + n + ' ' + o.thgf + (sj === 1 ? ' fær' : ' fá') + ' tölurnar sjálfkrafa. ' + (n - sj === 1 ? o.hin1 : o.hin) + '.']
+        : n ? ['bidur', n + (n === 1 ? ' ' + o.et + ' hefur' : ' ' + o.ft + ' hafa') + ' auðkenni, en engar sjálfvirkar tölur ennþá']
+        : ['ekki', o.enginn];
+      s.instagram = metaStada(fj.instagram, { et: 'reikningur', ft: 'reikningar', thgf: 'reikningum', hin: 'Hinir bíða', hin1: 'Hinn bíður', enginn: 'Enginn Instagram reikningur með auðkenni' });
+      s.facebook = metaStada(fj.facebook, { et: 'síða', ft: 'síður', thgf: 'síðum', hin: 'Hinar bíða', hin1: 'Hin bíður', enginn: 'Engin Facebook síða með auðkenni' });
       s.tiktok = ['handvirkt', tiktok ? tiktok + (tiktok === 1 ? ' TikTok reikningur, tölurnar skráðar í höndunum' : ' TikTok reikningar, tölurnar skráðar í höndunum') : 'Tölurnar eru skráðar í höndunum'];
     } catch (e) {
-      s.meta = ['ekki', 'Náði ekki í miðlana'];
+      s.instagram = s.facebook = ['ekki', 'Náði ekki í miðlana'];
       s.tiktok = ['handvirkt', 'Tölurnar eru skráðar í höndunum'];
     }
     /* API lyklarnir (kafli 28): null ef taflan er ekki komin */
@@ -199,88 +227,114 @@ async function start() {
     return s;
   }
 
-  /* Staða tengingar sem notar API lykil */
-  function lykilStada(s, veita, synidaemi) {
-    if (s.lyklar === null) return ['ekki', 'Tengingarnar eru ekki komnar í gagnagrunninn'];
-    const r = s.lyklar[veita];
-    if (!r) return synidaemi ? ['tengt', 'Sýnidæmi'] : ['ekki', ''];
+  /* Villutexti prófunar. Sumar villur segja að lykillinn sjálfur virki
+     ("Tengt við X, en appið vantar aðganginn"): þá ekkert á undan. Aðrar eru
+     tímamörk eða sambandsleysi, svo forskeytið segir bara að prófunin tókst ekki. */
+  function prufuVilla(svar) {
+    const x = String(svar || 'óþekkt villa').trim();
+    const texti = /^(Tengt við|Lykillinn virkar en)/i.test(x) ? x : 'Prófunin tókst ekki: ' + x;
+    return /[.!?]$/.test(texti) ? texti : texti + '.';
+  }
+
+  /* Staða tengingar sem notar API lykil. Allar eru í smíðum, svo spjaldið er
+     aldrei Tengt: textinn segir hvernig lykillinn stendur og hvað vantar. */
+  function lykilStada(s, t) {
+    const smidi = 'Í smíðum. ' + t.kemur;
+    const r = s.lyklar ? s.lyklar[t.veita] : null;
+    if (!r) return ['kemur', smidi];
     if (r.prufad) return /^ok/i.test(r.prufa_svar || '')
-      ? ['tengt', (String(r.prufa_svar).replace(/^ok:?\s*/i, '') || 'Lykillinn virkar') + '. Prófað ' + hvenaer(r.prufad)]
-      : ['ekki', 'Lykillinn virkar ekki: ' + (r.prufa_svar || 'óþekkt villa')];
-    return ['bidur', 'Lykill vistaður (endar á ' + (r.sidustu4 || '????') + ') en ekki prófaður ennþá'];
+      ? ['kemur', (String(r.prufa_svar).replace(/^ok:?\s*/i, '') || 'Lykillinn virkar') + '. Prófað ' + hvenaer(r.prufad) + '. ' + smidi]
+      : ['kemur', prufuVilla(r.prufa_svar) + ' ' + smidi];
+    return ['kemur', 'Lykill vistaður (endar á ' + (r.sidustu4 || '????') + ') en ekki prófaður ennþá. ' + smidi];
   }
 
   function teiknaTengingar(s) {
     sidastaStada = s;
     const POSTUR = g.prufa ? 'pósthólfi stofunnar' : 'tveir@tveir.is';
     const VERK = g.prufa ? 'verk-netfang stofunnar' : 'verk@tveir.is';
-    const PILLUR = { tengt: 'Tengt', bidur: 'Bíður', ekki: 'Ekki tengt', handvirkt: 'Handvirkt', kemur: 'Kemur' };
-    /* Gervigreindin er í smíðum. Í sýnidæminu segjum við það beint. */
-    const SMIDUM = ['kemur', 'Í smíðum. Drög að svörum og samantektir eru ekki tilbúin ennþá.'];
+    const DEILA = g.prufa ? 'netfangi stofunnar' : 'tveir@tveir.is';
+    const STOFA = g.prufa ? stofuNafn() : 'Tveir';
+    /* Sama orðalag og á vefnum: Í smíðum */
+    const PILLUR = { tengt: 'Tengt', bidur: 'Bíður', ekki: 'Ekki tengt', handvirkt: 'Handvirkt', kemur: 'Í smíðum' };
+    const SMIDI_TVEIR = 'Í smíðum. Þegar þetta er tilbúið setur Tveir tenginguna upp með þér.';
     const KEMUR = ['kemur', ''];
     const EKKI = ['ekki', ''];
-    const bok = bokhaldsKerfi();
-    /* merki: skrá í assets/tengingar. litur: bakgrunnur flísarinnar. ljos: merkið er í lit á hvítu, annars hvítt á lit */
+    /* Tengingar með lykli: alltaf Í smíðum. Í alvöru aðgangi má samt vista og prófa lykilinn. */
+    const lykilSpjald = (t) => (SYNID
+      ? synidSpjald({ ...t, stada: ['kemur', 'Í smíðum. ' + t.kemur], smidum: true }, SMIDI_TVEIR)
+      : { ...t, stada: lykilStada(s, t), smidum: true });
+    /* merki: skrá í assets/tengingar. litur: bakgrunnur flísarinnar. ljos: merkið er í lit á hvítu, annars hvítt á lit.
+       utan: telst ekki með í "X af Y tengt". pilla: '' þýðir engin pilla. */
     const HOPAR = [
       ['Póstur og dagatal', [
         { heiti: 'Gmail', lb: 'gmail', merki: 'gmail.svg', litur: '#EA4335', hvad: 'Pósthólfið á Samskiptum og póstar úr kerfinu', stada: s.gmail, slod: 'samskipti.html',
-          tharf: SYNID ? EINFALT + ' Pósturinn uppfærist á 5 mínútna fresti.' : 'Tengt í gegnum Apps Script á ' + POSTUR + '. Uppfærist á 5 mínútna fresti.' },
-        { heiti: 'Verk-netfangið', lb: 'gmail', stafur: '@', litur: '#1c3050', hvad: 'Póstur á ' + VERK + ' verður að verkum', stada: g.prufa ? ['handvirkt', 'Sýnidæmi'] : ['tengt', VERK],
-          tharf: 'Viðskiptavinur sendir póst á ' + VERK + ' og verkið birtist á Stjórnborðinu innan 5 mínútna.' },
+          tharf: SYNID ? EINFALT + ' Pósturinn uppfærist á 5 mínútna fresti.' : 'Pósturinn er sóttur með Apps Script skrift á ' + POSTUR + ', á 5 mínútna fresti.' },
+        /* Engin staða til í gögnunum fyrir verk-netfangið, svo spjaldið segir hvernig það virkar en ekki hvort það sé tengt */
+        { heiti: 'Verk-netfangið', lb: 'gmail', stafur: '@', litur: '#1c3050', hvad: 'Póstur á ' + VERK + ' verður að verkum', utan: true, pilla: '',
+          stada: ['handvirkt', g.prufa ? 'Sýnidæmi' : 'Póstur frá skráðum notanda verður að verki innan 5 mínútna'],
+          dTexti: 'Hér þarf enga tengingu. Verk sem koma með pósti birtast á Stjórnborðinu.',
+          tharf: 'Viðskiptavinur sendir póst á ' + VERK + ', eða setur ' + VERK + ' í CC, frá netfanginu sem er skráð á notanda hjá fyrirtækinu. Verkið birtist á Stjórnborðinu innan 5 mínútna. Póstur frá öðru netfangi verður ekki að verki, og sjálfvirk áframsending virkar ekki.' },
         { heiti: 'Google Calendar', lb: 'googlecalendar', merki: 'googlecalendar.svg', litur: '#4285F4', hvad: 'Fundirnir þínir á Dagatalinu, við hlið skiladaga', stada: s.dagatal, slod: 'dagatal.html',
-          tharf: SYNID ? EINFALT + ' Dagatalið uppfærist á 5 mínútna fresti.' : 'Tengt í gegnum sömu Apps Script skrift og Gmail. Dagatalið uppfærist á 5 mínútna fresti.' }
+          tharf: SYNID ? EINFALT + ' Dagatalið uppfærist á 5 mínútna fresti.'
+            : 'Deildu dagatalinu þínu með ' + DEILA + '. Í Google Calendar í tölvu: Settings and sharing við dagatalið, Shared with vinstra megin og svo Add people and groups. Bættu ' + DEILA + ' við, veldu See event details (sums staðar See all event details) og smelltu á Send. '
+              + 'Láttu ' + STOFA + ' vita. ' + STOFA + ' samþykkir deilinguna og eftir það koma fundirnir inn á 5 mínútna fresti. Á vinnuaðgangi gæti Google stjórnandinn þurft að leyfa deilingu út fyrir fyrirtækið fyrst.' }
       ]],
       ['Samfélagsmiðlar', [
-        { heiti: 'Instagram', lb: 'instagram', merki: 'instagram.svg', litur: '#E4405F', hvad: 'Fylgjendur, áhorf og færslur á Tölfræði', stada: s.meta, slod: 'tolfraedi.html',
-          tharf: SYNID ? EINFALT + ' Þú gefur okkur aðgang að Instagram reikningnum.' : 'Þarf Meta app og System User token (META_TOKEN) í Apps Script, og auðkenni reikningsins á Tölfræði.' },
-        { heiti: 'Facebook', lb: 'facebook', merki: 'facebook.svg', litur: '#0866FF', hvad: 'Áhorf og fylgjendur síðunnar á Tölfræði', stada: s.meta, slod: 'tolfraedi.html',
-          tharf: SYNID ? EINFALT + ' Þú gefur okkur aðgang að Facebook síðunni.' : 'Sama Meta app og Instagram. Page ID síðunnar fer á Tölfræði.' },
-        { heiti: 'TikTok', lb: 'tiktok', merki: 'tiktok.svg', litur: '#000000', hvad: 'Tölur á Tölfræði', stada: s.tiktok, slod: 'tolfraedi.html',
-          tharf: SYNID ? 'TikTok leyfir ekki sjálfvirka söfnun ennþá. Tölurnar eru skráðar í höndunum.' : 'TikTok leyfir ekki sjálfvirka söfnun fyrir okkur ennþá. Tölurnar eru skráðar í höndunum eða úr CSV.' },
-        { heiti: 'Messenger', merki: 'messenger.svg', litur: '#00B2FF', hvad: 'Skilaboð inn í Samskipti', stada: KEMUR, tharf: SYNID ? 'Bíður eftir leyfi frá Meta, það tekur nokkrar vikur. ' + EINFALT : 'Sama Meta app, auk leyfis Meta fyrir skilaboðum (App Review, nokkrar vikur).' },
-        { heiti: 'Instagram skilaboð', merki: 'instagram.svg', litur: '#C13584', hvad: 'DM inn í Samskipti', stada: KEMUR, tharf: SYNID ? 'Bíður eftir sama leyfi frá Meta og Messenger. ' + EINFALT : 'Sama Meta app og leyfi og Messenger.' }
+        { heiti: 'Instagram', lb: 'instagram', merki: 'instagram.svg', litur: '#E4405F', hvad: 'Fylgjendur, áhorf og færslur á Tölfræði', stada: s.instagram, slod: 'tolfraedi.html',
+          tharf: SYNID ? EINFALT + ' Þú gefur okkur aðgang að efni og tölfræði Instagram reikningsins.'
+            : 'Þarf Meta app og System User token (META_TOKEN) í Apps Script, og auðkenni reikningsins á Tölfræði. Reikningnum er deilt með Business ID ' + STOFA + ' sem samstarfsaðila (Partners), með aðgangi að bæði efni (Content) og tölfræði (Insights).' },
+        { heiti: 'Facebook', lb: 'facebook', merki: 'facebook.svg', litur: '#0866FF', hvad: 'Áhorf og fylgjendur síðunnar á Tölfræði', stada: s.facebook, slod: 'tolfraedi.html',
+          tharf: SYNID ? EINFALT + ' Þú gefur okkur aðgang að efni og tölfræði Facebook síðunnar.'
+            : 'Sama Meta app og Instagram. Page ID síðunnar fer á Tölfræði. Síðunni er deilt með Business ID ' + STOFA + ' sem samstarfsaðila (Partners), með aðgangi að bæði efni (Content) og tölfræði (Insights). Tölfræðin ein dugar ekki.' },
+        { heiti: 'TikTok', lb: 'tiktok', merki: 'tiktok.svg', litur: '#000000', hvad: 'Tölur á Tölfræði', stada: s.tiktok, slod: 'tolfraedi.html#tiktok', utan: true,
+          tharf: SYNID ? 'Sjálfvirk söfnun frá TikTok er ekki komin í Glerhúsið ennþá. Tölurnar eru skráðar í höndunum.' : 'Sjálfvirk söfnun frá TikTok er ekki komin í Glerhúsið ennþá. Tölurnar eru skráðar í höndunum á Tölfræði eða fluttar inn úr CSV.' },
+        { heiti: 'Messenger', merki: 'messenger.svg', litur: '#00B2FF', hvad: 'Skilaboð inn í Samskipti', stada: KEMUR, smidum: true,
+          tharf: SYNID ? 'Í smíðum. Skilaboðin koma ekki inn í Samskipti ennþá. ' + EINFALT : 'Í smíðum. Skilaboðin koma ekki inn í Samskipti ennþá. Þetta þarf Meta appið og leyfi Meta fyrir skilaboðum (App Review).' },
+        { heiti: 'Instagram skilaboð', merki: 'instagram.svg', litur: '#C13584', hvad: 'DM inn í Samskipti', stada: KEMUR, smidum: true,
+          tharf: SYNID ? 'Í smíðum. Skilaboðin koma ekki inn í Samskipti ennþá. ' + EINFALT : 'Í smíðum. Þetta þarf sama Meta app og leyfi og Messenger.' }
       ]],
-      ['Bókhald', [
-        synidSpjald({ ...LYKLAR.payday, stada: lykilStada(s, 'payday', g.prufa && bok === 'Payday') }),
-        synidSpjald({ ...LYKLAR.dk, stada: lykilStada(s, 'dk', g.prufa && bok === 'DK') })
-      ]],
-      ['Verslun', [
-        synidSpjald({ ...LYKLAR.shopify, stada: lykilStada(s, 'shopify') })
-      ]],
-      ['Gervigreind', [
-        SYNID ? synidSpjald({ ...LYKLAR.claude, stada: SMIDUM, pilla: 'Í smíðum', smidum: true }, 'Í smíðum. Þegar þetta er tilbúið setur Tveir tenginguna upp með þér.')
-          : { ...LYKLAR.claude, stada: lykilStada(s, 'claude') },
-        SYNID ? synidSpjald({ ...LYKLAR.chatgpt, stada: SMIDUM, pilla: 'Í smíðum', smidum: true }, 'Í smíðum. Þegar þetta er tilbúið setur Tveir tenginguna upp með þér.')
-          : { ...LYKLAR.chatgpt, stada: lykilStada(s, 'chatgpt') }
-      ]],
+      ['Bókhald', [lykilSpjald(LYKLAR.payday), lykilSpjald(LYKLAR.dk)]],
+      ['Verslun', [lykilSpjald(LYKLAR.shopify)]],
+      ['Gervigreind', [lykilSpjald(LYKLAR.claude), lykilSpjald(LYKLAR.chatgpt)]],
       ['Vefur og skrár', [
-        { heiti: 'Google Analytics', lb: 'googleanalytics', merki: 'googleanalytics.svg', litur: '#E37400', hvad: 'Heimsóknir á vef viðskiptavinarins á Tölfræði', stada: KEMUR, tharf: SYNID ? 'Viðskiptavinurinn gefur okkur lesaðgang að sínu Google Analytics. ' + EINFALT : 'Má tengja í gegnum Google. Viðskiptavinurinn gefur okkur lesaðgang að sínu Analytics.' },
-        { heiti: 'WeTransfer', lb: 'wetransfer', merki: 'wetransfer.svg', litur: '#409FFF', hvad: 'Hlekkir á undirverkum', stada: ['tengt', 'Hlekkir virka beint á undirverkum'], tharf: 'Engin tenging þarf: límdu WeTransfer hlekkinn á undirverkið og viðskiptavinurinn fær hann í pósti.' }
+        { heiti: 'Google Analytics', lb: 'googleanalytics', merki: 'googleanalytics.svg', litur: '#E37400', hvad: 'Heimsóknir á vef viðskiptavinarins á Tölfræði', smidum: true,
+          stada: ['kemur', 'Í smíðum. Engar tölur úr Google Analytics birtast ennþá.'],
+          tharf: SYNID ? SMIDI_TVEIR : 'Í smíðum. Engar tölur úr Google Analytics birtast ennþá, svo ekki þarf að gefa neinn aðgang strax.' },
+        { heiti: 'WeTransfer', lb: 'wetransfer', merki: 'wetransfer.svg', litur: '#409FFF', hvad: 'Hlekkir á undirverkum', utan: true, pilla: 'Engin uppsetning',
+          stada: ['handvirkt', 'Hlekkir virka beint á undirverkum'], dTexti: 'Hér þarf enga tengingu.',
+          tharf: 'Engin tenging þarf: límdu WeTransfer hlekkinn á undirverkið og viðskiptavinurinn fær hann í pósti.' }
       ]]
     ];
 
     const takn = (t) => el('span', { class: 'st-teng__takn' + (t.ljos ? ' er-ljos' : '') + (t.fyllt ? ' er-fyllt' : ''), style: 'background:' + t.litur, 'aria-hidden': 'true' },
       [t.merki ? el('img', { src: 'assets/tengingar/' + t.merki, alt: '', loading: 'lazy' }) : document.createTextNode(t.stafur || t.heiti[0])]);
 
-    const fjoldi = HOPAR.reduce((a, [, l]) => a + l.length, 0);
-    const tengd = HOPAR.reduce((a, [, l]) => a + l.filter((t) => (t.stada || [])[0] === 'tengt').length, 0);
+    /* Bara tengingar sem geta verið tengdar núna teljast með. Í smíðum, handvirkt og
+       engin uppsetning standa utan við. */
+    const oll = HOPAR.flatMap(([, l]) => l);
+    const telst = oll.filter((t) => !t.smidum && !t.utan);
+    const tengd = telst.filter((t) => (t.stada || [])[0] === 'tengt').length;
+    const smidi = oll.filter((t) => t.smidum).length;
     fylla(tengingarSvid, [
-      el('p', { class: 'st-teng-yfirlit', texti: tengd + ' af ' + fjoldi + ' tengt' }),
+      el('p', { class: 'st-teng-yfirlit', texti: tengd + ' af ' + telst.length + ' tengt' + (smidi ? ', ' + smidi + ' í smíðum' : '') }),
       ...HOPAR.map(([heiti, listi]) => el('div', { class: 'st-teng-hopur' }, [
         el('h3', { texti: heiti }),
         el('div', { class: 'st-tengingar' }, listi.map((t) => {
           const [stada, undir] = t.stada || EKKI;
+          const pilla = t.pilla === '' ? null : t.pilla || PILLUR[stada];
+          /* Tengja bara þar sem eitthvað er hægt að tengja núna, annars Nánar */
+          const tengja = !t.smidum && !t.utan && (stada === 'ekki' || stada === 'bidur');
           return el('article', { class: 'st-teng st-teng--' + stada }, [
             el('div', { class: 'st-teng__efst' }, [
               takn(t),
               el('div', { class: 'st-teng__nafn' }, [el('strong', { texti: t.heiti }), el('span', { texti: t.hvad })]),
-              el('span', { class: 'st-pilla st-pilla--' + stada, texti: t.pilla || PILLUR[stada] })
+              pilla ? el('span', { class: 'st-pilla st-pilla--' + stada, texti: pilla }) : null
             ]),
             undir ? el('p', { class: 'st-teng__stada', texti: undir }) : null,
             el('div', { class: 'st-teng__fot' }, [
               stada === 'tengt' && t.slod
                 ? el('a', { class: 'btn btn--sm btn--ghost', href: t.slod, texti: 'Opna' })
-                : el('button', { type: 'button', class: 'btn btn--sm' + (stada === 'tengt' ? ' btn--ghost' : ''), texti: stada === 'tengt' || t.smidum ? 'Nánar' : 'Tengja',
+                : el('button', { type: 'button', class: 'btn btn--sm' + (tengja ? '' : ' btn--ghost'), texti: tengja ? 'Tengja' : 'Nánar',
                     onclick: () => opnaTengingu(t, stada, takn) })
             ])
           ]);
@@ -308,7 +362,9 @@ async function start() {
         el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '✕', onclick: () => d.close() })
       ]),
       el('p', { class: 'st-t__hvad', texti: t.hvad + '.' }),
-      el('p', { class: 'st-t__stada st-t__stada--' + stada, texti: t.smidum ? 'Þetta er í smíðum og ekki tilbúið ennþá.' : TEXTI[stada] || '' }),
+      el('p', { class: 'st-t__stada st-t__stada--' + stada, texti: t.dTexti || (t.smidum
+        ? (t.veita ? 'Þetta er í smíðum. ' + t.kemur + ' Þú getur samt vistað lykilinn og prófað hann núna.' : 'Þetta er í smíðum og ekki tilbúið ennþá.')
+        : TEXTI[stada] || '') }),
       t.veita ? lykilForm(t, stada, d) : el('div', { class: 'st-t__tharf' }, [el('strong', { texti: 'Hvað þarf til' }), el('p', { texti: t.tharf }),
         t.lb ? el('a', { class: 'st-t__lb', href: LEIDBEININGAR + '#' + t.lb, target: '_blank', rel: 'noopener', texti: 'Nánari leiðbeiningar' }) : null]),
       t.veita ? null : el('div', { class: 'spjald__fot' }, [
@@ -323,40 +379,67 @@ async function start() {
   /* Leiðbeiningar skref fyrir skref, reitirnir og Vista. Lykillinn fer beint
      í gagnagrunninn og er aldrei sýndur aftur. */
   function lykilForm(t, stada, d) {
-    const r = (sidastaStada && sidastaStada.lyklar && sidastaStada.lyklar[t.veita]) || null;
+    let r = (sidastaStada && sidastaStada.lyklar && sidastaStada.lyklar[t.veita]) || null;
     const villa = el('p', { class: 'villa', role: 'alert', hidden: true });
     const tokst = el('p', { class: 'st-t__tokst', role: 'status', hidden: true });
     const syna = (ok, texti) => { villa.hidden = tokst.hidden = true; const x = ok ? tokst : villa; x.textContent = texti; x.hidden = false; };
+    const fleiri = (t.reitir || []).filter((f) => f.leynt !== false).length > 1;
     /* Prófar lykilinn strax hjá veitunni. Tekst það: glugginn lokast og spjaldið
-       sýnir Tengt. Tekst það ekki: glugginn helst opinn með skýringunni. */
+       segir að lykillinn virki en tengingin sé í smíðum. Tekst það ekki: glugginn
+       helst opinn með skýringunni, Prófa aftur og Aftengja. */
     async function profa(hnappur, venjulegt) {
       hnappur.disabled = true; hnappur.textContent = 'Prófa lykilinn';
       let n;
       try { n = await g.profaTengingu(t.veita); }
       catch (er) { n = { ok: false, svar: er.message || 'Ekki tókst að prófa.' }; }
       teiknaTengingar(await stadaTenginga());
+      r = (sidastaStada && sidastaStada.lyklar && sidastaStada.lyklar[t.veita]) || r;
+      synaStjorn();
       hnappur.disabled = false; hnappur.textContent = venjulegt;
       if (n && n.ok) {
-        syna(true, String(n.svar || 'Lykillinn virkar').replace(/\.$/, '') + (g.prufa ? '.' : '. Tengingin er komin á.'));
-        setTimeout(() => { if (d.open) d.close(); }, 1600);
+        const svar = String(n.svar || '').replace(/\.$/, '');
+        const virkar = g.prufa ? '' : (fleiri ? 'Lyklarnir virka' : 'Lykillinn virkar') + ' og ' + (fleiri ? 'eru vistaðir' : 'er vistaður') + ', en tengingin sjálf er í smíðum. ';
+        syna(true, (svar ? svar + '. ' : '') + (g.prufa ? 'Tengingin sjálf er í smíðum. ' : virkar) + t.kemur);
+        setTimeout(() => { if (d.open) d.close(); }, 3500);
       } else syna(false, (n && n.svar) || 'Lykillinn virkar ekki.');
       return n;
     }
     const reitir = (t.reitir || []).map((f) => {
       const inn = el('input', { type: f.leynt === false ? 'text' : 'password', name: f.nafn, autocomplete: 'off', spellcheck: 'false',
         autocapitalize: 'off', placeholder: f.daemi || '', value: f.leynt === false && r && r.stillingar ? (r.stillingar[f.nafn] || '') : '' });
-      return { f, inn, svid: el('label', { class: 'st-t__reitur' }, [el('span', { texti: f.heiti }), inn,
-        f.leynt !== false && r ? el('small', { texti: 'Vistað. Skildu eftir autt til að halda núverandi lykli.' }) : null]) };
+      const vistad = f.leynt !== false ? el('small', { texti: 'Vistað. Skildu eftir autt til að halda núverandi lykli.' }) : null;
+      return { f, inn, vistad, svid: el('label', { class: 'st-t__reitur' }, [el('span', { texti: f.heiti }), inn, r ? vistad : null]) };
     });
-    const vista = el('button', { type: 'submit', class: 'btn', texti: r ? 'Vista breytingar' : 'Vista og tengja' });
-    const aftur = r ? el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Prófa aftur', onclick: () => profa(aftur, 'Prófa aftur') }) : null;
+    const vistaTexti = () => (r ? 'Vista breytingar' : 'Vista og tengja');
+    const vista = el('button', { type: 'submit', class: 'btn', texti: vistaTexti() });
+    const aftur = el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Prófa aftur', onclick: () => profa(aftur, 'Prófa aftur') });
+    const aftengja = el('button', { type: 'button', class: 'btn btn--ghost btn--danger', texti: 'Aftengja', onclick: async () => {
+      if (!confirm('Aftengja ' + t.heiti + '? Lykillinn er þurrkaður út.')) return;
+      try { await g.eydaTengingu(t.veita); d.close(); teiknaTengingar(await stadaTenginga()); }
+      catch (er) { syna(false, er.message || 'Ekki tókst að aftengja.'); }
+    } });
+    const fot = el('div', { class: 'spjald__fot' }, [
+      vista,
+      t.opna ? el('a', { class: 'btn btn--ghost', href: t.opna[1], target: '_blank', rel: 'noopener', texti: t.opna[0] }) : null
+    ]);
+    /* Prófa aftur og Aftengja birtast um leið og lykill er vistaður, líka ef
+       fyrsta prófunin mistókst og glugginn er enn opinn */
+    function synaStjorn() {
+      if (!r) return;
+      if (!aftur.isConnected) vista.after(aftur);
+      if (!aftengja.isConnected) fot.append(aftengja);
+      reitir.forEach(({ inn, vistad }) => { if (vistad && !vistad.isConnected) inn.after(vistad); });
+    }
+    synaStjorn();
     const form = el('form', { class: 'st-t__form', onsubmit: async (e) => {
       e.preventDefault(); villa.hidden = tokst.hidden = true;
       const stillingar = { ...(t.fastar || {}) }, leyndo = {};
       for (const { f, inn } of reitir) {
         const v = inn.value.trim();
-        if (f.leynt === false) stillingar[f.nafn] = v.toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-        else if (v) leyndo[f.nafn] = v;
+        if (f.leynt === false) {
+          const hreint = f.nafn === 'verslun' ? verslunarSlod(v) : v.toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+          stillingar[f.nafn] = hreint; inn.value = hreint;
+        } else if (v) leyndo[f.nafn] = v;
       }
       const leyndirReitir = reitir.filter(({ f }) => f.leynt !== false);
       if (Object.keys(leyndo).length && Object.keys(leyndo).length < leyndirReitir.length) { villa.textContent = 'Fylltu út alla lyklareitina.'; villa.hidden = false; return; }
@@ -366,24 +449,17 @@ async function start() {
         reitir.forEach(({ inn }) => { if (inn.type === 'password') inn.value = ''; });
       } catch (er) {
         syna(false, er.message || 'Ekki tókst að vista.');
-        vista.disabled = false; vista.textContent = r ? 'Vista breytingar' : 'Vista og tengja';
+        vista.disabled = false; vista.textContent = vistaTexti();
         return;
       }
+      r = r || { veita: t.veita };
+      synaStjorn();
       await profa(vista, 'Vista breytingar');
     } }, [
       ...reitir.map((x) => x.svid),
       villa,
       tokst,
-      el('div', { class: 'spjald__fot' }, [
-        vista,
-        aftur,
-        t.opna ? el('a', { class: 'btn btn--ghost', href: t.opna[1], target: '_blank', rel: 'noopener', texti: t.opna[0] }) : null,
-        r ? el('button', { type: 'button', class: 'btn btn--ghost btn--danger', texti: 'Aftengja', onclick: async () => {
-          if (!confirm('Aftengja ' + t.heiti + '? Lykillinn er þurrkaður út.')) return;
-          try { await g.eydaTengingu(t.veita); d.close(); teiknaTengingar(await stadaTenginga()); }
-          catch (er) { syna(false, er.message || 'Ekki tókst að aftengja.'); }
-        } }) : null
-      ])
+      fot
     ]);
     return el('div', { class: 'st-t__lykill' }, [
       el('div', { class: 'st-t__tharf' }, [el('strong', { texti: 'Svona tengirðu' }),
@@ -393,11 +469,5 @@ async function start() {
       form,
       el('p', { class: 'skyring st-t__oruggt', texti: 'Lykillinn er prófaður um leið og þú vistar. Hann er geymdur dulkóðaður og sést aldrei aftur á þessari síðu, ekki heldur hjá þér.' })
     ]);
-  }
-
-  /* Í Glerhúsinu: bókhaldskerfið sem var valið í "Settu saman" */
-  function bokhaldsKerfi() {
-    try { const x = JSON.parse(localStorage.getItem('glerhus-tveir-byggja') || 'null'); const t = (x && x.tengingar) || []; return t.includes('payday') ? 'Payday' : t.includes('dk') ? 'DK' : null; }
-    catch (e) { return null; }
   }
 }

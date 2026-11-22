@@ -9,7 +9,7 @@
    Gröfin eru teiknuð hér sem SVG, ekkert safn að utan.
    ========================================================================== */
 
-import { gogn, el, fylla, lesaTolu, vardaHlid, teiknaHaus, geymt, geyma, tolu, erEnska } from './portal.js';
+import { gogn, el, fylla, vardaHlid, teiknaHaus, geymt, geyma, tolu, erEnska } from './portal.js';
 import { opnaSendingu } from './tolfraedi-senda.js';
 
 const ek = await vardaHlid({ badir: true });
@@ -152,7 +152,12 @@ function stadaBod(stada, texti, tegund) {
 function talnareitur(gildi) {
   const inn = el('input', { type: 'text', inputmode: 'numeric', autocomplete: 'off',
                             value: gildi === null || gildi === undefined ? '' : tala(gildi) });
-  inn.addEventListener('blur', () => { const t = lesaTolu(inn.value); inn.value = t === null ? '' : tala(t); });
+  /* 12,4K verður 12.400. Texti sem er ekki tala stendur, svo villan sjáist við vistun */
+  inn.addEventListener('blur', () => {
+    const t = lesaFjolda(inn.value, true);
+    if (t !== null) inn.value = tala(t);
+    else if (!inn.value.trim()) inn.value = '';
+  });
   return inn;
 }
 
@@ -394,16 +399,32 @@ function rit({ tegund, x, xMerki, rodir, nafn, lysing }) {
 /* ==================================================================
    CSV lestur
    ================================================================== */
-const HAUSAR = {
-  date: 'dags', dags: 'dags', dagsetning: 'dags', dagur: 'dags', day: 'dags',
-  followers: 'fylgjendur', fylgjendur: 'fylgjendur', followerscount: 'fylgjendur',
-  totalfollowers: 'fylgjendur',
-  views: 'ahorf', ahorf: 'ahorf', videoviews: 'ahorf',
-  reach: 'nadir', nad: 'nadir', nadir: 'nadir',
-  interactions: 'samskipti', samskipti: 'samskipti', engagement: 'samskipti', engagements: 'samskipti',
-  profilevisits: 'heimsoknir', heimsoknir: 'heimsoknir', visits: 'heimsoknir',
-  posts: 'faerslur', faerslur: 'faerslur'
+/* Dálkaheiti sem eru lesin, á íslensku og ensku (líka eins og TikTok Studio
+   skrifar þau). Bara dálkar sem maelingar geymir. Öðrum er sleppt. */
+const DALKAHEITI = {
+  dags: ['date', 'dags', 'dagsetning', 'dagur', 'day'],
+  fylgjendur: ['followers', 'fylgjendur', 'followers count', 'total followers', 'fjöldi fylgjenda'],
+  ahorf: ['views', 'áhorf', 'video views', 'áhorf á myndbönd', 'myndbandsáhorf'],
+  nadir: ['reach', 'náð', 'nadir'],
+  samskipti: ['interactions', 'samskipti', 'engagement', 'engagements'],
+  heimsoknir: ['profile visits', 'profile views', 'visits', 'heimsóknir', 'heimsóknir á prófíl', 'prófílheimsóknir'],
+  faerslur: ['posts', 'færslur']
 };
+/* Hlutar samskipta. Þeir leggjast saman í samskipti ef skráin hefur engan
+   samskiptadálk, annars er þeim sleppt svo ekkert sé talið tvisvar. */
+const HLUTAHEITI = {
+  likes: ['likes', 'líkar', 'læk'],
+  athugasemdir: ['comments', 'athugasemdir'],
+  deilingar: ['shares', 'deilingar'],
+  vistanir: ['saves', 'vistanir']
+};
+const heitaKort = (heiti) => {
+  const kort = {};
+  for (const [k, listi] of Object.entries(heiti)) listi.forEach((h) => { kort[hreinsaHaus(h)] = k; });
+  return kort;
+};
+const HAUSAR = heitaKort(DALKAHEITI);
+const HLUTAR = heitaKort(HLUTAHEITI);
 
 function hreinsaHaus(h) {
   return String(h || '').toLowerCase().trim()
@@ -438,46 +459,87 @@ function giskaSkil(lina) {
   return val[0][1] > 0 ? val[0][0] : ',';
 }
 
+/* Mánaðaheiti á ensku og íslensku, fyrstu þrír stafirnir án kommu */
+const MAN_HEITI = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, mai: 5, jun: 6, jul: 7, aug: 8, agu: 8,
+                    sep: 9, oct: 10, okt: 10, nov: 11, dec: 12, des: 12 };
+
 function lesaDags(gildi, rod) {
   const t = String(gildi || '').trim();
   let y; let m; let d; let k;
-  if ((k = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) { y = +k[1]; m = +k[2]; d = +k[3]; }
+  if ((k = t.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/))) { y = +k[1]; m = +k[2]; d = +k[3]; }
+  else if ((k = t.match(/^(\d{4})(\d{2})(\d{2})$/))) { y = +k[1]; m = +k[2]; d = +k[3]; }
   else if ((k = t.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/))) { d = +k[1]; m = +k[2]; y = +k[3]; }
   else if ((k = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/))) {
     y = +k[3] < 100 ? 2000 + +k[3] : +k[3];
     if (rod === 'mdy') { m = +k[1]; d = +k[2]; } else { d = +k[1]; m = +k[2]; }
-  } else return null;
+  } else {
+    /* November 1, 2026 / Nov 1 / 1 Nov 2026 / 1. nóvember 2026 */
+    const s = t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/,/g, ' ').trim();
+    let man; let dagur; let ar;
+    if ((k = s.match(/^([a-z]{3})[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?\s*(\d{4})?$/))) { man = k[1]; dagur = k[2]; ar = k[3]; }
+    else if ((k = s.match(/^(\d{1,2})\.?\s*([a-z]{3})[a-z]*\.?\s*(\d{4})?$/))) { dagur = k[1]; man = k[2]; ar = k[3]; }
+    else return null;
+    m = MAN_HEITI[man];
+    d = +dagur;
+    if (!m) return null;
+    if (ar) y = +ar;
+    else {
+      /* Ekkert ár: nýjasti dagurinn sem er ekki í framtíðinni */
+      y = new Date().getFullYear();
+      if (ymd(new Date(y, m - 1, d, 12)) > idag()) y--;
+    }
+  }
   const dd = new Date(y, m - 1, d, 12);
   if (dd.getFullYear() !== y || dd.getMonth() !== m - 1 || dd.getDate() !== d) return null;
   if (y < 2000 || ymd(dd) > idag()) return null;
   return ymd(dd);
 }
 
-function lesaFjolda(gildi) {
-  const t = String(gildi === undefined || gildi === null ? '' : gildi).trim().replace(/[\s ]/g, '');
-  if (!t || /[^0-9.,]/.test(t)) return null;
-  if (/^\d{1,3}([.,]\d{3})+$/.test(t)) return Number(t.replace(/[.,]/g, ''));
-  if (/^\d+([.,]\d+)?$/.test(t)) return Math.round(parseFloat(t.replace(',', '.')));
-  return null;
+/* Fjöldi eins og miðlarnir sýna hann: 12400, 12.400, 12,400, 12 400,
+   12.4K, 12,4 þ., 1,2 þús., 1,5 m. eða 1.5M. Skilar null ef þetta er ekki
+   tala. heilt: tala án viðskeytis má ekki hafa aukastafi (12,5 er villa). */
+const MARGFELDI = { k: 1e3, th: 1e3, thus: 1e3, m: 1e6, millj: 1e6 };
+function lesaFjolda(gildi, heilt) {
+  const t = String(gildi === undefined || gildi === null ? '' : gildi).trim().toLowerCase()
+    .replace(/[\s  ']/g, '').replace(/þ/g, 'th')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\.$/, '');
+  if (!t) return null;
+  let n = null;
+  const k = t.match(/^(\d+(?:[.,]\d+)?)(k|th|thus|m|millj)$/);
+  if (k) n = Math.round(parseFloat(k[1].replace(',', '.')) * MARGFELDI[k[2]]);
+  else if (/[^0-9.,]/.test(t)) return null;
+  else if (/^\d{1,3}([.,]\d{3})+$/.test(t)) n = Number(t.replace(/[.,]/g, ''));
+  else if (/^\d+$/.test(t)) n = Number(t);
+  else if (!heilt && /^\d+[.,]\d+$/.test(t)) n = Math.round(parseFloat(t.replace(',', '.')));
+  return n !== null && Number.isSafeInteger(n) && n < 1e12 ? n : null;
 }
 
 function lesaCsv(texti) {
   const linur = String(texti || '').replace(/^﻿/, '').split(/\r\n|\n|\r/).filter((l) => l.trim());
   if (!linur.length) return { villa: 'Ekkert til að lesa ennþá.' };
 
-  let hausNr = -1; let skil = ','; let dalkar = null;
+  let hausNr = -1; let skil = ','; let dalkar = null; let hlutar = null; let sleppt = []; let hausTexti = [];
   for (let i = 0; i < Math.min(6, linur.length); i++) {
     if (/^sep=/i.test(linur[i])) continue;
     const sk = giskaSkil(linur[i]);
     const kort = {};
-    sundra(linur[i], sk).map(hreinsaHaus).forEach((h, j) => {
+    const hl = {};
+    const ut = [];
+    const reitir = sundra(linur[i], sk);
+    reitir.map(hreinsaHaus).forEach((h, j) => {
       const k = HAUSAR[h];
+      const hk = HLUTAR[h];
       if (k && kort[k] === undefined) kort[k] = j;
+      else if (hk && hl[hk] === undefined) hl[hk] = j;
+      else if (reitir[j]) ut.push(reitir[j]);
     });
-    if (kort.dags !== undefined && Object.keys(kort).length > 1) { hausNr = i; skil = sk; dalkar = kort; break; }
+    if (kort.dags !== undefined && (Object.keys(kort).length > 1 || Object.keys(hl).length)) {
+      hausNr = i; skil = sk; dalkar = kort; hlutar = hl; sleppt = ut; hausTexti = reitir;
+      break;
+    }
   }
   if (hausNr < 0) {
-    return { villa: 'Fann ekki dálkaheitin. Fyrsta línan þarf að hafa dagsetningu (dags eða date) og minnst eina tölu, til dæmis fylgjendur eða followers.' };
+    return { villa: 'Fann ekki dálkaheitin. Fyrsta línan þarf að hafa dagsetningu (dags eða date) og minnst eina tölu, til dæmis fylgjendur eða followers. Skrá úr TikTok Studio þarf að vera sótt á ensku.' };
   }
 
   const hrar = linur.slice(hausNr + 1).map((l) => sundra(l, skil));
@@ -485,13 +547,21 @@ function lesaCsv(texti) {
 
   /* 03/11/2026: dagur fyrst nema einhver lína sýni annað */
   let rod = 'dmy';
+  let tviraett = false;
   for (const r of hrar) {
     const k = String(r[dalkar.dags] || '').match(/^(\d{1,2})\/(\d{1,2})\//);
-    if (k && +k[1] > 12) { rod = 'dmy'; break; }
-    if (k && +k[2] > 12) { rod = 'mdy'; break; }
+    if (k) tviraett = true;
+    if (k && +k[1] > 12) { rod = 'dmy'; tviraett = false; break; }
+    if (k && +k[2] > 12) { rod = 'mdy'; tviraett = false; break; }
   }
 
-  const tolur = MAELITOLUR.filter((k) => dalkar[k] !== undefined);
+  /* Enginn samskiptadálkur: líkar, athugasemdir, deilingar og vistanir saman */
+  if (dalkar.samskipti !== undefined) {
+    for (const j of Object.values(hlutar)) sleppt.push(hausTexti[j]);
+    hlutar = {};
+  }
+  const lagtSaman = Object.keys(hlutar).length > 0;
+  const tolur = MAELITOLUR.filter((k) => dalkar[k] !== undefined || (k === 'samskipti' && lagtSaman));
   const kort = new Map();
   let ogild = 0;
   for (const r of hrar) {
@@ -500,6 +570,15 @@ function lesaCsv(texti) {
     const gildi = {};
     let eitthvad = false;
     for (const k of tolur) {
+      if (k === 'samskipti' && lagtSaman) {
+        let summa = null;
+        for (const j of Object.values(hlutar)) {
+          const v = lesaFjolda(r[j]);
+          if (v !== null) summa = (summa || 0) + v;
+        }
+        if (summa !== null) { gildi[k] = summa; eitthvad = true; }
+        continue;
+      }
       const v = lesaFjolda(r[dalkar[k]]);
       if (v !== null) { gildi[k] = v; eitthvad = true; }
     }
@@ -508,7 +587,10 @@ function lesaCsv(texti) {
   }
   const radir = [...kort.values()].sort((a, b) => a.dags.localeCompare(b.dags));
   if (!radir.length) return { villa: 'Engin lína hafði bæði dagsetningu og tölu.' };
-  return { radir, tolur, ogild };
+  /* Dálkar sem bara TikTok Studio skrifar saman */
+  const hausar = hausTexti.map(hreinsaHaus);
+  const tiktok = hausar.includes('videoviews') && hausar.includes('profileviews');
+  return { radir, tolur, ogild, sleppt: sleppt.filter(Boolean), lagtSaman, tviraett, tiktok };
 }
 
 /* ==================================================================
@@ -539,9 +621,14 @@ async function start() {
      aftur á yfirlitið og hlekkinn má senda áfram. */
   const slodF = new URLSearchParams(location.search).get('f');
   let fid = admin ? (fyrirtaekin.some((f) => f.id === slodF) ? slodF : null) : ek.fyrirtaeki_id;
-  const opna = (id) => { location.search = '?f=' + encodeURIComponent(id); };
+  /* tolfraedi.html#tiktok (eða ?midill=tiktok) opnar síðuna með TikTok valið,
+     og valið fylgir þegar fyrirtæki er opnað af yfirlitinu */
+  const slodMidill = [location.hash.slice(1), new URLSearchParams(location.search).get('midill')]
+    .map((x) => String(x || '').toLowerCase()).find((x) => RODMIDLA.includes(x)) || null;
+  const fyrirtaekisSlod = (id) => 'tolfraedi.html?f=' + encodeURIComponent(id) + (slodMidill ? '#' + slodMidill : '');
+  const opna = (id) => { location.href = fyrirtaekisSlod(id); };
   let timabil = TIMABIL.some(([k]) => k === geymt('tolfraedi-timabil')) ? geymt('tolfraedi-timabil') : '30';
-  let sia = 'allir';
+  let sia = slodMidill || 'allir';
 
   const fyrNafn = () => {
     if (!admin) return ek.fyrirtaeki ? ek.fyrirtaeki.nafn : '';
@@ -704,7 +791,7 @@ async function start() {
     const spjald = ({ f, s, villa }) => {
       const tegundir = RODMIDLA.filter((k) => s.virkir.some((m) => m.midill === k));
       const merkiSlod = oruggSlod(f.merki_url);
-      return el('a', { class: 'tf-kort', href: 'tolfraedi.html?f=' + encodeURIComponent(f.id),
+      return el('a', { class: 'tf-kort', href: fyrirtaekisSlod(f.id),
                        'aria-label': f.nafn + ', opna tölfræði' }, [
         el('div', { class: 'tf-kort__haus' }, [
           merkiSlod
@@ -1445,8 +1532,11 @@ async function start() {
       .sort((a, b) => String(b.birt || '').localeCompare(String(a.birt || '')));
 
     const titill = el('input', { type: 'text', required: true, maxlength: '120', value: m.titill || '', placeholder: 'Til dæmis Vetrarnámskeiðin kynnt' });
+    /* Nýtt myndband: miðillinn sem er valinn á síðunni, eða sá eini sem fyrirtækið hefur */
+    const tegundir = [...new Set(midlar.map((x) => x.midill))];
+    const mbMidill = m.midill || (sia !== 'allir' ? sia : slodMidill) || (tegundir.length === 1 ? tegundir[0] : 'instagram');
     const midill = el('select', {}, [['instagram', 'Instagram'], ['facebook', 'Facebook'], ['tiktok', 'TikTok'], ['youtube', 'YouTube'], ['annad', 'Annað']]
-      .map(([k, h]) => el('option', { value: k, selected: (m.midill || 'instagram') === k, texti: h })));
+      .map(([k, h]) => el('option', { value: k, selected: mbMidill === k, texti: h })));
     const slod = el('input', { type: 'url', maxlength: '2000', value: m.slod || '', placeholder: 'https://', autocomplete: 'off' });
     const birt = el('input', { type: 'date', value: m.birt || '' });
     const tengja = el('select', {}, [el('option', { value: '', texti: 'Ekki tengt: ég skrái tölurnar sjálf(ur)' })].concat(
@@ -1471,12 +1561,12 @@ async function start() {
         catch (villa) { stadaBod(stadan, villa.message || 'Þetta gekk ekki.', 'err'); eydaHn.disabled = false; }
       } });
 
-    /* Tölurnar: einn mánuður í línu, frá birtingu (mest 12) til þessa mánaðar */
+    /* Tölurnar: einn mánuður í línu, frá birtingu (mest 12) til þessa mánaðar.
+       Taflan er teiknuð aftur þegar Birt breytist. Línur sem eru til halda
+       því sem var skrifað í þær. */
     const nuM = fyrstiIMan(idag());
-    const fyrsti = m.birt ? fyrstiIMan(m.birt) : manudFra(nuM, -2);
-    const manudir = [];
-    for (let x = nuM; x >= fyrsti && manudir.length < 12; x = manudFra(x, -1)) manudir.push(x);
-    const linur = manudir.map((man) => {
+    const linuMinni = new Map();
+    const bygjaLinu = (man) => {
       const t = (m.tolur || []).find((r) => r.manudur === man) || {};
       const sjalf = t.uppruni === 'sjalfvirkt';
       const inntok = {};
@@ -1492,11 +1582,31 @@ async function start() {
       ].concat(reitir));
       lina._inntok = inntok; lina._var = t; lina._sjalf = sjalf;
       return lina;
-    });
+    };
+    const reiknaLinur = () => {
+      let fyrsti = /^\d{4}-\d{2}-\d{2}$/.test(birt.value) ? fyrstiIMan(birt.value) : manudFra(nuM, -2);
+      if (fyrsti > nuM) fyrsti = nuM;
+      const manudir = [];
+      for (let x = nuM; x >= fyrsti && manudir.length < 12; x = manudFra(x, -1)) manudir.push(x);
+      return manudir.map((man) => {
+        if (!linuMinni.has(man)) linuMinni.set(man, bygjaLinu(man));
+        return linuMinni.get(man);
+      });
+    };
+    let linur = reiknaLinur();
+    const tbody = el('tbody', {}, linur);
+    birt.addEventListener('change', () => { linur = reiknaLinur(); fylla(tbody, linur); });
     const tafla = el('div', { class: 'tf-mb__tafla-svid' }, [el('table', { class: 'tf-mb__tafla' }, [
       el('thead', {}, [el('tr', {}, [el('th', { texti: 'Mánuður' })].concat(['Áhorf', 'Líkar', 'Athugas.', 'Deilingar', 'Vistanir'].map((h) => el('th', { texti: h }))))]),
-      el('tbody', {}, linur)
+      tbody
     ])]);
+
+    /* TikTok sýnir bara heildina frá birtingu */
+    const tiktokHjalp = el('p', { class: 'skyring', style: 'margin-top:-6px',
+      texti: 'TikTok sýnir heildartölur frá birtingu. Fyrsta mánuðinn skráirðu heildina. Næstu mánuði skráirðu muninn: heildina núna mínus heildina mánuðinn á undan.' });
+    const synaTiktokHjalp = () => { tiktokHjalp.hidden = midill.value !== 'tiktok'; };
+    midill.addEventListener('change', synaTiktokHjalp);
+    synaTiktokHjalp();
 
     const vistaHn = el('button', { type: 'submit', class: 'btn btn--sm', texti: nytt ? 'Vista myndband' : 'Vista' });
     const form = el('form', { class: 'tf-form', novalidate: true, onsubmit: async (e) => {
@@ -1512,14 +1622,15 @@ async function start() {
         const r = { manudur: lina.dataset.manudur };
         let villa = null, eitthvad = false, breytt = false;
         for (const [k, inp] of Object.entries(lina._inntok)) {
-          const v = inp.value.replace(/[.\s]/g, '').trim();
-          if (v && !/^\d{1,12}$/.test(v)) { villa = inp; break; }
-          r[k] = v === '' ? null : Number(v);
-          if (v !== '') eitthvad = true;
+          const v = inp.value.trim();
+          const n = v ? lesaFjolda(v, true) : null;
+          if (v && n === null) { villa = inp; break; }
+          r[k] = n;
+          if (n !== null) eitthvad = true;
           const fyrra = lina._var[k] === null || lina._var[k] === undefined ? null : Number(lina._var[k]);
           if (r[k] !== fyrra) breytt = true;
         }
-        if (villa) { stadaBod(stadan, 'Tölur mega bara vera heilar tölur, til dæmis 12400.', 'err'); villa.focus(); return; }
+        if (villa) { stadaBod(stadan, 'Tölur mega bara vera heilar tölur, til dæmis 12400, 12.400 eða 12,4K.', 'err'); villa.focus(); return; }
         if (breytt && (eitthvad || lina._var.manudur)) rodir.push({ ...r, tomt: !eitthvad });
       }
       vistaHn.disabled = true;
@@ -1546,6 +1657,7 @@ async function start() {
         : 'Engar myndbandsfærslur hafa komið frá Meta ennþá. Skráðu tölurnar í höndunum hér fyrir neðan.' }),
       el('div', { class: 'tf-mb__tolur-haus' }, [el('strong', { texti: 'Tölur á mánuði' }),
         el('span', { class: 'skyring', texti: 'Áhorfið í hverjum mánuði fyrir sig, ekki samtals. Tómt þýðir engin tala.' })]),
+      tiktokHjalp,
       tafla,
       stadan,
       el('div', { class: 'spjald__fot' }, [vistaHn, eydaHn])
@@ -1618,7 +1730,7 @@ async function start() {
      eitt og sér, annars í spjaldi (dialog). */
   function midilsForm(m, d) {
     const velja = el('select', { required: true }, RODMIDLA.map((k) =>
-      el('option', { value: k, selected: (m.midill || 'instagram') === k, texti: MIDLAR[k].heiti })));
+      el('option', { value: k, selected: (m.midill || slodMidill || 'instagram') === k, texti: MIDLAR[k].heiti })));
     const nafn = el('input', { type: 'text', required: true, maxlength: '120', value: m.nafn || '',
                                placeholder: 'Til dæmis nafnid_okkar', autocomplete: 'off' });
     const ytra = el('input', { type: 'text', maxlength: '100', value: m.ytra_id || '',
@@ -1628,9 +1740,9 @@ async function start() {
     const hjalp = el('p', { class: 'skyring', style: 'margin-top:-8px' });
     const uppfaeraHjalp = () => {
       hjalp.textContent = velja.value === 'instagram'
-        ? 'Auðkenni Instagram reikningsins, löng tala sem byrjar oft á 1784. Hún finnst eins og lýst er í LESTU-MIG, kaflanum Tölfræði. Tómt þýðir að tölurnar eru skráðar í höndunum.'
+        ? 'Auðkenni Instagram reikningsins, ekki notandanafnið. Það er löng tala sem byrjar oftast á 17841. Opnaðu developers.facebook.com/tools/explorer, veldu Meta appið ykkar og settu lykil kerfisnotandans í Access Token. Skrifaðu me/accounts?fields=name,id,instagram_business_account{id,username} og ýttu á Submit. Talan við id innan instagram_business_account er auðkennið, ekki id síðunnar. Tómt þýðir að tölurnar eru skráðar í höndunum.'
         : velja.value === 'facebook'
-          ? 'Page ID síðunnar. Það finnst á síðunni sjálfri undir Um, eða í Meta Business Suite undir Stillingar. Tómt þýðir að tölurnar eru skráðar í höndunum.'
+          ? 'Page ID síðunnar. Það finnst á síðunni sjálfri undir Um og svo Gagnsæi síðu (About, Page transparency), eða í Meta Business Suite undir Stillingar. Tómt þýðir að tölurnar eru skráðar í höndunum.'
           : 'TikTok safnast ekki sjálfkrafa ennþá. Skildu reitinn eftir tóman og skráðu tölurnar í höndunum eða úr CSV.';
     };
     velja.addEventListener('change', uppfaeraHjalp);
@@ -1712,9 +1824,18 @@ async function start() {
     fylla(kort, [midilsForm(m, d)]);
   }
 
-  /* Velja miðil í spjöldunum */
+  /* Velja miðil í spjöldunum. Sjálfgefið: miðillinn sem er valinn efst á
+     síðunni eða í slóðinni (til dæmis TikTok), svo sá sem var notaður
+     síðast, svo fyrsti virki miðillinn. */
+  function sjalfgefinnMidill() {
+    const afTegund = (k) => k && (midlar.find((x) => x.midill === k && x.virkt !== false) || midlar.find((x) => x.midill === k));
+    const sidast = midlar.find((x) => x.id === geymt('tolfraedi-midill'));
+    return afTegund(sia !== 'allir' ? sia : slodMidill) || sidast || midlar.find((x) => x.virkt !== false) || midlar[0] || null;
+  }
   function midlaval() {
-    return el('select', {}, midlar.map((m) => el('option', { value: m.id, texti: midilHeiti(m.midill) + ': ' + m.nafn })));
+    const valinn = sjalfgefinnMidill();
+    return el('select', {}, midlar.map((m) => el('option', { value: m.id, selected: !!valinn && valinn.id === m.id,
+      texti: midilHeiti(m.midill) + ': ' + m.nafn })));
   }
 
   /* Ein dagsmæling í höndunum */
@@ -1745,14 +1866,19 @@ async function start() {
         }
         const lina = { midill_id: velja.value, dags: dagur.value, uppruni: 'handvirkt' };
         let eitthvad = false;
+        let ogildur = null;
         MAELITOLUR.forEach((k) => {
-          const v = lesaTolu(reitir[k].value);
+          const texti = reitir[k].value.trim();
+          const v = texti ? lesaFjolda(texti, true) : null;
+          if (texti && v === null && !ogildur) ogildur = reitir[k];
           if (v !== null) { lina[k] = v; eitthvad = true; }
         });
+        if (ogildur) { stadaBod(stadan, 'Tölur mega bara vera heilar tölur, til dæmis 12400, 12.400 eða 12,4K.', 'err'); ogildur.focus(); return; }
         if (!eitthvad) { stadaBod(stadan, 'Settu inn minnst eina tölu.', 'err'); return; }
         vistaHn.disabled = true;
         try {
           await g.vistaMaelingar([lina]);
+          geyma('tolfraedi-midill', velja.value);
           await hladaMaelingum();
           d.close();
           teiknaTolur();
@@ -1784,10 +1910,20 @@ async function start() {
     const vistaHn = el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Vista', disabled: true });
     let greint = null;
     let bid = null;
+    /* Skrá úr TikTok Studio fer á TikTok miðilinn nema miðill hafi verið valinn í höndunum */
+    let validIHondum = false;
+    velja.addEventListener('change', () => { validIHondum = true; greina(); });
+    const valinnMidill = () => midlar.find((x) => x.id === velja.value);
 
     const greina = () => {
       stadan.hidden = true;
+      /* Eftir vistun er hnappurinn Loka. Breytist skráin eða miðillinn má vista aftur */
+      if (vistaHn.type === 'button') { vistaHn.type = 'submit'; vistaHn.onclick = null; }
       greint = svaedi.value.trim() ? lesaCsv(svaedi.value) : null;
+      if (greint && greint.tiktok && !validIHondum && (valinnMidill() || {}).midill !== 'tiktok') {
+        const tt = midlar.find((x) => x.midill === 'tiktok' && x.virkt !== false) || midlar.find((x) => x.midill === 'tiktok');
+        if (tt) velja.value = tt.id;
+      }
       vistaHn.disabled = !(greint && greint.radir);
       if (!greint) { fylla(forsyn, []); vistaHn.textContent = 'Vista'; return; }
       if (greint.villa) {
@@ -1801,7 +1937,11 @@ async function start() {
         el('p', { class: 'skyring', style: 'margin-top:0', texti: 'Fann ' + tala(r.length)
           + (eittDag(r.length) ? ' dag' : ' daga') + ', frá ' + dagsLangt(r[0].dags) + ' til '
           + dagsLangt(r[r.length - 1].dags) + '. Dálkar: ' + greint.tolur.map((k) => TOLUHEITI[k]).join(', ') + '.'
-          + (greint.ogild ? ' ' + tala(greint.ogild) + ' línum var sleppt, þær vantaði dagsetningu eða tölu.' : '') }),
+          + (greint.lagtSaman ? ' Samskipti eru líkar, athugasemdir, deilingar og vistanir lagðar saman.' : '')
+          + (greint.sleppt.length ? ' Sleppt: ' + greint.sleppt.join(', ') + '.' : '')
+          + (greint.ogild ? ' ' + tala(greint.ogild) + ' línum var sleppt, þær vantaði dagsetningu eða tölu.' : '')
+          + (greint.tviraett ? ' Dagsetningar eins og 03/11 voru lesnar sem dagur á undan mánuði. Athugaðu að dagarnir séu réttir.' : '')
+          + (valinnMidill() ? ' Tölurnar fara á ' + midilHeiti(valinnMidill().midill) + ': ' + valinnMidill().nafn + '.' : '') }),
         el('div', { class: 'ptafla-skrun' }, [el('table', { class: 'ptafla tf-csv__tafla' }, [
           el('thead', {}, [el('tr', {}, [el('th', { scope: 'col', texti: 'Dagur' })]
             .concat(greint.tolur.map((k) => el('th', { scope: 'col', texti: TOLUHEITI[k] }))))]),
@@ -1835,6 +1975,7 @@ async function start() {
           await hladaMaelingum();
           teiknaTolur();
           teiknaMidla();
+          geyma('tolfraedi-midill', velja.value);
           stadaBod(stadan, 'Vistað: ' + tala(n) + (eittDag(n) ? ' dagur.' : ' dagar.'), 'ok');
           vistaHn.textContent = 'Loka';
           vistaHn.disabled = false;
@@ -1853,7 +1994,11 @@ async function start() {
       ]),
       el('div', { class: 'tf-hnappar' }, [skraHn]),
       el('p', { class: 'skyring', style: 'margin-top:-6px',
-        texti: 'Fyrsta línan eru dálkaheiti, á íslensku eða ensku: dags eða date, fylgjendur eða followers, áhorf eða views, náð eða reach, samskipti eða interactions. Dagar sem eru til fyrir fá nýju tölurnar, tómur reitur breytir engu.' }),
+        texti: 'Fyrsta línan eru dálkaheiti, á íslensku eða ensku. Dagsetning: dags, dagsetning eða date. Tölur: fylgjendur eða followers, áhorf eða views (líka video views), náð eða reach, samskipti eða interactions, heimsóknir eða profile views, færslur eða posts. Líkar, athugasemdir, deilingar og vistanir (likes, comments, shares, saves) leggjast saman í samskipti ef skráin hefur engan samskiptadálk. Öðrum dálkum er sleppt.' }),
+      el('p', { class: 'skyring', style: 'margin-top:-6px',
+        texti: 'Dagsetningar mega vera 2026-11-01, 1.11.2026, 1/11/2026 eða Nov 1, 2026. Tölur mega vera 12400, 12.400, 12,400 eða 12,4K. Dagar sem eru til fyrir fá nýju tölurnar, tómur reitur breytir engu.' }),
+      el('p', { class: 'skyring', style: 'margin-top:-6px',
+        texti: 'Úr TikTok Studio (tiktok.com/tiktokstudio í tölvu): opnaðu Analytics, veldu tímabil og sæktu gögnin sem CSV, ekki Excel. Hafðu TikTok á ensku þegar þú sækir, annars þekkjast dálkaheitin ekki. Þetta eru tölur reikningsins dag fyrir dag. Tölur hvers myndbands skráirðu undir Myndböndin.' }),
       forsyn,
       stadan,
       el('div', { class: 'spjald__fot' }, [vistaHn])
