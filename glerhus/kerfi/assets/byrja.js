@@ -8,6 +8,7 @@
 import {
   gogn, el, fylla, vardaHlid, teiknaHaus, opnaLykilord, stofa, afrita, tilkynna, opnaBodGlugga
 } from './portal.js';
+import { skeraMerki } from './merki-skera.js';
 import { LYKLAR, lykilStada, opnaLykilGlugga, tengingarTakn } from './stillingar-sida.js';
 
 /* Kom með hlekk úr boðinu: lykilorðið er fyrsta skrefið hér, ekki gluggi ofan á síðunni */
@@ -163,7 +164,9 @@ async function start() {
     }
     const skraInn = el('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp', style: 'display:none', onchange: (e) => {
       const skra = e.target.files && e.target.files[0]; e.target.value = '';
-      if (skra) hladaUpp(skra);
+      if (!skra) return;
+      skeraMerki(skra).then((skorin) => { if (skorin) hladaUpp(skorin); },
+        (villa) => { merkiStada.textContent = villa.message || 'Það tókst ekki að lesa myndina.'; });
     } });
     /* Merkið úr sýnidæminu er mynd í vafranum: hlaðið upp eins og hver önnur skrá */
     const byggtMerki = !st.merki_url && byggt && typeof byggt.merki === 'string' && /^data:image\/(png|jpeg|webp);base64,/.test(byggt.merki) ? byggt.merki : null;

@@ -9,6 +9,7 @@ import {
   gjaldmidill, setjaGjaldmidil, gengid, virkurGjaldmidill, erEnska, stofa as nuStofa, erTveir, harPostholf,
   opnaBodGlugga, afrita, tilkynna, dags, geymaTengdar, tengdarGeymdar, ertengt
 } from './portal.js';
+import { skeraMerki } from './merki-skera.js';
 import { lesaUndirskrift, sjalfgefinUndirskrift, undirskriftHtml, opnaUndirskriftGlugga } from './undirskrift.js';
 
 /* Sýnidæmi úr Settu saman: enginn prufuaðgangur sýndur, engin tæknimál.
@@ -418,8 +419,11 @@ async function start() {
       : el('span', { class: 'skyring', texti: 'Ekkert merki. Nafnið birtist í staðinn.' })]);
     teiknaMerki(st.merki_url);
     const skraInn = el('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp', style: 'display:none', onchange: async (e) => {
-      const skra = e.target.files && e.target.files[0];
+      const valin = e.target.files && e.target.files[0];
       e.target.value = '';
+      if (!valin) return;
+      let skra;
+      try { skra = await skeraMerki(valin); } catch (villa) { merkiStada.textContent = villa.message || 'Það tókst ekki að lesa myndina.'; return; }
       if (!skra) return;
       merkiStada.textContent = 'Hleð upp';
       try {
