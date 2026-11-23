@@ -606,7 +606,10 @@ async function start() {
     fylla(innihald, [el('div', { class: 'card pblokk' }, [
       el('h2', { texti: 'Aðgangurinn er ekki tengdur fyrirtæki' }),
       el('p', { class: 'lead', style: 'margin-top:10px',
-        texti: 'Við þurfum að tengja þig við fyrirtækið þitt áður en þú sérð tölfræðina. Sendu okkur línu á tveir@tveir.is og við gerum það í dag.' })
+        texti: 'Við þurfum að tengja þig við fyrirtækið þitt áður en þú sérð tölfræðina. '
+          + (ek.stofa && ek.stofa.slug !== 'tveir'
+            ? (ek.stofa.netfang ? 'Sendu okkur línu á ' + ek.stofa.netfang + ' og við gerum það.' : 'Hafðu samband við þann sem bauð þér.')
+            : 'Sendu okkur línu á tveir@tveir.is og við gerum það í dag.') })
     ])]);
     return;
   }
@@ -614,6 +617,17 @@ async function start() {
   let fyrirtaekin = [];
   if (admin) {
     try { fyrirtaekin = await g.fyrirtaeki(); } catch (villa) { synaVillu(villa); return; }
+  }
+
+  /* Gervigreind stofunnar (Claude eða ChatGPT) skrifar samantekt á drög.
+     Í sýnidæminu er hún alltaf til og svarar með sýnitexta. */
+  let gervigreind = false;
+  if (admin) {
+    if (g.prufa) gervigreind = true;
+    else {
+      try { const t = g.tengingarStada ? await g.tengingarStada() : null; gervigreind = !!(t && (t.claude || t.chatgpt)); }
+      catch (e) { gervigreind = false; }
+    }
   }
 
   /* Admin byrjar á yfirliti með spjaldi fyrir hvert fyrirtæki. Fyrirtækið
@@ -698,7 +712,12 @@ async function start() {
                 manudur: ['það sem af er ' + manNafn(tb.fra), 'sama tíma í ' + manNafn(tb.fyrriFra)],
                 fyrri: ['í ' + manNafn(tb.fra), 'í ' + manNafn(tb.fyrriFra)] }[timabil] || ['á tímabilinu', 'tímabilið á undan'];
               const valdir = sia === 'allir' ? midlar : midlar.filter((m) => m.midill === sia);
-              opnaSendingu({ g, ek, fid, fyrirtaeki: fyrNafn(), midlar: valdir, maelingar, tb, timabilHeiti: heiti[0], fyrriHeiti: heiti[1], myndbond });
+              /* Síðasti mánuður: drög að mánaðarskýrslu hans geta skrifað orðin með gervigreind */
+              const skyrsla = timabil === 'fyrri' && gervigreind
+                ? skyrslur.find((x) => x.stada === 'drog' && String(x.manudur).slice(0, 7) === String(tb.fra).slice(0, 7)) || null
+                : null;
+              opnaSendingu({ g, ek, fid, fyrirtaeki: fyrNafn(), midlar: valdir, maelingar, tb, timabilHeiti: heiti[0], fyrriHeiti: heiti[1], myndbond,
+                skyrsla, eftirSamantekt: (sk) => endurteiknaSkyrslu(sk) });
             } }, [el('span', { 'aria-hidden': 'true', texti: '✉ ' }), document.createTextNode('Senda á viðskiptavin')])
           : null,
         admin && fid && fyrirtaekin.length > 1
@@ -1284,6 +1303,38 @@ async function start() {
       onclick: () => stadfestaSendingu(sk, svaedi.value.trim(), stadan)
     });
 
+    /* Gervigreindin skrifar samantektina og vistar hana á drögin. Sé texti
+       í reitnum (skrifaður af manneskju eða sniðmáti) er spurt fyrst. */
+    const ggHn = gervigreind ? el('button', {
+      type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Skrifa samantekt',
+      onclick: async () => {
+        if ((svaedi.value.trim() || String(sk.samantekt || '').trim())
+            && !confirm('Gervigreindin skrifar nýja samantekt í stað þeirrar sem er núna. Halda áfram?')) return;
+        ggHn.disabled = true; vistaHn.disabled = true; sendaHn.disabled = true;
+        const fyrriTexti = ggHn.textContent;
+        ggHn.textContent = 'Gervigreindin skrifar';
+        try {
+          const svar = await g.gervigreind('samantekt_skyrsla', sk.id);
+          const texti = String(svar.texti || '').trim();
+          if (texti) {
+            svaedi.value = texti.slice(0, 4000);
+            svaedi.dispatchEvent(new Event('input'));
+          }
+          if (svar.vistad) sk.samantekt = svaedi.value.trim();
+          stadaBod(stadan, svar.synidaemi
+            ? 'Sýnidæmi: ekkert var vistað. Lestu textann yfir og vistaðu hann ef hann á að standa.'
+            : svar.vistad ? 'Drög frá gervigreind, vistuð á skýrsluna. Lestu þau yfir áður en þú samþykkir.'
+              : String(svar.athugasemd || 'Samantektin var ekki vistuð. Lestu hana yfir og vistaðu.').replace(/ sjálf\(ur\)/g, ''),
+          svar.vistad || svar.synidaemi ? 'ok' : 'err');
+        } catch (villa) {
+          stadaBod(stadan, villa.message || 'Þetta gekk ekki.', 'err');
+        } finally {
+          ggHn.disabled = false; vistaHn.disabled = false; sendaHn.disabled = false;
+          ggHn.textContent = fyrriTexti;
+        }
+      }
+    }) : null;
+
     return el('div', { class: 'tf-ritill' }, [
       el('div', { class: 'field' }, [
         el('label', { for: reitId, texti: 'Samantekt sem fer í póstinum' }),
@@ -1293,7 +1344,7 @@ async function start() {
         document.createTextNode('Tölurnar koma beint úr gögnunum, bara textinn breytist.'), telja
       ]),
       stadan,
-      el('div', { class: 'tf-hnappar' }, [vistaHn, sendaHn])
+      el('div', { class: 'tf-hnappar' }, [vistaHn, ggHn, sendaHn])
     ]);
   }
 

@@ -46,13 +46,20 @@ export function svarHtml(texti, u) {
   return '<div style="' + L + 'font-size:15px;line-height:1.6;color:#1c3050;">' + esc(texti).replace(/\r?\n/g, '<br>') + '</div>' + undirskriftHtml(u);
 }
 
-/* Sjálfgefin undirskrift áður en notandinn vistar sína */
+/* Sjálfgefin undirskrift áður en notandinn vistar sína. Netfang, vefur og
+   merki koma frá stofunni. Tveir (og gagnagrunnur án stofa) heldur sínu. */
 export function sjalfgefinUndirskrift(g, ek) {
+  const grunnur = { virk: true, kvedja: 'Kveðja,', nafn: ek.nafn || '', starf: '', simi: '' };
+  if (g.prufa) return { ...grunnur, netfang: ek.netfang || '', vefur: '', merki: '' };
+  const s = ek.stofa;
+  if (!s || s.slug === 'tveir') {
+    return { ...grunnur, netfang: 'tveir@tveir.is', vefur: 'tveir.is', merki: 'https://tveir.is/assets/img/tveir-logo-3d.png' };
+  }
   return {
-    virk: true, kvedja: 'Kveðja,', nafn: ek.nafn || '', starf: '', simi: '',
-    netfang: g.prufa ? (ek.netfang || '') : 'tveir@tveir.is',
-    vefur: g.prufa ? '' : 'tveir.is',
-    merki: g.prufa ? '' : 'https://tveir.is/assets/img/tveir-logo-3d.png'
+    ...grunnur,
+    netfang: s.netfang || ek.netfang || '',
+    vefur: String(s.vefur || '').replace(/^https:\/\//i, '').replace(/\/$/, ''),
+    merki: oruggSlod(s.merki_url) || ''
   };
 }
 
@@ -97,13 +104,13 @@ export function opnaUndirskriftGlugga({ g, u: upphaf, sjalfgefin }) {
         el('h2', { id: 'sk-us-h', texti: 'Undirskrift' }),
         el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '✕', onclick: () => d.close() })
       ]),
-      el('p', { class: 'skyring', texti: 'Fer neðst í svörin þín úr pósthólfinu. Vistast á aðganginum þínum, svo hún fylgir þér á milli tækja.' }),
+      el('p', { class: 'skyring', texti: 'Fer neðst í svörin þín. Vistast á aðganginum þínum, svo hún fylgir þér á milli tækja.' }),
       el('div', { class: 'sk-us__grind' }, [
         el('div', { class: 'sk-us__form' }, [
           reitur('Kveðja', 'kvedja', { placeholder: 'Kveðja,' }),
           el('div', { class: 'field-row' }, [reitur('Nafn', 'nafn'), reitur('Starfsheiti', 'starf', { placeholder: 'Til dæmis Markaðsstjóri' })]),
           el('div', { class: 'field-row' }, [reitur('Sími', 'simi', { inputmode: 'tel', placeholder: '+354 ...' }), reitur('Netfang', 'netfang', { inputmode: 'email' })]),
-          reitur('Vefsíða', 'vefur', { placeholder: 'tveir.is' }),
+          reitur('Vefsíða', 'vefur', { placeholder: 'vefurinn.is' }),
           reitur('Slóð á merki (https)', 'merki', { inputmode: 'url', placeholder: 'https://' }),
           villa,
           el('div', { class: 'spjald__fot' }, [vistaHn])

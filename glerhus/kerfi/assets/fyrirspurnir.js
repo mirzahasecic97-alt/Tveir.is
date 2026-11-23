@@ -7,7 +7,7 @@
 
 import {
   gogn, el, fylla, dags, sidan, kronur, tolu, lesaTolu, vardaHlid, teiknaHaus, uppfaeraMerki,
-  geymt, geyma, samskiptaFlipar
+  geymt, geyma, samskiptaFlipar, tilkynna
 , gjaldmidilsMerki, upphaedTexti, setjaUpphaed, lesaUpphaed, snyrtaUpphaed, upphaedInntak} from './portal.js';
 import { STODUR_FYRIRSPURN, UPPRUNI } from './gogn.js';
 
@@ -36,6 +36,15 @@ async function start() {
 
   const innihald = document.getElementById('innihald');
   let flipi = 'opid';
+
+  /* Gervigreind stofunnar skrifar drög að svari. Í sýnidæminu svarar hún með sýnitexta. */
+  let gervigreind = !!g.prufa;
+  if (!gervigreind) {
+    try { const t = g.tengingarStada ? await g.tengingarStada() : null; gervigreind = !!(t && (t.claude || t.chatgpt)); }
+    catch (e) { gervigreind = false; }
+  }
+  /* Drög sem búið er að skrifa, svo þau hverfi ekki ef glugginn er opnaður aftur */
+  const svarDrog = new Map();
 
   /* Gögnin eru sótt einu sinni. Flipar og síur teikna bara upp á nýtt
      úr því sem er komið, það er það sem gerði flipana hæga. */
@@ -173,6 +182,62 @@ async function start() {
       ])]);
     }
 
+    /* Drög að svari frá gervigreind. Ekkert er sent héðan: textinn er
+       afritaður eða opnaður í póstforritinu og manneskja sendir. */
+    function drogAdSvari(f) {
+      /* texti: það sem stendur í reitnum, sidasta: það sem gervigreindin skrifaði síðast */
+      const geymd = svarDrog.get(f.id) || null;
+      let sidasta = geymd ? geymd.sidasta : '';
+      let til = (geymd && geymd.til) || f.netfang || '';
+      let efni = (geymd && geymd.efni) || 'Svar við fyrirspurn';
+      const reitur = el('textarea', { rows: '8', maxlength: '10000', 'aria-label': 'Drög að svari' });
+      reitur.value = geymd ? geymd.texti : '';
+      reitur.addEventListener('input', () => svarDrog.set(f.id, { texti: reitur.value, sidasta, til, efni }));
+      const stada = el('p', { class: 'skyring', role: 'status' });
+      const hn = el('button', { type: 'button', class: 'btn btn--sm btn--ghost' });
+      const postur = el('a', { class: 'btn btn--sm btn--ghost', texti: 'Opna í pósti' });
+      const afrita = el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Afrita',
+        onclick: async () => {
+          try { await navigator.clipboard.writeText(reitur.value); tilkynna('Afritað'); }
+          catch (e) { reitur.select(); tilkynna('Náði ekki að afrita. Textinn er valinn, afritaðu hann.'); }
+        } });
+      const svid = el('div', { style: 'display:flex; flex-direction:column; gap:10px' }, [
+        el('div', { class: 'ath__haus' }, [el('strong', { texti: 'Drög frá gervigreind' }), el('span', { texti: 'Lestu yfir og breyttu áður en þú sendir' })]),
+        el('div', { class: 'field' }, [reitur]),
+        el('div', { class: 'tf-hnappar' }, [afrita, postur])
+      ]);
+      const uppfaera = () => {
+        const synilegt = !!reitur.value.trim();
+        svid.style.display = synilegt ? 'flex' : 'none';
+        hn.textContent = synilegt ? 'Skrifa ný drög' : 'Drög að svari';
+        postur.style.display = til ? '' : 'none';
+        if (til) postur.href = 'mailto:' + encodeURIComponent(til).replace(/%40/g, '@') + '?subject=' + encodeURIComponent(efni) + '&body=' + encodeURIComponent(reitur.value.slice(0, 1800));
+      };
+      reitur.addEventListener('input', uppfaera);
+      hn.addEventListener('click', async () => {
+        /* Spurt áður en skrifað er yfir það sem manneskja breytti */
+        if (reitur.value.trim() && reitur.value !== sidasta
+            && !confirm('Skrifa yfir það sem þú breyttir í drögunum?')) return;
+        hn.disabled = true; stada.textContent = 'Gervigreindin skrifar';
+        try {
+          const svar = await g.gervigreind('svar_fyrirspurn', f.id);
+          sidasta = String(svar.texti || '').trim();
+          til = svar.til || til; efni = svar.efni || efni;
+          reitur.value = sidasta;
+          svarDrog.set(f.id, { texti: sidasta, sidasta, til, efni });
+          stada.textContent = svar.synidaemi ? 'Sýnidæmi: þetta eru ekki alvöru drög.' : '';
+        } catch (villa) {
+          stada.textContent = villa.message || 'Þetta gekk ekki.';
+        }
+        hn.disabled = false;
+        uppfaera();
+      });
+      uppfaera();
+      return el('div', { style: 'margin-top:18px; display:flex; flex-direction:column; gap:10px; align-items:flex-start' }, [
+        hn, stada, el('div', { style: 'align-self:stretch' }, [svid])
+      ]);
+    }
+
     /* ------------------------------------------------------------------
        Spjaldið
        ------------------------------------------------------------------ */
@@ -240,6 +305,8 @@ async function start() {
         ].concat(auka)),
 
         f.skilabod ? el('blockquote', { class: 'fsp__skilabod', texti: f.skilabod }) : null,
+
+        gervigreind ? drogAdSvari(f) : null,
 
         el('h3', { class: 'fsp__undirfyrirsogn', texti: 'Hvaðan kom hún' }),
         el('ul', { class: 'pmeta', style: 'margin-top:6px' }, [

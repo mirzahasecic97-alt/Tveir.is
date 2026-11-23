@@ -2,10 +2,18 @@
    Samskipti > Pósthólf: Gmail pósthólfið á vinnusvæðinu
    Apps Script (postholf.gs) afritar pósthólfið hingað á 5 mínútna fresti.
    Hér má lesa þræðina, sjá hvaða viðskiptavin þeir varða og svara. Svarið
-   fer frá tveir@tveir.is í sama þræði. Bara stjórnendur.
+   fer frá netfangi stofunnar í sama þræði. Bara stjórnendur.
+
+   Pósthólfið er bara hjá stofum með postholf (Tveir). Aðrar stofur sjá
+   hér Verkpóst: póst á verk-netfangið frá netföngum sem eru ekki skráð á
+   viðskiptavin. Úr honum má búa til verk eða bjóða sendandanum inn. Svör
+   við honum fara úr pósthólfi stjórnandans sjálfs, héðan fer enginn póstur.
+
+   Gervigreind stofunnar (Claude eða ChatGPT) skrifar drög og samantektir
+   ef hún er tengd. Það eru alltaf drög sem manneskja les yfir.
    ========================================================================== */
 
-import { gogn, el, fylla, vardaHlid, teiknaHaus, uppfaeraMerki, samskiptaFlipar, postOlesinn } from './portal.js';
+import { gogn, el, fylla, vardaHlid, teiknaHaus, uppfaeraMerki, samskiptaFlipar, postOlesinn, tilkynna, opnaBodGlugga } from './portal.js';
 import { undirskriftTexti, undirskriftHtml, svarHtml, sjalfgefinUndirskrift, opnaUndirskriftGlugga } from './undirskrift.js';
 
 const ek = await vardaHlid({ krefstAdmin: true });
@@ -44,6 +52,22 @@ async function start() {
   document.body.classList.add('sk-sida');
   const innihald = document.getElementById('innihald');
 
+  /* Stofan: Tveir (eða gagnagrunnur án stofa) heldur sínu pósthólfi og netfangi */
+  const stofa = ek.stofa || null;
+  const postholf = !stofa || stofa.postholf !== false;
+  const fraNetfang = !stofa || stofa.slug === 'tveir' ? 'tveir@tveir.is' : (stofa.netfang || 'netfangi stofunnar');
+  const fraTexti = 'Fer frá ' + fraNetfang;
+
+  /* Gervigreind stofunnar. Í sýnidæminu svarar hún alltaf með sýnitexta. */
+  let gervigreind = !!g.prufa;
+  if (!gervigreind) {
+    try { const t = g.tengingarStada ? await g.tengingarStada() : null; gervigreind = !!(t && (t.claude || t.chatgpt)); }
+    catch (e) { gervigreind = false; }
+  }
+  /* Drög og samantektir frá gervigreindinni, á hvern þráð, meðan síðan er opin */
+  const ggDrog = {};
+  const samantektir = {};
+
   /* Undirskriftin: vistuð í gagnagrunninum, annars sjálfgefin */
   const SJALFGEFIN = sjalfgefinUndirskrift(g, ek);
   let undirskrift = { ...SJALFGEFIN };
@@ -68,12 +92,14 @@ async function start() {
     samskiptaFlipar('postholf'),
     el('div', { class: 'page-head sk-haus', style: 'padding-top:0' }, [
       el('div', { class: 'sk-haus__efst' }, [
-        el('h1', { style: 'font-size:clamp(28px,24px+1.3vw,40px)', texti: 'Pósthólf' }),
+        el('h1', { style: 'font-size:clamp(28px,24px+1.3vw,40px)', texti: postholf ? 'Pósthólf' : 'Verkpóstur' }),
         el('div', { class: 'sk-haus__hn' }, [
           el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Undirskrift', onclick: () => opnaUndirskrift() }),
-          el('button', { type: 'submit', class: 'btn', texti: '+ Nýr póstur', onclick: () => opnaNyjanPost() })
+          postholf ? el('button', { type: 'submit', class: 'btn', texti: '+ Nýr póstur', onclick: () => opnaNyjanPost() }) : null
         ])
       ]),
+      postholf ? null : el('p', { class: 'lead', style: 'margin-top:6px', texti: 'Póstur á '
+        + ((stofa && stofa.verk) || 'verk-netfangið') + ' frá netföngum sem eru ekki skráð á viðskiptavin. Búðu til verk úr honum eða bjóddu sendandanum inn.' }),
       el('div', { class: 'sk-tol' }, [leitReitur, siuHnappar])
     ]),
     grind
@@ -112,7 +138,9 @@ async function start() {
     if (!thraedir.length) {
       fylla(listiSvid, [el('div', { class: 'sk-tomt' }, [
         el('strong', { texti: 'Ekkert hér ennþá' }),
-        el('p', { texti: g.prufa ? 'Engir sýniþræðir.' : 'Pósthólfið fyllist innan 5 mínútna eftir að postholf.gs er komin inn í Apps Script.' })
+        el('p', { texti: g.prufa ? 'Engir sýniþræðir.' : postholf
+          ? 'Pósthólfið fyllist innan 5 mínútna eftir að postholf.gs er komin inn í Apps Script.'
+          : 'Hingað kemur póstur á verk-netfangið frá netföngum sem eru ekki skráð á viðskiptavin. Póstur frá skráðum viðskiptavinum verður beint að verkum.' })
       ])]);
       return;
     }
@@ -145,7 +173,9 @@ async function start() {
     document.body.classList.remove('sk-les');
     fylla(thradurSvid, [el('div', { class: 'sk-tomt sk-tomt--thradur' }, [
       el('strong', { texti: 'Veldu þráð' }),
-      el('p', { texti: 'Svar sem þú skrifar hér fer ' + (g.prufa ? 'hvergi í prufu.' : 'frá tveir@tveir.is í sama þræði.') })
+      el('p', { texti: g.prufa ? 'Svar sem þú skrifar hér fer hvergi í prufu.'
+        : postholf ? 'Svar sem þú skrifar hér fer frá ' + fraNetfang + ' í sama þræði.'
+          : 'Héðan fer enginn póstur. Svör fara úr þínu eigin pósthólfi.' })
     ])]);
   }
 
@@ -176,9 +206,10 @@ async function start() {
   function teiknaThrad(t) {
     const { skilabod = [], svor = [] } = opinnGogn || {};
     const gmail = oruggGmail(t.tengill);
+    const verkThradur = t.uppruni === 'verk' || !postholf;
     const svarReitur = el('textarea', { class: 'sk-svar__texti', rows: '5', maxlength: '10000',
-      placeholder: 'Skrifaðu svar til ' + (t.fra_nafn ? t.fra_nafn.split(' ')[0] : t.fra_netfang || 'viðtakanda') + '…', 'aria-label': 'Svar',
-      oninput: (e) => { uppkost[t.id] = e.target.value; } });
+      placeholder: (postholf ? 'Skrifaðu svar til ' : 'Drög að svari til ') + (t.fra_nafn ? t.fra_nafn.split(' ')[0] : t.fra_netfang || 'viðtakanda') + '…', 'aria-label': 'Svar',
+      oninput: (e) => { uppkost[t.id] = e.target.value; merkjaDrog(); } });
     svarReitur.value = uppkost[t.id] || '';
     const stada = el('p', { class: 'sk-svar__stada', role: 'status' });
     const sendaHn = el('button', { type: 'submit', class: 'btn', texti: 'Senda svar' });
@@ -187,8 +218,135 @@ async function start() {
     const undirsk = el('div', { class: 'sk-undirsk', html: undirskriftHtml({ ...undirskrift, virk: true }) || '<p class="skyring">Engin undirskrift ennþá.</p>' });
     undirsk.hidden = undirskrift.virk === false;
 
+    /* Merki yfir svarinu meðan textinn er óbreyttur frá gervigreindinni */
+    const drogMerki = el('span', { class: 'sk-sb__drog', style: 'align-self:flex-start; width:max-content', texti: 'Drög frá gervigreind' });
+    /* Stíll merkisins setur display, svo hidden dugar ekki */
+    function merkjaDrog() { drogMerki.style.display = ggDrog[t.id] && svarReitur.value === ggDrog[t.id] ? '' : 'none'; }
+    merkjaDrog();
+
+    /* Drög að svari: spurt áður en skrifað er yfir texta sem manneskja skrifaði */
+    const ggHn = gervigreind ? el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Drög með gervigreind',
+      onclick: async () => {
+        const nu = svarReitur.value.trim();
+        if (nu && svarReitur.value !== ggDrog[t.id] && !confirm('Skrifa yfir það sem stendur í svarinu?')) return;
+        ggHn.disabled = true; ggHn.textContent = 'Gervigreindin skrifar';
+        stada.className = 'sk-svar__stada'; stada.textContent = '';
+        try {
+          const svar = await g.gervigreind('svar_thradur', t.id);
+          const texti = String(svar.texti || '').trim();
+          if (texti) {
+            ggDrog[t.id] = texti; uppkost[t.id] = texti; svarReitur.value = texti;
+            stada.textContent = svar.synidaemi ? 'Sýnidæmi: þetta eru ekki alvöru drög.' : 'Lestu drögin yfir og breyttu áður en þú sendir.';
+          }
+        } catch (villa) {
+          stada.textContent = villa.message || 'Þetta gekk ekki.'; stada.className = 'sk-svar__stada er-villa';
+        }
+        ggHn.disabled = false; ggHn.textContent = 'Drög með gervigreind';
+        merkjaDrog();
+        svarReitur.focus();
+      } }) : null;
+
+    /* Samantekt þráðarins: sést bara hér, er ekki vistuð */
+    const samantektSvid = el('div', { 'aria-live': 'polite' });
+    const teiknaSamantekt = () => {
+      const s = samantektir[t.id];
+      fylla(samantektSvid, s ? [el('div', { class: 'ath', style: 'margin:0 0 16px' }, [
+        el('div', { class: 'ath__haus' }, [
+          el('strong', { texti: 'Samantekt frá gervigreind' }),
+          el('span', { texti: s.synidaemi ? 'Sýnidæmi' : 'Ekki vistuð' }),
+          el('button', { type: 'button', class: 'sk-tengill', style: 'margin-left:auto', texti: 'Fela',
+            onclick: () => { delete samantektir[t.id]; teiknaSamantekt(); } })
+        ]),
+        el('div', { class: 'ath__texti', style: 'white-space:pre-wrap', texti: s.texti })
+      ])] : []);
+    };
+    teiknaSamantekt();
+    const samantektHn = gervigreind ? el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Samantekt',
+      onclick: async () => {
+        samantektHn.disabled = true; samantektHn.textContent = 'Les þráðinn';
+        try {
+          const svar = await g.gervigreind('samantekt_thradur', t.id);
+          samantektir[t.id] = { texti: String(svar.texti || '').trim(), synidaemi: !!svar.synidaemi };
+        } catch (villa) {
+          samantektir[t.id] = null;
+          fylla(samantektSvid, [el('p', { class: 'sk-svar__stada er-villa', style: 'margin:0 0 12px', texti: villa.message || 'Þetta gekk ekki.' })]);
+          samantektHn.disabled = false; samantektHn.textContent = 'Samantekt';
+          return;
+        }
+        samantektHn.disabled = false; samantektHn.textContent = 'Samantekt';
+        teiknaSamantekt();
+      } }) : null;
+
+    /* Verkpóstur: verk úr þræðinum, eða boð til sendandans */
+    const verkHn = verkThradur || g.prufa ? el('button', { type: 'button', class: 'btn btn--sm', texti: 'Búa til verk',
+      onclick: () => opnaVerkUrThraedi(t) }) : null;
+    const bodHn = (verkThradur || g.prufa) && !t.fyrirtaeki_id && t.fra_netfang
+      ? el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Bjóða sem notanda', onclick: () => opnaBod(t) }) : null;
+
+    /* Svarið: sent héðan í pósthólfi stofunnar, annars bara drög sem
+       eru afrituð eða opnuð í póstforritinu */
+    const svarSvaedi = postholf ? el('form', { class: 'sk-svar', onsubmit: async (e) => {
+        e.preventDefault();
+        const texti = svarReitur.value.trim();
+        if (!texti) { svarReitur.focus(); return; }
+        sendaHn.disabled = true; sendaHn.textContent = 'Sendi…';
+        try {
+          const u = medUndirskrift.checked ? { ...undirskrift, virk: true } : null;
+          const lokaTexti = u && undirskriftTexti(u) ? texti + '\n\n' + undirskriftTexti(u) : texti;
+          const nytt = await g.svaraPosti(t.id, lokaTexti, svarHtml(texti, u));
+          delete uppkost[t.id]; delete ggDrog[t.id];
+          opinnGogn.svor = (opinnGogn.svor || []).concat([nytt]);
+          teiknaThrad(t);
+        } catch (villa) {
+          stada.textContent = villa.message || 'Svarið fór ekki. Reyndu aftur.';
+          stada.className = 'sk-svar__stada er-villa';
+          sendaHn.disabled = false; sendaHn.textContent = 'Senda svar';
+        }
+      } }, [
+        drogMerki,
+        svarReitur,
+        undirsk,
+        el('div', { class: 'sk-svar__fot' }, [
+          el('span', { class: 'sk-svar__undir' }, [
+            el('label', { class: 'sk-svar__val' }, [medUndirskrift, document.createTextNode('Með undirskrift')]),
+            el('button', { type: 'button', class: 'sk-tengill', texti: 'Breyta undirskrift', onclick: () => opnaUndirskrift(() => teiknaThrad(t)) })
+          ]),
+          ggHn,
+          el('span', { class: 'skyring', texti: g.prufa ? 'Í prufu fer ekkert út.' : fraTexti + ', sem svar í þessum þræði.' }),
+          sendaHn
+        ]),
+        stada
+      ])
+      : el('div', { class: 'sk-svar' }, [
+        drogMerki,
+        svarReitur,
+        el('div', { class: 'sk-svar__fot' }, [
+          ggHn,
+          el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Afrita',
+            onclick: async () => {
+              const texti = lokaDrog();
+              if (!texti) { svarReitur.focus(); return; }
+              try { await navigator.clipboard.writeText(texti); tilkynna('Afritað'); }
+              catch (e) { svarReitur.select(); tilkynna('Náði ekki að afrita. Textinn er valinn, afritaðu hann.'); }
+            } }),
+          t.fra_netfang ? el('button', { type: 'button', class: 'btn btn--sm', texti: 'Opna í pósti',
+            onclick: () => {
+              const texti = lokaDrog();
+              location.href = 'mailto:' + encodeURIComponent(t.fra_netfang).replace(/%40/g, '@')
+                + '?subject=' + encodeURIComponent('Re: ' + (t.efni || '')) + '&body=' + encodeURIComponent(texti.slice(0, 1800));
+            } }) : null,
+          el('span', { class: 'skyring', texti: 'Héðan fer enginn póstur. Svaraðu úr þínu eigin pósthólfi.' })
+        ]),
+        stada
+      ]);
+    function lokaDrog() {
+      const texti = svarReitur.value.trim();
+      const u = undirskrift.virk !== false ? undirskriftTexti({ ...undirskrift, virk: true }) : '';
+      return texti && u ? texti + '\n\n' + u : texti;
+    }
+
     fylla(thradurSvid, [
-      el('button', { type: 'button', class: 'sk-tilbaka', texti: '← Pósthólf', onclick: () => {
+      el('button', { type: 'button', class: 'sk-tilbaka', texti: postholf ? '← Pósthólf' : '← Verkpóstur', onclick: () => {
         opinn = null; history.replaceState(null, '', location.pathname); teiknaLista(); teiknaTomtThrad(); window.scrollTo({ top: 0 }); } }),
       el('header', { class: 'sk-thradur__haus' }, [
         el('h2', { texti: t.efni || '(ekkert efni)' }),
@@ -196,10 +354,12 @@ async function start() {
           el('span', { texti: (t.fra_nafn ? t.fra_nafn + ' · ' : '') + (t.fra_netfang || '') }),
           t.fyr && t.fyr.nafn ? el('a', { class: 'sk-merki', href: 'tolfraedi.html?f=' + encodeURIComponent(t.fyrirtaeki_id), texti: t.fyr.nafn }) : null,
           el('span', { class: 'sk-thradur__hn' }, [
+            verkHn, bodHn, samantektHn,
             gmail ? el('a', { class: 'btn btn--sm btn--ghost', href: gmail, target: '_blank', rel: 'noopener noreferrer', texti: 'Opna í Gmail' }) : null
           ])
         ])
       ]),
+      samantektSvid,
       el('ol', { class: 'sk-skilabod' }, skilabod.map((m) => el('li', { class: 'sk-sb' + (m.fra_okkur ? ' sk-sb--okkar' : '') + (m.drog ? ' sk-sb--drog' : '') }, [
         el('div', { class: 'sk-sb__haus' }, [
           el('strong', {}, [
@@ -208,8 +368,9 @@ async function start() {
           ]),
           el('span', { texti: (m.drog ? 'Vistað ' : '') + hvenaer(m.dags, true) })
         ]),
-        el('div', { class: 'sk-sb__texti', texti: m.texti || '(enginn texti, opnaðu í Gmail)' }),
-        m.vidhengi ? el('p', { class: 'sk-sb__vidhengi', texti: (m.vidhengi === 1 ? '1 viðhengi' : m.vidhengi + ' viðhengi') + ', opnaðu þráðinn í Gmail til að sjá ' + (m.vidhengi === 1 ? 'það' : 'þau') + '.' }) : null
+        el('div', { class: 'sk-sb__texti', texti: m.texti || (postholf ? '(enginn texti, opnaðu í Gmail)' : '(enginn texti)') }),
+        m.vidhengi ? el('p', { class: 'sk-sb__vidhengi', texti: (m.vidhengi === 1 ? '1 viðhengi' : m.vidhengi + ' viðhengi')
+          + (postholf ? ', opnaðu þráðinn í Gmail til að sjá ' + (m.vidhengi === 1 ? 'það' : 'þau') + '.' : '.') }) : null
       ])).concat(svor.filter((s) => s.stada !== 'send' || !skilabod.some((m) => m.fra_okkur && !m.drog && new Date(m.dags) >= new Date(s.stofnad))).map((s) =>
         el('li', { class: 'sk-sb sk-sb--okkar sk-sb--svar' }, [
           el('div', { class: 'sk-sb__haus' }, [
@@ -219,40 +380,73 @@ async function start() {
           ]),
           el('div', { class: 'sk-sb__texti', texti: s.texti })
         ])))),
-      el('form', { class: 'sk-svar', onsubmit: async (e) => {
-        e.preventDefault();
-        const texti = svarReitur.value.trim();
-        if (!texti) { svarReitur.focus(); return; }
-        sendaHn.disabled = true; sendaHn.textContent = 'Sendi…';
-        try {
-          const u = medUndirskrift.checked ? { ...undirskrift, virk: true } : null;
-          const lokaTexti = u && undirskriftTexti(u) ? texti + '\n\n' + undirskriftTexti(u) : texti;
-          const nytt = await g.svaraPosti(t.id, lokaTexti, svarHtml(texti, u));
-          delete uppkost[t.id];
-          opinnGogn.svor = (opinnGogn.svor || []).concat([nytt]);
-          teiknaThrad(t);
-        } catch (villa) {
-          stada.textContent = villa.message || 'Svarið fór ekki. Reyndu aftur.';
-          stada.className = 'sk-svar__stada er-villa';
-          sendaHn.disabled = false; sendaHn.textContent = 'Senda svar';
-        }
-      } }, [
-        svarReitur,
-        undirsk,
-        el('div', { class: 'sk-svar__fot' }, [
-          el('span', { class: 'sk-svar__undir' }, [
-            el('label', { class: 'sk-svar__val' }, [medUndirskrift, document.createTextNode('Með undirskrift')]),
-            el('button', { type: 'button', class: 'sk-tengill', texti: 'Breyta undirskrift', onclick: () => opnaUndirskrift(() => teiknaThrad(t)) })
-          ]),
-          el('span', { class: 'skyring', texti: g.prufa ? 'Í prufu fer ekkert út.' : 'Fer frá tveir@tveir.is, sem svar í þessum þræði.' }),
-          sendaHn
-        ]),
-        stada
-      ])
+      svarSvaedi
     ]);
   }
 
-  /* Nýr póstur: til, efni, texti og undirskrift. Fer frá tveir@tveir.is innan 5 mínútna. */
+  /* Verkpóstur: verk úr þræðinum hjá fyrirtæki sem er valið */
+  async function opnaVerkUrThraedi(t) {
+    let fyrirtaekin = [];
+    try { fyrirtaekin = (await g.fyrirtaeki()) || []; } catch (e) { fyrirtaekin = []; }
+    const val = el('select', { required: true }, [el('option', { value: '', texti: 'Veldu fyrirtæki' })].concat(
+      fyrirtaekin.map((f) => el('option', { value: f.id, selected: f.id === t.fyrirtaeki_id, texti: f.nafn }))));
+    const stadan = el('div', { class: 'form-status', role: 'status', hidden: true });
+    const buaHn = el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Búa til verk' });
+    let buid = false;
+    const d = gluggi('Búa til verk', [
+      el('p', { class: 'skyring', style: 'margin-top:8px', texti: 'Verkin verða til hjá fyrirtækinu úr síðasta pósti sendandans í þræðinum: eitt verk á hverja línu í lista, annars eitt verk úr efninu.' }),
+      fyrirtaekin.length ? null : el('p', { class: 'form-status form-status--err', texti: 'Ekkert fyrirtæki er til. Stofnaðu það á Stjórnborði fyrst.' }),
+      el('label', { class: 'field' }, [el('span', { texti: 'Fyrirtæki' }), val]),
+      stadan,
+      el('div', { class: 'spjald__fot' }, [buaHn])
+    ], async () => {
+      if (buid) { d.close(); return; }
+      if (!val.value) { val.focus(); return; }
+      buaHn.disabled = true;
+      try {
+        const svar = await g.verkUrThraedi(t.id, val.value);
+        const titlar = Array.isArray(svar.titlar) ? svar.titlar : [];
+        stadan.className = 'form-status form-status--ok';
+        stadan.textContent = svar.texti || svar.svar
+          || (Number(svar.fjoldi) === 1 ? '1 verk var búið til.' : (Number(svar.fjoldi) || titlar.length) + ' verk voru búin til.');
+        stadan.hidden = false;
+        if (titlar.length) stadan.append(el('ul', { style: 'margin:8px 0 0 18px' }, titlar.map((x) => el('li', { texti: x }))));
+        buid = true; val.disabled = true;
+        buaHn.textContent = 'Loka';
+        buaHn.disabled = false;
+      } catch (villa) {
+        stadan.className = 'form-status form-status--err';
+        stadan.textContent = villa.message || 'Þetta gekk ekki.';
+        stadan.hidden = false;
+        buaHn.disabled = false;
+      }
+    });
+  }
+
+  /* Boð til sendandans: sami gluggi og á Stjórnborði, með nafni og netfangi úr þræðinum */
+  function opnaBod(t) {
+    return opnaBodGlugga({ hlutverk: 'vidskiptavinur', netfang: t.fra_netfang || '', nafn: t.fra_nafn || '',
+      fyrirtaeki_id: t.fyrirtaeki_id || '' });
+  }
+
+  /* Einfaldur gluggi með formi. vista keyrir þegar formið er sent. */
+  function gluggi(titill, born, vista) {
+    const d = el('dialog', { class: 'pdialog' }, [el('div', { class: 'pdialog__kort' }, [
+      el('div', { class: 'pdialog__haus' }, [
+        el('h2', { texti: titill }),
+        el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '✕', onclick: () => d.close() })
+      ]),
+      el('form', { style: 'margin-top:12px; display:flex; flex-direction:column; gap:14px', novalidate: true,
+        onsubmit: (e) => { e.preventDefault(); vista(); } }, born)
+    ])]);
+    d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+    d.addEventListener('close', () => d.remove());
+    document.body.append(d);
+    d.showModal();
+    return d;
+  }
+
+  /* Nýr póstur: til, efni, texti og undirskrift. Fer frá netfangi stofunnar innan 5 mínútna. */
   let nyrUppkast = { til: '', efni: '', texti: '' };
   async function opnaNyjanPost(forfyllt) {
     if (forfyllt) nyrUppkast = { ...nyrUppkast, ...forfyllt };
@@ -300,7 +494,7 @@ async function start() {
         fylla(kort, [el('div', { class: 'ts-sent' }, [
           el('span', { class: 'ts-sent__hak', 'aria-hidden': 'true', texti: '✓' }),
           el('h2', { texti: 'Pósturinn er á leiðinni' }),
-          el('p', { texti: 'Til ' + netfong.join(', ') + (g.prufa ? '. Í prufu fer ekkert út.' : '. Hann fer frá tveir@tveir.is innan 5 mínútna.') }),
+          el('p', { texti: 'Til ' + netfong.join(', ') + (g.prufa ? '. Í prufu fer ekkert út.' : '. Hann fer frá ' + fraNetfang + ' innan 5 mínútna.') }),
           el('button', { type: 'button', class: 'btn', texti: 'Loka', onclick: () => d.close() })
         ])]);
       } catch (e) {
@@ -325,7 +519,7 @@ async function start() {
       el('div', { class: 'sk-svar__fot' }, [
         el('span', { class: 'sk-svar__undir' }, [
           el('label', { class: 'sk-svar__val' }, [medU, document.createTextNode('Með undirskrift')]),
-          el('span', { class: 'skyring', texti: g.prufa ? 'Í prufu fer ekkert út.' : 'Fer frá tveir@tveir.is' })
+          el('span', { class: 'skyring', texti: g.prufa ? 'Í prufu fer ekkert út.' : fraTexti })
         ]),
         sendaHn
       ])

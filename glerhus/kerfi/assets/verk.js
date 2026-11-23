@@ -5,10 +5,22 @@
 import {
   gogn, el, tom, fylla, dags, sidan, erSeint, pilla, opnaTask, kronur, lesaTolu,
   vardaHlid, teiknaHaus, uppfaeraMerki, STODUR_VERK, stillingar, undirverkTala
-, tolu, erEnska, setjaUpphaed, lesaUpphaed, snyrtaUpphaed, upphaedInntak} from './portal.js';
+, tolu, erEnska, setjaUpphaed, lesaUpphaed, snyrtaUpphaed, upphaedInntak, ertengt, tilkynna } from './portal.js';
 
 const ek = await vardaHlid({ badir: true });
 if (ek) start();
+
+const VEITA_HEITI = { payday: 'Payday', dk: 'DK' };
+
+/* Hvaða tengingar stofan hefur: bókhaldskerfi og gervigreind. Í
+   sýnidæminu er allt sýnt (Payday ef ekkert bókhaldskerfi var valið). */
+async function tengingar(g) {
+  let t = null;
+  try { t = g.tengingarStada ? await g.tengingarStada() : null; } catch (e) { t = null; }
+  const veitur = ['payday', 'dk'].filter((v) => t && t[v]);
+  if (g.prufa && !veitur.length) veitur.push(ertengt('dk') && !ertengt('payday') ? 'dk' : 'payday');
+  return { veitur, gervigreind: g.prufa || !!(t && (t.claude || t.chatgpt)) };
+}
 
 async function start() {
   const g = await gogn();
@@ -17,6 +29,10 @@ async function start() {
 
   const innihald = document.getElementById('innihald');
   const id = new URLSearchParams(location.search).get('id');
+  const teng = admin ? await tengingar(g) : { veitur: [], gervigreind: false };
+  /* Samantektin lifir meðan síðan er opin, svo hún hverfi ekki þegar
+     eitthvað annað á síðunni teiknast upp á nýtt */
+  let samantekt = null;
 
   async function teikna() {
     const v = id ? await g.verkefniEitt(id) : null;
@@ -35,6 +51,8 @@ async function start() {
     const taskar = await g.taskar({ verkefni_id: v.id });
     const innri = admin ? await g.innri(v.id) : null;
     const timalog = admin ? await g.timaskraning(v.id) : [];
+    const drogin = admin && teng.veitur.length && !v.innan_samnings
+      ? await g.reikningar({ uppruni: 'verkefni', uppruni_id: v.id }).catch(() => []) : [];
     const opin = taskar.filter((t) => t.stada !== 'lokid');
     const lokin = taskar.filter((t) => t.stada === 'lokid');
     const tillaga = v.stada === 'tillaga';
@@ -143,7 +161,9 @@ async function start() {
             admin ? adminStjorn(v) : null,
           ]),
 
-          admin ? timaKort(v, innri, timalog) : null,
+          admin ? timaKort(v, innri, timalog, drogin) : null,
+
+          admin && teng.gervigreind ? samantektKort(v) : null,
 
 
           !admin && !tillaga && v.stada !== 'lokid' && v.stada !== 'hafnad'
@@ -221,7 +241,7 @@ async function start() {
      Tímar og rukkun. Bara við sjáum þetta, það býr í sértöflu með
      sinni eigin stefnu svo viðskiptavinur nái ekki framlegðinni.
      ------------------------------------------------------------------ */
-  function timaKort(v, innri, timalog) {
+  function timaKort(v, innri, timalog, drogin) {
     const klst = Number(innri.klst) || 0;
     const aTimann = klst > 0 && v.verd_okkar ? Math.round(v.verd_okkar / klst) : null;
     const lagt = aTimann !== null && aTimann < (stillingar.timagjald || 0);
@@ -240,7 +260,10 @@ async function start() {
       el('option', { value: 'rukkad', selected: innri.reikningur === 'rukkad',
                      texti: 'Reikningur sendur' }),
       el('option', { value: 'greitt', selected: innri.reikningur === 'greitt',
-                     texti: 'Greitt' })
+                     texti: 'Greitt' }),
+      /* Sett af reikningsdrögunum (Payday eða DK), ekki valið hér */
+      innri.reikningur === 'drog'
+        ? el('option', { value: 'drog', selected: true, texti: 'Drög í bókhaldskerfi' }) : null
     ]);
 
     return el('div', { class: 'card pblokk', style: 'margin-top:clamp(16px,2vw,22px)' }, [
@@ -282,7 +305,86 @@ async function start() {
 
       v.innan_samnings ? null : el('div', { class: 'field', style: 'margin-top:18px' }, [
         el('span', { texti: 'Reikningur' }), reikningur
-      ])
+      ]),
+
+      v.innan_samnings ? null : reikningsdrog(v, innri, drogin)
+    ]);
+  }
+
+  /* Reikningsdrög í Payday eða DK. Glugginn sjálfur er á Bókhaldi, þar
+     sem farið er yfir línurnar áður en nokkuð er búið til. */
+  function reikningsdrog(v, innri, drogin) {
+    if (!teng.veitur.length) return null;
+    const gild = drogin.filter((d) => d.stada !== 'villa');
+    const d = gild[0] || drogin[0] || null;
+    const slodBokhalds = 'bokhald.html?drog=' + encodeURIComponent('verkefni:' + v.id);
+    const nafn = teng.veitur.map((x) => VEITA_HEITI[x]).join(' eða ');
+    const born = [];
+
+    if (d) {
+      const veita = VEITA_HEITI[d.veita] || d.veita;
+      const slod = /^https:\/\/\S+$/.test(String(d.ytri_slod || '')) ? d.ytri_slod : null;
+      if (d.stada === 'drog') {
+        born.push(el('span', { class: 'pstat pstat--ok', texti: 'Drög í ' + veita + (d.ytra_numer ? ' nr ' + d.ytra_numer : '') }));
+        born.push(slod
+          ? el('a', { class: 'btn btn--sm btn--ghost', href: slod, target: '_blank', rel: 'noopener noreferrer', texti: 'Opna í ' + veita })
+          : el('p', { class: 'skyring', texti: 'Finndu drögin í ' + veita + ' undir sölureikningum og sendu þaðan.' }));
+      } else if (d.stada === 'i_vinnslu') {
+        born.push(el('span', { class: 'pstat pstat--vinnsla', texti: 'Drögin eru í vinnslu' }));
+        born.push(el('a', { class: 'btn btn--sm btn--ghost', href: 'bokhald.html', texti: 'Sjá á Bókhaldi' }));
+      } else {
+        born.push(el('p', { class: 'skyring', style: 'color:#a3312a', texti: 'Drögin urðu ekki til: ' + (d.villa || 'villa') }));
+      }
+    }
+
+    const tilbuid = v.stada === 'lokid' && (innri.reikningur || 'ekki_rukkad') === 'ekki_rukkad' && !gild.length;
+    if (tilbuid && v.verd_okkar) {
+      born.push(el('a', { class: 'btn btn--sm btn--block', href: slodBokhalds,
+        texti: (d && d.stada === 'villa' ? 'Reyna aftur í ' : 'Búa til reikningsdrög í ') + nafn }));
+      born.push(el('p', { class: 'skyring', texti: 'Þú ferð yfir línurnar á Bókhaldi áður en nokkuð er búið til.' }));
+    } else if (tilbuid) {
+      born.push(el('p', { class: 'skyring', texti: 'Settu verð á verkefnið til að búa til reikningsdrög í ' + nafn + '.' }));
+    }
+    if (!born.length) return null;
+    return el('div', { style: 'margin-top:16px; display:flex; flex-direction:column; gap:10px; align-items:flex-start' }, [
+      el('span', { style: 'font-size:13px; color:var(--soft)', texti: 'Reikningsdrög' }), ...born
+    ]);
+  }
+
+  /* Samantekt frá gervigreind stofunnar. Ekki vistuð og ekki send neinum. */
+  function samantektKort(v) {
+    const svid = el('div', { 'aria-live': 'polite' });
+    const hn = el('button', { type: 'button', class: 'btn btn--sm btn--ghost btn--block', texti: samantekt ? 'Skrifa nýja samantekt' : 'Samantekt með gervigreind' });
+    const synaTexta = () => {
+      if (!samantekt) { fylla(svid, []); return; }
+      fylla(svid, [el('div', { class: 'ath', style: 'margin-top:14px' }, [
+        el('div', { class: 'ath__haus' }, [el('strong', { texti: 'Drög frá gervigreind' }), el('span', { texti: 'Lestu yfir, ekkert var vistað' })]),
+        el('div', { class: 'ath__texti', style: 'white-space:pre-wrap', texti: samantekt }),
+        el('button', { type: 'button', class: 'sk-tengill', style: 'margin-top:10px', texti: 'Afrita',
+          onclick: async () => {
+            try { await navigator.clipboard.writeText(samantekt); tilkynna('Afritað'); }
+            catch (e) { tilkynna('Náði ekki að afrita. Veldu textann og afritaðu hann.'); }
+          } })
+      ])]);
+    };
+    hn.addEventListener('click', async () => {
+      hn.disabled = true; hn.textContent = 'Gervigreindin les verkefnið';
+      try {
+        const svar = await g.gervigreind('samantekt_verkefni', v.id);
+        samantekt = String(svar.texti || '').trim() || null;
+      } catch (villa) {
+        fylla(svid, [el('p', { class: 'form-status form-status--err', style: 'margin-top:12px', texti: villa.message || 'Þetta gekk ekki.' })]);
+        hn.disabled = false; hn.textContent = 'Samantekt með gervigreind';
+        return;
+      }
+      hn.disabled = false; hn.textContent = 'Skrifa nýja samantekt';
+      synaTexta();
+    });
+    synaTexta();
+    return el('div', { class: 'card pblokk', style: 'margin-top:clamp(16px,2vw,22px)' }, [
+      el('h2', { style: 'font-size:17px; font-family:var(--f-body); font-weight:500', texti: 'Samantekt' }),
+      el('p', { class: 'skyring', style: 'margin:8px 0 12px', texti: 'Gervigreindin les skrefin og nýjustu athugasemdirnar og dregur saman stöðuna. Hún sést bara hér.' }),
+      hn, svid
     ]);
   }
 

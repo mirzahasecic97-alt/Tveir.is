@@ -2,9 +2,34 @@
    Glerhúsið: sameiginlegt
    ========================================================================== */
 
-import { gogn, STODUR_TASK, STODUR_VERK, STODUR_INNRI, FORGANGUR } from './gogn.js';
+import { gogn, STODUR_TASK, STODUR_VERK, STODUR_INNRI, FORGANGUR, stofuLykill } from './gogn.js';
 import { stillingar } from './stillingar.js';
 import { undirverkHluti, undirverkTala } from './undirverk.js';
+
+/* Sýnidæmi eða alvöru Glerhús. Í alvöru Glerhúsi kemur nafn, merki og
+   litur úr stofunni sjálfri og valið úr "Settu saman" er aldrei notað. */
+const ALVORU = !(await gogn()).prufa;
+
+/* Innskráði notandinn, settur í vardaHlid. Stofan hans stýrir útlitinu. */
+let minEk = null;
+/* Stofan úr síðustu síðu í þessum flipa, svo liturinn komi strax */
+const geymdStofa = (() => {
+  if (!ALVORU) return null;
+  try { const x = JSON.parse(sessionStorage.getItem('glerhus-tveir-eg-2') || 'null'); return x && x.stofa && typeof x.stofa === 'object' ? x.stofa : null; }
+  catch (e) { return null; }
+})();
+/* Stofa innskráða notandans: { id, nafn, slug, stada, netfang, merki_url, litur,
+   vefur, postholf, sendir_fra, einingar, stillingar, uppsetning, verk }. null ef engin. */
+export function stofa() {
+  /* Þegar notandinn er vitaður gildir bara hans stofa. Geymda stofan úr
+     flipanum er bara fyrir fyrstu teikningu og gæti verið annars notanda. */
+  if (minEk) return minEk.stofa || null;
+  return geymdStofa || null;
+}
+/* Lykill í localStorage fyrir stillingar eins notanda, með stofuna aftast */
+export const lykill = (nafn) => stofuLykill(nafn, minEk);
+/* Tveir sjálf: gamla vinnulagið helst óbreytt (engin uppsetning, sama orðalag) */
+export const erTveir = () => { const s = stofa(); return !!s && (s.slug === 'tveir' || s.sendir_fra === 'tveir'); };
 
 /* Kom fólk inn með hlekk úr pósti? Supabase les slóðina og hreinsar hana
    um leið og það ræsir, svo við lítum á hana fyrst. Geymt í flipanum því
@@ -24,7 +49,7 @@ try {
    Smáhjálp
    ------------------------------------------------------------------ */
 /* Valið úr "Settu saman ykkar kerfi" (byggja.html), ef gesturinn kom þaðan */
-export const sersnid = (() => {
+export const sersnid = ALVORU ? null : (() => {
   try { const x = JSON.parse(localStorage.getItem('glerhus-tveir-byggja') || 'null'); return x && x.buid ? x : null; }
   catch (e) { return null; }
 })();
@@ -42,9 +67,43 @@ if (sersnid && /(^|\/)stjornbord\.html$/.test(location.pathname) && upphafssida(
   location.replace(upphafssida() + location.search);
 }
 export const ertengt = (id) => !!sersnid && (sersnid.tengingar || []).includes(id);
-/* Í sýnidæminu birtist nákvæmlega það sem gesturinn valdi, ekkert annað */
-export const ervalid = (id) => !sersnid || (sersnid.einingar || []).includes(id);
-export const bokhaldskerfi = () => (ertengt('payday') ? 'Payday' : ertengt('dk') ? 'DK' : null);
+/* Í sýnidæminu birtist nákvæmlega það sem gesturinn valdi, ekkert annað.
+   Stofa sem valdi einingar við skráningu sér þær einingar. */
+export const ervalid = (id) => {
+  const s = stofa();
+  const ein = s && Array.isArray(s.einingar) ? s.einingar : [];
+  if (ein.length) return ein.includes(id);
+  return !sersnid || (sersnid.einingar || []).includes(id);
+};
+/* Tengingar sem standast prófun (Payday, DK, Shopify, Claude, ChatGPT og
+   OAuth tengingar), geymdar í flipanum. null þar til það er vitað. */
+const TENGDAR_LYKILL = 'tengdar';
+export function tengdarGeymdar() {
+  if (sersnid) return (sersnid.tengingar || []).slice();
+  const x = geymt(TENGDAR_LYKILL);
+  return Array.isArray(x) ? x : null;
+}
+export function geymaTengdar(stada) {
+  const listi = Object.values(stada || {})
+    .filter((r) => r && r.veita && (/^ok/i.test(String(r.prufa_svar || '')) || ['google', 'meta', 'tiktok'].includes(r.veita)))
+    .map((r) => r.veita);
+  geyma(TENGDAR_LYKILL, listi);
+  return listi;
+}
+export async function tengdarVeitur({ ferskt } = {}) {
+  if (sersnid) return tengdarGeymdar();
+  if (!ferskt) { const x = tengdarGeymdar(); if (x) return x; }
+  try {
+    const g = await gogn();
+    const ek = await g.eg();
+    if (!ek || ek.hlutverk !== 'admin' || !g.tengingarStada) return [];
+    return geymaTengdar(await g.tengingarStada());
+  } catch (e) { return tengdarGeymdar() || []; }
+}
+export const bokhaldskerfi = () => {
+  const t = tengdarGeymdar() || [];
+  return t.includes('payday') ? 'Payday' : t.includes('dk') ? 'DK' : null;
+};
 const TENGINGAR_HEITI = {
   gmail: ['Gmail', 'Póstur á verk-netfangið verður að verkum og lokið-pósturinn fer héðan'],
   facebook: ['Facebook', 'Áhorf og fylgjendur síðunnar koma inn á hverjum morgni'],
@@ -57,8 +116,9 @@ const TENGINGAR_HEITI = {
   claude: ['Claude', 'Gervigreind sem skrifar drög að svörum og samantektum'],
   chatgpt: ['ChatGPT', 'Gervigreind sem skrifar drög að svörum og samantektum']
 };
-/* Tengingar sem eru ekki tilbúnar í alvöru aðganginum */
-const TENGINGAR_SMIDI = ['dk', 'payday', 'shopify', 'claude', 'chatgpt'];
+/* Tengingar sem eru ekki tilbúnar í alvöru aðganginum. Payday og DK (reikningsdrög),
+   Shopify (Verslun), Claude og ChatGPT (drög og samantektir) eru komnar. */
+const TENGINGAR_SMIDI = [];
 /* Tengingarnar sem gesturinn valdi, sem glerspjald */
 export function tengingaSpjald() {
   const valdar = sersnid ? (sersnid.tengingar || []).filter((t) => TENGINGAR_HEITI[t]) : [];
@@ -82,12 +142,21 @@ export function tilkynna(texti) {
 }
 /* Litur stofunnar: áherslan, dekkri útgáfa fyrir texta á ljósu og
    texti ofan á litnum sem sést (dökkur á gulu, hvítur á dökku) */
-if (sersnid && /^#[0-9a-f]{6}$/i.test(sersnid.litur || '')) {
-  const l = sersnid.litur;
+const LITA_EIGINLEIKAR = ['--acc', '--acc-hover', '--acc-on-navy', '--accs', '--acc-djupt', '--acc-texti'];
+let virkurLitur = null;
+export function setjaLit(litur) {
+  const l = /^#[0-9a-f]{6}$/i.test(litur || '') ? litur.toLowerCase() : null;
+  if (l === virkurLitur) return;
+  virkurLitur = l;
+  const s = document.documentElement.style;
+  if (!l) {
+    LITA_EIGINLEIKAR.forEach((k) => s.removeProperty(k));
+    document.documentElement.classList.remove('gh-eigin-litur');
+    return;
+  }
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(l.slice(i, i + 2), 16) / 255)
     .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
   const birta = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  const s = document.documentElement.style;
   s.setProperty('--acc', l);
   s.setProperty('--acc-hover', 'color-mix(in srgb, ' + l + ' 86%, #000)');
   s.setProperty('--acc-on-navy', l);
@@ -97,22 +166,40 @@ if (sersnid && /^#[0-9a-f]{6}$/i.test(sersnid.litur || '')) {
   document.documentElement.classList.add('gh-eigin-litur');
 }
 /* Letur stofunnar af vefsíðunni hennar, sótt frá Google Fonts */
-if (sersnid && /^[A-Za-z0-9 ]{2,40}$/.test(sersnid.letur || '')) {
-  const f = sersnid.letur.trim();
+let virktLetur = null;
+function setjaLetur(letur) {
+  const f = /^[A-Za-z0-9 ]{2,40}$/.test(letur || '') ? letur.trim() : null;
+  if (f === virktLetur) return;
+  virktLetur = f;
+  const s = document.documentElement.style;
+  if (!f) { s.removeProperty('--f-head'); s.removeProperty('--f-body'); return; }
   const tengill = document.createElement('link');
   tengill.rel = 'stylesheet';
   tengill.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(f).replace(/%20/g, '+') + ':wght@400;500;600;700&display=swap';
   document.head.appendChild(tengill);
   const stafla = "'" + f + "', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-  document.documentElement.style.setProperty('--f-head', stafla);
-  document.documentElement.style.setProperty('--f-body', stafla);
+  s.setProperty('--f-head', stafla);
+  s.setProperty('--f-body', stafla);
 }
+/* Litur og letur: úr stofunni, annars úr "Settu saman" í sýnidæminu */
+export function beitaUtliti(st) {
+  const s = st || stofa();
+  const lit = (s && s.litur) || (sersnid && sersnid.litur) || null;
+  const let_ = (s && s.stillingar && s.stillingar.letur) || (sersnid && sersnid.letur) || null;
+  setjaLit(lit);
+  setjaLetur(let_);
+}
+beitaUtliti();
 /* Merki stofunnar: slóð af vefnum hennar eða mynd sem var hlaðið upp */
 export const stofuMerki = () => {
-  const m = sersnid && sersnid.merki;
-  return typeof m === 'string' && (/^https:\/\//.test(m) || /^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,/.test(m)) ? m : null;
+  const s = stofa();
+  const m = (s && s.merki_url) || (sersnid && sersnid.merki);
+  return typeof m === 'string' && (/^https:\/\//.test(m) || (!ALVORU && /^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,/.test(m))) ? m : null;
 };
-export const stofuNafn = () => (sersnid && sersnid.nafn) || 'Tveir';
+export const stofuNafn = () => {
+  const s = stofa();
+  return (s && s.nafn) || (sersnid && sersnid.nafn) || (ALVORU ? '' : 'Norðurljós');
+};
 /* Nafnið sem gesturinn skrifaði í Settu saman. Tómt ef hann skrifaði
    ekkert og sjálfgefna nafnið stendur, svo það birtist ekki eins og alvöru nafn. */
 const SJALFGEFIN_NOFN = ['Stofan', 'Fyrirtækið', 'Glerhúsið mitt'];
@@ -171,9 +258,10 @@ export function dags(gildi, medAri) {
    samstillt úr kerfisstillingum í gagnagrunninum) */
 const TUNGA_LYKILL = 'glerhus-tveir-tungumal', GJALD_LYKILL = 'glerhus-tveir-gjaldmidill';
 export const tungumal = () => { try { return localStorage.getItem(TUNGA_LYKILL) === 'en' ? 'en' : 'is'; } catch (e) { return 'is'; } };
-export const gjaldmidill = () => { try { const v = localStorage.getItem(GJALD_LYKILL); return ['ISK', 'EUR', 'USD'].includes(v) ? v : 'ISK'; } catch (e) { return 'ISK'; } };
+/* Gjaldmiðillinn er stofunnar, svo hann er geymdur með stofuna aftast (gamli lykillinn til vara) */
+export const gjaldmidill = () => { try { const v = localStorage.getItem(lykill(GJALD_LYKILL)) || localStorage.getItem(GJALD_LYKILL); return ['ISK', 'EUR', 'USD'].includes(v) ? v : 'ISK'; } catch (e) { return 'ISK'; } };
 export function setjaTungumal(t) { try { localStorage.setItem(TUNGA_LYKILL, t === 'en' ? 'en' : 'is'); } catch (e) { /* lokað */ } }
-export function setjaGjaldmidil(v) { try { localStorage.setItem(GJALD_LYKILL, ['ISK', 'EUR', 'USD'].includes(v) ? v : 'ISK'); } catch (e) { /* lokað */ } }
+export function setjaGjaldmidil(v) { try { localStorage.setItem(lykill(GJALD_LYKILL), ['ISK', 'EUR', 'USD'].includes(v) ? v : 'ISK'); } catch (e) { /* lokað */ } }
 /* Enskt snið á tölum bara ef þýðingin hlóðst, annars er allt á íslensku */
 let enska = false;
 export const erEnska = () => enska;
@@ -382,26 +470,85 @@ async function samstillaGjaldmidil(g) {
   } catch (e) { /* sjálfgefið ISK */ }
 }
 
-export async function vardaHlid({ krefstAdmin, badir } = {}) {
+/* Staða aðgangsins gagnvart stofunni: 'virk', 'lokud', 'bidur', 'engin'
+   (notandi án stofu) eða null (gagnagrunnurinn er ekki kominn með stofur). */
+export function stofuStada(ek) {
+  if (!ek) return null;
+  const ms = ek.min_stada;
+  const st = (ms && ms.stada) || (ek.stofa && ek.stofa.stada) || null;
+  if (st) return st;
+  /* min_stada svaraði en notandinn er í engri stofu */
+  if (ms && !ms.stofa_id) return 'engin';
+  /* min_stada skilaði engri línu: viðskiptavinur án stofu og án fyrirtækis.
+     Stjórnandi á gömlu skema (engar stofur) heldur áfram eins og áður. */
+  if (!ms && !ek.stofa && !ek.stofa_id && ek.hlutverk !== 'admin' && !ek.fyrirtaeki_id) return 'engin';
+  return null;
+}
+export const erRekstraradili = (ek) => !!(ek && ek.min_stada && ek.min_stada.er_rekstraradili);
+
+/* Lokað Glerhús, eða aðgangur sem er ekki tengdur neinu: bara skilaboð og útskráning */
+function synaAnAdgangs(ek, titill, texti) {
+  teiknaHaus({ ...ek, hlutverk: 'an_adgangs', fyrirtaeki_id: null, fyrirtaeki: null, __anAdgangs: true }, 'Glerhúsið');
+  const m = document.getElementById('innihald');
+  if (!m) return;
+  fylla(m, [el('div', { class: 'card pblokk' }, [
+    el('h2', { texti: titill }),
+    el('p', { class: 'lead', style: 'margin-top:10px', texti }),
+    el('div', { style: 'margin-top:20px' }, [
+      el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Skrá út',
+        onclick: async () => { const g = await gogn(); await g.utskra(); location.replace('./'); } })
+    ])
+  ])]);
+}
+
+export async function vardaHlid({ krefstAdmin, badir, rekstur } = {}) {
   const g = await gogn();
   const ek = await g.eg();
 
   if (!ek) { location.replace('./'); return null; }
+  minEk = ek;
+  beitaUtliti(ek.stofa);
+
+  const stada = stofuStada(ek);
+  /* Rekstraraðili kemst á Rekstur þótt hann sé ekki í virkri stofu */
+  const rekstrarSida = rekstur && erRekstraradili(ek);
+  if (!rekstrarSida && stada === 'lokud') {
+    synaAnAdgangs(ek, 'Lokað', 'Aðgangurinn að þessu Glerhúsi er lokaður.');
+    return null;
+  }
+  if (!rekstrarSida && stada === 'bidur') {
+    synaAnAdgangs(ek, 'Bíður samþykkis', 'Glerhúsið þitt hefur ekki verið opnað ennþá. Þú færð póst þegar það er tilbúið.');
+    return null;
+  }
+  if (!rekstrarSida && stada === 'engin') {
+    synaAnAdgangs(ek, 'Ekkert Glerhús', 'Aðgangurinn er ekki tengdur neinu Glerhúsi. Biddu þann sem bauð þér að senda nýtt boð.');
+    return null;
+  }
   samstillaGjaldmidil(g);
+  if (rekstur) return ek;
 
   if (krefstAdmin && ek.hlutverk !== 'admin') { location.replace('yfirlit.html'); return null; }
   if (!krefstAdmin && !badir && ek.hlutverk === 'admin') {
     /* Admin lendir á stjórnborðinu, ekki á viðskiptavinayfirliti */
     location.replace('stjornbord.html'); return null;
   }
+  /* Eigandi nýrrar stofu klárar uppsetninguna fyrst (Tveir og sýnidæmið aldrei) */
+  if (krefstAdmin && ALVORU && ek.er_eigandi && ek.stofa && !erTveir()
+      && !(ek.stofa.uppsetning && ek.stofa.uppsetning.lokid)
+      && /(^|\/)stjornbord\.html$/.test(location.pathname)) {
+    location.replace('byrja.html'); return null;
+  }
   if (!krefstAdmin && !badir && !ek.fyrirtaeki_id) {
     teiknaHaus(ek, 'Vinnusvæði');
     const m = document.getElementById('innihald');
+    const netfang = ek.stofa && ek.stofa.netfang;
     if (m) {
       fylla(m, [el('div', { class: 'card pblokk' }, [
         el('h2', { texti: 'Aðgangurinn er ekki tengdur fyrirtæki' }),
         el('p', { class: 'lead', style: 'margin-top:10px',
-          texti: 'Við þurfum að tengja þig við fyrirtækið þitt áður en þú sérð verkefnin. Sendu okkur línu á tveir@tveir.is og við gerum það í dag.' })
+          texti: netfang
+            ? 'Það þarf að tengja þig við fyrirtækið þitt áður en þú sérð verkefnin. Sendu línu á ' + netfang + '.'
+            : 'Það þarf að tengja þig við fyrirtækið þitt áður en þú sérð verkefnin. Hafðu samband við þann sem bauð þér.' })
       ])]);
     }
     return null;
@@ -437,13 +584,14 @@ const HAUS_SJALFGEFID = ['stjornbord.html', 'tillogur.html', 'samskipti.html', '
 const hausLykill = (ek) => 'glerhus-tveir-haus-' + ek.id;
 function festarSidur(ek) {
   try {
-    const x = JSON.parse(localStorage.getItem(hausLykill(ek)) || 'null');
+    /* Með stofuna aftast; eldri vistun án hennar til vara */
+    const x = JSON.parse(localStorage.getItem(lykill(hausLykill(ek))) || localStorage.getItem(hausLykill(ek)) || 'null');
     if (Array.isArray(x)) return new Set(x);
   } catch (e) { /* sjálfgefið */ }
   return new Set(HAUS_SJALFGEFID);
 }
 function vistaFestar(ek, festar) {
-  try { localStorage.setItem(hausLykill(ek), JSON.stringify([...festar])); } catch (e) { /* bara þessi heimsókn */ }
+  try { localStorage.setItem(lykill(hausLykill(ek)), JSON.stringify([...festar])); } catch (e) { /* bara þessi heimsókn */ }
 }
 const PINNI = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" '
   + 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/>'
@@ -483,10 +631,14 @@ export function uppfaeraMerki() {
 export const postOlesinn = (t) => !t.lesid_kerfi || new Date(t.lesid_kerfi) < new Date(t.sidast);
 
 /* Flipar efst á Samskiptum: Pósthólf og Fyrirspurnir, Messenger og Instagram koma */
+/* Pósthólfið (full samstilling) er bara hjá Tveir. Aðrar stofur fá Verkpóst:
+   póst á verk-netfangið frá sendendum sem eru ekki skráðir. */
+export const harPostholf = () => { const s = stofa(); return !s || s.postholf !== false; };
+export const postholfHeiti = () => (harPostholf() ? 'Pósthólf' : 'Verkpóstur');
 export function samskiptaFlipar(virkur) {
-  const flipi = (slod, heiti, kodi) => el('a', { class: 'sk-flipi', href: slod, 'aria-current': virkur === kodi ? 'page' : null, texti: heiti });
+  const flipi = (slod, heiti, kodi) => el('a', { class: 'sk-flipi', href: slod, 'aria-current': [].concat(kodi).includes(virkur) ? 'page' : null, texti: heiti });
   return el('nav', { class: 'sk-flipar', 'aria-label': 'Samskipti' }, [
-    flipi('samskipti.html', 'Pósthólf', 'postholf'),
+    flipi('samskipti.html', postholfHeiti(), ['postholf', 'verkpostur']),
     flipi('fyrirspurnir.html', 'Fyrirspurnir', 'fyrirspurnir'),
     el('span', { class: 'sk-flipi sk-flipi--kemur', title: 'Kemur þegar Meta appið er tilbúið', texti: 'Messenger' }),
     el('span', { class: 'sk-flipi sk-flipi--kemur', title: 'Kemur þegar Meta appið er tilbúið', texti: 'Instagram' })
@@ -498,8 +650,12 @@ export function teiknaHaus(ek, heiti) {
   if (!haus) return;
 
   const admin = ek.hlutverk === 'admin';
+  const anAdgangs = !!ek.__anAdgangs;
+  if (!anAdgangs) { minEk = minEk && minEk.id === ek.id ? { ...minEk, ...ek } : ek; beitaUtliti(); }
+  const st = anAdgangs ? null : stofa();
   /* Ný síða (líka Til baka í vafranum): valmyndin byrjar lokuð */
   haus.classList.remove('er-opin');
+  const sidaHeiti = heiti;
 
   /* Merkin fyllast á eftir, því tölurnar liggja ekki fyrir strax */
   const tvo = (cls) => admin
@@ -526,16 +682,28 @@ export function teiknaHaus(ek, heiti) {
     sersnid ? null : { slod: 'okkar.html', heiti: 'Okkar', merki: mOkkar },
     sersnid && !ervalid('postur') && !ervalid('postur_verk') ? null : {
       slod: 'samskipti.html', heiti: 'Samskipti', merki: mSam, virkt: ['samskipti.html', 'fyrirspurnir.html'],
-      undir: [{ slod: 'samskipti.html', heiti: 'Pósthólf', merki: mPost },
+      undir: [{ slod: 'samskipti.html', heiti: postholfHeiti(), merki: mPost },
               { slod: 'fyrirspurnir.html', heiti: 'Fyrirspurnir', merki: mFsp }]
     },
     sersnid && !ertengt('googlecalendar') ? null : { slod: 'dagatal.html', heiti: 'Dagatal' },
     ervalid('tekjur') ? { slod: 'bokhald.html', heiti: 'Bókhald' } : null,
     ervalid('tolfraedi') ? { slod: 'tolfraedi.html', heiti: 'Tölfræði' } : null,
+    /* Verslun: þegar Shopify tengingin hefur staðist prófun */
+    (tengdarGeymdar() || []).includes('shopify') ? { slod: 'verslun.html', heiti: 'Verslun' } : null,
     /* Harvey spjallið er ekki komið í loftið, fallið undir api/ þarf
        API lykil. Kveikt í stillingar.js þegar það er tilbúið. */
-    stillingar.harvey ? { slod: 'harvey.html', heiti: 'Harvey' } : null
+    stillingar.harvey ? { slod: 'harvey.html', heiti: 'Harvey' } : null,
+    /* Rekstraraðili Glerhússins: stofurnar og skráningarnar */
+    erRekstraradili(ek) ? { slod: 'rekstur.html', heiti: 'Rekstur' } : null
   ].filter(Boolean) : [];
+  /* Hvort Shopify er tengt er sótt einu sinni í flipanum. Breytist það er hausinn teiknaður aftur. */
+  if (valmynd && !sersnid && tengdarGeymdar() === null && !haus.__saekirTengdar) {
+    haus.__saekirTengdar = true;
+    tengdarVeitur().then((t) => {
+      haus.__saekirTengdar = false;
+      if (t.includes('shopify') && haus.isConnected) teiknaHaus(ek, sidaHeiti);
+    }, () => { haus.__saekirTengdar = false; });
+  }
   const festar = festarSidur(ek);
   haus.classList.toggle('phead--valmynd', valmynd);
 
@@ -557,15 +725,23 @@ export function teiknaHaus(ek, heiti) {
           ek.fyrirtaeki && ek.fyrirtaeki.merki_url
             ? el('img', { class: 'phead__kunnamerki', src: ek.fyrirtaeki.merki_url,
                           alt: ek.fyrirtaeki.nafn })
-            : stofuMerki()
+            : !anAdgangs && stofuMerki()
               /* Stofan setti inn merki: hennar merki, og lítið Glerhúsið hús við hliðina */
               ? el('span', { class: 'phead__logo' }, [
                   el('img', { class: 'phead__glerhus', src: '../assets/merki/glerhusid-merki-blatt.svg', alt: 'Glerhúsið',
                               width: '26', height: '26' }),
                   el('img', { class: 'phead__stofumerki', src: stofuMerki(), alt: stofuNafn(), referrerpolicy: 'no-referrer' })
                 ])
-              : el('img', { class: 'phead__tveir', src: '/assets/img/tveir-merki-gegnsaett.png', alt: 'Tveir',
-                            width: '124', height: '29' })
+              : ALVORU && st && st.nafn
+                /* Alvöru stofa án merkis: nafnið hennar við hlið Glerhúsið hússins */
+                ? el('span', { class: 'phead__logo' }, [
+                    el('img', { class: 'phead__glerhus', src: '../assets/merki/glerhusid-merki-blatt.svg', alt: 'Glerhúsið',
+                                width: '26', height: '26' }),
+                    el('span', { class: 'phead__stofunafn', texti: st.nafn,
+                                 style: 'font:600 16px/1.2 var(--f-head); color:var(--ink); max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis' })
+                  ])
+                : el('img', { class: 'phead__tveir', src: '../assets/merki/glerhusid-logo-blatt.svg', alt: 'Glerhúsið',
+                              width: '124', height: '29' })
         ]),
         el('span', { class: 'phead__skil', 'aria-hidden': 'true' }),
 
@@ -643,12 +819,12 @@ export function teiknaHaus(ek, heiti) {
                 el('span', { class: 'phead__synid', texti: 'Sýnidæmi' })
               ])
             : el('div', { class: 'phead__notandi' }, [
-                el('strong', { texti: ek.nafn }),
-                document.createTextNode(admin ? stofuNafn() : ek.netfang)
+                el('strong', { texti: ek.nafn || ek.netfang || '' }),
+                document.createTextNode(admin ? stofuNafn() : ek.netfang || '')
               ]),
           /* Stillingar: aðgangur, lykilorð, undirskrift og tengingar.
              Sýnidæmi persónu, verktaka og fyrirtækis eru án þeirra. */
-          erPersona() || erVerktaki() ? null : el('a', {
+          erPersona() || erVerktaki() || anAdgangs ? null : el('a', {
             class: 'btn btn--sm btn--ghost phead__lykill phead__stillingar', href: 'stillingar.html',
             'aria-label': 'Stillingar', title: 'Stillingar',
             'aria-current': nuna === 'stillingar.html' ? 'page' : null,
@@ -1345,6 +1521,100 @@ export function taskLina(t, { admin, eftir }) {
       pilla(t.stada, 'task')
     ])
   ])]);
+}
+
+/* ------------------------------------------------------------------
+   Bjóða notanda: stjórnanda eða viðskiptavini fyrirtækis. Notað á
+   Stjórnborði, í Stillingum og í uppsetningunni. Skilar glugganum.
+   ------------------------------------------------------------------ */
+export async function opnaBodGlugga({ hlutverk = 'vidskiptavinur', netfang = '', nafn = '', fyrirtaeki_id = '', fyrirtaeki, eftir, festaHlutverk } = {}) {
+  const g = await gogn();
+  const fyrirtaekin = fyrirtaeki || await g.fyrirtaeki().catch(() => []);
+  const inNetfang = el('input', { type: 'email', required: true, autocomplete: 'off', value: netfang, placeholder: 'nafn@fyrirtaeki.is' });
+  const inNafn = el('input', { type: 'text', autocomplete: 'off', value: nafn, placeholder: 'Fullt nafn' });
+  const valHlutverk = el('select', { 'aria-label': 'Hlutverk' }, [
+    el('option', { value: 'vidskiptavinur', texti: 'Viðskiptavinur', selected: hlutverk === 'vidskiptavinur' }),
+    el('option', { value: 'admin', texti: 'Stjórnandi', selected: hlutverk === 'admin' })
+  ]);
+  const valFyrirtaeki = el('select', { 'aria-label': 'Fyrirtæki' }, [el('option', { value: '', texti: 'Velja fyrirtæki' })]
+    .concat(fyrirtaekin.map((f) => el('option', { value: f.id, texti: f.nafn, selected: f.id === fyrirtaeki_id }))));
+  const skyring = el('p', { class: 'skyring' });
+  const fyrirtaekiReitur = el('div', { class: 'field' }, [el('span', { texti: 'Fyrirtæki' }), valFyrirtaeki]);
+  const hlutverkReitur = el('div', { class: 'field', hidden: !!festaHlutverk }, [el('span', { texti: 'Hlutverk' }), valHlutverk]);
+  const uppfaera = () => {
+    const vid = valHlutverk.value === 'vidskiptavinur';
+    fyrirtaekiReitur.hidden = !vid;
+    skyring.textContent = vid
+      ? 'Viðskiptavinur sér bara verkefni síns fyrirtækis.'
+      : 'Stjórnandi sér allt í Glerhúsinu og getur breytt öllu.';
+  };
+  valHlutverk.addEventListener('change', uppfaera);
+  uppfaera();
+  const stada = el('div', { class: 'form-status', role: 'status', hidden: true });
+  const senda = el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Senda boð' });
+  const segja = (texti, tegund) => { stada.textContent = texti; stada.className = 'form-status form-status--' + tegund; stada.hidden = false; };
+
+  const form = el('form', { class: 'form-grid', style: 'margin-top:18px', novalidate: true, onsubmit: async (e) => {
+    e.preventDefault();
+    stada.hidden = true;
+    if (!inNetfang.value.trim()) { segja('Netfangið vantar.', 'err'); inNetfang.focus(); return; }
+    if (valHlutverk.value === 'vidskiptavinur' && !valFyrirtaeki.value) { segja('Veldu fyrirtæki fyrir viðskiptavininn.', 'err'); valFyrirtaeki.focus(); return; }
+    senda.disabled = true; senda.textContent = 'Sendi';
+    try {
+      const svar = await g.bjodaNotanda({ netfang: inNetfang.value, nafn: inNafn.value,
+        hlutverk: valHlutverk.value, fyrirtaeki_id: valFyrirtaeki.value || null });
+      segja(svar.texti || 'Boðið er farið.', 'ok');
+      inNetfang.value = ''; inNafn.value = '';
+      senda.textContent = 'Bjóða öðrum';
+      if (eftir) eftir(svar);
+    } catch (villa) {
+      segja(villa.message || 'Þetta gekk ekki. Prófaðu aftur.', 'err');
+      senda.textContent = 'Senda boð';
+    } finally { senda.disabled = false; }
+  } }, [
+    el('label', { class: 'field' }, [el('span', { texti: 'Netfang' }), inNetfang]),
+    el('label', { class: 'field' }, [el('span', { texti: 'Nafn' }), inNafn]),
+    hlutverkReitur,
+    fyrirtaekiReitur,
+    skyring,
+    el('p', { class: 'skyring', texti: 'Viðkomandi fær hlekk í pósti og velur sér lykilorð. Boðið gildir í 14 daga.' }),
+    stada,
+    el('div', { style: 'display:flex; gap:10px; flex-wrap:wrap' }, [
+      senda,
+      el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Loka', onclick: () => d.close() })
+    ])
+  ]);
+  const d = el('dialog', { class: 'pdialog pdialog--mjor' }, [el('div', { class: 'pdialog__kort' }, [
+    el('div', { class: 'pdialog__haus' }, [
+      el('h2', { texti: festaHlutverk && hlutverk === 'admin' ? 'Bjóða stjórnanda' : 'Bjóða notanda' }),
+      el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '✕', onclick: () => d.close() })
+    ]),
+    form
+  ])]);
+  d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+  d.addEventListener('close', () => d.remove());
+  document.body.append(d);
+  d.showModal();
+  inNetfang.focus();
+  return d;
+}
+
+/* Afrita texta (t.d. verk-netfangið) og segja frá því á hnappinum */
+export async function afrita(texti, hnappur) {
+  let tokst = false;
+  try { await navigator.clipboard.writeText(texti); tokst = true; } catch (e) {
+    try {
+      const t = el('textarea', { style: 'position:fixed; opacity:0' }); t.value = texti;
+      document.body.append(t); t.select(); tokst = document.execCommand('copy'); t.remove();
+    } catch (e2) { tokst = false; }
+  }
+  if (hnappur) {
+    const fyrra = hnappur.dataset.texti || hnappur.textContent;
+    hnappur.dataset.texti = fyrra;
+    hnappur.textContent = tokst ? 'Afritað' : 'Afritaðu handvirkt';
+    setTimeout(() => { hnappur.textContent = fyrra; }, 2000);
+  }
+  return tokst;
 }
 
 export { gogn, STODUR_TASK, STODUR_VERK, STODUR_INNRI, FORGANGUR, stillingar, undirverkTala };

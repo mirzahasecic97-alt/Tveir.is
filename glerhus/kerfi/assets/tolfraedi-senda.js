@@ -3,13 +3,25 @@
    Hnappurinn er efst í horninu á Tölfræði hvers fyrirtækis. Stjórnandi velur
    viðtakendur, getur bætt við persónulegum orðum og sér póstinn nákvæmlega
    eins og hann fer. Pósturinn fer í töfluna tolfraedi_sendingar og Apps
-   Script (tolfraedi.gs) sendir hann frá tveir@tveir.is.
-   Útlitið er það sama og í mánaðarskýrslunni (skyrsluHtml_ í tolfraedi.gs).
+   Script sendir hann: tolfraedi.gs frá tveir@tveir.is fyrir Tveir, vélin
+   Glerhúsið verk í nafni stofunnar fyrir aðrar stofur.
+   Útlitið er það sama og í mánaðarskýrslunni (skyrsluHtml_ í tolfraedi.gs),
+   með merki, nafni og vef stofunnar.
    ========================================================================== */
-import { el, fylla } from './portal.js';
+import { el, fylla, stillingar } from './portal.js';
 
-const MERKI = 'https://tveir.is/assets/img/tveir-logo-3d.png';
-const TOLFRAEDI = 'https://tveir.is/vinnusvaedi/tolfraedi.html';
+/* Tveir heldur sínu merki og slóð. Aðrar stofur: þeirra merki, annars
+   nafnið þeirra í texta, og tengill á tölfræðina í kerfinu. */
+const TVEIR = { nafn: 'Tveir', merki: 'https://tveir.is/assets/img/tveir-logo-3d.png', merkiAlt: 'TVEIR',
+                vefur: 'https://tveir.is', tolfraedi: 'https://tveir.is/vinnusvaedi/tolfraedi.html' };
+/* Slóð kerfisins úr stillingum (a-tveir.sh setur https://tveir.is/glerhus/kerfi/).
+   Í sýnidæminu er hún tóm: þá vísar pósturinn á kerfið sem hann var skrifaður í. */
+const KERFI = (() => {
+  const s = String(stillingar.slod || '');
+  if (/^https:\/\/[^\s"'<>]+$/.test(s)) return s.replace(/\/?$/, '/');
+  try { if (location.protocol === 'https:') return new URL('./', location.href).href; } catch (e) { /* engin slóð */ }
+  return 'https://tveir.is/glerhus/kerfi/';
+})();
 const MIDLAR_HEITI = { instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok' };
 const TEGUNDIR = { mynd: 'Mynd', myndband: 'Myndband', reel: 'Reel', karusell: 'Hringekja', saga: 'Saga', annad: 'Færsla' };
 const MAN = ['janúar', 'febrúar', 'mars', 'apríl', 'maí', 'júní', 'júlí', 'ágúst', 'september', 'október', 'nóvember', 'desember'];
@@ -23,6 +35,21 @@ const tala = (n) => {
   return (Number(n) < 0 ? '-' : '') + t;
 };
 const dagsTexti = (d) => { const x = new Date(String(d).slice(0, 10) + 'T12:00:00Z'); return x.getUTCDate() + '. ' + MAN[x.getUTCMonth()]; };
+
+/* Útlit og nafn stofunnar í póstinum. Gagnagrunnur án stofa er Tveir. */
+export function stofuSnid(stofa) {
+  if (!stofa || stofa.slug === 'tveir') return { ...TVEIR, erTveir: true };
+  const nafn = String(stofa.nafn || '').trim() || 'Glerhúsið';
+  const vefur = oruggSlod(stofa.vefur);
+  return {
+    nafn, erTveir: false,
+    merki: oruggSlod(stofa.merki_url),
+    merkiAlt: nafn,
+    vefur: vefur || KERFI,
+    vefurTexti: vefur ? vefur.replace(/^https:\/\//, '').replace(/\/$/, '') : '',
+    tolfraedi: KERFI + 'tolfraedi.html'
+  };
+}
 
 /* ------------------------------------------------------------------
    Tölurnar úr gögnunum sem síðan er þegar með
@@ -84,7 +111,8 @@ export function sjalfgefinOrd(tolur, fyrriHeiti) {
 /* ------------------------------------------------------------------
    Pósturinn í Tveir útliti. Töflur og stílar í línu fyrir Gmail og Outlook.
    ------------------------------------------------------------------ */
-export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, tolur, ord, myndbond }) {
+export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, tolur, ord, myndbond, snid }) {
+  const st = snid || stofuSnid(null);
   const L = "font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
   const H = "font-family:'Inter Tight',Inter,-apple-system,'Segoe UI',Arial,sans-serif;letter-spacing:-.02em;";
   const t = tolur.samtals;
@@ -184,7 +212,11 @@ export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, 
     + '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' + esc('Tölurnar ykkar ' + inngangur) + '</div>'
     + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f2f8fe" style="background:#f2f8fe;"><tr><td align="center" style="padding:32px 12px;">'
     + '<table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;">'
-    + '<tr><td align="center" style="padding:0 0 22px 0;"><a href="https://tveir.is" target="_blank" style="text-decoration:none;"><img src="' + MERKI + '" width="132" alt="TVEIR" style="display:block;width:132px;height:auto;border:0;' + L + 'font-size:24px;font-weight:800;color:#5b93f0;"></a></td></tr>'
+    + '<tr><td align="center" style="padding:0 0 22px 0;"><a href="' + esc(st.vefur) + '" target="_blank" style="text-decoration:none;">'
+    + (st.merki
+      ? '<img src="' + esc(st.merki) + '" width="132" alt="' + esc(st.merkiAlt) + '" style="display:block;width:132px;height:auto;border:0;' + L + 'font-size:24px;font-weight:800;color:#5b93f0;">'
+      : '<span style="' + H + 'font-size:24px;font-weight:700;color:#1c3050;">' + esc(st.nafn) + '</span>')
+    + '</a></td></tr>'
     + '<tr><td bgcolor="#ffffff" style="background:#ffffff;border-radius:20px;padding:30px 22px;box-shadow:0 12px 30px rgba(28,48,80,.10);">'
     + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
     + '<tr><td style="padding:0 6px 14px 6px;"><span style="display:inline-block;background:#e7f0fd;color:#2c62c4;border-radius:999px;padding:6px 12px;' + L + 'font-size:12.5px;font-weight:600;">' + esc(merkiTexti) + '</span></td></tr>'
@@ -193,13 +225,17 @@ export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, 
     + '<tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' + reitir + '</table></td></tr>'
     + '<tr><td style="padding:0 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
     + ordin + sulurit + myndbondPosts + midlar + (faerslur ? kafli('Bestu færslurnar') + faerslur : '')
-    + '<tr><td align="center" style="padding:24px 0 6px 0;">' + takki('Sjá alla tölfræðina', TOLFRAEDI, true) + '</td></tr>'
+    + '<tr><td align="center" style="padding:24px 0 6px 0;">' + takki('Sjá alla tölfræðina', st.tolfraedi, true) + '</td></tr>'
     + '</table></td></tr></table></td></tr>'
-    + '<tr><td align="center" style="padding:22px 12px 0 12px;' + L + 'font-size:13px;line-height:1.6;color:#7189ac;">Kveðja, Tveir<br><a href="https://tveir.is" target="_blank" style="color:#5b93f0;text-decoration:none;">tveir.is</a></td></tr>'
+    + '<tr><td align="center" style="padding:22px 12px 0 12px;' + L + 'font-size:13px;line-height:1.6;color:#7189ac;">Kveðja, ' + esc(st.nafn)
+    + (st.erTveir ? '<br><a href="https://tveir.is" target="_blank" style="color:#5b93f0;text-decoration:none;">tveir.is</a>'
+      : st.vefurTexti ? '<br><a href="' + esc(st.vefur) + '" target="_blank" style="color:#5b93f0;text-decoration:none;">' + esc(st.vefurTexti) + '</a>' : '')
+    + '</td></tr>'
     + '</table></td></tr></table></body></html>';
 }
 
-export function postTexti({ fyrirtaeki, nofn, inngangur, fyrriHeiti, tolur, ord, myndbond }) {
+export function postTexti({ fyrirtaeki, nofn, inngangur, fyrriHeiti, tolur, ord, myndbond, snid }) {
+  const st = snid || stofuSnid(null);
   const t = tolur.samtals;
   const lina = (h, nu, fyrr) => { const b = breyting(nu, fyrr, fyrriHeiti); return h + ': ' + (tala(nu) || 'engin gögn') + (b ? ' (' + b.texti + ')' : ''); };
   const n = (nofn || []).filter(Boolean);
@@ -207,14 +243,19 @@ export function postTexti({ fyrirtaeki, nofn, inngangur, fyrriHeiti, tolur, ord,
     lina('Áhorf', t.ahorf, t.ahorf_fyrri), lina('Náð', t.nadir, t.nadir_fyrri), lina('Samskipti', t.samskipti, t.samskipti_fyrri),
     'Fylgjendur: ' + (tala(t.fylgjendur_lok) || 'engin gögn'),
     ...((myndbond || []).filter((m) => erTala(m.ahorf)).length ? ['', 'Myndböndin:'].concat((myndbond || []).filter((m) => erTala(m.ahorf)).map((m) => '- ' + m.titill + ': ' + tala(m.ahorf) + ' áhorf')) : []),
-    ord ? '\n' + ord : '', '', 'Sjá alla tölfræðina: ' + TOLFRAEDI, '', 'Kveðja,', 'Tveir'].join('\n');
+    ord ? '\n' + ord : '', '', 'Sjá alla tölfræðina: ' + st.tolfraedi, '', 'Kveðja,', st.nafn].join('\n');
 }
 
 /* ------------------------------------------------------------------
    Glugginn: velja viðtakendur, sjá póstinn og senda
    ------------------------------------------------------------------ */
-export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, tb, timabilHeiti, fyrriHeiti, myndbond }) {
+/* skyrsla: drög að mánaðarskýrslu sama mánaðar, ef til. Þá má láta
+   gervigreindina skrifa orðin (hún vistar þau líka á drögin, og
+   eftirSamantekt(skyrsla) lætur síðuna vita). */
+export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, tb, timabilHeiti, fyrriHeiti, myndbond, skyrsla, eftirSamantekt }) {
   fyrriHeiti = fyrriHeiti || 'tímabilið á undan';
+  const stofa = (ek && ek.stofa) || null;
+  const snid = stofuSnid(stofa);
   const merkiTexti = 'Tölfræði · ' + dagsTexti(tb.fra) + ' til ' + dagsTexti(tb.til);
   const inngangur = timabilHeiti;
 
@@ -244,15 +285,48 @@ export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, 
   const valdir = new Set(vidskiptavinir.map((n) => n.netfang));
   let afrit = false;
 
-  const ordReitur = el('textarea', { class: 'ts-ord', rows: '3', maxlength: '1200', placeholder: 'Nokkur orð frá ykkur (valfrjálst)' });
-  ordReitur.value = sjalfgefinOrd(tolur, fyrriHeiti);
+  const ordReitur = el('textarea', { id: 'ts-ord', class: 'ts-ord', rows: '3', maxlength: '1200', placeholder: 'Nokkur orð frá ykkur (valfrjálst)' });
+  const sjalfgefid = sjalfgefinOrd(tolur, fyrriHeiti);
+  ordReitur.value = sjalfgefid;
   const forsyn = el('iframe', { class: 'ts-forsyn', title: 'Forsýn á póstinum', sandbox: '', loading: 'eager' });
   const villa = el('p', { class: 'ts-villa', role: 'alert', hidden: true });
   const sendaHn = el('button', { type: 'button', class: 'btn', texti: 'Senda núna' });
 
   const nofnValdra = () => vidskiptavinir.filter((n) => valdir.has(n.netfang)).map((n) => n.nafn || '');
   const efni = () => ('Tölfræðin ykkar ' + inngangur + ': ' + fyrirtaeki).replace(/[\r\n]+/g, ' ').slice(0, 200);
-  const gogn = () => ({ fyrirtaeki, nofn: nofnValdra(), merkiTexti, inngangur, fyrriHeiti, tolur, ord: ordReitur.value.trim(), myndbond: medMyndbond ? mbTilbuin : [] });
+  const gogn = () => ({ fyrirtaeki, nofn: nofnValdra(), merkiTexti, inngangur, fyrriHeiti, tolur, ord: ordReitur.value.trim(), myndbond: medMyndbond ? mbTilbuin : [], snid });
+
+  /* Gervigreindin skrifar orðin út frá tölum mánaðarskýrslunnar. Hafi
+     einhver skrifað í reitinn, eða samantekt sé á skýrslunni, er spurt fyrst. */
+  const ggStada = el('p', { class: 'skyring', role: 'status', hidden: true });
+  const ggHn = skyrsla && skyrsla.id ? el('button', { type: 'button', class: 'sk-tengill', style: 'font-size:13.5px', texti: 'Skrifa með gervigreind' }) : null;
+  if (ggHn) {
+    ggHn.addEventListener('click', async () => {
+      const manudur = MAN[Number(String(skyrsla.manudur).slice(5, 7)) - 1] || 'mánuðinn';
+      const skrifad = ordReitur.value.trim() && ordReitur.value.trim() !== sjalfgefid.trim();
+      const samantekt = String(skyrsla.samantekt || '').trim();
+      if ((skrifad || samantekt) && !confirm('Gervigreindin skrifar ný orð. Þau koma í reitinn og í samantekt mánaðarskýrslunnar fyrir '
+          + manudur + ', í stað þess sem stendur þar núna. Halda áfram?')) return;
+      ggHn.disabled = true; sendaHn.disabled = true;
+      ggStada.hidden = false; ggStada.style.color = ''; ggStada.textContent = 'Gervigreindin skrifar';
+      try {
+        const svar = await g.gervigreind('samantekt_skyrsla', skyrsla.id);
+        const texti = String(svar.texti || '').trim();
+        if (texti.length > 1200) ordReitur.maxLength = 4000;
+        if (texti) ordReitur.value = texti;
+        if (svar.vistad) { skyrsla.samantekt = texti; if (eftirSamantekt) eftirSamantekt(skyrsla); }
+        ggStada.textContent = svar.synidaemi
+          ? 'Sýnidæmi: svona líta drög frá gervigreindinni út. Ekkert var vistað.'
+          : 'Drög frá gervigreind. Lestu þau yfir og breyttu áður en þú sendir.'
+            + (svar.vistad ? ' Þau eru líka vistuð á mánaðarskýrsluna.' : svar.athugasemd ? ' ' + String(svar.athugasemd).replace(/ sjálf\(ur\)/g, '') : '');
+      } catch (villa2) {
+        ggStada.textContent = villa2.message || 'Þetta gekk ekki.';
+        ggStada.style.color = '#a3312a';
+      }
+      ggHn.disabled = false;
+      uppfaera();
+    });
+  }
   let bid;
   const uppfaera = () => {
     clearTimeout(bid);
@@ -289,7 +363,12 @@ export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, 
           el('input', { type: 'checkbox', checked: true, onchange: (e) => { medMyndbond = e.target.checked; uppfaera(); } }),
           document.createTextNode('Hafa myndböndin með (' + mbTilbuin.length + ')')
         ]) : null,
-        el('label', { class: 'ts-hluti' }, [el('span', { class: 'ts-midi', texti: 'Orð frá ykkur' }), ordReitur]),
+        el('div', { class: 'ts-hluti' }, [
+          el('label', { class: 'ts-midi', for: 'ts-ord', texti: 'Orð frá ykkur' }),
+          ordReitur,
+          ggHn ? el('div', { style: 'margin-top:8px' }, [ggHn]) : null,
+          ggStada
+        ]),
         villa,
         el('div', { class: 'ts-hnappar' }, [el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Hætta við', onclick: () => d.close() }), sendaHn])
       ]),
@@ -311,7 +390,10 @@ export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, 
       fylla(kort, [el('div', { class: 'ts-sent' }, [
         el('span', { class: 'ts-sent__hak', 'aria-hidden': 'true', texti: '✓' }),
         el('h2', { texti: 'Pósturinn er á leiðinni' }),
-        el('p', { texti: (hverjum.length ? 'Til ' + hverjum.join(', ') : 'Til ' + netfong.join(', ')) + '. Hann fer frá tveir@tveir.is.' }),
+        el('p', { texti: (hverjum.length ? 'Til ' + hverjum.join(', ') : 'Til ' + netfong.join(', ')) + '. '
+          + (g.prufa ? 'Í sýnidæminu fer ekkert út.'
+            : snid.erTveir ? 'Hann fer frá tveir@tveir.is.'
+              : 'Hann fer í nafni ' + snid.nafn + (stofa && stofa.netfang ? ' og svör berast á ' + stofa.netfang : '') + '.') }),
         el('button', { type: 'button', class: 'btn', texti: 'Loka', onclick: () => d.close() })
       ])]);
     } catch (e) {

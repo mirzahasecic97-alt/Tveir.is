@@ -5,8 +5,9 @@
 import {
   gogn, el, tom, fylla, dags, erSeint, pilla, taskLina, kronur, lesaTolu,
   vardaHlid, teiknaHaus, STODUR_VERK,
-  geymt, geyma, ervalid, bokhaldskerfi, tengingaSpjald, tilkynna
-, tolu, lesaUpphaed, snyrtaUpphaed, upphaedInntak} from './portal.js';
+  geymt, geyma, ervalid, tengingaSpjald, tilkynna,
+  lesaUpphaed, snyrtaUpphaed, upphaedInntak, stofa, erTveir, lykill, opnaBodGlugga, tengdarVeitur
+} from './portal.js';
 import { NU_MAN, manHeiti, NAESTI, naestiMan, MAN, pPlus, pAn, pMed, lesaMedVsk, reiknivel } from './bokreikningur.js';
 
 const ek = await vardaHlid({ krefstAdmin: true });
@@ -23,16 +24,18 @@ async function start() {
   /* Útlitið á stjórnborðinu: hver notandi ræður röð spjaldanna, breidd,
      hvaða spjöld sjást og hvaða kaflar. Geymt í vafranum. */
   const LYKILL_UTLIT = 'glerhusid-stjornbord-' + (ek.id || 'gestur');
+  const LYKILL_STOFU = lykill(LYKILL_UTLIT);
   const SJALFGEFID_UTLIT = { rod: ['greidist', 'opnir', 'fast', 'orukkad'], breidd: {}, kaflar: { tilkynningar: true, listar: true } };
   let utlit = (() => {
     try {
-      const u = JSON.parse(localStorage.getItem(LYKILL_UTLIT));
+      /* Með stofuna aftast; eldri vistun án hennar til vara */
+      const u = JSON.parse(localStorage.getItem(LYKILL_STOFU) || localStorage.getItem(LYKILL_UTLIT));
       if (u && Array.isArray(u.rod)) return { rod: u.rod, breidd: u.breidd || {}, kaflar: Object.assign({}, SJALFGEFID_UTLIT.kaflar, u.kaflar) };
     } catch (villa) { /* ekkert vistað */ }
     return JSON.parse(JSON.stringify(SJALFGEFID_UTLIT));
   })();
   function vistaUtlit() {
-    try { localStorage.setItem(LYKILL_UTLIT, JSON.stringify(utlit)); } catch (villa) { /* lokaður gluggi */ }
+    try { localStorage.setItem(LYKILL_STOFU, JSON.stringify(utlit)); } catch (villa) { /* lokaður gluggi */ }
   }
   let breyta = false;
   let dregid = null;
@@ -45,12 +48,15 @@ async function start() {
       hlad = await Promise.all([
       g.verkefni(), g.taskar({}), g.fyrirtaeki(), g.notendur(), g.innri(), g.snid(),
       g.innriTaskar(), g.fyrirspurnir().catch(() => []),
-      g.bokhald('samningar').catch(() => []), g.bokhald('aukaverkefni').catch(() => [])
+      g.bokhald('samningar').catch(() => []), g.bokhald('aukaverkefni').catch(() => []),
+      g.bod ? g.bod().catch(() => []) : [], tengdarVeitur().catch(() => [])
     ]);
       geyma('stjornbord', hlad);
     }
     const [verkefni, taskar, fyrirtaeki, notendur, innriOll, snidin, okkar, fyrirspurnir,
-           samningar, aukaverkefni] = hlad;
+           samningar, aukaverkefni, bodin = [], tengdar = []] = hlad;
+    /* Reikningsdrög fara í það bókhaldskerfi sem er tengt (bæði ef bæði eru tengd) */
+    const bokhaldsveitur = [['payday', 'Payday'], ['dk', 'DK']].filter(([v]) => (tengdar || []).includes(v));
 
     /* Bókhaldið: sömu tölur og efst á bókhaldssíðunni, með sama VSK rofa */
     const { virkurI, fastI, aukaI } = reiknivel(samningar, aukaverkefni);
@@ -173,7 +179,7 @@ async function start() {
         stada: oinnheimt.length
           ? [oinnheimt.length + (oinnheimt.length === 1 ? ' verk bíður reiknings' : ' verk bíða reiknings'), 'raudt']
           : ['Allt rukkað', 'graent'],
-        undir: bokhaldskerfi() ? 'Fer í ' + bokhaldskerfi() + ' með einum smelli' : 'Í vinnslu ' + (kronur(ivinnslu) || kronur(0))
+        undir: bokhaldsveitur.length ? 'Drög í ' + bokhaldsveitur.map((x) => x[1]).join(' eða ') + ' með einum smelli' : 'Í vinnslu ' + (kronur(ivinnslu) || kronur(0))
       }) },
       seint: { heiti: 'Á eftir áætlun', smida: () => glerkort({
         midi: 'Komið fram yfir skiladag', tala: fjoldiTaska(seinir.length), slod: '#taskar',
@@ -299,6 +305,9 @@ async function start() {
 
       breytiBordi(),
 
+      /* ---------- ný stofa: það sem er eftir af uppsetningunni ---------- */
+      naestuSkref(),
+
       /* ---------- glerspjöldin, í þeirri röð og breidd sem notandinn valdi ---------- */
       synd.length ? spjaldaGrind() : null,
 
@@ -414,11 +423,27 @@ async function start() {
                           style: 'color:inherit; text-decoration:none', texti: v.titill })
               ]),
               el('span', { class: 'upph', texti: kronur(v.verd_okkar) }),
-              el('button', { type: 'button', texti: bokhaldskerfi() ? 'Senda í ' + bokhaldskerfi() : 'Rukkað', onclick: async () => {
-                await g.setjaReikning(v.id, 'rukkad');
-                if (bokhaldskerfi()) tilkynna('Reikningur fyrir ' + v.titill + ' (' + kronur(v.verd_okkar) + ') kominn í ' + bokhaldskerfi());
-                teikna();
-              } })
+              ...(bokhaldsveitur.length
+                /* Drög í Payday eða DK: ekkert er bókað eða sent á viðskiptavininn */
+                ? bokhaldsveitur.map(([veita, heiti]) => el('button', {
+                    type: 'button', texti: 'Drög í ' + heiti, title: 'Búa til reikningsdrög í ' + heiti,
+                    'aria-label': 'Búa til reikningsdrög í ' + heiti + ' fyrir ' + v.titill,
+                    onclick: async (e) => {
+                      const hn = e.currentTarget;
+                      hn.disabled = true; hn.textContent = 'Augnablik';
+                      try {
+                        const svar = await g.reikningsdrog({ veita, uppruni: 'verkefni', id: v.id });
+                        tilkynna(svar.texti);
+                        if (!svar.synidaemi) teikna(); else { hn.disabled = false; hn.textContent = 'Drög í ' + heiti; }
+                      } catch (villa) {
+                        tilkynna(villa.message || 'Drögin urðu ekki til. Prófaðu aftur.');
+                        hn.disabled = false; hn.textContent = 'Drög í ' + heiti;
+                      }
+                    } }))
+                : [el('button', { type: 'button', texti: 'Rukkað', onclick: async () => {
+                    await g.setjaReikning(v.id, 'rukkad');
+                    teikna();
+                  } })])
             ])))
           ]) : null,
 
@@ -432,7 +457,10 @@ async function start() {
                   const op = taskar.filter((t) => t.fyrirtaeki_id === f.id && t.stada !== 'lokid').length;
                   return el('tr', {}, [
                     el('td', {}, [
-                      el('div', { class: 'nafn', texti: f.nafn }),
+                      /* Smellt á nafnið: nafn, kennitala og netfang fyrir reikninga */
+                      el('button', { type: 'button', class: 'nafn', texti: f.nafn, title: 'Breyta fyrirtækinu',
+                                     style: 'background:none; border:0; padding:0; font:inherit; color:inherit; cursor:pointer; text-align:left',
+                                     onclick: () => fyrirtaekiForm(f) }),
                       f.er_askrift
                         ? el('div', { style: 'font-size:12.5px; color:var(--soft)',
                                       texti: 'Áskrift' + (f.askrift_verd ? ' · ' + kronur(f.askrift_verd) : '') })
@@ -447,6 +475,25 @@ async function start() {
             el('button', { type: 'button', class: 'btn btn--block btn--sm btn--ghost',
                            style: 'margin-top:14px', texti: 'Nýtt fyrirtæki',
                            onclick: () => nyttFyrirtaekiForm() })
+          ]),
+
+          /* aðgangar: bjóða notendum og boð sem bíða */
+          el('div', { class: 'card pblokk' }, [
+            el('h2', { style: 'font-size:17px; font-family:var(--f-body); font-weight:500', texti: 'Aðgangar' }),
+            el('p', { class: 'lead', style: 'font-size:14px; margin-top:8px',
+                      texti: bodin.length
+                        ? (bodin.length === 1 ? 'Eitt boð bíður.' : bodin.length + ' boð bíða.')
+                        : 'Bjóddu viðskiptavinum og starfsfólki inn.' }),
+            bodin.length ? el('div', { style: 'margin-top:14px; display:flex; flex-direction:column; gap:10px' },
+              bodin.slice(0, 6).map((b) => el('div', {}, [
+                el('div', { style: 'font-size:14.5px; font-weight:500', texti: b.nafn || b.netfang }),
+                el('div', { style: 'font-size:13px; color:var(--soft)',
+                            texti: (b.hlutverk === 'admin' ? 'Stjórnandi' : 'Viðskiptavinur' + (b.fyrirtaeki ? ' hjá ' + b.fyrirtaeki.nafn : ''))
+                              + (b.runnid_ut ? ', útrunnið' : ', gildir til ' + dags(b.utrunnid)) })
+              ]))) : null,
+            bodin.length > 6 ? el('a', { href: 'stillingar.html#adgangar', style: 'display:block; margin-top:10px; font-size:13.5px', texti: 'Öll boðin í Stillingum' }) : null,
+            el('button', { type: 'button', class: 'btn btn--block btn--sm btn--ghost', style: 'margin-top:14px', texti: 'Bjóða notanda',
+                           onclick: () => opnaBodGlugga({ fyrirtaeki, eftir: () => teikna() }) })
           ]),
 
           /* notendur sem þarf að tengja */
@@ -488,6 +535,31 @@ async function start() {
   /* ------------------------------------------------------------------
      Hlutar
      ------------------------------------------------------------------ */
+
+  /* Ný stofa: skrefin sem eru eftir úr uppsetningunni (byrja.html). Tveir
+     og sýnidæmið eru alltaf búin. */
+  function naestuSkref() {
+    const st = stofa();
+    if (g.prufa || !st || erTveir() || (st.uppsetning && st.uppsetning.lokid)) return null;
+    const u = st.uppsetning || {};
+    const SKREF = [['stofan', 'Nafn, merki og litur stofunnar'], ['verk', 'Prufupóstur á verk-netfangið'],
+                   ['vidskiptavinur', 'Fyrsti viðskiptavinurinn'], ['starfsfolk', 'Starfsfólkinu boðið'], ['tengingar', 'Tengingar']];
+    const eftir = SKREF.filter(([k]) => u[k] !== true);
+    return el('div', { class: 'card pblokk', style: 'margin-top:20px' }, [
+      el('h2', { style: 'font-size:17px; font-family:var(--f-body); font-weight:500', texti: 'Næstu skref' }),
+      el('p', { class: 'lead', style: 'font-size:14px; margin-top:8px',
+                texti: eftir.length ? 'Nokkur skref eru eftir áður en Glerhúsið er tilbúið.' : 'Öll skrefin eru búin.' }),
+      el('ul', { class: 'uppsetning', style: 'margin-top:12px' }, SKREF.map(([k, heiti], i) => el('li', {}, [
+        el('span', { class: 'uppsetning__nr', texti: u[k] === true ? '✓' : String(i + 1) }),
+        u[k] === true
+          ? el('span', { style: 'color:var(--soft); text-decoration:line-through', texti: heiti })
+          : el('a', { href: 'byrja.html#' + k, texti: heiti })
+      ]))),
+      el('div', { style: 'margin-top:16px; display:flex; gap:10px; flex-wrap:wrap' }, [
+        el('a', { class: 'btn btn--sm', href: 'byrja.html', texti: 'Halda áfram' })
+      ])
+    ]);
+  }
 
   function seintKort(seinir) {
     return el('div', { class: 'card card--navy bidur' + (seinir.length ? '' : ' bidur--tomt') }, [
@@ -591,8 +663,52 @@ async function start() {
     fyrVal.focus();
   }
 
+  /* Fyrirtæki breytt: nafn, kennitala og netfang fyrir reikninga (reikningsdrög þurfa kennitölu) */
+  function fyrirtaekiForm(f) {
+    const nafn = el('input', { type: 'text', required: true, value: f.nafn || '' });
+    const kennitala = el('input', { type: 'text', inputmode: 'numeric', autocomplete: 'off', value: f.kennitala || '', placeholder: '10 tölustafir' });
+    const reikningsnetfang = el('input', { type: 'email', autocomplete: 'off', value: f.reikningsnetfang || '', placeholder: 'bokhald@fyrirtaeki.is' });
+    const villa = el('div', { class: 'form-status form-status--err', hidden: true });
+    const d = el('dialog', { class: 'pdialog' }, [el('div', { class: 'pdialog__kort' }, [
+      el('div', { class: 'pdialog__haus' }, [
+        el('h2', { texti: f.nafn }),
+        el('button', { type: 'button', class: 'loka', 'aria-label': 'Loka', texti: '✕', onclick: () => d.close() })
+      ]),
+      el('form', { class: 'form-grid', style: 'margin-top:18px', novalidate: true, onsubmit: async (e) => {
+        e.preventDefault();
+        if (!nafn.value.trim()) { villa.textContent = 'Nafn vantar.'; villa.hidden = false; return; }
+        try {
+          /* Bara það sem breyttist fer með */
+          const breytt = { nafn: nafn.value.trim() };
+          if (kennitala.value.trim() !== (f.kennitala || '')) breytt.kennitala = kennitala.value;
+          if (reikningsnetfang.value.trim() !== (f.reikningsnetfang || '')) breytt.reikningsnetfang = reikningsnetfang.value;
+          await g.uppfaeraFyrirtaeki(f.id, breytt);
+          d.close(); teikna();
+        } catch (er) { villa.textContent = er.message; villa.hidden = false; }
+      } }, [
+        el('label', { class: 'field' }, [el('span', { texti: 'Nafn' }), nafn]),
+        el('label', { class: 'field' }, [el('span', { texti: 'Kennitala' }), kennitala]),
+        el('label', { class: 'field' }, [el('span', { texti: 'Netfang fyrir reikninga' }), reikningsnetfang]),
+        el('p', { class: 'skyring', texti: 'Reikningsdrög í Payday og DK þurfa kennitölu fyrirtækisins.' }),
+        villa,
+        el('div', { style: 'display:flex; gap:10px; flex-wrap:wrap' }, [
+          el('button', { type: 'submit', class: 'btn btn--sm', texti: 'Vista' }),
+          el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Bjóða notanda hjá fyrirtækinu',
+                         onclick: () => { d.close(); opnaBodGlugga({ fyrirtaeki_id: f.id, eftir: () => teikna() }); } })
+        ])
+      ])
+    ])]);
+    d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+    d.addEventListener('close', () => d.remove());
+    document.body.append(d);
+    d.showModal();
+    nafn.focus();
+  }
+
   function nyttFyrirtaekiForm() {
     const nafn = el('input', { type: 'text', required: true, placeholder: 'Nafn fyrirtækis' });
+    const kennitala = el('input', { type: 'text', inputmode: 'numeric', autocomplete: 'off', placeholder: '10 tölustafir' });
+    const reikningsnetfang = el('input', { type: 'email', autocomplete: 'off', placeholder: 'bokhald@fyrirtaeki.is' });
     const askrift = el('input', { type: 'text', placeholder: 'Til dæmis: vefsíða í áskrift' });
     const villa = el('div', { class: 'form-status form-status--err', hidden: true });
 
@@ -626,6 +742,8 @@ async function start() {
         try {
           await g.nyttFyrirtaeki({
             nafn: nafn.value.trim(),
+            ...(kennitala.value.trim() ? { kennitala: kennitala.value } : {}),
+            ...(reikningsnetfang.value.trim() ? { reikningsnetfang: reikningsnetfang.value } : {}),
             askrift: askrift.value.trim() || null,
             er_askrift: erAskrift.value === 'ja',
             askrift_verd: erAskrift.value === 'ja' ? lesaUpphaed(verd) : null
@@ -634,6 +752,8 @@ async function start() {
         } catch (f) { villa.textContent = f.message; villa.hidden = false; }
       } }, [
         el('label', { class: 'field' }, [el('span', { texti: 'Nafn' }), nafn]),
+        el('label', { class: 'field' }, [el('span', { texti: 'Kennitala' }), kennitala]),
+        el('label', { class: 'field' }, [el('span', { texti: 'Netfang fyrir reikninga' }), reikningsnetfang]),
         el('label', { class: 'field' }, [el('span', { texti: 'Hvað gerum við fyrir þau' }), askrift]),
         el('div', { class: 'field' }, [el('span', { texti: 'Greitt' }), erAskrift]),
         verdReitur,

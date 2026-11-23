@@ -32,7 +32,7 @@
 
 <main class="inn">
   <div class="card inn__kort">
-    <img class="inn__logo" src="/assets/img/tveir-merki-gegnsaett.png" alt="Tveir" width="160" height="40">
+    <img class="inn__logo" src="../assets/merki/glerhusid-logo-blatt.svg" alt="Glerhúsið" width="170" height="40">
     <h1>Vinnusvæði</h1>
     <p class="lead" id="inngangur">Skráðu þig inn með netfangi og lykilorði, eða fáðu hlekk sendan í póstinum.</p>
 
@@ -64,9 +64,9 @@
     <div class="prufubanner" id="prufubanner" hidden></div>
 
     <p class="inn__fot">
-      Ekki með aðgang? <a href="https://tveir.is/glerhusid/index.html#kynning">Sæktu um aðgang</a>.<br>
-      Kemstu ekki inn? Sendu okkur línu á <a href="mailto:tveir@tveir.is">tveir@tveir.is</a>
-      eða hringdu í <a href="tel:+3548572319">857-2319</a>.
+      Ekki með aðgang? <a href="https://tveir.is/glerhusid/#kynning">Sæktu um aðgang</a>.<br>
+      Kemstu ekki inn? Talaðu við þann sem bauð þér, eða sendu línu á
+      <a href="mailto:tveir@tveir.is">tveir@tveir.is</a> eða hringdu í <a href="tel:+3548572319">857-2319</a>.
     </p>
   </div>
 </main>
@@ -163,6 +163,13 @@ if (g.prufa || sersnid) {
   tengill.href = 'https://tveir.is/glerhusid/byggja.html';
   tengill.textContent = 'Settu saman';
   banner.append(tengill, '.');
+  if (g.prufa && !heima) {
+    /* Sýnidæmið: alvöru kerfið er á tveir.is/glerhus/kerfi */
+    const alvoru = document.createElement('a');
+    alvoru.href = 'https://tveir.is/glerhus/kerfi/';
+    alvoru.textContent = 'Skráðu þig inn hér';
+    banner.append(' Ertu með aðgang? ', alvoru, '.');
+  }
   if (!heima && !g.prufa) {
     /* Alvöru kerfi: gesturinn prófaði sýnidæmið í þessum vafra. Innskráningin helst,
        og hægt er að hreinsa sýnidæmið í burtu. */

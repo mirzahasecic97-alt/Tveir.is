@@ -102,17 +102,7 @@ async function start() {
 
           simaKort(),
 
-          el('div', { class: 'card pblokk' }, [
-            el('h2', { style: 'font-size:17px; font-family:var(--f-body); font-weight:500',
-                       texti: 'Þarftu okkur strax' }),
-            el('p', { class: 'lead', style: 'font-size:14px; margin-top:8px',
-                      texti: 'Ef eitthvað er brotið eða brennur má alltaf hringja.' }),
-            el('p', { style: 'margin-top:12px; font-size:14.5px' }, [
-              el('a', { href: 'tel:+3548572319', texti: '857-2319' }),
-              document.createTextNode('  ·  '),
-              el('a', { href: 'mailto:tveir@tveir.is', texti: 'tveir@tveir.is' })
-            ])
-          ])
+          strax()
         ])
       ])
     ]);
@@ -121,6 +111,26 @@ async function start() {
   /* ------------------------------------------------------------------
      Hlutar
      ------------------------------------------------------------------ */
+
+  /* Hvert á að snúa sér. Síminn er bara hjá Tveir, aðrar stofur fá
+     netfangið sitt fyrir svör, og spjaldið hverfur ef það vantar. */
+  function strax() {
+    const s = ek.stofa;
+    const tveir = !s || s.slug === 'tveir';
+    const netfang = tveir ? 'tveir@tveir.is' : s.netfang;
+    if (!netfang) return null;
+    return el('div', { class: 'card pblokk' }, [
+      el('h2', { style: 'font-size:17px; font-family:var(--f-body); font-weight:500',
+                 texti: 'Þarftu okkur strax' }),
+      el('p', { class: 'lead', style: 'font-size:14px; margin-top:8px',
+                texti: tveir ? 'Ef eitthvað er brotið eða brennur má alltaf hringja.' : 'Ef eitthvað liggur á, sendu okkur línu.' }),
+      el('p', { style: 'margin-top:12px; font-size:14.5px' }, [
+        tveir ? el('a', { href: 'tel:+3548572319', texti: '857-2319' }) : null,
+        tveir ? document.createTextNode('  ·  ') : null,
+        el('a', { href: 'mailto:' + netfang, texti: netfang })
+      ])
+    ]);
+  }
 
   function flipiHnappur(gildi, heiti, fjoldi) {
     return el('button', {
@@ -142,7 +152,7 @@ async function start() {
 
     const inntak = el('input', {
       type: 'file', style: 'display:none',
-      accept: 'image/png,image/jpeg,image/svg+xml,image/webp',
+      accept: 'image/png,image/jpeg,image/webp',
       onchange: async (e) => {
         const skra = (e.target.files || [])[0];
         if (!skra) return;
