@@ -786,9 +786,11 @@
 .merkikort__synd {
   display: flex; align-items: center; justify-content: center;
   min-height: 84px; margin-top: 12px; padding: 12px;
-  background: var(--bg); border: 1px dashed rgba(28, 48, 80, .18);
+  border: 1px dashed rgba(28, 48, 80, .18);
   border-radius: var(--r-input);
 }
+/* Köflótt eins og gegnsæi, svo hvítt eða ljóst merki sjáist líka */
+.merkikort__synd:has(img) { background-color: #c9d0db; background-image: linear-gradient(45deg,#b7c0ce 25%,transparent 25%),linear-gradient(-45deg,#b7c0ce 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#b7c0ce 75%),linear-gradient(-45deg,transparent 75%,#b7c0ce 75%); background-size: 16px 16px; background-position: 0 0,0 8px,8px -8px,-8px 0; }
 .merkikort__synd img { max-height: 58px; max-width: 100%; object-fit: contain; }
 .merkikort__synd span { font-size: 13px; color: var(--soft); }
 .merkikort__hnappar { display: flex; gap: 8px; margin-top: 12px; }

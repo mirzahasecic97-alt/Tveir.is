@@ -1480,6 +1480,7 @@ h2 em {
   background: var(--bg);
   border: 1px dashed rgba(255, 255, 255, 0.32);
 }
+.merkikort__synd:has(img) { background-color: #c9d0db; background-image: linear-gradient(45deg,#b7c0ce 25%,transparent 25%),linear-gradient(-45deg,#b7c0ce 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#b7c0ce 75%),linear-gradient(-45deg,transparent 75%,#b7c0ce 75%); background-size: 16px 16px; background-position: 0 0,0 8px,8px -8px,-8px 0; }
 .merkikort__synd span {
   color: var(--soft);
 }
