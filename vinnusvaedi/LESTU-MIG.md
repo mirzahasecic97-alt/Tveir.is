@@ -541,10 +541,13 @@ samt ef röðin snýst við, en undirverkin sjást ekki fyrr en taflan er til.
 **3. Google skriftan.** Á script.google.com, skráð inn sem tveir@tveir.is:
 
 1. Opnaðu verkefnið með `verk-postur.gs`.
-2. Afritaðu **allt** úr nýju `verk-postur.gs` og límdu yfir það sem er þar.
-3. Settu aftur inn línurnar tvær sem eru auðar í afritinu: `ANON` (anon
-   lykillinn úr `assets/stillingar.js`) og `LYKILL` (sami lykill og var
-   þar áður, hann liggur í töflunni `stillingar_innri`).
+2. `ANON` og `LYKILL` eru ekki í kóðanum heldur í **Project Settings**
+   (tannhjólið) > **Script Properties**. Séu þau ekki þar, settu þau inn
+   FYRST: `ANON` (anon lykillinn úr `assets/stillingar.js`) og `LYKILL`
+   (gildið í töflunni `stillingar_innri`, línan `postur_lykill`).
+3. Afritaðu svo **allt** úr nýju `verk-postur.gs`, límdu yfir það sem er
+   þar og keyrðu `profaLykil` einu sinni. Executions sýnir "Lykillinn
+   virkar" eða hvað vantar. Röðin stendur líka efst í `verk-postur.gs`.
 4. Ýttu á **Save**. Vaktin sem keyrir á 5 mínútna fresti kallar sjálf á
    nýja hlutann, það þarf ekki að setja hana upp aftur.
 5. Prófaðu: hakaðu í undirverk hjá prufufyrirtæki með hlekk, bíddu í 5
@@ -831,8 +834,8 @@ Lyklar fara aldrei í kóðann sjálfan og aldrei á vefinn.
    Nefndu hana `tolfraedi` (Google bætir `.gs` við).
 2. Afritaðu **allt** úr `tolfraedi.gs` hér og límdu inn í nýju skrána.
 3. Opnaðu `verk-postur.gs` í sama verkefni, afritaðu **allt** úr nýju
-   `verk-postur.gs` og límdu yfir. Settu aftur inn `ANON` og `LYKILL` eins og
-   áður (sjá kaflann Undirverk).
+   `verk-postur.gs` og límdu yfir. `ANON` og `LYKILL` eru í Script Properties
+   (sjá kaflann Undirverk), ekki í kóðanum, svo þeim þarf ekki að breyta.
 4. **Save** (diskurinn).
 5. Efst: veldu fallið `setjaTolfraedi` í fellilistanum og ýttu á **Run**. Google
    biður um leyfi: **Review permissions** -> tveir@tveir.is -> **Allow**. Þetta

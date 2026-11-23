@@ -25,7 +25,7 @@
    Tölfræði.
    ========================================================================== */
 
-const TOLFRAEDI = 'https://tveir.is/vinnusvaedi/tolfraedi.html';
+const TOLFRAEDI = 'https://tveir.is/glerhus/kerfi/tolfraedi.html';
 /* Meta styður hverja útgáfu í um tvö ár. Hækka þegar Meta varar við. */
 const META_GRAPH = 'https://graph.facebook.com/v26.0/';
 const TOLF_DAGAR = 3;          /* hve marga liðna daga við sækjum í hvert sinn */

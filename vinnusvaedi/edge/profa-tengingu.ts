@@ -2,31 +2,53 @@
 // Supabase Edge Function: profa-tengingu
 //
 // Stillingar síðan kallar á þetta strax eftir að lykill er vistaður.
-// Fallið les lykilinn úr Vault (bara hér, með service_role sem Supabase
-// setur sjálft inn), prófar hann hjá veitunni og skráir niðurstöðuna.
-// Lykillinn fer aldrei aftur út á síðuna.
+// Fallið les lykil stofunnar úr Vault (bara hér, með service_role sem
+// Supabase setur sjálft inn), prófar hann hjá veitunni og skráir
+// niðurstöðuna. Lykillinn fer aldrei aftur út á síðuna.
 //
-// Uppsetning: Supabase -> Edge Functions -> Deploy a new function -> Via
-// Editor, nafn profa-tengingu, líma þessa skrá inn. Engin leyndarmál þarf
-// að setja inn: SUPABASE_URL, SUPABASE_ANON_KEY og SUPABASE_SERVICE_ROLE_KEY
-// eru alltaf til staðar í Edge Functions.
+// Stofan kemur bara úr rpc('min_stada') með JWT þess sem kallar, aldrei úr
+// beiðninni sjálfri. Bara stjórnandi virkrar stofu má prófa.
+//
+// Uppsetning: Supabase -> Edge Functions -> profa-tengingu -> líma þessa
+// skrá inn. Verify JWT stendur á. Engin leyndarmál þarf að setja inn:
+// SUPABASE_URL, SUPABASE_ANON_KEY og SUPABASE_SERVICE_ROLE_KEY eru alltaf til
+// staðar í Edge Functions.
 // ==========================================================================
 
+// deno-lint-ignore-file no-explicit-any
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+/* Sameiginlegar reglur (eins í hverju falli) */
+const LEYFT = ['https://tveir.is', 'https://www.tveir.is', 'https://glerhusid.vercel.app'];
+const cors = (req: Request) => {
+  const uppruni = req.headers.get('Origin') || '';
+  return {
+    'Access-Control-Allow-Origin': LEYFT.includes(uppruni) ? uppruni : LEYFT[0],
+    'Vary': 'Origin',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
 };
-const svara = (gogn: unknown, stada = 200) =>
-  new Response(JSON.stringify(gogn), { status: stada, headers: { ...CORS, 'Content-Type': 'application/json' } });
+const svara = (req: Request, gogn: unknown, stada = 200) =>
+  new Response(JSON.stringify(gogn), { status: stada, headers: { ...cors(req), 'Content-Type': 'application/json' } });
+
+type Stada = { stofa_id: string; stada: string; er_admin: boolean; er_eigandi: boolean; slug: string; nafn: string; er_rekstraradili: boolean };
+async function hverErEg(notandi: any): Promise<Stada | null> {
+  const { data, error } = await notandi.rpc('min_stada');
+  if (error) return null;
+  const ek = Array.isArray(data) ? data[0] : data;
+  return ek && ek.stofa_id ? ek as Stada : null;
+}
 
 type Lyklar = Record<string, string>;
-type Nidurstada = { ok: boolean; svar: string };
+type Nidurstada = { ok: boolean; svar: string; likon?: string[] };
 
 const BID = 12000;
 const saekja = (slod: string, valkostir: RequestInit = {}) => fetch(slod, { ...valkostir, signal: AbortSignal.timeout(BID) });
+
+/* Líkön sem Glerhúsið býður upp á hjá OpenAI. Prufan geymir bara þau sem
+   lykillinn hefur aðgang að OG eru á þessum lista. */
+const OPENAI_LIKON = /^(gpt-5(\.[0-9]+)?(-mini|-nano)?|gpt-4\.1(-mini|-nano)?|gpt-4o(-mini)?|o3(-mini)?|o4-mini)$/;
 
 /* Algeng svör frá veitunum þýdd á mannamál */
 function villa(stada: number, heiti: string): Nidurstada {
@@ -38,7 +60,7 @@ function villa(stada: number, heiti: string): Nidurstada {
   return { ok: false, svar: heiti + ' svaraði með villu ' + stada + '.' };
 }
 
-const PROF: Record<string, (k: Lyklar, s: Record<string, string>) => Promise<Nidurstada>> = {
+const PROF: Record<string, (k: Lyklar, s: Record<string, unknown>) => Promise<Nidurstada>> = {
   async claude(k) {
     const r = await saekja('https://api.anthropic.com/v1/models?limit=1', {
       headers: { 'x-api-key': k.lykill || '', 'anthropic-version': '2026-10-21' }
@@ -48,7 +70,16 @@ const PROF: Record<string, (k: Lyklar, s: Record<string, string>) => Promise<Nid
 
   async chatgpt(k) {
     const r = await saekja('https://api.openai.com/v1/models', { headers: { Authorization: 'Bearer ' + (k.lykill || '') } });
-    return r.ok ? { ok: true, svar: 'OpenAI tók við lyklinum' } : villa(r.status, 'OpenAI');
+    if (!r.ok) return villa(r.status, 'OpenAI');
+    const d = await r.json().catch(() => null);
+    const likon = (Array.isArray(d && d.data) ? d.data : [])
+      .map((m: any) => String((m && m.id) || ''))
+      .filter((id: string) => OPENAI_LIKON.test(id))
+      .sort()
+      .reverse()
+      .slice(0, 20);
+    if (!likon.length) return { ok: false, svar: 'OpenAI tók við lyklinum en hann hefur ekki aðgang að neinu líkani sem Glerhúsið notar.', likon };
+    return { ok: true, svar: 'OpenAI tók við lyklinum', likon };
   },
 
   async payday(k) {
@@ -63,6 +94,8 @@ const PROF: Record<string, (k: Lyklar, s: Record<string, string>) => Promise<Nid
 
   async dk(k) {
     const r = await saekja('https://api.dkplus.is/api/v1/company', { headers: { Authorization: 'Bearer ' + (k.token || '') } });
+    // Samkvæmt dkPlus swagger þýðir 401 að tokeninn vanti réttindi, ekki bara að hann sé rangur
+    if (r.status === 401) return { ok: false, svar: 'DK tók ekki við tokeninum eða hann vantar réttindi. Athugaðu réttindi notandans í dkPlus.' };
     if (!r.ok) return villa(r.status, 'DK');
     const d = await r.json().catch(() => null);
     const nafn = d && d.Information && d.Information.Company && d.Information.Company.Name;
@@ -99,32 +132,47 @@ const PROF: Record<string, (k: Lyklar, s: Record<string, string>) => Promise<Nid
 };
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
-  if (req.method !== 'POST') return svara({ ok: false, svar: 'Bara POST' }, 405);
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors(req) });
+  if (req.method !== 'POST') return svara(req, { ok: false, svar: 'Bara POST' }, 405);
 
   const url = Deno.env.get('SUPABASE_URL')!;
   const notandi = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, {
-    global: { headers: { Authorization: req.headers.get('Authorization') || '' } }
+    global: { headers: { Authorization: req.headers.get('Authorization') || '' } },
+    auth: { persistSession: false }
   });
-  const { data: admin } = await notandi.rpc('er_admin');
-  if (admin !== true) return svara({ ok: false, svar: 'Bara stjórnendur geta prófað tengingar' }, 403);
+  const ek = await hverErEg(notandi);
+  if (!ek || ek.stada !== 'virk' || ek.er_admin !== true) return svara(req, { ok: false, svar: 'Bara stjórnendur geta prófað tengingar' }, 403);
 
-  const { veita } = await req.json().catch(() => ({ veita: '' }));
-  const prof = PROF[String(veita)];
-  if (!prof) return svara({ ok: false, svar: 'Óþekkt tenging' }, 400);
+  // Tómur eða ógildur bolur (líka JSON null) fær sama svar og óþekkt tenging, ekki 500
+  const inn = await req.json().catch(() => null);
+  const veita = inn && typeof inn === 'object' && typeof inn.veita === 'string' ? inn.veita : '';
+  // Bara eigin lyklar PROF (ekki toString, constructor o.s.frv. úr prototype)
+  const prof = Object.prototype.hasOwnProperty.call(PROF, String(veita)) ? PROF[String(veita)] : null;
+  if (!prof) return svara(req, { ok: false, svar: 'Óþekkt tenging' }, 400);
 
   const bak = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
-  const [{ data: lyklar }, { data: lina }] = await Promise.all([
-    bak.rpc('tenging_lykill', { p_veita: veita }),
-    bak.from('tengingar').select('stillingar').eq('veita', veita).maybeSingle()
+  const [{ data: lyklar, error: lykilVilla }, { data: lina }] = await Promise.all([
+    bak.rpc('tenging_lykill', { p_stofa: ek.stofa_id, p_veita: veita }),
+    bak.from('tengingar').select('stillingar').eq('stofa_id', ek.stofa_id).eq('veita', veita).maybeSingle()
   ]);
-  if (!lyklar) return svara({ ok: false, svar: 'Enginn lykill vistaður fyrir þessa tengingu' }, 404);
+  if (lykilVilla) console.error('tenging_lykill', lykilVilla.code, lykilVilla.message);
+  if (!lyklar) return svara(req, { ok: false, svar: 'Enginn lykill vistaður fyrir þessa tengingu' }, 404);
 
+  const stillingar = ((lina && lina.stillingar) || {}) as Record<string, unknown>;
   let n: Nidurstada;
-  try { n = await prof(lyklar as Lyklar, ((lina && lina.stillingar) || {}) as Record<string, string>); }
+  try { n = await prof(lyklar as Lyklar, stillingar); }
   catch (e) {
     n = { ok: false, svar: (e as Error).name === 'TimeoutError' ? 'Veitan svaraði ekki innan 12 sekúndna. Prófaðu aftur.' : 'Náði ekki sambandi við veituna.' };
   }
-  await bak.rpc('skra_tengingarprufu', { p_veita: veita, p_svar: (n.ok ? 'OK: ' : '') + n.svar });
-  return svara(n);
+
+  // ChatGPT: líkönin sem lykillinn má nota fara í stillingar tengingarinnar (ekki leyndarmál)
+  if (veita === 'chatgpt' && Array.isArray(n.likon) && lina) {
+    const ny = { ...stillingar, likon: n.likon };
+    if (JSON.stringify(ny).length <= 2000) {
+      await bak.from('tengingar').update({ stillingar: ny }).eq('stofa_id', ek.stofa_id).eq('veita', 'chatgpt');
+    }
+  }
+
+  await bak.rpc('skra_tengingarprufu', { p_stofa: ek.stofa_id, p_veita: veita, p_svar: (n.ok ? 'OK: ' : '') + n.svar });
+  return svara(req, n);
 });

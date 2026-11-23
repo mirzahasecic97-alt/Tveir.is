@@ -21,26 +21,51 @@
    verkefni. tilkynna_ sendir líka samþykktar skýrslur.
    Pósthólfið á vinnusvæðinu (Samskipti) er í postholf.gs, dagatalið í dagatal.gs.
 
-   LYKILL hér að neðan er skilinn eftir auður í þessu afriti. Raunverulegi
-   lykillinn liggur bara í skriftunni í Google og í töflunni stillingar_innri.
+   Leyndarmál liggja bara í Script Properties (Project Settings > Script
+   Properties), aldrei í kóðanum:
+     ANON     anon lykill Supabase
+     LYKILL   lykill Tveir skriftarinnar (stillingar_innri.postur_lykill,
+              skráður í vel_lyklar: bara Tveir, öll umfang)
+   Skrárnar postholf.gs, dagatal.gs og tolfraedi.gs nota sömu fasta.
+
+   RÖÐIN ÞEGAR ÞESSI ÚTGÁFA ER SETT INN (eldri kóðinn var með lyklana í textanum):
+     1. Project Settings > Script Properties > Add script property:
+        ANON og LYKILL, með sömu gildum og standa núna efst í gamla kóðanum
+        (LYKILL er sama gildi og stillingar_innri.postur_lykill). Save.
+        Þetta fyrst: kóðinn hér les bara Script Properties.
+     2. Þá fyrst er nýja verk-postur.gs (og tolfraedi.gs) límd inn og vistuð.
+     3. Keyra profaLykil einu sinni í ritlinum. Executions sýnir
+        "Lykillinn virkar" eða hvað vantar.
+     4. Deploy > Manage deployments > blýanturinn > Version: New version >
+        Deploy, svo vefappið (póstur strax) lesi líka Script Properties.
+   Þetta má gera hvenær sem er í skrefum 1 til 5: lykillinn er sá sami.
+   Í skrefi 6 er lyklinum snúið. Þá er bara gildinu LYKILL í Script
+   Properties skipt út fyrir nýja gildið úr skrefi 6 og profaLykil keyrt
+   aftur. Engin ný útgáfa af kóðanum. Póstur á verk@ sem berst á meðan
+   gamli lykillinn er inni týnist ekki: hann bíður og er lesinn þegar nýi
+   lykillinn er kominn (innan 3 daga), og tveir@tveir.is fær einn póst um
+   að laga þurfi lykilinn.
    ========================================================================== */
 
 const SUPABASE = 'https://wusqvolbwjysnjrfahjy.supabase.co';
 const GRUNNUR = SUPABASE + '/rest/v1/rpc/';
-const VINNUSVAEDI = 'https://tveir.is/vinnusvaedi/yfirlit.html';
-const ANON = 'SETTU_ANON_LYKILINN_HER';
-const LYKILL = 'SETTU_POSTUR_LYKILINN_HER';
+const VINNUSVAEDI = 'https://tveir.is/glerhus/kerfi/yfirlit.html';
+const ANON = PropertiesService.getScriptProperties().getProperty('ANON') || '';
+const LYKILL = PropertiesService.getScriptProperties().getProperty('LYKILL') || '';
 const NETFANG = 'verk@tveir.is';
 /* Hækka í hvert sinn sem kóðanum er breytt. Vefappið keyrir útgáfuna sem var
    birt síðast, en 5 mínútna vaktin keyrir alltaf nýjasta kóðann. Passi
    útgáfurnar ekki saman sendir vefappið ekkert, vaktin tekur við og
    tveir@tveir.is fær einn póst um að birta nýja útgáfu. */
-const UTGAFA = '2026-11-19-3';
+const UTGAFA = '2026-11-24-1';
 
 /* Keyrt einu sinni með höndunum: setur upp 5 mínútna vaktina. Eyðir bara
    gömlum lesaVerk vöktum, svo daglega tölfræðisöfnunin (setjaTolfraedi í
    tolfraedi.gs) lifir af. */
 function setja() {
+  if (!ANON || !LYKILL) {
+    throw new Error('Vantar ANON eða LYKILL í Script Properties. Project Settings > Script Properties > Add script property.');
+  }
   ScriptApp.getProjectTriggers()
     .filter((t) => t.getHandlerFunction() === 'lesaVerk')
     .forEach((t) => ScriptApp.deleteTrigger(t));
@@ -48,8 +73,52 @@ function setja() {
   lesaVerk();
 }
 
+/* Keyrt með höndunum eftir að Script Properties eru sett eða LYKILL skipt
+   út (skref 6). Spyr gagnagrunninn um sendanda sem er ekki til: réttur
+   lykill svarar "othekktur", rangur "lykill". Ekkert verður til. */
+function profaLykil() {
+  if (!ANON || !LYKILL) {
+    throw new Error('Vantar ' + (!ANON ? 'ANON' : 'LYKILL') + ' í Script Properties. Project Settings > Script Properties > Add script property.');
+  }
+  const stada = lykilStada_();
+  if (stada === null) throw new Error('Náði ekki í Supabase. Er ANON réttur?');
+  if (stada === 'hafnad') throw new Error('Gagnagrunnurinn hafnar LYKLI. Settu gildið úr SQL Editor í LYKILL í Script Properties.');
+  PropertiesService.getScriptProperties().deleteProperty('lykill_vidvorun');
+  console.log('Lykillinn virkar.');
+  return 'Lykillinn virkar.';
+}
+
+/* 'ok', 'hafnad' eða null (netið eða ANON) */
+function lykilStada_() {
+  const svar = kalla_('taskur_ur_posti', { p_fra: 'enginn-prufa@tveir.is', p_efni: '', p_texti: '', p_thradur: null });
+  if (!svar) return null;
+  return svar.villa === 'lykill' ? 'hafnad' : 'ok';
+}
+
+/* Einn póstur á sólarhring til tveir@tveir.is um að lykil vanti eða sé hafnað */
+function vidvorunLykill_(texti) {
+  const eig = PropertiesService.getScriptProperties();
+  const sidast = Number(eig.getProperty('lykill_vidvorun') || 0);
+  if (Date.now() - sidast < 24 * 3600e3) return;
+  eig.setProperty('lykill_vidvorun', String(Date.now()));
+  try {
+    GmailApp.sendEmail('tveir@tveir.is', 'Vinnusvæðið: laga þarf lykil skriftarinnar',
+      texti + '\n\nLagfæring í script.google.com: Project Settings > Script Properties. '
+      + 'Settu rétt gildi í ANON og LYKILL, vistaðu og keyrðu svo profaLykil í ritlinum.',
+      { name: 'Vinnusvæðið' });
+  } catch (villa) {
+    /* skiptir ekki máli, Executions loggið sýnir það líka */
+  }
+}
+
 function lesaVerk() {
   PropertiesService.getScriptProperties().setProperty('utgafa', UTGAFA);
+  if (!ANON || !LYKILL) {
+    vidvorunLykill_('Það vantar ANON eða LYKILL í Script Properties skriftarinnar á tveir@tveir.is.');
+    console.log('Vantar ANON eða LYKILL í Script Properties. Ekkert lesið.');
+    return;
+  }
+  let hafnad = false;
   const skrad = merki_('Verk/Skrad');
   const othekkt = merki_('Verk/Othekkt');
   const eiginlegir = PropertiesService.getScriptProperties();
@@ -68,6 +137,9 @@ function lesaVerk() {
       const svar = kalla_('taskur_ur_posti', { p_fra: fra, p_efni: p.getSubject(),
         p_texti: hreinsa_(p.getPlainBody()), p_thradur: thradur.getId() });
       if (!svar) return; /* netið datt út, reynum aftur eftir 5 mín */
+      /* Gagnagrunnurinn hafnaði lyklinum (til dæmis eftir að honum var snúið í
+         skrefi 6): pósturinn bíður þar til LYKILL er lagaður, hann má ekki týnast */
+      if (svar.villa === 'lykill') { hafnad = true; return; }
 
       buid.push(id);
       if (svar.ok) {
@@ -77,7 +149,7 @@ function lesaVerk() {
           ? 'Takk, ' + svar.fjoldi + ' verk eru komin á verklistann hjá Tveir:'
           : 'Takk, þetta er komið á verklistann hjá Tveir:';
         p.reply(inngangur + '\n\n' + titlar.map((t) => '- ' + t).join('\n')
-          + '\n\nÞú getur fylgst með stöðunni á https://tveir.is/vinnusvaedi\n\nKveðja,\nTveir',
+          + '\n\nÞú getur fylgst með stöðunni á ' + VINNUSVAEDI + '\n\nKveðja,\nTveir',
           { name: 'Tveir' });
       } else if (svar.villa === 'othekktur') {
         thradur.addLabel(othekkt);
@@ -87,6 +159,18 @@ function lesaVerk() {
 
   if (buid.length > 500) buid = buid.slice(-500);
   eiginlegir.setProperty('buid', JSON.stringify(buid));
+  /* Berist enginn póstur sést hafnaður lykill ekki hér að ofan, en þá fer
+     heldur enginn póstur um lokin verk (listarnir koma tómir). Því er spurt
+     einu sinni á klukkustund. */
+  if (!hafnad && Date.now() - Number(eiginlegir.getProperty('lykill_profad') || 0) > 3600e3) {
+    const stada = lykilStada_();
+    if (stada !== null) eiginlegir.setProperty('lykill_profad', String(Date.now()));
+    if (stada === 'hafnad') hafnad = true;
+  }
+  if (hafnad) {
+    vidvorunLykill_('Gagnagrunnurinn hafnar LYKLI skriftarinnar á tveir@tveir.is. Póstur á ' + NETFANG
+      + ' bíður og verður að verkum þegar réttur lykill er kominn.');
+  }
 
   /* Pósthólfið á vinnusvæðinu (postholf.gs). Villa þar stöðvar aldrei verkin. */
   if (typeof samstillaPostholf_ === 'function') {
@@ -110,7 +194,7 @@ function doPost(e) {
   } catch (villa) {
     gogn = {};
   }
-  if (!gogn || typeof gogn.lykill !== 'string' || gogn.lykill !== LYKILL) {
+  if (!LYKILL || !gogn || typeof gogn.lykill !== 'string' || gogn.lykill !== LYKILL) {
     return ContentService.createTextOutput('nei');
   }
   const eiginlegir = PropertiesService.getScriptProperties();
@@ -175,7 +259,7 @@ function tilkynnaLokid_() {
     const texti = (fornafn ? 'Hæ ' + fornafn + ',\n\n' : '')
       + (taskar.length > 1 ? 'Þessi verk eru klár:' : 'Þetta er klárt:')
       + '\n\n' + taskar.map((t) => '- ' + t.titill).join('\n')
-      + '\n\nÞú sérð stöðuna á https://tveir.is/vinnusvaedi\n\nKveðja,\nTveir';
+      + '\n\nÞú sérð stöðuna á ' + VINNUSVAEDI + '\n\nKveðja,\nTveir';
     const html = postHtml_({
       fornafn: fornafn,
       fyrirsogn: taskar.length > 1 ? 'Verkin eru klár' : 'Verkið er klárt',
@@ -440,6 +524,10 @@ function undirritud_(tokn, slod) {
 }
 
 function kalla_(fall, gogn) {
+  if (!ANON || !LYKILL) {
+    console.log('Vantar ANON eða LYKILL í Script Properties');
+    return null;
+  }
   try {
     const r = UrlFetchApp.fetch(GRUNNUR + fall, {
       method: 'post',
