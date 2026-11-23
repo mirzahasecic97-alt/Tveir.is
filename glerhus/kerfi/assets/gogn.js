@@ -454,11 +454,29 @@ async function supabaseBakendi() {
      svarar PostgREST PGRST200 áður en nokkuð er keyrt eða skrifað. Þá er sama
      beiðni send aftur án vísbendinga og þeim sleppt það sem eftir er í
      flipanum. Skilgreint fyrir createClient svo fetch geti lesið það strax. */
+  /* Munað í vafranum: þegar ljóst er að gagnagrunnurinn þekkir ekki
+     vísbendingarnar er þeim sleppt strax við næstu síðu, svo hver listi
+     fari ekki tvisvar. Ef tengingin verður tvíræð án vísbendinga (PGRST201)
+     er minnið hreinsað og þær notaðar aftur frá næstu síðu. */
+  const VISBENDING_MINNI = 'glerhus-tveir-visbendingar';
   let visbendingar = true;
+  try { visbendingar = localStorage.getItem(VISBENDING_MINNI) !== 'nei'; } catch (e) { /* lokað */ }
+  function munaVisbendingar(nota) {
+    visbendingar = nota;
+    try {
+      if (nota) localStorage.removeItem(VISBENDING_MINNI);
+      else localStorage.setItem(VISBENDING_MINNI, 'nei');
+    } catch (e) { /* lokað */ }
+  }
   const VISBENDING = /!(fyrirtaeki_id|verkefni_id|task_id|snid_id|myndband_id|stofa_id)(?=\()/;
   const VISBENDINGAR = new RegExp(VISBENDING.source, 'g');
   async function saekjaMedVara(input, init) {
     const svar = await fetch(input, init);
+    if (svar.status === 300 && !visbendingar) {
+      /* Tvíræð tenging án vísbendinga: nota þær aftur frá næstu síðu */
+      try { const v = await svar.clone().json(); if (v && v.code === 'PGRST201') munaVisbendingar(true); } catch (e) { /* ekki json */ }
+      return svar;
+    }
     if (svar.status !== 400) return svar;
     const slod = typeof input === 'string' ? input : String((input && input.url) || input || '');
     if (slod.indexOf('/rest/v1/') < 0) return svar;
@@ -471,7 +489,7 @@ async function supabaseBakendi() {
     if (!villa || villa.code !== 'PGRST200') return svar;
     u.searchParams.set('select', val.replace(VISBENDINGAR, ''));
     const aftur = await fetch(u.toString(), init);
-    if (aftur.ok) visbendingar = false;
+    if (aftur.ok) munaVisbendingar(false);
     return aftur;
   }
 
@@ -538,7 +556,7 @@ async function supabaseBakendi() {
          vísbendinguna. Gamla fyrirspurnin virkar þá eins og áður. */
       const umFyrirtaeki = /'fyrirtaeki'/.test(String(svar.error.message || ''));
       svar = await sb.from('notendur').select(EG_GAMALT).eq('id', id).maybeSingle();
-      if (!svar.error && umFyrirtaeki) visbendingar = false;
+      if (!svar.error && umFyrirtaeki) munaVisbendingar(false);
     }
     if (svar.error || !svar.data) return null;
     const min_stada = stada.error ? null : hreinMinStada(stada.data);
