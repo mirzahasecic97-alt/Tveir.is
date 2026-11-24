@@ -19,6 +19,11 @@
      META_TOKEN          langlífur System User lykill úr Meta Business
      META_APP_SECRET     valkvætt: þá fylgir appsecret_proof hverju kalli
      ANTHROPIC_API_KEY   valkvætt: þá skrifar Claude samantektina
+     ZERNIO_API_KEY      fyrir miðla sem eru tengdir í gegnum Zernio
+
+   Zernio: miðill með ytra_id 'zernio:<accountId>' er sóttur í gegnum
+   Zernio (zernio.com), sem á samþykkt Meta app. Þá þarf engan META_TOKEN.
+   zernioSaga() sækir síðustu 30 daga einu sinni, eftir að miðill er tengdur.
 
    TikTok: ekkert API enn. Tölurnar eru slegnar inn á vinnusvæðinu þar til
    TikTok samþykkir aðganginn okkar. Uppsetning: LESTU-MIG.md, kaflinn
@@ -46,6 +51,8 @@ function setjaTolfraedi() {
   ScriptApp.newTrigger('safnaTolfraedi').timeBased().everyDays(1).atHour(6)
     .inTimezone('Atlantic/Reykjavik').create();
   safnaTolfraedi();
+  /* Eldri saga Instagram í gegnum Zernio, ef hún er ekki þegar sett af stað */
+  if (!PropertiesService.getScriptProperties().getProperty('zernio_saga_bil')) setjaZernioSogu();
 }
 
 /* Daglega söfnunin. Kastar aldrei villu: hver miðill fær sína tilraun og
@@ -58,21 +65,25 @@ function safnaTolfraedi(nu) {
 
   try {
     const tokn = eiginlegir.getProperty('META_TOKEN');
+    const zlykill = eiginlegir.getProperty('ZERNIO_API_KEY');
     const midlar = kalla_('midlar_til_soefnunar', {});
     if (!Array.isArray(midlar)) {
       console.log('Tölfræði: náði ekki í listann yfir miðla úr Supabase');
-    } else if (!tokn && midlar.some((m) => m.midill !== 'tiktok')) {
-      console.log('Tölfræði: META_TOKEN vantar í Script Properties, engu safnað');
     } else {
       const dagar = tolfDagar_(nu);
+      let vantarMeta = false, vantarZernio = false;
       midlar.forEach((m) => {
         if (m.midill !== 'instagram' && m.midill !== 'facebook') return; /* TikTok: handvirkt */
+        const zernio = erZernio_(m);
+        if (zernio && !zlykill) { vantarZernio = true; return; }
+        if (!zernio && !tokn) { vantarMeta = true; return; }
         if (Date.now() - byrjun > TOLF_TIMAMORK) {
           console.log('Tölfræði: tíminn búinn, ' + m.midill + ' ' + m.nafn + ' bíður til morguns');
           return;
         }
         try {
-          const ut = m.midill === 'instagram'
+          const ut = zernio ? safnaZernio_(m, zlykill, dagar)
+            : m.midill === 'instagram'
             ? safnaInstagram_(m, tokn, dagar)
             : safnaFacebook_(m, tokn, dagar);
           if (ut.maelingar.length && kalla_('skra_maelingar', { p_gogn: ut.maelingar }) === null) {
@@ -85,6 +96,8 @@ function safnaTolfraedi(nu) {
           console.log('Tölfræði: ' + m.midill + ' ' + m.nafn + ': ' + villaTexti_(villa));
         }
       });
+      if (vantarMeta) console.log('Tölfræði: META_TOKEN vantar í Script Properties, Meta miðlum ekki safnað');
+      if (vantarZernio) console.log('Tölfræði: ZERNIO_API_KEY vantar í Script Properties, Zernio miðlum ekki safnað');
     }
   } catch (villa) {
     console.log('Tölfræði: söfnun stöðvaðist: ' + villaTexti_(villa));
@@ -418,6 +431,235 @@ function fbFaersla_(f, midillId, innsyn) {
     deilingar: f.shares ? metaTala_(f.shares.count) : null,
     vistanir: null
   };
+}
+
+/* ==========================================================================
+   Zernio (zernio.com): Facebook síður og Instagram í gegnum samþykkt Meta
+   app Zernio. ytra_id miðilsins er 'zernio:<accountId>'. Sömu tölur og hér
+   að ofan, sama snið á mælingunum:
+     Facebook: page_media_view, page_total_media_view_unique,
+       page_post_engagements, page_views_total og page_follows, daglega.
+       Meta merkir hvern dag með lokum hans, svo dagur X í svarinu er X-1.
+     Instagram: views, reach, total_interactions, profile_views, einn dagur
+       í senn (bara reach styður daglegar raðir). Fylgjendur úr reikningnum.
+   Færslur: nýjustu 50 daglega (zernioSaga tekur 100), með tölum frá Zernio.
+   ========================================================================== */
+
+const ZERNIO = 'https://zernio.com/api/v1/';
+
+function erZernio_(m) {
+  return /^zernio:[A-Za-z0-9]{8,64}$/.test(String(m.ytra_id || ''));
+}
+
+function zernioSaekja_(leid, lykill) {
+  const r = UrlFetchApp.fetch(ZERNIO + leid, {
+    method: 'get', muteHttpExceptions: true,
+    headers: { Authorization: 'Bearer ' + lykill }
+  });
+  const kodi = r.getResponseCode();
+  let gogn = null;
+  try { gogn = JSON.parse(r.getContentText()); } catch (villa) { gogn = null; }
+  if (kodi !== 200 || !gogn) {
+    const skilabod = gogn && (gogn.error || gogn.message) ? String(gogn.error || gogn.message) : 'svar ' + kodi;
+    throw new Error('Zernio ' + kodi + ': ' + skilabod.slice(0, 200));
+  }
+  return gogn;
+}
+
+function zernioTala_(x) {
+  return typeof x === 'number' && isFinite(x) && x >= 0 ? Math.round(x) : null;
+}
+
+/* Fylgjendur núna, úr reikningnum sjálfum */
+function zernioFylgjendur_(reikningur, lykill) {
+  const g = zernioSaekja_('accounts', lykill);
+  const a = (g.accounts || []).filter((x) => x._id === reikningur)[0];
+  return a ? zernioTala_(a.followersCount) : null;
+}
+
+function safnaZernio_(m, lykill, dagar) {
+  const reikn = String(m.ytra_id).slice('zernio:'.length);
+  const id = encodeURIComponent(reikn);
+  let maelingar;
+
+  if (m.midill === 'facebook') {
+    /* Einn dag aftur og fram, því Meta merkir daginn með lokum hans */
+    const fra = dagar[0];
+    const til = naestiDagur_(dagar[dagar.length - 1]);
+    const g = zernioSaekja_('analytics/facebook/page-insights?accountId=' + id
+      + '&metrics=page_media_view,page_total_media_view_unique,page_post_engagements,page_views_total,page_follows'
+      + '&metricType=time_series&fromDate=' + fra + '&toDate=' + til, lykill);
+    const aDag = {};
+    Object.keys(g.metrics || {}).forEach((k) => {
+      ((g.metrics[k] || {}).values || []).forEach((v) => {
+        if (!v || !/^\d{4}-\d{2}-\d{2}/.test(String(v.date))) return;
+        const d = tolfDags_(new Date(Date.parse(String(v.date).slice(0, 10) + 'T00:00:00Z') - 864e5));
+        (aDag[d] = aDag[d] || {})[k] = zernioTala_(v.value);
+      });
+    });
+    maelingar = dagar.map((d) => {
+      const t = aDag[d] || {};
+      const k = (n) => (t[n] === undefined ? null : t[n]);
+      return {
+        midill_id: m.id, dags: d, fylgjendur: k('page_follows'),
+        ahorf: k('page_media_view'), nadir: k('page_total_media_view_unique'),
+        samskipti: k('page_post_engagements'), heimsoknir: k('page_views_total'),
+        faerslur: null
+      };
+    });
+  } else {
+    maelingar = dagar.map((d) => {
+      const g = zernioSaekja_('analytics/instagram/account-insights?accountId=' + id
+        + '&metrics=views,reach,total_interactions,profile_views&fromDate=' + d + '&toDate=' + d, lykill);
+      const t = g.metrics || {};
+      const k = (n) => (t[n] ? zernioTala_(t[n].total) : null);
+      return {
+        midill_id: m.id, dags: d, fylgjendur: null,
+        ahorf: k('views'), nadir: k('reach'), samskipti: k('total_interactions'),
+        heimsoknir: k('profile_views'), faerslur: null
+      };
+    });
+    /* Fjöldinn núna er staðan í lok gærdagsins */
+    if (naestiDagur_(dagar[dagar.length - 1]) === tolfDags_(new Date())) {
+      maelingar[maelingar.length - 1].fylgjendur = zernioFylgjendur_(reikn, lykill);
+    }
+  }
+  const faerslur = zernioFaerslur_(m, reikn, lykill, 50);
+  const aDag = faerslurADag_(faerslur, dagar);
+  maelingar.forEach((r) => { r.faerslur = aDag[r.dags]; });
+  return { maelingar: maelingar, faerslur: faerslur };
+}
+
+/* Nýjustu færslurnar með tölum, í sniði midla_faerslur */
+function zernioFaerslur_(m, reikn, lykill, fjoldi) {
+  const g = zernioSaekja_('analytics?accountId=' + encodeURIComponent(reikn) + '&limit=' + fjoldi + '&source=all', lykill);
+  return (g.posts || []).map((p) => {
+    const pl = (p.platforms || [])[0] || {};
+    const a = pl.analytics || p.analytics || {};
+    const mp = String(p.mediaProductType || '').toUpperCase();
+    const mt = String(p.mediaType || '').toLowerCase();
+    const tegund = mp === 'REELS' ? 'reel' : mp === 'STORY' ? 'saga' : mt.indexOf('carousel') >= 0 ? 'karusell'
+      : mt === 'video' ? 'myndband' : mt === 'image' ? 'mynd' : 'annad';
+    return {
+      midill_id: m.id,
+      ytra_id: String(pl.platformPostId || p._id).slice(0, 100),
+      birt: p.publishedAt || null,
+      tegund: tegund,
+      texti: stytta_(p.content, 500) || null,
+      slod: oruggSlod_(pl.platformPostUrl || p.platformPostUrl),
+      mynd_slod: oruggSlod_(p.thumbnailUrl),
+      ahorf: zernioTala_(a.views), nadir: zernioTala_(a.reach), likes: zernioTala_(a.likes),
+      athugasemdir: zernioTala_(a.comments), deilingar: zernioTala_(a.shares), vistanir: zernioTala_(a.saves)
+    };
+  }).filter((f) => f.birt);
+}
+
+/* Eldri saga Instagram í gegnum Zernio, einn dagur í senn. Zernio leyfir um
+   120 köll á klukkustund á Instagram reikning, svo þetta keyrir á 10 mínútna
+   fresti og tekur 15 daga í hvert sinn, nýjasta dag fyrst. Bilin sem eftir eru
+   liggja í Script Property zernio_saga_bil sem [[fra, til], ...]. Þegar öll
+   bilin eru búin eyðir fallið eigin gikk. Facebook þarf þetta ekki: þar koma
+   allt að 89 dagar í einu kalli. */
+const ZERNIO_SAGA_DAGAR = 15;
+
+function setjaZernioSogu() {
+  const eig = PropertiesService.getScriptProperties();
+  eig.setProperty('zernio_saga_bil', JSON.stringify([['2026-05-05', '2026-11-07'], ['2025-01-01', '2025-11-23']]));
+  ScriptApp.getProjectTriggers().filter((t) => t.getHandlerFunction() === 'zernioSagaAfram')
+    .forEach((t) => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('zernioSagaAfram').timeBased().everyMinutes(10).create();
+  zernioSagaAfram();
+}
+
+function zernioSagaAfram() {
+  const eig = PropertiesService.getScriptProperties();
+  const lykill = eig.getProperty('ZERNIO_API_KEY');
+  let bil = [];
+  try { bil = JSON.parse(eig.getProperty('zernio_saga_bil') || '[]'); } catch (villa) { bil = []; }
+  const haetta = () => ScriptApp.getProjectTriggers().filter((t) => t.getHandlerFunction() === 'zernioSagaAfram')
+    .forEach((t) => ScriptApp.deleteTrigger(t));
+  if (!bil.length) { haetta(); console.log('Zernio saga: allt komið'); return; }
+  if (!lykill) { console.log('Zernio saga: ZERNIO_API_KEY vantar'); return; }
+  const midlar = kalla_('midlar_til_soefnunar', {});
+  if (!Array.isArray(midlar)) { console.log('Zernio saga: náði ekki í miðlana'); return; }
+  const ig = midlar.filter((m) => erZernio_(m) && m.midill === 'instagram');
+  if (!ig.length) { console.log('Zernio saga: enginn Instagram miðill á Zernio'); return; }
+
+  /* Dagarnir í þessari umferð: aftast úr fyrsta bilinu, nýjast fyrst */
+  const dagar = [];
+  while (bil.length && dagar.length < ZERNIO_SAGA_DAGAR) {
+    const [fra, til] = bil[0];
+    if (til < fra) { bil.shift(); continue; }
+    dagar.push(til);
+    bil[0][1] = tolfDags_(new Date(Date.parse(til + 'T00:00:00Z') - 864e5));
+  }
+  const byrjun = Date.now();
+  const lokid = [];
+  for (const d of dagar) {
+    if (Date.now() - byrjun > 4 * 60 * 1000) break;
+    try {
+      const radir = ig.map((m) => safnaZernio_(m, lykill, [d]).maelingar[0]);
+      if (kalla_('skra_maelingar', { p_gogn: radir }) === null) throw new Error('Supabase tók ekki við');
+      lokid.push(d);
+    } catch (villa) {
+      console.log('Zernio saga: ' + d + ': ' + villaTexti_(villa));
+      break;   /* 429 eða annað: reynum aftur eftir 10 mínútur */
+    }
+  }
+  /* Dagar sem náðust ekki fara aftur fremst í fyrsta bilið */
+  const eftir = dagar.filter((d) => lokid.indexOf(d) < 0);
+  if (eftir.length) {
+    const nyjast = eftir[0];
+    if (bil.length && bil[0][0] <= nyjast && tolfDags_(new Date(Date.parse(bil[0][1] + 'T00:00:00Z') + 864e5)) <= nyjast) bil[0][1] = nyjast;
+    else bil.unshift([eftir[eftir.length - 1], nyjast]);
+  }
+  bil = bil.filter((b) => b[0] <= b[1]);
+  eig.setProperty('zernio_saga_bil', JSON.stringify(bil));
+  console.log('Zernio saga: ' + lokid.length + ' dagar skráðir (' + (lokid[0] || '-') + ' til ' + (lokid[lokid.length - 1] || '-') + '), bil eftir: ' + JSON.stringify(bil));
+  if (!bil.length) haetta();
+}
+
+/* Bara færslurnar (100 nýjustu) á öllum Zernio miðlum, án dagtalnanna */
+function zernioFaerslurNuna() {
+  const lykill = PropertiesService.getScriptProperties().getProperty('ZERNIO_API_KEY');
+  if (!lykill) { console.log('Tölfræði: ZERNIO_API_KEY vantar í Script Properties'); return; }
+  const midlar = kalla_('midlar_til_soefnunar', {});
+  if (!Array.isArray(midlar)) { console.log('Tölfræði: náði ekki í listann yfir miðla'); return; }
+  midlar.filter(erZernio_).forEach((m) => {
+    try {
+      const faerslur = zernioFaerslur_(m, String(m.ytra_id).slice('zernio:'.length), lykill, 100);
+      const svar = faerslur.length ? kalla_('skra_faerslur', { p_gogn: faerslur }) : 0;
+      console.log('Zernio færslur: ' + m.fyrirtaeki + ' ' + m.midill + ': ' + (svar === null ? 'Supabase tók ekki við' : faerslur.length + ' færslur'));
+    } catch (villa) {
+      console.log('Zernio færslur: ' + m.fyrirtaeki + ' ' + m.midill + ': ' + villaTexti_(villa));
+    }
+  });
+}
+
+/* Keyrt einu sinni með höndunum eftir að miðill er tengdur í Zernio:
+   síðustu 30 dagar (meira leyfir Instagram ekki með Facebook innskráningu). */
+function zernioSaga() {
+  const lykill = PropertiesService.getScriptProperties().getProperty('ZERNIO_API_KEY');
+  if (!lykill) { console.log('Tölfræði: ZERNIO_API_KEY vantar í Script Properties'); return; }
+  const midlar = kalla_('midlar_til_soefnunar', {});
+  if (!Array.isArray(midlar)) { console.log('Tölfræði: náði ekki í listann yfir miðla'); return; }
+  const nu = new Date();
+  const i0 = Date.UTC(nu.getUTCFullYear(), nu.getUTCMonth(), nu.getUTCDate());
+  const dagar = [];
+  for (let i = 30; i >= 1; i--) dagar.push(tolfDags_(new Date(i0 - i * 864e5)));
+  midlar.filter(erZernio_).forEach((m) => {
+    try {
+      const ut = safnaZernio_(m, lykill, dagar);
+      const svar = kalla_('skra_maelingar', { p_gogn: ut.maelingar });
+      const reikn = String(m.ytra_id).slice('zernio:'.length);
+      const faerslur = zernioFaerslur_(m, reikn, lykill, 100);
+      const fSvar = faerslur.length ? kalla_('skra_faerslur', { p_gogn: faerslur }) : 0;
+      console.log('Zernio saga: ' + m.fyrirtaeki + ' ' + m.midill + ': ' + (svar === null ? 'Supabase tók ekki við' : ut.maelingar.length + ' dagar')
+        + ', ' + (fSvar === null ? 'færslur ekki teknar' : faerslur.length + ' færslur'));
+    } catch (villa) {
+      console.log('Zernio saga: ' + m.fyrirtaeki + ' ' + m.midill + ': ' + villaTexti_(villa));
+    }
+  });
 }
 
 /* ==========================================================================
