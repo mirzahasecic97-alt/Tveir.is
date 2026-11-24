@@ -746,9 +746,6 @@ async function start() {
       ['Verslun', [lykilSpjald(LYKLAR.shopify)]],
       ['Gervigreind', [lykilSpjald(LYKLAR.claude), lykilSpjald(LYKLAR.chatgpt)]],
       ['Vefur og skrár', [
-        oauthSpjald({ heiti: 'Google Analytics', lb: 'googleanalytics', merki: 'googleanalytics.svg', litur: '#E37400', hvad: 'Heimsóknir á vef viðskiptavinarins á Tölfræði', smidum: true,
-          stada: ['kemur', 'Í smíðum. Engar tölur úr Google Analytics birtast ennþá.'],
-          tharf: SYNID ? SMIDI_TVEIR : 'Í smíðum. Engar tölur úr Google Analytics birtast ennþá, svo ekki þarf að gefa neinn aðgang strax.' }, 'google'),
         { heiti: 'WeTransfer', lb: 'wetransfer', merki: 'wetransfer.svg', litur: '#409FFF', hvad: 'Hlekkir á undirverkum', utan: true, pilla: 'Engin uppsetning',
           stada: ['handvirkt', 'Hlekkir virka beint á undirverkum'], dTexti: 'Hér þarf enga tengingu.',
           tharf: 'Engin tenging þarf: límdu WeTransfer hlekkinn á undirverkið og viðskiptavinurinn fær hann í pósti.' }

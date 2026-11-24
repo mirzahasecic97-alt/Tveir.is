@@ -54,7 +54,7 @@ type Lina = { state_hash: string; stofa_id: string; veita: Veita; notandi: strin
 type Vista = { stillingar: Record<string, unknown>; leyndo: Record<string, string>; prufa?: string };
 
 const SCOPE = {
-  google: 'openid email https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/analytics.readonly',
+  google: 'openid email https://www.googleapis.com/auth/calendar.readonly',
   meta: 'pages_show_list,pages_read_engagement,read_insights,instagram_basic,instagram_manage_insights,business_management',
   tiktok: 'user.info.basic,user.info.stats,video.list',
   shopify: 'read_products,read_inventory,read_orders'

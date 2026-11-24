@@ -369,7 +369,7 @@ async function start() {
   function oauthTexti() {
     const ms = ek.min_stada || {};
     const bida = [
-      ...(ms.google_tilbuid ? [] : ['Google Calendar', 'Google Analytics']),
+      ...(ms.google_tilbuid ? [] : ['Google Calendar']),
       ...(ms.meta_tilbuid ? [] : ['Instagram', 'Facebook']),
       ...(ms.tiktok_tilbuid ? [] : ['TikTok'])
     ];
