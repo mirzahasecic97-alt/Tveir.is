@@ -69,10 +69,16 @@ if (sersnid && /(^|\/)stjornbord\.html$/.test(location.pathname) && upphafssida(
 export const ertengt = (id) => !!sersnid && (sersnid.tengingar || []).includes(id);
 /* Í sýnidæminu birtist nákvæmlega það sem gesturinn valdi, ekkert annað.
    Stofa sem valdi einingar við skráningu sér þær einingar. */
+/* Nýjar stofur byrja einfalt: verkin, verk@ pósturinn, fyrirspurnirnar og
+   bókhaldið. Annað er falið þar til það er valið eða kveikt á því fyrir
+   stofuna (stofur.einingar). Tveir sér allt eins og áður. */
+const KJARNI = ['tekjur', 'postur_verk'];
+export const erNyStofa = () => !!stofa() && !sersnid && !erTveir();
 export const ervalid = (id) => {
   const s = stofa();
   const ein = s && Array.isArray(s.einingar) ? s.einingar : [];
   if (ein.length) return ein.includes(id);
+  if (erNyStofa()) return KJARNI.includes(id);
   return !sersnid || (sersnid.einingar || []).includes(id);
 };
 /* Tengingar sem standast prófun (Payday, DK, Shopify, Claude, ChatGPT og
@@ -679,13 +685,16 @@ export function teiknaHaus(ek, heiti) {
     { slod: 'stjornbord.html', heiti: 'Stjórnborð' },
     ervalid('tillogur') ? { slod: 'tillogur.html', heiti: 'Tillögur', merki: mTill } : null,
     /* Innri verkin eru fyrir Tveir sjálf, ekki sýnidæmið */
-    sersnid ? null : { slod: 'okkar.html', heiti: 'Okkar', merki: mOkkar },
-    sersnid && !ervalid('postur') && !ervalid('postur_verk') ? null : {
+    sersnid || erNyStofa() ? null : { slod: 'okkar.html', heiti: 'Okkar', merki: mOkkar },
+    /* Ný stofa án pósthólfs: bara fyrirspurnirnar af vefnum */
+    erNyStofa() && !(st && st.postholf) && !ervalid('postur')
+      ? { slod: 'fyrirspurnir.html', heiti: 'Fyrirspurnir', merki: mFsp }
+    : sersnid && !ervalid('postur') && !ervalid('postur_verk') ? null : {
       slod: 'samskipti.html', heiti: 'Samskipti', merki: mSam, virkt: ['samskipti.html', 'fyrirspurnir.html'],
       undir: [{ slod: 'samskipti.html', heiti: postholfHeiti(), merki: mPost },
               { slod: 'fyrirspurnir.html', heiti: 'Fyrirspurnir', merki: mFsp }]
     },
-    sersnid && !ertengt('googlecalendar') ? null : { slod: 'dagatal.html', heiti: 'Dagatal' },
+    (sersnid && !ertengt('googlecalendar')) || (erNyStofa() && !ervalid('dagskra')) ? null : { slod: 'dagatal.html', heiti: 'Dagatal' },
     ervalid('tekjur') ? { slod: 'bokhald.html', heiti: 'Bókhald' } : null,
     ervalid('tolfraedi') ? { slod: 'tolfraedi.html', heiti: 'Tölfræði' } : null,
     /* Verslun: þegar Shopify tengingin hefur staðist prófun */

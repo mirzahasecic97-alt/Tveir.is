@@ -366,25 +366,13 @@ async function start() {
   }
 
   /* Google, Meta og TikTok: hvað bíður samþykkis veitnanna (úr min_stada) */
-  function oauthTexti() {
-    const ms = ek.min_stada || {};
-    const bida = [
-      ...(ms.google_tilbuid ? [] : ['Google Calendar']),
-      ...(ms.meta_tilbuid ? [] : ['Instagram', 'Facebook']),
-      ...(ms.tiktok_tilbuid ? [] : ['TikTok'])
-    ];
-    if (!bida.length) return 'Google, Instagram, Facebook og TikTok tengirðu í Stillingum.';
-    const listi = bida.length > 1 ? bida.slice(0, -1).join(', ') + ' og ' + bida[bida.length - 1] : bida[0];
-    return bida.length > 1
-      ? listi + ' bíða samþykkis veitnanna. Þær birtast í Stillingum þegar þær opnast.'
-      : listi + ' bíður samþykkis. Tengingin birtist í Stillingum þegar hún opnast.';
-  }
 
   /* ---------- 6. Tengingar ---------- */
   async function skrefTengingar(svid) {
     let lyklar = (g.tengingarStada ? await g.tengingarStada().catch(() => null) : null) || {};
     const PILLUR = { tengt: 'Tengt', bidur: 'Bíður', ekki: 'Ekki tengt' };
-    const teiknaListi = () => fylla(listiSvid, Object.values(LYKLAR).map((t) => {
+    /* Byrjað einfalt: Payday og Claude, og það sem er þegar tengt */
+    const teiknaListi = () => fylla(listiSvid, Object.values(LYKLAR).filter((t) => ['payday', 'claude'].includes(t.veita) || lyklar[t.veita]).map((t) => {
       const r = lyklar[t.veita] || null;
       const [stada, undir] = lykilStada(r, t);
       return el('article', { class: 'st-teng st-teng--' + stada }, [
@@ -407,9 +395,8 @@ async function start() {
     const listiSvid = el('div', { class: 'st-tengingar', style: 'margin-top:18px' });
     teiknaListi();
     fylla(svid, [
-      el('p', { class: 'lead', style: 'margin-top:10px', texti: 'Tengdu bókhaldið, vefverslunina og gervigreindina með ykkar eigin lyklum. Hver lykill er prófaður um leið og hann er vistaður.' }),
+      el('p', { class: 'lead', style: 'margin-top:10px', texti: 'Tengdu bókhaldið og gervigreindina með ykkar eigin lyklum. Hver lykill er prófaður um leið og hann er vistaður. Fleiri tengingar bætast við í Stillingum þegar þær eru tilbúnar.' }),
       listiSvid,
-      el('p', { class: 'skyring', style: 'margin-top:14px', texti: oauthTexti() }),
       hnappar([
         el('button', { type: 'button', class: 'btn', texti: 'Klárt', onclick: async (e) => { await merkja('tengingar', true); klart(e.currentTarget); } }),
         tilBaka()

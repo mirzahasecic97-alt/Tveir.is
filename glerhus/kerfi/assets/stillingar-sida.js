@@ -7,7 +7,7 @@
 import {
   gogn, el, fylla, vardaHlid, teiknaHaus, opnaLykilord, sersnid, stofuNafn, gestNafn, tungumal, setjaTungumal,
   gjaldmidill, setjaGjaldmidil, gengid, virkurGjaldmidill, erEnska, stofa as nuStofa, erTveir, harPostholf,
-  opnaBodGlugga, afrita, tilkynna, dags, geymaTengdar, tengdarGeymdar, ertengt
+  opnaBodGlugga, afrita, tilkynna, dags, geymaTengdar, tengdarGeymdar, ertengt, erNyStofa
 } from './portal.js';
 import { skeraMerki } from './merki-skera.js';
 import { lesaUndirskrift, sjalfgefinUndirskrift, undirskriftHtml, opnaUndirskriftGlugga } from './undirskrift.js';
@@ -752,6 +752,13 @@ async function start() {
       ]]
     ];
 
+    /* Ný stofa sér bara það sem virkar fyrir hana núna: verk-netfangið, Payday,
+       Claude og WeTransfer. Hitt bætist við þegar það er tilbúið eða tengt. */
+    if (erNyStofa()) {
+      const SYNA = ['Verk-netfangið', 'Gmail', 'Payday', 'Claude', 'WeTransfer'];
+      for (const h of HOPAR) h[1] = h[1].filter((t) => t && (SYNA.includes(t.heiti) || (t.stada || [])[0] === 'tengt'));
+      for (let i = HOPAR.length - 1; i >= 0; i--) if (!HOPAR[i][1].length) HOPAR.splice(i, 1);
+    }
     /* Bara tengingar sem geta verið tengdar núna teljast með. Í smíðum, handvirkt og
        engin uppsetning standa utan við. */
     const oll = HOPAR.flatMap(([, l]) => l);
