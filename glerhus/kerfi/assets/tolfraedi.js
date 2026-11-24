@@ -1059,6 +1059,7 @@ async function start() {
     const bilTexti = dagsLangt(tb.fra) + ' til ' + dagsLangt(tb.til);
 
     const faerslurHolf = el('div');
+    const myndefniHolf = el('div');
 
     fylla(hlutar.tolur, [
       el('div', { class: 'tf-siur' }, [
@@ -1116,10 +1117,16 @@ async function start() {
       el('section', { class: 'card pblokk tf-blokk' }, [
         el('div', { class: 'pyfir' }, [el('h2', { texti: 'Bestu færslurnar' })]),
         faerslurHolf
+      ]),
+
+      /* Reels og myndbönd sér: þau fá oft minna áhorf en myndir og hverfa annars af listanum */
+      el('section', { class: 'card pblokk tf-blokk' }, [
+        el('div', { class: 'pyfir' }, [el('h2', { texti: 'Bestu reels og myndböndin' })]),
+        myndefniHolf
       ])
     ]);
 
-    hladaFaerslum(tb, faerslurHolf, ids, sFaer ? null : faerslurTala);
+    hladaFaerslum(tb, faerslurHolf, ids, sFaer ? null : faerslurTala, myndefniHolf);
   }
 
   function kpi(merki, gildi, breyting) {
@@ -1138,16 +1145,18 @@ async function start() {
     ]);
   }
 
-  async function hladaFaerslum(tb, holf, ids, faerslurTala) {
+  async function hladaFaerslum(tb, holf, ids, faerslurTala, myndefniHolf) {
     const min = utgafa;
     const lykill = tb.fra + '|' + tb.til;
     let listi = faerslurMinni.get(lykill);
     if (!listi) {
       fylla(holf, [el('p', { class: 'tomt', texti: 'Sæki færslurnar' })]);
+      if (myndefniHolf) fylla(myndefniHolf, [el('p', { class: 'tomt', texti: 'Sæki færslurnar' })]);
       try {
         listi = await g.midlaFaerslur(fid, tb.fra, tb.til) || [];
       } catch (villa) {
         if (holf.isConnected) fylla(holf, [el('p', { class: 'tomt', texti: villa.message || 'Færslurnar komu ekki.' })]);
+        if (myndefniHolf && myndefniHolf.isConnected) fylla(myndefniHolf, [el('p', { class: 'tomt', texti: villa.message || 'Færslurnar komu ekki.' })]);
         return;
       }
       if (min !== utgafa) return;
@@ -1159,11 +1168,18 @@ async function start() {
       faerslurTala.textContent = tala(hans.length);
       faerslurTala.classList.remove('tf-engin');
     }
-    const bestu = hans.slice().sort((a, b) => (Number(b.ahorf) || 0) - (Number(a.ahorf) || 0)).slice(0, 5);
     const midillAf = new Map(midlar.map((m) => [m.id, m]));
-    fylla(holf, [bestu.length
-      ? el('ol', { class: 'tf-faerslur' }, bestu.map((p) => faerslaLina(p, midillAf.get(p.midill_id))))
-      : el('p', { class: 'tomt', texti: 'Engar færslur skráðar á þessu tímabili.' })]);
+    const rada = (l) => l.slice().sort((a, b) => (Number(b.ahorf) || 0) - (Number(a.ahorf) || 0)).slice(0, 5);
+    const listi5 = (l, tomt) => (l.length
+      ? el('ol', { class: 'tf-faerslur' }, l.map((p) => faerslaLina(p, midillAf.get(p.midill_id))))
+      : el('p', { class: 'tomt', texti: tomt }));
+    const erMyndefni = (p) => p.tegund === 'reel' || p.tegund === 'myndband';
+    if (myndefniHolf) {
+      fylla(holf, [listi5(rada(hans.filter((p) => !erMyndefni(p))), 'Engar færslur skráðar á þessu tímabili.')]);
+      if (myndefniHolf.isConnected) fylla(myndefniHolf, [listi5(rada(hans.filter(erMyndefni)), 'Engin reels eða myndbönd á þessu tímabili.')]);
+    } else {
+      fylla(holf, [listi5(rada(hans), 'Engar færslur skráðar á þessu tímabili.')]);
+    }
   }
 
   function stadgengill(midill) {
