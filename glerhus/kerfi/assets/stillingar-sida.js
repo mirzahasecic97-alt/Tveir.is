@@ -626,7 +626,7 @@ async function start() {
       let tiktok = 0;
       for (const f of fyrirtaeki) {
         const midlar = (await g.midlar(f.id).catch(() => [])) || [];
-        const meta = midlar.filter((m) => fj[m.midill] && m.ytra_id && m.virkt !== false);
+        const meta = midlar.filter((m) => fj[m.midill] && String(m.ytra_id || '').startsWith('zernio:') && m.virkt !== false);
         tiktok += midlar.filter((m) => m.midill === 'tiktok').length;
         if (!meta.length) continue;
         const ma = (await g.maelingar(f.id, ymd(fra), ymd(nu)).catch(() => [])) || [];
@@ -637,10 +637,10 @@ async function start() {
       }
       const metaStada = ([n, sj], o) => sj && sj === n ? ['tengt', 'Tölurnar koma sjálfkrafa á hverjum morgni']
         : sj ? ['bidur', sj + ' af ' + n + ' ' + o.thgf + (sj === 1 ? ' fær' : ' fá') + ' tölurnar sjálfkrafa. ' + (n - sj === 1 ? o.hin1 : o.hin) + '.']
-        : n ? ['bidur', n + (n === 1 ? ' ' + o.et + ' hefur' : ' ' + o.ft + ' hafa') + ' auðkenni, en engar sjálfvirkar tölur ennþá']
+        : n ? ['bidur', n + (n === 1 ? ' ' + o.et + ' er ' + o.t1 : ' ' + o.ft + ' eru ' + o.tn) + ', fyrstu tölurnar koma innan 10 mínútna']
         : ['ekki', o.enginn];
-      s.instagram = metaStada(fj.instagram, { et: 'reikningur', ft: 'reikningar', thgf: 'reikningum', hin: 'Hinir bíða', hin1: 'Hinn bíður', enginn: 'Enginn Instagram reikningur með auðkenni' });
-      s.facebook = metaStada(fj.facebook, { et: 'síða', ft: 'síður', thgf: 'síðum', hin: 'Hinar bíða', hin1: 'Hin bíður', enginn: 'Engin Facebook síða með auðkenni' });
+      s.instagram = metaStada(fj.instagram, { et: 'reikningur', ft: 'reikningar', thgf: 'reikningum', t1: 'tengdur', tn: 'tengdir', hin: 'Hinir bíða', hin1: 'Hinn bíður', enginn: 'Enginn Instagram reikningur tengdur. Tengdu hann á Tölfræði.' });
+      s.facebook = metaStada(fj.facebook, { et: 'síða', ft: 'síður', thgf: 'síðum', t1: 'tengd', tn: 'tengdar', hin: 'Hinar bíða', hin1: 'Hin bíður', enginn: 'Engin Facebook síða tengd. Tengdu hana á Tölfræði.' });
       s.tiktok = ['handvirkt', tiktok ? tiktok + (tiktok === 1 ? ' TikTok reikningur, tölurnar skráðar í höndunum' : ' TikTok reikningar, tölurnar skráðar í höndunum') : 'Tölurnar eru skráðar í höndunum'];
     } catch (e) {
       s.instagram = s.facebook = ['ekki', 'Náði ekki í miðlana'];
@@ -729,18 +729,12 @@ async function start() {
               + 'Láttu ' + STOFA_THF + ' vita. ' + STOFA_NF + ' samþykkir deilinguna og eftir það koma fundirnir inn á 5 mínútna fresti. Á vinnuaðgangi gæti Google stjórnandinn þurft að leyfa deilingu út fyrir fyrirtækið fyrst.' }, 'google')
       ].filter(Boolean)],
       ['Samfélagsmiðlar', [
-        oauthSpjald({ heiti: 'Instagram', lb: 'instagram', merki: 'instagram.svg', litur: '#E4405F', hvad: 'Fylgjendur, áhorf og færslur á Tölfræði', stada: s.instagram, slod: 'tolfraedi.html',
-          tharf: SYNID ? EINFALT + ' Þú gefur okkur aðgang að efni og tölfræði Instagram reikningsins.'
-            : 'Þarf Meta app og System User token (META_TOKEN) í Apps Script, og auðkenni reikningsins á Tölfræði. Reikningnum er deilt með Business ID ' + STOFA_EF + ' sem samstarfsaðila (Partners), með aðgangi að bæði efni (Content) og tölfræði (Insights).' }, 'meta'),
-        oauthSpjald({ heiti: 'Facebook', lb: 'facebook', merki: 'facebook.svg', litur: '#0866FF', hvad: 'Áhorf og fylgjendur síðunnar á Tölfræði', stada: s.facebook, slod: 'tolfraedi.html',
-          tharf: SYNID ? EINFALT + ' Þú gefur okkur aðgang að efni og tölfræði Facebook síðunnar.'
-            : 'Sama Meta app og Instagram. Page ID síðunnar fer á Tölfræði. Síðunni er deilt með Business ID ' + STOFA_EF + ' sem samstarfsaðila (Partners), með aðgangi að bæði efni (Content) og tölfræði (Insights). Tölfræðin ein dugar ekki.' }, 'meta'),
-        oauthSpjald({ heiti: 'TikTok', lb: 'tiktok', merki: 'tiktok.svg', litur: '#000000', hvad: 'Tölur á Tölfræði', stada: s.tiktok, slod: 'tolfraedi.html#tiktok', utan: true,
-          tharf: SYNID ? 'Sjálfvirk söfnun frá TikTok er ekki komin í Glerhúsið ennþá. Tölurnar eru skráðar í höndunum.' : 'Sjálfvirk söfnun frá TikTok er ekki komin í Glerhúsið ennþá. Tölurnar eru skráðar í höndunum á Tölfræði eða fluttar inn úr CSV.' }, 'tiktok'),
-        { heiti: 'Messenger', merki: 'messenger.svg', litur: '#00B2FF', hvad: 'Skilaboð inn í Samskipti', stada: KEMUR, smidum: true,
-          tharf: SYNID ? 'Í smíðum. Skilaboðin koma ekki inn í Samskipti ennþá. ' + EINFALT : 'Í smíðum. Skilaboðin koma ekki inn í Samskipti ennþá. Þetta þarf Meta appið og leyfi Meta fyrir skilaboðum (App Review).' },
-        { heiti: 'Instagram skilaboð', merki: 'instagram.svg', litur: '#C13584', hvad: 'DM inn í Samskipti', stada: KEMUR, smidum: true,
-          tharf: SYNID ? 'Í smíðum. Skilaboðin koma ekki inn í Samskipti ennþá. ' + EINFALT : 'Í smíðum. Þetta þarf sama Meta app og leyfi og Messenger.' }
+        { heiti: 'Facebook', lb: 'facebook', merki: 'facebook.svg', litur: '#0866FF', hvad: 'Áhorf, náð og færslur síðunnar á Tölfræði', stada: s.facebook, slod: 'tolfraedi.html',
+          dTexti: 'Tengt með Facebook innskráningu á Tölfræði.',
+          tharf: 'Opnaðu Tölfræði, veldu viðskiptavininn og smelltu á Tengja Facebook. Skráðu þig inn með Facebook og veldu síðuna. Þú þarft aðgang að síðunni. Tölurnar og saga síðasta árs koma sjálfkrafa, og nýjar tölur á hverjum morgni.' },
+        { heiti: 'Instagram', lb: 'instagram', merki: 'instagram.svg', litur: '#E4405F', hvad: 'Fylgjendur, áhorf og færslur á Tölfræði', stada: s.instagram, slod: 'tolfraedi.html',
+          dTexti: 'Tengt með Facebook innskráningu á Tölfræði.',
+          tharf: 'Opnaðu Tölfræði, veldu viðskiptavininn og smelltu á Tengja Instagram. Skráðu þig inn með Facebook og veldu síðuna sem Instagram reikningurinn er tengdur við. Reikningurinn þarf að vera fyrirtækja- eða creator reikningur.' }
       ]],
       ['Bókhald', [lykilSpjald(LYKLAR.payday), lykilSpjald(LYKLAR.dk)]],
       ['Verslun', [lykilSpjald(LYKLAR.shopify)]],

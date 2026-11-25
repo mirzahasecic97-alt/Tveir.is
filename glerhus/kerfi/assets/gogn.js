@@ -1182,6 +1182,18 @@ async function supabaseBakendi() {
       kastaTf(svar); return svar.data;
     },
 
+    /* Facebook og Instagram í gegnum Zernio: slóð á innskráningu, og
+       samstilling sem gerir tengda reikninga að miðlum (Edge fallið zernio) */
+    async zernioTengja(fyrirtaeki_id, midill) {
+      const svar = await kallaFall('zernio', { verk: 'tengja', fyrirtaeki_id, midill });
+      if (!svar || typeof svar.slod !== 'string' || !/^https:\/\//.test(svar.slod)) throw fallVilla('Tengingin gekk ekki. Prófaðu aftur.', { kodi: 'villa' });
+      return svar.slod;
+    },
+    async zernioSamstilla(fyrirtaeki_id) {
+      const svar = await kallaFall('zernio', { verk: 'samstilla', fyrirtaeki_id });
+      return Array.isArray(svar && svar.midlar) ? svar.midlar : [];
+    },
+
     async uppfaeraMidil(id, breytingar) {
       const svar = await sb.from('midlar').update(utanStofu(breytingar)).eq('id', id).select().single();
       kastaTf(svar); return svar.data;
@@ -2534,6 +2546,9 @@ function prufuBakendi() {
       };
       g.tf.midlar.push(nyr); vista(); return { ...nyr };
     },
+
+    async zernioTengja() { throw new Error('Í sýnidæminu tengist enginn miðill. Í alvöru Glerhúsi opnast Facebook innskráning hér.'); },
+    async zernioSamstilla() { return []; },
 
     async uppfaeraMidil(id, breytingar) {
       krefjastAdmin();

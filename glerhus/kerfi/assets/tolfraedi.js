@@ -683,6 +683,13 @@ async function start() {
   }
 
   teiknaHausinn();
+  /* Komið til baka úr Facebook innskráningu (Zernio): tengdu reikningarnir verða miðlar */
+  let zernioSvar = null;
+  if (admin && new URLSearchParams(location.search).get('zernio') === '1') {
+    history.replaceState(null, '', fyrirtaekisSlod(fid));
+    try { zernioSvar = { midlar: await g.zernioSamstilla(fid) }; }
+    catch (villa) { zernioSvar = { villa: villa.message || 'Tengingin gekk ekki.' }; }
+  }
   await hlada();
 
   /* ------------------------------------------------------------------
@@ -922,12 +929,19 @@ async function start() {
     hreinsaRit();
 
     if (!midlar.length) {
+      const tomStada = el('div', { class: 'form-status', role: 'status', hidden: true });
+      zernioSkilabod(tomStada);
       fylla(hlutar.tolur, [admin
         ? el('section', { class: 'card pblokk' }, [
             el('div', { class: 'pyfir' }, [el('h2', { texti: 'Tengdu fyrsta miðilinn' })]),
             el('p', { class: 'skyring', style: 'margin:-6px 0 16px',
-              texti: 'Settu inn Instagram, Facebook eða TikTok reikning fyrir ' + fyrNafn() + '. Með auðkenni safnast Instagram og Facebook sjálfkrafa á hverjum morgni. Annars eru tölurnar skráðar í höndunum eða fluttar inn úr CSV.' }),
-            midilsForm({}, null)
+              texti: 'Tengdu Facebook síðu eða Instagram reikning ' + fyrNafn() + ' með Facebook innskráningu. Tölurnar og saga síðasta árs koma sjálfkrafa. Þú þarft aðgang að síðunni á Facebook.' }),
+            el('div', { class: 'tf-hnappar', style: 'margin-bottom:12px' }, tengjaHnappar(tomStada)),
+            tomStada,
+            el('details', { class: 'tf-handvirkt' }, [
+              el('summary', { texti: 'Eða skráðu miðil í höndunum' }),
+              midilsForm({}, null)
+            ])
           ])
         : el('div', { class: 'card pblokk' }, [
             el('p', { class: 'tomt', texti: 'Tölfræðin birtist hér þegar miðlarnir þínir hafa verið tengdir.' })
@@ -1734,9 +1748,42 @@ async function start() {
     else setTimeout(() => titill.focus(), 60);
   }
 
+  /* Tengja Facebook eða Instagram: Zernio slóð sem opnar Facebook innskráningu.
+     Eftir hana kemur notandinn hingað aftur með ?zernio=1 og miðlarnir verða til. */
+  function tengjaHnappar(stadan) {
+    const hn = (midill, heiti) => el('button', { type: 'button', class: 'btn btn--sm', texti: 'Tengja ' + heiti,
+      onclick: async (e) => {
+        const takki = e.currentTarget;
+        takki.disabled = true;
+        const fyrri = takki.textContent;
+        takki.textContent = 'Augnablik';
+        try { location.href = await g.zernioTengja(fid, midill); }
+        catch (villa) {
+          takki.disabled = false; takki.textContent = fyrri;
+          if (stadan) stadaBod(stadan, villa.message || 'Tengingin gekk ekki. Prófaðu aftur.', 'err');
+        }
+      } });
+    return [hn('facebook', 'Facebook'), hn('instagram', 'Instagram')];
+  }
+
+  /* Skilaboð eftir að komið er til baka úr Facebook innskráningunni */
+  function zernioSkilabod(stadan) {
+    if (!zernioSvar || !stadan) return;
+    if (zernioSvar.villa) stadaBod(stadan, zernioSvar.villa, 'err');
+    else if (!zernioSvar.midlar.length) stadaBod(stadan, 'Enginn reikningur tengdist. Prófaðu aftur og veldu síðuna í Facebook glugganum.', 'err');
+    else {
+      const nyir = zernioSvar.midlar.filter((m) => m.nytt);
+      stadaBod(stadan, (nyir.length ? 'Tengt: ' + nyir.map((m) => midilHeiti(m.midill) + ' ' + m.nafn).join(', ')
+        : 'Reikningarnir voru þegar tengdir.') + ' Saga síðasta árs kemur inn á næstu mínútum, Instagram á nokkrum klukkustundum.', 'ok');
+    }
+    zernioSvar = null;
+  }
+
   function teiknaMidla() {
     if (!admin || !midlar.length) { fylla(hlutar.midlar, []); return; }
     const stadan = el('div', { class: 'form-status', role: 'status', hidden: true });
+    zernioSkilabod(stadan);
+    if (!stadan.hidden) setTimeout(() => stadan.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
     const sidastaMaeling = new Map();
     for (const r of maelingar) sidastaMaeling.set(r.midill_id, r.dags);
 
@@ -1744,13 +1791,14 @@ async function start() {
       el('div', { class: 'pyfir' }, [
         el('h2', { texti: 'Miðlar' }),
         el('div', { class: 'tf-hnappar' }, [
+          ...tengjaHnappar(stadan),
           el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Skrá dag', onclick: () => opnaDag() }),
           el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Flytja inn CSV', onclick: () => opnaCsv() }),
-          el('button', { type: 'button', class: 'btn btn--sm', texti: 'Nýr miðill', onclick: () => opnaMidil({}) })
+          el('button', { type: 'button', class: 'btn btn--sm btn--ghost', texti: 'Nýr miðill', onclick: () => opnaMidil({}) })
         ])
       ]),
       el('p', { class: 'skyring', style: 'margin:-6px 0 8px',
-        texti: 'Instagram og Facebook með auðkenni safnast sjálfkrafa á hverjum morgni. TikTok og miðlar án auðkennis eru skráðir í höndunum eða fluttir inn úr CSV. Handskráðar tölur víkja aldrei fyrir sjálfvirkum.' }),
+        texti: 'Tengdu Facebook síðu eða Instagram reikning með Facebook innskráningu. Tölurnar koma sjálfkrafa á hverjum morgni, með sögu síðasta árs. Aðrir miðlar eru skráðir í höndunum eða fluttir inn úr CSV. Handskráðar tölur víkja aldrei fyrir sjálfvirkum.' }),
       stadan,
       el('ul', { class: 'tasklisti' }, midlar.map((m) => {
         const sjalfvirkt = !!m.ytra_id && m.midill !== 'tiktok';

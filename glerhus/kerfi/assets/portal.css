@@ -2075,3 +2075,8 @@ body.sk-les .page-head.sk-haus { display: none !important; }
 .st-val__reitur > span { font: 500 13px/1.3 var(--f-body); color: var(--soft); }
 .st-val { width: 100%; }
 .st-val__svar:empty { display: none; }
+
+/* Tölfræði: handskráning falin undir tengihnöppunum */
+.tf-handvirkt { margin-top: 6px; }
+.tf-handvirkt > summary { cursor: pointer; font-size: 14px; color: var(--soft); padding: 6px 0; }
+.tf-handvirkt[open] > summary { margin-bottom: 10px; }
