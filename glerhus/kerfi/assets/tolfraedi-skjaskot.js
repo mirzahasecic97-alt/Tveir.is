@@ -61,7 +61,7 @@ async function undirbua(skra) {
   return { gerd: 'image/jpeg', gogn: gogn.slice(gogn.indexOf(',') + 1), slod };
 }
 
-export async function opnaSkjaskot({ g, ek, fid, fyrirtaeki }) {
+export async function opnaSkjaskot({ g, ek, fid, fyrirtaeki, fyrri, eftirSendingu }) {
   const stofa = (ek && ek.stofa) || null;
   const snid = stofuSnid(stofa);
 
@@ -313,7 +313,7 @@ export async function opnaSkjaskot({ g, ek, fid, fyrirtaeki }) {
       : notendaVilla
         ? el('p', { class: 'ts-villa', texti: 'Náði ekki í viðtakendur (' + notendaVilla + '). Lokaðu glugganum og prófaðu aftur, eða sendu afrit á þig.' })
         : el('p', { class: 'skyring', texti: 'Enginn viðskiptavinur er skráður hjá ' + fyrirtaeki + '. Skrifaðu netfang hér fyrir neðan, eða sendu afrit á þig til að sjá póstinn.' });
-    const annad = netfangaReitur(valdir, () => uppfaera());
+    const annad = netfangaReitur(valdir, () => uppfaera(), 10, fyrri, vidskiptavinir.map((n) => String(n.netfang).toLowerCase()));
 
     const athugid = [
       'Lesið af ' + (myndir.length === 1 ? '1 skjáskoti' : myndir.length + ' skjáskotum') + '. Gervigreind getur lesið vitlaust, berðu tölurnar saman við myndirnar áður en þú sendir.',
@@ -374,6 +374,7 @@ export async function opnaSkjaskot({ g, ek, fid, fyrirtaeki }) {
                 : 'Hann fer í nafni ' + snid.nafn + (stofa && stofa.netfang ? ' og svör berast á ' + stofa.netfang : '') + '.') }),
           el('button', { type: 'button', class: 'btn', texti: 'Loka', onclick: () => d.close() })
         ])]);
+        if (eftirSendingu) eftirSendingu();
       } catch (e) {
         sendir = false;
         villa.textContent = e.message || 'Pósturinn fór ekki. Reyndu aftur.'; villa.hidden = false;

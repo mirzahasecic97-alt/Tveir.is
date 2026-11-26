@@ -284,20 +284,27 @@ export function postTexti({ fyrirtaeki, nofn, inngangur, fyrriHeiti, tolur, ord,
    reitnum og skilar false ef það er ekki gilt netfang.
    ------------------------------------------------------------------ */
 const NETFANG = /^[^\s@,;<>"']+@[^\s@,;<>"']+\.[^\s@,;<>"']+$/;
-export function netfangaReitur(valdir, uppfaera, hamark = 10) {
+export function netfangaReitur(valdir, uppfaera, hamark = 10, tillogur = [], utan = []) {
   const aukalega = [];
+  const tillogulisti = el('div', { class: 'ts-tillogur' });
+  const teiknaTillogur = () => fylla(tillogulisti, (tillogur || [])
+    .filter((n) => !valdir.has(n) && !(utan || []).includes(n)).slice(0, 12)
+    .map((n) => el('button', { type: 'button', class: 'ts-tillaga', title: 'Bæta ' + n + ' við', texti: '+ ' + n, onclick: () => {
+      if (valdir.size >= hamark) { villa.textContent = 'Mest ' + hamark + ' viðtakendur í einu.'; villa.hidden = false; return; }
+      valdir.add(n); if (!aukalega.includes(n)) aukalega.push(n); teikna(); uppfaera();
+    } })));
   const inn = el('input', { type: 'email', class: 'ts-ord ts-netfang', placeholder: 'netfang@daemi.is', autocomplete: 'off',
     'aria-label': 'Bæta við netfangi', maxlength: '500' });
   const villa = el('p', { class: 'ts-villa', role: 'alert', hidden: true });
   const listi = el('ul', { class: 'ts-vidtakendur ts-aukanetfong' });
-  const teikna = () => fylla(listi, aukalega.map((n) => el('li', {}, [
+  const teikna = () => { teiknaTillogur(); fylla(listi, aukalega.map((n) => el('li', {}, [
     el('div', { class: 'ts-aukanetfang' }, [
       el('span', { texti: n }),
       el('button', { type: 'button', class: 'loka', 'aria-label': 'Taka ' + n + ' út', texti: '✕', onclick: () => {
         aukalega.splice(aukalega.indexOf(n), 1); valdir.delete(n); teikna(); uppfaera();
       } })
     ])
-  ])));
+  ]))); };
   const baetaInnslaetti = () => {
     villa.hidden = true;
     const hlutar = inn.value.split(/[\s,;]+/).map((x) => x.trim().toLowerCase()).filter(Boolean);
@@ -318,8 +325,9 @@ export function netfangaReitur(valdir, uppfaera, hamark = 10) {
   const reitur = el('div', { class: 'ts-hluti' }, [
     el('span', { class: 'ts-midi', texti: 'Annað netfang' }),
     el('div', { class: 'ts-netfang-lina' }, [inn, el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Bæta við', onclick: () => baetaInnslaetti() })]),
-    villa, listi
+    villa, listi, tillogulisti
   ]);
+  teiknaTillogur();
   return { reitur, baetaInnslaetti };
 }
 
@@ -329,7 +337,7 @@ export function netfangaReitur(valdir, uppfaera, hamark = 10) {
 /* skyrsla: drög að mánaðarskýrslu sama mánaðar, ef til. Þá má láta
    gervigreindina skrifa orðin (hún vistar þau líka á drögin, og
    eftirSamantekt(skyrsla) lætur síðuna vita). */
-export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, tb, timabilHeiti, fyrriHeiti, myndbond, skyrsla, eftirSamantekt }) {
+export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, tb, timabilHeiti, fyrriHeiti, myndbond, skyrsla, eftirSamantekt, fyrri, eftirSendingu }) {
   fyrriHeiti = fyrriHeiti || 'tímabilið á undan';
   const stofa = (ek && ek.stofa) || null;
   const snid = stofuSnid(stofa);
@@ -421,7 +429,7 @@ export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, 
         ])
       ])))
     : el('p', { class: 'skyring', texti: 'Enginn viðskiptavinur er skráður hjá ' + fyrirtaeki + '. Skrifaðu netfang hér fyrir neðan, eða sendu afrit á þig til að sjá póstinn.' });
-  const annad = netfangaReitur(valdir, () => uppfaera());
+  const annad = netfangaReitur(valdir, () => uppfaera(), 10, fyrri, vidskiptavinir.map((n) => String(n.netfang).toLowerCase()));
 
   fylla(kort, [
     el('div', { class: 'pdialog__haus' }, [
@@ -476,6 +484,7 @@ export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, 
               : 'Hann fer í nafni ' + snid.nafn + (stofa && stofa.netfang ? ' og svör berast á ' + stofa.netfang : '') + '.') }),
         el('button', { type: 'button', class: 'btn', texti: 'Loka', onclick: () => d.close() })
       ])]);
+      if (eftirSendingu) eftirSendingu();
     } catch (e) {
       villa.textContent = e.message || 'Pósturinn fór ekki. Reyndu aftur.'; villa.hidden = false;
       uppfaera();

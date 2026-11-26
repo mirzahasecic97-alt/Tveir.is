@@ -1625,6 +1625,33 @@ button.uv__titill:hover { color: var(--acc); }
 .ts-aukanetfang { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 8px 8px 12px; border-radius: 14px; border: 1px solid var(--line); font-size: 14px; color: var(--ink); }
 .ts-aukanetfang span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ts-aukanetfong:empty { display: none; }
+.ts-tillogur { display: flex; flex-wrap: wrap; gap: 6px; }
+.ts-tillogur:empty { display: none; }
+.ts-tillaga { border: 1px dashed var(--line); background: transparent; border-radius: 999px; padding: 6px 12px; font: 500 13px/1.3 var(--f-body); color: var(--soft); cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ts-tillaga:hover { border-color: var(--acc); color: var(--ink); }
+/* Senda skýrslu á Tölfræði (tolfraedi-sendingar.js) */
+.tf-ss-hnappar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 620px) { .tf-ss-hnappar { grid-template-columns: minmax(0, 1fr); } }
+.tf-ss-val { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 16px 18px; border-radius: 18px; border: 1px solid var(--line); background: color-mix(in srgb, var(--acc) 6%, transparent); cursor: pointer; color: var(--ink); font: inherit; transition: border-color .15s, transform .15s; }
+.tf-ss-val:hover, .tf-ss-val:focus-visible { border-color: var(--acc); transform: translateY(-1px); }
+.tf-ss-val strong { font: 600 16px/1.3 var(--f-head); }
+.tf-ss-val small { color: var(--soft); font-size: 13px; line-height: 1.45; }
+.tf-ss-val__takn { font-size: 20px; line-height: 1; margin-bottom: 4px; }
+.tf-ss-hluti { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
+.tf-ss-folk { font-size: 14px; color: var(--ink); line-height: 1.6; word-break: break-word; }
+.tf-ss-listi { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.tf-ss { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.tf-ss:first-child { border-top: 0; }
+.tf-ss__texti { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tf-ss__texti strong { font-weight: 500; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tf-ss__texti small { color: var(--soft); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tf-ss__texti .tf-ss__villa { color: #b42318; white-space: normal; }
+.tf-ss__merki { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+.tf-ss--send { background: #e6f4ea; color: #1e6b34; }
+.tf-ss--bidur { background: #eef2f7; color: #4a5f80; }
+.tf-ss--villa { background: #fdecec; color: #b42318; }
+.tf-ss__hn { padding: 7px 14px; font-size: 13.5px; }
+@media (max-width: 520px) { .tf-ss { grid-template-columns: minmax(0, 1fr) auto; } .tf-ss__merki { display: none; } }
 /* Tölfræði úr skjáskoti (tolfraedi-skjaskot.js) */
 .sk-skref1 { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; max-width: 640px; }
 .sk-svaedi { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 28px 16px; border: 2px dashed var(--line); border-radius: 18px; text-align: center; cursor: pointer; color: var(--ink); transition: border-color .15s, background .15s; }
@@ -2113,3 +2140,5 @@ body.sk-les .page-head.sk-haus { display: none !important; }
 .tf-handvirkt { margin-top: 6px; }
 .tf-handvirkt > summary { cursor: pointer; font-size: 14px; color: var(--soft); padding: 6px 0; }
 .tf-handvirkt[open] > summary { margin-bottom: 10px; }
+
+#senda-skyrslu { scroll-margin-top: 96px; }

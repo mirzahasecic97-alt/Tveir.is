@@ -1264,6 +1264,19 @@ async function supabaseBakendi() {
       kastaTf(svar); return svar.data;
     },
 
+    /* Skýrslur sem hafa farið á fyrirtækið, nýjust fyrst (án póstsins sjálfs) */
+    async tolfraediSendingar(fyrirtaeki_id) {
+      const svar = await sb.from('tolfraedi_sendingar').select('id, efni, netfong, stada, villa, stofnad, sent_dags')
+        .eq('fyrirtaeki_id', fyrirtaeki_id).order('stofnad', { ascending: false }).limit(200);
+      kastaTf(svar); return svar.data || [];
+    },
+
+    /* Ein skýrsla með póstinum eins og hann fór */
+    async tolfraediSending(id) {
+      const svar = await sb.from('tolfraedi_sendingar').select('id, fyrirtaeki_id, efni, netfong, html, texti, stada, stofnad').eq('id', id).single();
+      kastaTf(svar); return svar.data;
+    },
+
     /* ---------- Myndböndin (kafli 23) ----------
        Hvert myndband með tölum á mánuði. Tengt færslu frá Meta fyllast
        tölurnar sjálfkrafa í gagnagrunninum, annars skráðar í höndunum. */
@@ -2776,8 +2789,19 @@ function prufuBakendi() {
     async sendaTolfraedi(rod) {
       if (!erAdminPrufa()) throw new Error('Bara stjórnendur senda tölfræði');
       if (!rod.netfong || !rod.netfong.length) throw new Error('Veldu 1 til 10 viðtakendur');
-      g.tf.sendingar = (g.tf.sendingar || []).concat([{ ...rod, id: 'ts' + Date.now(), stada: 'send', stofnad: new Date().toISOString() }]).slice(-20);
+      g.tf.sendingar = (g.tf.sendingar || []).concat([{ ...rod, id: 'ts' + Date.now(), stada: 'send', stofnad: new Date().toISOString() }]).slice(-12);
       vista(); return { id: 'ts' + Date.now(), stada: 'send' };
+    },
+
+    async tolfraediSendingar(fyrirtaeki_id) {
+      return (g.tf.sendingar || []).filter((s) => s.fyrirtaeki_id === fyrirtaeki_id).slice().reverse()
+        .map(({ id, efni, netfong, stada, stofnad }) => ({ id, efni, netfong, stada, stofnad, villa: null }));
+    },
+
+    async tolfraediSending(id) {
+      const s = (g.tf.sendingar || []).find((x) => x.id === id);
+      if (!s) throw new Error('Skýrslan fannst ekki.');
+      return { ...s };
     },
 
     /* Stofan í sýnidæminu.

@@ -12,6 +12,7 @@
 import { gogn, el, fylla, vardaHlid, teiknaHaus, geymt, geyma, tolu, erEnska } from './portal.js';
 import { opnaSendingu } from './tolfraedi-senda.js';
 import { opnaSkjaskot } from './tolfraedi-skjaskot.js';
+import { sendingarHluti, fyrriNetfong } from './tolfraedi-sendingar.js';
 
 const ek = await vardaHlid({ badir: true });
 if (ek) start();
@@ -663,11 +664,14 @@ async function start() {
   let vaktTimi = null;
   const skyrsluHnutar = new Map();
 
+  /* Skýrslur sem hafa verið sendar á fyrirtækið (Senda skýrslu) */
+  let sendingar = null, sendingaVilla = null;
+
   const hlutar = {
-    haus: el('div'), tolur: el('div'), myndbond: el('div'), skyrslur: el('div'), midlar: el('div')
+    haus: el('div'), tolur: el('div'), sendingar: el('div'), myndbond: el('div'), skyrslur: el('div'), midlar: el('div')
   };
   fylla(innihald, [
-    hlutar.haus, hlutar.tolur, hlutar.myndbond, hlutar.skyrslur, hlutar.midlar,
+    hlutar.haus, hlutar.tolur, hlutar.sendingar, hlutar.myndbond, hlutar.skyrslur, hlutar.midlar,
     g.prufa ? el('div', { class: 'prufubanner', style: 'margin-top:18px' }, [
       el('strong', { texti: 'Prufustilling. ' }),
       document.createTextNode('Tölurnar eru sýnidæmi sem verða til í vafranum. Ekkert fer út á netið og enginn póstur er sendur.')
@@ -712,27 +716,12 @@ async function start() {
               ? 'Fylgjendur, áhorf og færslur á samfélagsmiðlum, dag fyrir dag.'
               : 'Fylgjendur, áhorf og færslur á samfélagsmiðlunum ykkar, dag fyrir dag.' })
         ]),
+        /* Allt sem er sent er á einum stað neðar á síðunni: Senda skýrslu */
         admin && fid
           ? el('button', { type: 'button', class: 'btn tf-senda', onclick: () => {
-              const tb = reiknaTimabil(timabil);
-              const heiti = { '30': ['síðustu 30 daga', '30 dagana á undan'], '90': ['síðustu 90 daga', '90 dagana á undan'],
-                '12': ['síðustu 12 mánuði', 'árið á undan'],
-                manudur: ['það sem af er ' + manNafn(tb.fra), 'sama tíma í ' + manNafn(tb.fyrriFra)],
-                fyrri: ['í ' + manNafn(tb.fra), 'í ' + manNafn(tb.fyrriFra)] }[timabil] || ['á tímabilinu', 'tímabilið á undan'];
-              const valdir = sia === 'allir' ? midlar : midlar.filter((m) => m.midill === sia);
-              /* Síðasti mánuður: drög að mánaðarskýrslu hans geta skrifað orðin með gervigreind */
-              const skyrsla = timabil === 'fyrri' && gervigreind
-                ? skyrslur.find((x) => x.stada === 'drog' && String(x.manudur).slice(0, 7) === String(tb.fra).slice(0, 7)) || null
-                : null;
-              opnaSendingu({ g, ek, fid, fyrirtaeki: fyrNafn(), midlar: valdir, maelingar, tb, timabilHeiti: heiti[0], fyrriHeiti: heiti[1], myndbond,
-                skyrsla, eftirSamantekt: (sk) => endurteiknaSkyrslu(sk) });
-            } }, [el('span', { 'aria-hidden': 'true', texti: '✉ ' }), document.createTextNode('Senda á viðskiptavin')])
-          : null,
-        /* Tölur úr skjáskoti, t.d. eftir helgi sem var tekin upp: lesnar með gervigreind og sendar í sama útliti */
-        admin && fid
-          ? el('button', { type: 'button', class: 'btn btn--ghost tf-senda', title: 'Lesa tölur af skjáskotum og senda á viðskiptavininn',
-              onclick: () => opnaSkjaskot({ g, ek, fid, fyrirtaeki: fyrNafn() }) },
-              [el('span', { 'aria-hidden': 'true', texti: '📷 ' }), document.createTextNode('Úr skjáskoti')])
+              const s = document.getElementById('senda-skyrslu');
+              if (s) { s.scrollIntoView({ behavior: 'smooth', block: 'start' }); const b = s.querySelector('.tf-ss-val'); if (b) b.focus({ preventScroll: true }); }
+            } }, [el('span', { 'aria-hidden': 'true', texti: '✉ ' }), document.createTextNode('Senda skýrslu')])
           : null,
         admin && fid && fyrirtaekin.length > 1
           ? el('label', { class: 'pyfir tf-velja', style: 'margin:0' }, [
@@ -924,9 +913,46 @@ async function start() {
 
   function teiknaAllt() {
     teiknaTolur();
+    teiknaSendingar();
     teiknaMyndbond();
     teiknaSkyrslur();
     teiknaMidla();
+  }
+
+  /* ------------------------------------------------------------------
+     Senda skýrslu: allt sem er sent á einum stað
+     ------------------------------------------------------------------ */
+  async function hladaSendingum() {
+    try { sendingar = await g.tolfraediSendingar(fid); sendingaVilla = null; }
+    catch (villa) { sendingar = []; sendingaVilla = villa; }
+    teiknaSendingar();
+  }
+
+  /* Úr tölunum: sama tímabil og miðlar og eru valdir á síðunni */
+  function opnaUrTolunum(fyrri) {
+    const tb = reiknaTimabil(timabil);
+    const heiti = { '30': ['síðustu 30 daga', '30 dagana á undan'], '90': ['síðustu 90 daga', '90 dagana á undan'],
+      '12': ['síðustu 12 mánuði', 'árið á undan'],
+      manudur: ['það sem af er ' + manNafn(tb.fra), 'sama tíma í ' + manNafn(tb.fyrriFra)],
+      fyrri: ['í ' + manNafn(tb.fra), 'í ' + manNafn(tb.fyrriFra)] }[timabil] || ['á tímabilinu', 'tímabilið á undan'];
+    const valdir = sia === 'allir' ? midlar : midlar.filter((m) => m.midill === sia);
+    /* Síðasti mánuður: drög að mánaðarskýrslu hans geta skrifað orðin með gervigreind */
+    const skyrsla = timabil === 'fyrri' && gervigreind
+      ? skyrslur.find((x) => x.stada === 'drog' && String(x.manudur).slice(0, 7) === String(tb.fra).slice(0, 7)) || null
+      : null;
+    opnaSendingu({ g, ek, fid, fyrirtaeki: fyrNafn(), midlar: valdir, maelingar, tb, timabilHeiti: heiti[0], fyrriHeiti: heiti[1], myndbond,
+      skyrsla, eftirSamantekt: (sk) => endurteiknaSkyrslu(sk), fyrri, eftirSendingu: hladaSendingum });
+  }
+
+  function teiknaSendingar() {
+    if (!admin || !fid) { fylla(hlutar.sendingar, []); return; }
+    fylla(hlutar.sendingar, [sendingarHluti({
+      g, ek, fid, fyrirtaeki: fyrNafn(), listi: sendingar, villa: sendingaVilla,
+      urTolunum: (fyrri) => opnaUrTolunum(fyrri),
+      urSkjaskoti: (fyrri) => opnaSkjaskot({ g, ek, fid, fyrirtaeki: fyrNafn(), fyrri, eftirSendingu: hladaSendingum }),
+      endurhlada: hladaSendingum
+    })]);
+    if (sendingar === null && !sendingaVilla) { sendingar = undefined; hladaSendingum(); }
   }
 
   /* ------------------------------------------------------------------
