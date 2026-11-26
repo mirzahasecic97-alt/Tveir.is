@@ -1619,6 +1619,12 @@ button.uv__titill:hover { color: var(--acc); }
 .ts-sent { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; padding: 30px 10px; }
 .ts-sent__hak { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; color: #fff; background: #1e9e4a; animation: ts-popp .5s cubic-bezier(.26, 1.62, .45, 1); }
 .ts-sent p { color: var(--soft); }
+.ts-netfang-lina { display: flex; gap: 8px; }
+.ts-netfang-lina .ts-netfang { flex: 1; min-width: 0; }
+.ts-netfang-lina .btn { flex: none; }
+.ts-aukanetfang { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 8px 8px 12px; border-radius: 14px; border: 1px solid var(--line); font-size: 14px; color: var(--ink); }
+.ts-aukanetfang span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ts-aukanetfong:empty { display: none; }
 /* Tölfræði úr skjáskoti (tolfraedi-skjaskot.js) */
 .sk-skref1 { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; max-width: 640px; }
 .sk-svaedi { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 28px 16px; border: 2px dashed var(--line); border-radius: 18px; text-align: center; cursor: pointer; color: var(--ink); transition: border-color .15s, background .15s; }

@@ -278,6 +278,52 @@ export function postTexti({ fyrirtaeki, nofn, inngangur, fyrriHeiti, tolur, ord,
 }
 
 /* ------------------------------------------------------------------
+   Önnur netföng: hvaða netfang sem er má skrifa inn (líka fleiri í einu,
+   aðskilin með kommu eða bili). Þau bætast í valdir. Skilar { reitur,
+   baetaInnslaetti }: baetaInnslaetti() bætir við því sem stendur enn í
+   reitnum og skilar false ef það er ekki gilt netfang.
+   ------------------------------------------------------------------ */
+const NETFANG = /^[^\s@,;<>"']+@[^\s@,;<>"']+\.[^\s@,;<>"']+$/;
+export function netfangaReitur(valdir, uppfaera, hamark = 10) {
+  const aukalega = [];
+  const inn = el('input', { type: 'email', class: 'ts-ord ts-netfang', placeholder: 'netfang@daemi.is', autocomplete: 'off',
+    'aria-label': 'Bæta við netfangi', maxlength: '500' });
+  const villa = el('p', { class: 'ts-villa', role: 'alert', hidden: true });
+  const listi = el('ul', { class: 'ts-vidtakendur ts-aukanetfong' });
+  const teikna = () => fylla(listi, aukalega.map((n) => el('li', {}, [
+    el('div', { class: 'ts-aukanetfang' }, [
+      el('span', { texti: n }),
+      el('button', { type: 'button', class: 'loka', 'aria-label': 'Taka ' + n + ' út', texti: '✕', onclick: () => {
+        aukalega.splice(aukalega.indexOf(n), 1); valdir.delete(n); teikna(); uppfaera();
+      } })
+    ])
+  ])));
+  const baetaInnslaetti = () => {
+    villa.hidden = true;
+    const hlutar = inn.value.split(/[\s,;]+/).map((x) => x.trim().toLowerCase()).filter(Boolean);
+    if (!hlutar.length) return true;
+    const ogild = hlutar.filter((x) => !NETFANG.test(x) || x.length > 254);
+    if (ogild.length) {
+      villa.textContent = ogild.join(', ') + (ogild.length === 1 ? ' er ekki gilt netfang.' : ' eru ekki gild netföng.');
+      villa.hidden = false; return false;
+    }
+    const ny = [...new Set(hlutar)].filter((x) => !valdir.has(x));
+    if (valdir.size + ny.length > hamark) { villa.textContent = 'Mest ' + hamark + ' viðtakendur í einu.'; villa.hidden = false; return false; }
+    ny.forEach((x) => { valdir.add(x); if (!aukalega.includes(x)) aukalega.push(x); });
+    inn.value = '';
+    teikna(); uppfaera();
+    return true;
+  };
+  inn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); baetaInnslaetti(); } });
+  const reitur = el('div', { class: 'ts-hluti' }, [
+    el('span', { class: 'ts-midi', texti: 'Annað netfang' }),
+    el('div', { class: 'ts-netfang-lina' }, [inn, el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Bæta við', onclick: () => baetaInnslaetti() })]),
+    villa, listi
+  ]);
+  return { reitur, baetaInnslaetti };
+}
+
+/* ------------------------------------------------------------------
    Glugginn: velja viðtakendur, sjá póstinn og senda
    ------------------------------------------------------------------ */
 /* skyrsla: drög að mánaðarskýrslu sama mánaðar, ef til. Þá má láta
@@ -374,7 +420,8 @@ export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, 
           el('span', {}, [el('strong', { texti: n.nafn || n.netfang }), el('small', { texti: n.netfang })])
         ])
       ])))
-    : el('p', { class: 'skyring', texti: 'Enginn viðskiptavinur er skráður hjá ' + fyrirtaeki + '. Bættu honum við á stjórnborðinu, eða sendu afrit á þig til að sjá póstinn.' });
+    : el('p', { class: 'skyring', texti: 'Enginn viðskiptavinur er skráður hjá ' + fyrirtaeki + '. Skrifaðu netfang hér fyrir neðan, eða sendu afrit á þig til að sjá póstinn.' });
+  const annad = netfangaReitur(valdir, () => uppfaera());
 
   fylla(kort, [
     el('div', { class: 'pdialog__haus' }, [
@@ -390,6 +437,7 @@ export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, 
             el('input', { type: 'checkbox', onchange: (e) => { afrit = e.target.checked; uppfaera(); } }),
             document.createTextNode('Senda afrit á mig (' + ek.netfang + ')')
           ]) : null]),
+        annad.reitur,
         mbTilbuin.length ? el('label', { class: 'ts-afrit' }, [
           el('input', { type: 'checkbox', checked: true, onchange: (e) => { medMyndbond = e.target.checked; uppfaera(); } }),
           document.createTextNode('Hafa myndböndin með (' + mbTilbuin.length + ')')
@@ -410,6 +458,7 @@ export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, 
   uppfaera();
 
   sendaHn.addEventListener('click', async () => {
+    if (!annad.baetaInnslaetti()) return;
     const netfong = [...valdir];
     if (afrit && ek && ek.netfang && !netfong.includes(ek.netfang)) netfong.push(ek.netfang);
     if (!netfong.length) return;
@@ -421,7 +470,7 @@ export async function opnaSendingu({ g, ek, fid, fyrirtaeki, midlar, maelingar, 
       fylla(kort, [el('div', { class: 'ts-sent' }, [
         el('span', { class: 'ts-sent__hak', 'aria-hidden': 'true', texti: '✓' }),
         el('h2', { texti: 'Pósturinn er á leiðinni' }),
-        el('p', { texti: (hverjum.length ? 'Til ' + hverjum.join(', ') : 'Til ' + netfong.join(', ')) + '. '
+        el('p', { texti: 'Til ' + (hverjum.length ? hverjum.concat(netfong.filter((x) => !vidskiptavinir.some((v) => v.netfang === x))).join(', ') : netfong.join(', ')) + '. '
           + (g.prufa ? 'Í sýnidæminu fer ekkert út.'
             : snid.erTveir ? 'Hann fer frá tveir@tveir.is.'
               : 'Hann fer í nafni ' + snid.nafn + (stofa && stofa.netfang ? ' og svör berast á ' + stofa.netfang : '') + '.') }),

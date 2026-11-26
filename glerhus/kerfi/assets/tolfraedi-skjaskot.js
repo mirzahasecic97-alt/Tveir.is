@@ -8,7 +8,7 @@
    aldrei vistaðar. Ekkert fer út fyrr en ýtt er á Senda.
    ========================================================================== */
 import { el, fylla } from './portal.js';
-import { postHtml, postTexti, stofuSnid } from './tolfraedi-senda.js';
+import { postHtml, postTexti, stofuSnid, netfangaReitur } from './tolfraedi-senda.js';
 
 const MEST_MYNDIR = 8;
 const LENGD = 2400;          // lengsta hlið eftir minnkun, í dílum
@@ -312,7 +312,8 @@ export async function opnaSkjaskot({ g, ek, fid, fyrirtaeki }) {
         ])))
       : notendaVilla
         ? el('p', { class: 'ts-villa', texti: 'Náði ekki í viðtakendur (' + notendaVilla + '). Lokaðu glugganum og prófaðu aftur, eða sendu afrit á þig.' })
-        : el('p', { class: 'skyring', texti: 'Enginn viðskiptavinur er skráður hjá ' + fyrirtaeki + '. Bættu honum við á stjórnborðinu, eða sendu afrit á þig til að sjá póstinn.' });
+        : el('p', { class: 'skyring', texti: 'Enginn viðskiptavinur er skráður hjá ' + fyrirtaeki + '. Skrifaðu netfang hér fyrir neðan, eða sendu afrit á þig til að sjá póstinn.' });
+    const annad = netfangaReitur(valdir, () => uppfaera());
 
     const athugid = [
       'Lesið af ' + (myndir.length === 1 ? '1 skjáskoti' : myndir.length + ' skjáskotum') + '. Gervigreind getur lesið vitlaust, berðu tölurnar saman við myndirnar áður en þú sendir.',
@@ -340,6 +341,7 @@ export async function opnaSkjaskot({ g, ek, fid, fyrirtaeki }) {
               el('input', { type: 'checkbox', onchange: (e) => { afrit = e.target.checked; uppfaera(); } }),
               document.createTextNode('Senda afrit á mig (' + ek.netfang + ')')
             ]) : null]),
+          annad.reitur,
           villa,
           el('div', { class: 'ts-hnappar' }, [
             el('button', { type: 'button', class: 'btn btn--ghost', texti: 'Til baka', onclick: () => skref1() }),
@@ -352,6 +354,7 @@ export async function opnaSkjaskot({ g, ek, fid, fyrirtaeki }) {
     uppfaera();
 
     sendaHn.addEventListener('click', async () => {
+      if (sendir || !annad.baetaInnslaetti()) return;
       const netfong = [...valdir];
       if (afrit && ek && ek.netfang && !netfong.includes(ek.netfang)) netfong.push(ek.netfang);
       if (!netfong.length || sendir) return;
@@ -365,7 +368,7 @@ export async function opnaSkjaskot({ g, ek, fid, fyrirtaeki }) {
         fylla(kort, [el('div', { class: 'ts-sent' }, [
           el('span', { class: 'ts-sent__hak', 'aria-hidden': 'true', texti: '✓' }),
           el('h2', { texti: 'Pósturinn er á leiðinni' }),
-          el('p', { texti: (hverjum.length ? 'Til ' + hverjum.join(', ') : 'Til ' + netfong.join(', ')) + '. '
+          el('p', { texti: 'Til ' + (hverjum.length ? hverjum.concat(netfong.filter((x) => !vidskiptavinir.some((v) => v.netfang === x))).join(', ') : netfong.join(', ')) + '. '
             + (g.prufa ? 'Í sýnidæminu fer ekkert út.'
               : snid.erTveir ? 'Hann fer frá tveir@tveir.is.'
                 : 'Hann fer í nafni ' + snid.nafn + (stofa && stofa.netfang ? ' og svör berast á ' + stofa.netfang : '') + '.') }),
