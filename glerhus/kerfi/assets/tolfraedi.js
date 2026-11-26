@@ -11,6 +11,7 @@
 
 import { gogn, el, fylla, vardaHlid, teiknaHaus, geymt, geyma, tolu, erEnska } from './portal.js';
 import { opnaSendingu } from './tolfraedi-senda.js';
+import { opnaSkjaskot } from './tolfraedi-skjaskot.js';
 
 const ek = await vardaHlid({ badir: true });
 if (ek) start();
@@ -726,6 +727,12 @@ async function start() {
               opnaSendingu({ g, ek, fid, fyrirtaeki: fyrNafn(), midlar: valdir, maelingar, tb, timabilHeiti: heiti[0], fyrriHeiti: heiti[1], myndbond,
                 skyrsla, eftirSamantekt: (sk) => endurteiknaSkyrslu(sk) });
             } }, [el('span', { 'aria-hidden': 'true', texti: '✉ ' }), document.createTextNode('Senda á viðskiptavin')])
+          : null,
+        /* Tölur úr skjáskoti, t.d. eftir helgi sem var tekin upp: lesnar með gervigreind og sendar í sama útliti */
+        admin && fid
+          ? el('button', { type: 'button', class: 'btn btn--ghost tf-senda', title: 'Lesa tölur af skjáskotum og senda á viðskiptavininn',
+              onclick: () => opnaSkjaskot({ g, ek, fid, fyrirtaeki: fyrNafn() }) },
+              [el('span', { 'aria-hidden': 'true', texti: '📷 ' }), document.createTextNode('Úr skjáskoti')])
           : null,
         admin && fid && fyrirtaekin.length > 1
           ? el('label', { class: 'pyfir tf-velja', style: 'margin:0' }, [

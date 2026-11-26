@@ -98,6 +98,18 @@ function breyting(nu, fyrr, fyrriHeiti) {
   return { texti: Math.abs(p) + '% ' + (p > 0 ? 'meira' : 'minna') + ' en ' + fyrriHeiti, upp: p > 0 };
 }
 
+/* Myndband eða færsla sem fer í póstinn: titill og að minnsta kosti ein tala.
+   Mánaðarsendingin sendir bara myndbönd með áhorfum, svo hún breytist ekki. */
+const mbMed = (m) => !!(m && String(m.titill || '').trim()
+  && (erTala(m.ahorf) || erTala(m.likes) || erTala(m.athugasemdir) || erTala(m.deilingar)));
+
+/* Breyting sem stóð á skjáskoti, í prósentum */
+function breytingUrPr(p, fyrriHeiti) {
+  const r = Math.round(p);
+  if (r === 0) return { texti: 'Svipað og ' + fyrriHeiti, upp: null };
+  return { texti: Math.abs(r) + '% ' + (r > 0 ? 'meira' : 'minna') + ' en ' + fyrriHeiti, upp: r > 0 };
+}
+
 /* Ein eða tvær setningar sem segja bara það sem tölurnar segja */
 export function sjalfgefinOrd(tolur, fyrriHeiti) {
   const t = tolur.samtals, s = [];
@@ -111,7 +123,11 @@ export function sjalfgefinOrd(tolur, fyrriHeiti) {
 /* ------------------------------------------------------------------
    Pósturinn í Tveir útliti. Töflur og stílar í línu fyrir Gmail og Outlook.
    ------------------------------------------------------------------ */
-export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, tolur, ord, myndbond, snid }) {
+/* Aukalega fyrir póst úr skjáskoti (tolfraedi-skjaskot.js):
+   inngangsTexti kemur í stað "Hér eru tölurnar ...", breytingarPr eru
+   prósentur sem stóðu á skjáskotinu, aukatolur bætast við í töflu og
+   myndbondTitill er fyrirsögnin yfir myndböndunum eða færslunum. */
+export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, tolur, ord, myndbond, snid, inngangsTexti, breytingarPr, aukatolur, myndbondTitill, samanburdur }) {
   const st = snid || stofuSnid(null);
   const L = "font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
   const H = "font-family:'Inter Tight',Inter,-apple-system,'Segoe UI',Arial,sans-serif;letter-spacing:-.02em;";
@@ -139,9 +155,11 @@ export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, 
     const b = Number(t.fylgjendur_breyting);
     fb = b === 0 ? { texti: 'Óbreytt á tímabilinu', upp: null } : { texti: tala(Math.abs(b)) + (b > 0 ? ' fleiri' : ' færri') + ' á tímabilinu', upp: b > 0 };
   }
-  const reitir = '<tr>' + reitur('Áhorf', tala(t.ahorf), breyting(t.ahorf, t.ahorf_fyrri, fyrriHeiti))
-    + reitur('Náð', tala(t.nadir), breyting(t.nadir, t.nadir_fyrri, fyrriHeiti)) + '</tr><tr>'
-    + reitur('Samskipti', tala(t.samskipti), breyting(t.samskipti, t.samskipti_fyrri, fyrriHeiti))
+  const bPr = breytingarPr || {};
+  const b2 = (k) => (erTala(t[k]) && erTala(bPr[k]) ? breytingUrPr(Number(bPr[k]), fyrriHeiti) : breyting(t[k], t[k + '_fyrri'], fyrriHeiti));
+  const reitir = '<tr>' + reitur('Áhorf', tala(t.ahorf), b2('ahorf'))
+    + reitur('Náð', tala(t.nadir), b2('nadir')) + '</tr><tr>'
+    + reitur('Samskipti', tala(t.samskipti), b2('samskipti'))
     + reitur('Fylgjendur', tala(t.fylgjendur_lok), fb) + '</tr>';
 
   const sula = (gildi, haest, litur) => {
@@ -159,7 +177,8 @@ export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, 
       + '<td align="right" style="' + L + 'font-size:13px;color:#4a5f80;padding-bottom:6px;">' + esc(tala(nu) || 'Engin gögn') + ' <span style="color:#7189ac;">/ ' + esc(tala(fyrr) || 'engin gögn') + '</span></td>'
       + '</tr></table>' + sula(nu, haest, '#5b93f0') + '<div style="height:4px;line-height:4px;font-size:0;">&nbsp;</div>' + sula(fyrr, haest, '#c9dcf8') + '</td></tr>';
   };
-  const sulur = sulurLina('Áhorf', t.ahorf, t.ahorf_fyrri) + sulurLina('Náð', t.nadir, t.nadir_fyrri) + sulurLina('Samskipti', t.samskipti, t.samskipti_fyrri);
+  /* Skjáskot hafa engar tölur fyrra tímabils, þá sleppur samanburðurinn */
+  const sulur = samanburdur === false ? '' : sulurLina('Áhorf', t.ahorf, t.ahorf_fyrri) + sulurLina('Náð', t.nadir, t.nadir_fyrri) + sulurLina('Samskipti', t.samskipti, t.samskipti_fyrri);
   const kafli = (texti) => '<tr><td style="padding:22px 0 10px 0;' + H + 'font-size:20px;font-weight:700;color:#1c3050;">' + esc(texti) + '</td></tr>';
   const sulurit = sulur ? kafli('Miðað við ' + fyrriHeiti)
     + '<tr><td style="padding:0 0 14px 0;' + L + 'font-size:13px;color:#4a5f80;"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#5b93f0;"></span>&nbsp;Þetta tímabil&nbsp;&nbsp;&nbsp;<span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#c9dcf8;"></span>&nbsp;Tímabilið á undan</td></tr>' + sulur : '';
@@ -186,30 +205,36 @@ export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, 
       + '</td></tr></table></td></tr>';
   }).join('');
   /* Myndböndin sem við gerðum: áhorf hvers og eins á tímabilinu */
-  const mbListi = (myndbond || []).filter((m) => erTala(m.ahorf));
-  const mbHaest = Math.max(1, ...mbListi.map((m) => Number(m.ahorf)));
-  const myndbondPosts = mbListi.length ? kafli('Myndböndin') + mbListi.map((m) => {
+  const mbListi = (myndbond || []).filter(mbMed);
+  const mbHaest = Math.max(1, ...mbListi.map((m) => Number(m.ahorf) || 0));
+  const myndbondPosts = mbListi.length ? kafli(myndbondTitill || 'Myndböndin') + mbListi.map((m) => {
     const slod = oruggSlod(m.slod);
     const lysing = [MIDLAR_HEITI[m.midill] || (m.midill === 'youtube' ? 'YouTube' : ''), m.birt ? 'birt ' + dagsTexti(m.birt) : ''].filter(Boolean).join(' · ');
-    const aukatolur = [erTala(m.likes) ? tala(m.likes) + ' líkar' : '', erTala(m.heild) && Number(m.heild) !== Number(m.ahorf) ? tala(m.heild) + ' áhorf alls' : ''].filter(Boolean).join(' · ');
+    const aukatolur = [erTala(m.likes) ? tala(m.likes) + ' líkar' : '', erTala(m.athugasemdir) ? tala(m.athugasemdir) + ' athugasemdir' : '',
+      erTala(m.deilingar) ? tala(m.deilingar) + ' deilingar' : '', erTala(m.heild) && Number(m.heild) !== Number(m.ahorf) ? tala(m.heild) + ' áhorf alls' : ''].filter(Boolean).join(' · ');
     return '<tr><td style="padding:0 0 12px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;background:#f2f8fe;border-radius:14px;"><tr><td style="padding:14px 16px;">'
       + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
       + '<td valign="top" style="' + L + 'font-size:15px;line-height:1.4;font-weight:600;color:#1c3050;word-break:break-word;">' + esc(m.titill) + '</td>'
       + '<td align="right" valign="top" style="' + H + 'font-size:18px;line-height:1.3;font-weight:700;color:#1c3050;white-space:nowrap;padding-left:10px;">' + esc(tala(m.ahorf)) + '</td>'
       + '</tr><tr><td style="' + L + 'font-size:12.5px;line-height:1.4;color:#7189ac;padding-top:2px;">' + esc(lysing) + '</td>'
-      + '<td align="right" style="' + L + 'font-size:12.5px;color:#7189ac;padding-top:2px;white-space:nowrap;">áhorf</td></tr></table>'
-      + '<div style="padding-top:10px;">' + sula(m.ahorf, mbHaest, '#5b93f0') + '</div>'
+      + '<td align="right" style="' + L + 'font-size:12.5px;color:#7189ac;padding-top:2px;white-space:nowrap;">' + (erTala(m.ahorf) ? 'áhorf' : '') + '</td></tr></table>'
+      + (erTala(m.ahorf) ? '<div style="padding-top:10px;">' + sula(m.ahorf, mbHaest, '#5b93f0') + '</div>' : '')
       + (aukatolur ? '<div style="' + L + 'font-size:13px;line-height:1.5;color:#4a5f80;padding-top:8px;">' + esc(aukatolur) + '</div>' : '')
       + (slod ? '<div style="padding-top:10px;">' + takki('Horfa á myndbandið', slod, false) + '</div>' : '')
       + '</td></tr></table></td></tr>';
   }).join('') : '';
+  const aukaListi = (aukatolur || []).filter((x) => x && x.heiti && erTala(x.gildi));
+  const aukaTafla = aukaListi.length ? kafli('Fleiri tölur') + '<tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
+    + aukaListi.map((x, i) => '<tr><td style="' + ms + 'padding-left:0;' + (i ? '' : 'border-top:0;') + '">' + esc(x.heiti) + '</td>'
+      + '<td align="right" style="' + ms + 'font-weight:600;padding-right:0;' + (i ? '' : 'border-top:0;') + '">' + esc(tala(x.gildi)) + '</td></tr>').join('')
+    + '</table></td></tr>' : '';
   const nofnin = (nofn || []).map((x) => String(x || '').trim().split(' ')[0]).filter(Boolean);
   const kvedja = !nofnin.length || nofnin.length > 3 ? 'Hæ,' : nofnin.length === 1 ? 'Hæ ' + nofnin[0] + ',' : 'Hæ ' + nofnin.slice(0, -1).join(', ') + ' og ' + nofnin[nofnin.length - 1] + ',';
   const ordin = ord ? '<tr><td style="padding:16px 0 4px 0;' + L + 'font-size:16px;line-height:1.6;color:#1c3050;word-break:break-word;">' + esc(ord).replace(/\r?\n/g, '<br>') + '</td></tr>' : '';
 
   return '<!doctype html><html lang="is"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>' + esc('Tölfræði ' + fyrirtaeki) + '</title></head>'
     + '<body style="margin:0;padding:0;background:#f2f8fe;">'
-    + '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' + esc('Tölurnar ykkar ' + inngangur) + '</div>'
+    + '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' + esc(inngangsTexti || ('Tölurnar ykkar ' + inngangur)) + '</div>'
     + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f2f8fe" style="background:#f2f8fe;"><tr><td align="center" style="padding:32px 12px;">'
     + '<table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;">'
     + '<tr><td align="center" style="padding:0 0 22px 0;"><a href="' + esc(st.vefur) + '" target="_blank" style="text-decoration:none;">'
@@ -221,10 +246,10 @@ export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, 
     + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
     + '<tr><td style="padding:0 6px 14px 6px;"><span style="display:inline-block;background:#e7f0fd;color:#2c62c4;border-radius:999px;padding:6px 12px;' + L + 'font-size:12.5px;font-weight:600;">' + esc(merkiTexti) + '</span></td></tr>'
     + '<tr><td style="padding:0 6px 8px 6px;' + H + 'font-size:30px;line-height:1.15;font-weight:700;color:#1c3050;word-break:break-word;">' + esc(fyrirtaeki) + '</td></tr>'
-    + '<tr><td style="padding:0 6px 14px 6px;' + L + 'font-size:16px;line-height:1.55;color:#4a5f80;">' + esc(kvedja) + '<br>' + esc('Hér eru tölurnar af samfélagsmiðlunum ykkar ' + inngangur + '.') + '</td></tr>'
+    + '<tr><td style="padding:0 6px 14px 6px;' + L + 'font-size:16px;line-height:1.55;color:#4a5f80;word-break:break-word;">' + esc(kvedja) + '<br>' + esc(inngangsTexti || ('Hér eru tölurnar af samfélagsmiðlunum ykkar ' + inngangur + '.')) + '</td></tr>'
     + '<tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' + reitir + '</table></td></tr>'
     + '<tr><td style="padding:0 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'
-    + ordin + sulurit + myndbondPosts + midlar + (faerslur ? kafli('Bestu færslurnar') + faerslur : '')
+    + ordin + sulurit + myndbondPosts + midlar + aukaTafla + (faerslur ? kafli('Bestu færslurnar') + faerslur : '')
     + '<tr><td align="center" style="padding:24px 0 6px 0;">' + takki('Sjá alla tölfræðina', st.tolfraedi, true) + '</td></tr>'
     + '</table></td></tr></table></td></tr>'
     + '<tr><td align="center" style="padding:22px 12px 0 12px;' + L + 'font-size:13px;line-height:1.6;color:#7189ac;">Kveðja, ' + esc(st.nafn)
@@ -234,15 +259,21 @@ export function postHtml({ fyrirtaeki, nofn, merkiTexti, inngangur, fyrriHeiti, 
     + '</table></td></tr></table></body></html>';
 }
 
-export function postTexti({ fyrirtaeki, nofn, inngangur, fyrriHeiti, tolur, ord, myndbond, snid }) {
+export function postTexti({ fyrirtaeki, nofn, inngangur, fyrriHeiti, tolur, ord, myndbond, snid, inngangsTexti, breytingarPr, aukatolur, myndbondTitill }) {
   const st = snid || stofuSnid(null);
   const t = tolur.samtals;
-  const lina = (h, nu, fyrr) => { const b = breyting(nu, fyrr, fyrriHeiti); return h + ': ' + (tala(nu) || 'engin gögn') + (b ? ' (' + b.texti + ')' : ''); };
+  const bPr = breytingarPr || {};
+  const lina = (h, k) => {
+    const b = erTala(t[k]) && erTala(bPr[k]) ? breytingUrPr(Number(bPr[k]), fyrriHeiti) : breyting(t[k], t[k + '_fyrri'], fyrriHeiti);
+    return h + ': ' + (tala(t[k]) || 'engin gögn') + (b ? ' (' + b.texti + ')' : '');
+  };
   const n = (nofn || []).filter(Boolean);
-  return [n.length === 1 ? 'Hæ ' + n[0] + ',' : 'Hæ,', '', 'Tölfræði ' + fyrirtaeki + ' ' + inngangur + ':', '',
-    lina('Áhorf', t.ahorf, t.ahorf_fyrri), lina('Náð', t.nadir, t.nadir_fyrri), lina('Samskipti', t.samskipti, t.samskipti_fyrri),
+  const mb = (myndbond || []).filter(mbMed);
+  return [n.length === 1 ? 'Hæ ' + n[0] + ',' : 'Hæ,', '', inngangsTexti || ('Tölfræði ' + fyrirtaeki + ' ' + inngangur + ':'), '',
+    lina('Áhorf', 'ahorf'), lina('Náð', 'nadir'), lina('Samskipti', 'samskipti'),
     'Fylgjendur: ' + (tala(t.fylgjendur_lok) || 'engin gögn'),
-    ...((myndbond || []).filter((m) => erTala(m.ahorf)).length ? ['', 'Myndböndin:'].concat((myndbond || []).filter((m) => erTala(m.ahorf)).map((m) => '- ' + m.titill + ': ' + tala(m.ahorf) + ' áhorf')) : []),
+    ...((aukatolur || []).filter((x) => x && x.heiti && erTala(x.gildi)).map((x) => x.heiti + ': ' + tala(x.gildi))),
+    ...(mb.length ? ['', (myndbondTitill || 'Myndböndin') + ':'].concat(mb.map((m) => '• ' + m.titill + (erTala(m.ahorf) ? ': ' + tala(m.ahorf) + ' áhorf' : ''))) : []),
     ord ? '\n' + ord : '', '', 'Sjá alla tölfræðina: ' + st.tolfraedi, '', 'Kveðja,', st.nafn].join('\n');
 }
 

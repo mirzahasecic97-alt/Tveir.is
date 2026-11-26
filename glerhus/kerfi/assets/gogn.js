@@ -1570,6 +1570,15 @@ async function supabaseBakendi() {
       return kallaFall('gervigreind', { verk, id: String(id) });
     },
 
+    /* Tölur lesnar úr skjáskotum af tölfræði (Edge Function greina-skjaskot).
+       myndir: [{ gerd: 'image/jpeg', gogn: '<base64>' }]. Myndirnar eru ekki
+       vistaðar neins staðar. Skilar { midlar, faerslur, timabil, samantekt, oljost }. */
+    async greinaSkjaskot(fyrirtaeki_id, myndir, lysing) {
+      if (!fyrirtaeki_id) throw new Error('Veldu fyrirtæki fyrst.');
+      if (!Array.isArray(myndir) || !myndir.length) throw new Error('Settu inn að minnsta kosti eitt skjáskot.');
+      return kallaFall('greina-skjaskot', { fyrirtaeki_id, myndir, lysing: String(lysing || '').slice(0, 300) });
+    },
+
     /* Rekstraraðili Glerhússins. Allt fer í Edge Function rekstur sem
        { adgerd, ...gogn }: yfirlit, samthykkja, loka, opna, skraning, postur,
        utflutningur, eyda.
@@ -2888,6 +2897,24 @@ function prufuBakendi() {
         ? 'Sýnidæmi: svona líta drög frá gervigreindinni út.\n\nSæl og takk fyrir póstinn.\n\nVið förum yfir þetta og svörum þér fljótlega með nánari upplýsingum.\n\nKveðja,\n' + nafn
         : 'Sýnidæmi: hér kæmi stutt samantekt frá gervigreindinni. Í alvöru Glerhúsi les hún gögnin og dregur saman það helsta í nokkrum setningum, sem þú ferð yfir áður en nokkur sér hana.';
       return { ok: true, synidaemi: true, verk, texti, styttist: false };
+    },
+
+    async greinaSkjaskot(fyrirtaeki_id, myndir) {
+      krefjastAdmin();
+      if (!Array.isArray(myndir) || !myndir.length) throw new Error('Settu inn að minnsta kosti eitt skjáskot.');
+      await new Promise((r) => setTimeout(r, 900));
+      return {
+        ok: true, synidaemi: true, veita: 'claude', timabil: '22. til 23. nóvember',
+        midlar: [{ midill: 'instagram', reikningur: null, ahorf: 48200, ahorf_breyting_pr: 212, nadir: 19400, nadir_breyting_pr: 145,
+          samskipti: 3150, samskipti_breyting_pr: 98, fylgjendur: 8420, fylgjendur_breyting: 236, likes: 2710, athugasemdir: 184,
+          deilingar: 410, vistanir: 96, heimsoknir: 1320, faerslur: 4 }],
+        faerslur: [
+          { titill: 'Markið í lokin og fagnið', midill: 'instagram', tegund: 'reel', birt: null, ahorf: 31200, likes: 1840, athugasemdir: 96, deilingar: 290 },
+          { titill: 'Upphitun og stemningin í stúkunni', midill: 'instagram', tegund: 'reel', birt: null, ahorf: 11800, likes: 620, athugasemdir: 41, deilingar: 77 }
+        ],
+        samantekt: 'Helgin skilaði 48.200 áhorfum og efnið náði til 19.400 reikninga. Fylgjendum fjölgaði um 236.',
+        oljost: null
+      };
     },
 
     async rekstur() { throw new Error('Rekstur er ekki í boði í sýnidæminu.'); },
